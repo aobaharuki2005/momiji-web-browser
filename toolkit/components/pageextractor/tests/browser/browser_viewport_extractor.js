@@ -4,7 +4,8 @@
 "use strict";
 
 add_task(async function test_viewport_extraction() {
-  const { actor, cleanup, tab } = await html`
+  const { html } = await MLTestUtils.serveHTMLInTab({ browser: gBrowser });
+  const { getPageExtractor, cleanup, tab } = await html`
     <style>
       body {
         margin: 0;
@@ -20,8 +21,10 @@ add_task(async function test_viewport_extraction() {
     <div class="page" id="page-3">Viewport page 3</div>
   `;
 
+  const actor = getPageExtractor();
+
   is(
-    await actor.getText({ justViewport: true }),
+    (await actor.getText({ justViewport: true })).text,
     "Viewport page 1",
     "Viewport-only extraction returns the first page."
   );
@@ -31,13 +34,13 @@ add_task(async function test_viewport_extraction() {
   });
 
   is(
-    await actor.getText({ justViewport: true }),
+    (await actor.getText({ justViewport: true })).text,
     "Viewport page 2",
     "Viewport extraction follows the current scroll position."
   );
 
   is(
-    await actor.getText(),
+    (await actor.getText()).text,
     ["Viewport page 1", "Viewport page 2", "Viewport page 3"].join("\n"),
     "Full document extraction includes all content."
   );

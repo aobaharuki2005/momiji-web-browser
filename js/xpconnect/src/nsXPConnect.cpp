@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,7 +13,9 @@
 #include "jsfriendapi.h"
 #include "js/AllocationLogging.h"  // JS::SetLogCtorDtorFunctions
 #include "js/CompileOptions.h"     // JS::ReadOnlyCompileOptions
-#include "js/Object.h"             // JS::GetClass
+#include "js/Initialization.h"
+#include "js/Object.h"  // JS::GetClass
+#include "js/Prefs.h"
 #include "js/ProfilingStack.h"
 #include "GeckoProfiler.h"
 #include "mozJSModuleLoader.h"
@@ -32,9 +32,11 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/glean/bindings/Glean.h"
 #include "mozilla/glean/bindings/GleanPings.h"
 #include "mozilla/ScriptPreloader.h"
+#include "mozilla/StaticPrefs_javascript.h"
 
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
@@ -55,6 +57,10 @@
 #  include "mozilla/WinHeaderOnlyUtils.h"
 #else
 #  include <sys/mman.h>
+#endif
+
+#ifdef XP_IOS
+#  include <CoreFoundation/CoreFoundation.h>
 #endif
 
 using namespace mozilla;
@@ -78,16 +84,55 @@ const char XPC_SCRIPT_ERROR_CONTRACTID[] = "@mozilla.org/scripterror;1";
 
 /***************************************************************************/
 
-nsXPConnect::nsXPConnect() {
-#ifdef MOZ_GECKO_PROFILER
+#ifdef XP_IOS
+// Check if iOS LockdownMode is enabled, which blocks the JIT everywhere.
+static bool IsLockdownModeEnabled() {
+  CFPropertyListRef prefValue = CFPreferencesCopyValue(
+      CFSTR("LDMGlobalEnabled"), kCFPreferencesAnyApplication,
+      kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+  bool enabled = prefValue == kCFBooleanTrue;
+  if (prefValue) CFRelease(prefValue);
+  return enabled;
+}
+#endif
+
+static void InitJSEngine() {
+#if defined(ENABLE_WASM_SIMD) && \
+    (defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86))
+  // Update static engine preferences, such as AVX, before
+  // `JS_InitWithFailureDiagnostic` is called.
+  JS::SetAVXEnabled(mozilla::StaticPrefs::javascript_options_wasm_simd_avx());
+#endif
+
+  if (XRE_IsParentProcess() &&
+      mozilla::StaticPrefs::javascript_options_main_process_disable_jit()) {
+    JS::DisableJitBackend();
+  }
+#ifdef XP_IOS
+  else if (IsLockdownModeEnabled()) {
+    JS::DisableJitBackend();
+  }
+#endif
+
+  // Set all JS::Prefs.
+  SET_JS_PREFS_FROM_BROWSER_PREFS;
+
+  const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
+  if (jsInitFailureReason) {
+    MOZ_CRASH_UNSAFE(jsInitFailureReason);
+  }
+
   JS::SetProfilingThreadCallbacks(profiler_register_thread,
                                   profiler_unregister_thread);
-#endif
 }
 
 // static
 void nsXPConnect::InitJSContext() {
   MOZ_ASSERT(!gSelf->mContext);
+
+  // Initialize the JS engine for this process before creating the first
+  // JSContext.
+  InitJSEngine();
 
   XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext();
   if (!xpccx) {
@@ -139,6 +184,9 @@ nsXPConnect::~nsXPConnect() {
   XPC_LOG_FINISH();
 
   delete mContext;
+
+  // Shut down the JS engine.
+  JS_ShutDown();
 
   MOZ_ASSERT(gSelf == this);
   gSelf = nullptr;
@@ -1098,6 +1146,17 @@ bool IsNotUAWidget(JSContext* cx, JSObject* /* unused */) {
   JS::Compartment* c = JS::GetCompartmentForRealm(realm);
 
   return !IsUAWidgetCompartment(c);
+}
+
+bool IsChromeOrWorkerDebugger(JSContext* cx, JSObject* /* unused */) {
+  // Replicates ChromeOnly checks
+  if (nsContentUtils::ThreadsafeIsSystemCaller(cx)) {
+    return true;
+  }
+
+  // But also accept WorkerDebugger modules used by DevTools.
+  JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+  return IsWorkerDebuggerGlobal(global);
 }
 
 extern bool IsCurrentThreadRunningChromeWorker();

@@ -26,7 +26,7 @@ add_task(async function () {
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
-  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditorAt(view, 1);
   const propEditor = getTextProperty(view, 1, {
     "background-color": "blue",
   }).editor;

@@ -13,7 +13,6 @@ import mozilla.components.feature.addons.Addon
 import mozilla.components.lib.state.Middleware
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -23,9 +22,11 @@ import org.mozilla.fenix.components.menu.store.ExtensionMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
+import org.mozilla.fenix.components.menu.store.SummarizationMenuState
 import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
 import org.mozilla.fenix.components.menu.store.copyWithBrowserMenuState
 import org.mozilla.fenix.components.menu.store.copyWithExtensionMenuState
+import kotlin.test.assertNotNull
 
 class MenuStoreTest {
 
@@ -398,45 +399,53 @@ class MenuStoreTest {
         }
 
     @Test
-    fun `WHEN update show extensions onboarding dispatched THEN extension state is updated`() =
-        runTest {
-            val initialState = MenuState()
-            val store = MenuStore(initialState = initialState)
+    fun `WHEN initialize summarizer state action is received, THEN the summarize page state is updated`() = runTest {
+        val initialState = MenuState()
+        val store = MenuStore(initialState = initialState)
 
-            store.dispatch(MenuAction.UpdateShowExtensionsOnboarding(true))
+        val newState = SummarizationMenuState.Default.copy(
+            visible = true,
+            highlighted = true,
+            showNewFeatureBadge = true,
+        )
+        store.dispatch(MenuAction.InitializeSummarizationMenuState(newState))
 
-            assertTrue(store.state.extensionMenuState.showExtensionsOnboarding)
-        }
+        assertEquals(
+            "Expected the new state to be the same as what was dispatched",
+            newState,
+            store.state.summarizationMenuState,
+        )
+    }
 
     @Test
-    fun `WHEN update manage extensions menu item visibility is dispatched THEN extension state is updated`() =
+    fun `GIVEN more menu is expanded, WHEN the OnMoreMenuClicked action is received, THEN the menu is not expanded`() =
         runTest {
-            val addon = Addon(id = "ext1")
-            val addonTwo = Addon(id = "ext2")
-            val store = MenuStore(
-                initialState = MenuState(
-                    extensionMenuState = ExtensionMenuState(
-                        recommendedAddons = listOf(
-                            addon,
-                            addonTwo,
-                        ),
-                    ),
-                ),
+            val initialState = MenuState(
+                isMoreMenuExpanded = true,
             )
+            val store = MenuStore(initialState = initialState)
 
-            store.dispatch(MenuAction.UpdateManageExtensionsMenuItemVisibility(true))
+            store.dispatch(MenuAction.OnMoreMenuClicked)
 
-            assertTrue(store.state.extensionMenuState.shouldShowManageExtensionsMenuItem)
+            assertFalse(
+                "Expected that isMoreMenuExpanded is now set to false",
+                store.state.isMoreMenuExpanded,
+            )
         }
 
     @Test
-    fun `WHEN update show disabled extensions onboarding dispatched THEN extension state is updated`() =
+    fun `GIVEN more menu is not expanded, WHEN the OnMoreMenuClicked action is received, THEN the menu is expanded`() =
         runTest {
-            val initialState = MenuState()
+            val initialState = MenuState(
+                isMoreMenuExpanded = false,
+            )
             val store = MenuStore(initialState = initialState)
 
-            store.dispatch(MenuAction.UpdateShowDisabledExtensionsOnboarding(true))
+            store.dispatch(MenuAction.OnMoreMenuClicked)
 
-            assertTrue(store.state.extensionMenuState.showDisabledExtensionsOnboarding)
+            assertTrue(
+                "Expected that isMoreMenuExpanded is now set to true",
+                store.state.isMoreMenuExpanded,
+            )
         }
 }

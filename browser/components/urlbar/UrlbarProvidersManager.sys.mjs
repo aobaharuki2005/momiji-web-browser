@@ -8,9 +8,9 @@
  */
 
 /**
- * @import { UrlbarProvider } from "UrlbarUtils.sys.mjs"
- * @import { UrlbarMuxer } from "UrlbarUtils.sys.mjs"
- * @import { UrlbarSearchStringTokenData } from "UrlbarTokenizer.sys.mjs"
+ * @import { UrlbarProvider } from "./UrlbarUtils.sys.mjs"
+ * @import { UrlbarMuxer } from "./UrlbarUtils.sys.mjs"
+ * @import { UrlbarSearchStringTokenData } from "./UrlbarTokenizer.sys.mjs"
  */
 
 const lazy = {};
@@ -25,6 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarProvider: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
+  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
   UrlbarTokenizer:
     "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
@@ -42,168 +43,173 @@ var localProviderModules = [
     name: "UrlbarProviderAboutPages",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderAboutPages.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderActionsSearchMode",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderActionsSearchMode.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderGlobalActions",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderGlobalActions.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "urlbar"],
   },
   {
     name: "UrlbarProviderAliasEngines",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderAliasEngines.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "urlbar"],
   },
   {
     name: "UrlbarProviderAutofill",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderAutofill.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderBookmarkKeywords",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderBookmarkKeywords.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderCalculator",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderCalculator.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "urlbar"],
+  },
+  {
+    name: "UrlbarProviderAiChat",
+    module: "moz-src:///browser/components/urlbar/UrlbarProviderAiChat.sys.mjs",
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderClipboard",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderClipboard.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderHeuristicFallback",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderHeuristicFallback.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderHistoryUrlHeuristic",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderHistoryUrlHeuristic.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderInputHistory",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderInputHistory.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderInterventions",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderInterventions.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderOmnibox",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderOmnibox.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderPlaces",
     module: "moz-src:///browser/components/urlbar/UrlbarProviderPlaces.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderPrivateSearch",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderPrivateSearch.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "urlbar"],
   },
   {
     name: "UrlbarProviderQuickSuggest",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderQuickSuggest.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderQuickSuggestContextualOptIn",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderQuickSuggestContextualOptIn.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderRecentSearches",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderRecentSearches.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "urlbar"],
   },
   {
     name: "UrlbarProviderRemoteTabs",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderRemoteTabs.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderRestrictKeywords",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderRestrictKeywords.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderRestrictKeywordsAutofill",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderRestrictKeywordsAutofill.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderSearchTips",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderSearchTips.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderSearchSuggestions",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderSearchSuggestions.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderSemanticHistorySearch",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderSemanticHistorySearch.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["smartbar", "urlbar"],
   },
   {
     name: "UrlbarProviderTabToSearch",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderTabToSearch.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderTokenAliasEngines",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderTokenAliasEngines.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "urlbar"],
   },
   {
     name: "UrlbarProviderTopSites",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderTopSites.sys.mjs",
-    supportedInputTypes: ["urlbar"],
+    supportedSAPs: ["urlbar"],
   },
   {
     name: "UrlbarProviderUnitConversion",
     module:
       "moz-src:///browser/components/urlbar/UrlbarProviderUnitConversion.sys.mjs",
-    supportedInputTypes: ["urlbar", "searchbar"],
+    supportedSAPs: ["searchbar", "urlbar"],
   },
 ];
 
@@ -212,6 +218,13 @@ var localMuxerModules = {
   UrlbarMuxerStandard:
     "moz-src:///browser/components/urlbar/UrlbarMuxerStandard.sys.mjs",
 };
+
+/**
+ * Map of ProvidersManager instances per SAP name.
+ *
+ * @type {Map<string,ProvidersManager>}
+ */
+var gProvidersManagerPerSap = new Map();
 
 const DEFAULT_MUXER = "UnifiedComplete";
 const DEFAULT_CHUNK_RESULTS_DELAY_MS = 16;
@@ -230,14 +243,13 @@ export class ProvidersManager {
   static interruptLevel = 0;
 
   /**
-   * @param {object} providerModules
-   *   Object with symbol names as keys and module paths as values.
-   *   Symbols should be UrlbarProvider classes that will be instanciated.
+   * @param {string} sapName
+   *  The SAP name this manager is for, e.g. "urlbar", "searchbar", ...
    * @param {object} muxerModules
    *   Object with symbol names as keys and module paths as values.
    *   Symbols should be UrlbarMuxer instances.
    */
-  constructor(providerModules, muxerModules = localMuxerModules) {
+  constructor(sapName, muxerModules = localMuxerModules) {
     /**
      * Tracks the available providers. This is a sorted array, with HEURISTIC
      * providers at the front.
@@ -245,6 +257,7 @@ export class ProvidersManager {
      * @type {UrlbarProvider[]}
      */
     this.providers = [];
+
     /**
      * @type {{onEngagement: Set<UrlbarProvider>, onImpression: Set<UrlbarProvider>, onAbandonment: Set<UrlbarProvider>, onSearchSessionEnd: Set<UrlbarProvider>}}
      */
@@ -254,7 +267,10 @@ export class ProvidersManager {
       onAbandonment: new Set(),
       onSearchSessionEnd: new Set(),
     };
-    for (let providerInfo of providerModules) {
+
+    for (let providerInfo of localProviderModules.filter(info =>
+      info.supportedSAPs.includes(sapName)
+    )) {
       let { [providerInfo.name]: providerClass } = ChromeUtils.importESModule(
         providerInfo.module
       );
@@ -279,14 +295,30 @@ export class ProvidersManager {
       let { [symbol]: muxer } = ChromeUtils.importESModule(module);
       this.registerMuxer(muxer);
     }
-    /**
-     * These can be set by tests to increase or reduce the chunk delays.
-     * See _notifyResultsFromProvider for additional details.
-     * To improve dataflow and reduce UI work, when a result is added we may notify
-     * it to the controller after a delay, so that we can chunk results in that
-     * timeframe into a single call. See _notifyResultsFromProvider for details.
-     */
-    this.CHUNK_RESULTS_DELAY_MS = DEFAULT_CHUNK_RESULTS_DELAY_MS;
+  }
+
+  /**
+   * This can be set by tests to increase or reduce the chunk delays.
+   * See _notifyResultsFromProvider for additional details.
+   * To improve dataflow and reduce UI work, when a result is added we may notify
+   * it to the controller after a delay, so that we can chunk results in that
+   * timeframe into a single call. See _notifyResultsFromProvider for details.
+   */
+  static chunkResultsDelayMs = DEFAULT_CHUNK_RESULTS_DELAY_MS;
+
+  /**
+   * Gets a cached ProvidersManager for the given SAP name, or creates a new one.
+   *
+   * @param {string} sapName The SAP name.
+   * @returns {ProvidersManager} The ProvidersManager instance.
+   */
+  static getInstanceForSap(sapName) {
+    let manager = gProvidersManagerPerSap.get(sapName);
+    if (!manager) {
+      manager = new ProvidersManager(sapName);
+      gProvidersManagerPerSap.set(sapName, manager);
+    }
+    return manager;
   }
 
   /**
@@ -445,7 +477,7 @@ export class ProvidersManager {
       queryContext.restrictToken = restrictToken;
       // If the restriction token has an equivalent source, then set it as
       // restrictSource.
-      if (lazy.UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(restrictToken.value)) {
+      if (lazy.UrlbarShared.SEARCH_MODE_RESTRICT.has(restrictToken.value)) {
         queryContext.restrictSource = queryContext.sources[0];
       }
     }
@@ -657,18 +689,6 @@ export class ProvidersManager {
   }
 }
 
-export var UrlbarProvidersManager = new ProvidersManager(
-  localProviderModules.filter(info =>
-    info.supportedInputTypes.includes("urlbar")
-  )
-);
-
-export var SearchbarProvidersManager = new ProvidersManager(
-  localProviderModules.filter(info =>
-    info.supportedInputTypes.includes("searchbar")
-  )
-);
-
 /**
  * Tracks a query status.
  * Multiple queries can potentially be executed at the same time by different
@@ -782,7 +802,8 @@ export class Query {
         (innerProvider, result) => {
           addedResult = true;
           this.add(innerProvider, result);
-        }
+        },
+        this.controller
       );
       if (!addedResult) {
         this.context.deferUserSelectionProviders.delete(provider.name);
@@ -948,9 +969,7 @@ export class Query {
       this._chunkTimer = new lazy.SkippableTimer({
         name: "chunking",
         callback: () => this._notifyResults(),
-        time:
-          this.controller?.manager.CHUNK_RESULTS_DELAY_MS ??
-          DEFAULT_CHUNK_RESULTS_DELAY_MS,
+        time: ProvidersManager.chunkResultsDelayMs,
         logger: provider.logger,
       });
     } else if (
@@ -1017,22 +1036,22 @@ function updateSourcesIfEmpty(context) {
       ? undefined
       : context.tokens.find(t =>
           [
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_URL,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_ACTION,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_HISTORY,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_BOOKMARK,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_TAG,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_OPENPAGE,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_TITLE,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_URL,
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_ACTION,
           ].includes(t.type)
         );
 
   // RESTRICT_TITLE and RESTRICT_URL do not affect query sources.
   let restrictTokenType =
     restrictToken &&
-    restrictToken.type != lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE &&
-    restrictToken.type != lazy.UrlbarTokenizer.TYPE.RESTRICT_URL
+    restrictToken.type != lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_TITLE &&
+    restrictToken.type != lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_URL
       ? restrictToken.type
       : undefined;
 
@@ -1041,8 +1060,9 @@ function updateSourcesIfEmpty(context) {
     switch (source) {
       case lazy.UrlbarUtils.RESULT_SOURCE.BOOKMARKS:
         if (
-          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK ||
-          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG ||
+          restrictTokenType ===
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_BOOKMARK ||
+          restrictTokenType === lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_TAG ||
           (!restrictTokenType && lazy.UrlbarPrefs.get("suggest.bookmark"))
         ) {
           acceptedSources.push(source);
@@ -1050,7 +1070,7 @@ function updateSourcesIfEmpty(context) {
         break;
       case lazy.UrlbarUtils.RESULT_SOURCE.HISTORY:
         if (
-          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY ||
+          restrictTokenType === lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_HISTORY ||
           (!restrictTokenType && lazy.UrlbarPrefs.get("suggest.history"))
         ) {
           acceptedSources.push(source);
@@ -1058,7 +1078,7 @@ function updateSourcesIfEmpty(context) {
         break;
       case lazy.UrlbarUtils.RESULT_SOURCE.SEARCH:
         if (
-          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH ||
+          restrictTokenType === lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH ||
           !restrictTokenType
         ) {
           // We didn't check browser.urlbar.suggest.searches here, because it
@@ -1071,7 +1091,8 @@ function updateSourcesIfEmpty(context) {
         break;
       case lazy.UrlbarUtils.RESULT_SOURCE.TABS:
         if (
-          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE ||
+          restrictTokenType ===
+            lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_OPENPAGE ||
           (!restrictTokenType && lazy.UrlbarPrefs.get("suggest.openpage"))
         ) {
           acceptedSources.push(source);

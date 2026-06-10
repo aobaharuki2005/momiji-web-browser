@@ -1,5 +1,5 @@
-libpng 1.6.53 - December 5, 2025
-================================
+libpng 1.6.58 - April 15, 2026
+==============================
 
 This is a public release of libpng, intended for use in production code.
 
@@ -9,10 +9,10 @@ Files available for download
 
 Source files:
 
- * libpng-1.6.53.tar.xz (LZMA-compressed, recommended)
- * libpng-1.6.53.tar.gz (deflate-compressed)
- * lpng1653.7z (LZMA-compressed)
- * lpng1653.zip (deflate-compressed)
+ * libpng-1.6.58.tar.xz (LZMA-compressed, recommended)
+ * libpng-1.6.58.tar.gz (deflate-compressed)
+ * lpng1658.7z (LZMA-compressed)
+ * lpng1658.zip (deflate-compressed)
 
 Other information:
 
@@ -22,17 +22,16 @@ Other information:
  * TRADEMARK.md
 
 
-Changes from version 1.6.52 to version 1.6.53
+Changes from version 1.6.57 to version 1.6.58
 ---------------------------------------------
 
- * Fixed a build failure on RISC-V RVV caused by a misspelled intrinsic.
-   (Contributed by Alexander Smorkalov.)
- * Fixed a build failure with CMake 4.1 or newer, on Windows, when using
-   Visual C++ without MASM installed.
-   (Reported by Andrew Tribick; fixed by Luis Caro Campos.)
+ * Fixed a regression introduced in version 1.6.56 that caused `png_get_PLTE`
+   to return stale palette data after applying gamma and background transforms
+   in-place.
+   (Reported by ralfjunker <ralfjunker@users.noreply.github.com>.)
 
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net.
 Subscription is required; visit
-https://lists.sourceforge.net/lists/listinfo/png-mng-implement
+<https://lists.sourceforge.net/lists/listinfo/png-mng-implement>
 to subscribe.

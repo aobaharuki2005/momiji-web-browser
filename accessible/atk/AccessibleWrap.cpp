@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,6 +24,7 @@
 #include "Relation.h"
 #include "RootAccessible.h"
 #include "States.h"
+#include "nsIAccessibleAnnouncementEvent.h"
 #include "nsISimpleEnumerator.h"
 
 #include "mozilla/Sprintf.h"
@@ -585,7 +584,7 @@ AtkRole getRoleCB(AtkObject* aAtkObj) {
     break;
 
   switch (acc->Role()) {
-#include "RoleMap.h"
+#include "RoleMap.inc"
     default:
       MOZ_CRASH("Unknown role.");
   }
@@ -758,15 +757,14 @@ static void TranslateStates(uint64_t aState, roles::Role aRole,
 
   // Convert every state to an entry in AtkStateMap
   uint64_t bitMask = 1;
-  for (auto stateIndex = 0U; stateIndex < gAtkStateMapLen; stateIndex++) {
-    if (gAtkStateMap[stateIndex]
-            .atkState) {  // There's potentially an ATK state for this
+  for (auto stateIndex : gAtkStateMap) {
+    if (stateIndex.atkState) {  // There's potentially an ATK state for this
       bool isStateOn = (aState & bitMask) != 0;
-      if (gAtkStateMap[stateIndex].stateMapEntryType == kMapOpposite) {
+      if (stateIndex.stateMapEntryType == kMapOpposite) {
         isStateOn = !isStateOn;
       }
       if (isStateOn) {
-        atk_state_set_add_state(aStateSet, gAtkStateMap[stateIndex].atkState);
+        atk_state_set_add_state(aStateSet, stateIndex.atkState);
       }
     }
     bitMask <<= 1;
@@ -822,7 +820,7 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
 #define RELATIONTYPE(geckoType, geckoTypeName, atkType, msaaType, ia2Type) \
   UpdateAtkRelation(RelationType::geckoType, acc, atkType, relation_set);
 
-#include "RelationTypeMap.h"
+#include "RelationTypeMap.inc"
 
 #undef RELATIONTYPE
 
@@ -1143,6 +1141,24 @@ void MaiAtkObject::FireAtkShowHideEvent(AtkObject* aParent, bool aIsAdded,
 void a11y::PlatformSelectionEvent(Accessible*, Accessible* aWidget, uint32_t) {
   MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aWidget));
   g_signal_emit_by_name(obj, "selection_changed");
+}
+
+// XXX Taken from atkobject.h in ATK 2.57. Updating ATK causes a plethora of
+// build errors which aren't worth fixing for a single enum.
+typedef enum { ATK_LIVE_NONE, ATK_LIVE_POLITE, ATK_LIVE_ASSERTIVE } AtkLive;
+
+void a11y::PlatformAnnouncementEvent(Accessible* aTarget,
+                                     const nsAString& aAnnouncement,
+                                     uint16_t aPriority) {
+  if (!IsAtkVersionAtLeast(2, 50)) {
+    return;
+  }
+  AtkObject* wrapper = GetWrapperFor(aTarget);
+  g_signal_emit_by_name(wrapper, "notification",
+                        NS_ConvertUTF16toUTF8(aAnnouncement).get(),
+                        aPriority == nsIAccessibleAnnouncementEvent::ASSERTIVE
+                            ? ATK_LIVE_ASSERTIVE
+                            : ATK_LIVE_POLITE);
 }
 
 mozilla::StaticAutoPtr<nsCString> sReturnedString;

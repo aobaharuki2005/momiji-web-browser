@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,6 +32,7 @@
 #include "nsHttp.h"
 #include "nsHttpConnection.h"
 #include "nsHttpHandler.h"
+#include "nsHttpConnectionMgr.h"
 #include "nsIRequestContext.h"
 #include "nsISupportsPriority.h"
 #include "nsITLSSocketControl.h"
@@ -642,6 +641,28 @@ void Http2Session::CreateStream(nsAHttpTransaction* aHttpTransaction,
           this, aHttpTransaction));
     DontReuse();
   }
+}
+
+void Http2Session::SwapTransaction(nsAHttpTransaction* aOld,
+                                   nsAHttpTransaction* aNew) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_ASSERT(aOld && aNew);
+  RefPtr<Http2StreamBase> stream = mStreamTransactionHash.Get(aOld);
+  if (!stream) {
+    LOG3(("Http2Session::SwapTransaction %p aOld=%p not in hash", this, aOld));
+    return;
+  }
+  Http2Stream* http2Stream = stream->GetHttp2Stream();
+  if (!http2Stream) {
+    LOG3(("Http2Session::SwapTransaction %p aOld=%p not a plain Http2Stream",
+          this, aOld));
+    return;
+  }
+  LOG3(("Http2Session::SwapTransaction %p aOld=%p -> aNew=%p stream=%p", this,
+        aOld, aNew, stream.get()));
+  http2Stream->SetTransaction(aNew);
+  mStreamTransactionHash.Remove(aOld);
+  mStreamTransactionHash.InsertOrUpdate(aNew, std::move(stream));
 }
 
 Result<already_AddRefed<nsHttpConnection>, nsresult>
@@ -1703,8 +1724,28 @@ nsresult Http2Session::ResponseHeadersComplete() {
   }
 
   // allow more headers in the case of 1xx
-  if (((httpResponseCode / 100) == 1) && didFirstSetAllRecvd) {
-    mInputFrameDataStream->UnsetAllHeadersReceived();
+  if (didFirstSetAllRecvd) {
+    RefPtr<nsAHttpTransaction> trans = mInputFrameDataStream->Transaction();
+    nsHttpTransaction* httpTrans =
+        trans ? trans->QueryHttpTransaction() : nullptr;
+
+    if ((httpResponseCode / 100) == 1) {
+      mInputFrameDataStream->UnsetAllHeadersReceived();
+      if (httpTrans && httpTrans->GetFirstInterimResponseStart().IsNull()) {
+        auto now = TimeStamp::Now();
+        httpTrans->SetFirstInterimResponseStart(now, true);
+        httpTrans->SetResponseStart(now, false);
+      }
+    } else if (httpTrans) {
+      auto now = TimeStamp::Now();
+      httpTrans->SetFinalResponseHeadersStart(now, true);
+      TimeStamp firstInterim = httpTrans->GetFirstInterimResponseStart();
+      if (!firstInterim.IsNull()) {
+        httpTrans->SetResponseStart(firstInterim, false);
+      } else {
+        httpTrans->SetResponseStart(now, false);
+      }
+    }
   }
 
   ChangeDownstreamState(PROCESSING_COMPLETE_HEADERS);
@@ -2163,7 +2204,11 @@ nsresult Http2Session::RecvWindowUpdate(Http2Session* self) {
 
 nsresult Http2Session::RecvContinuation(Http2Session* self) {
   MOZ_ASSERT(self->mInputFrameType == FRAME_TYPE_CONTINUATION);
-  MOZ_ASSERT(self->mInputFrameID);
+  if (!self->mInputFrameID) {  // must be checked before the other assertions
+    LOG3(("Http2Session::RecvContinuation %p stream ID of 0 - PROTOCOL_ERROR\n",
+          self));
+    return self->SessionError(PROTOCOL_ERROR);
+  }
   MOZ_ASSERT(self->mExpectedPushPromiseID || self->mExpectedHeaderID);
   MOZ_ASSERT(!(self->mExpectedPushPromiseID && self->mExpectedHeaderID));
 
@@ -2387,7 +2432,7 @@ nsresult Http2Session::RecvAltSvc(Http2Session* self) {
       LOG3(
           ("Http2Session::RecvAltSvc %p can't reroute non-authoritative origin "
            "%s",
-           self, origin.BeginReading()));
+           self, origin.get()));
       self->ResetDownstreamState();
       return NS_OK;
     }
@@ -3090,9 +3135,8 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
       return NS_ERROR_UNEXPECTED;
     }
 
-    // There is no bounds checking on the error code.. we provide special
-    // handling for a couple of cases and all others (including unknown) are
-    // equivalent to cancel.
+    // There is no bounds checking on the error code. We provide special
+    // handling for a few cases; all others trigger a retry.
     if (mDownstreamRstReason == REFUSED_STREAM_ERROR) {
       streamCleanupCode = NS_ERROR_NET_RESET;  // can retry this 100% safely
       mInputFrameDataStream->ReuseConnectionOnRestartOK(true);
@@ -3102,10 +3146,21 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
       mInputFrameDataStream->DisableSpdy();
       // actually allow restart by unsticking
       mInputFrameDataStream->MakeNonSticky();
-    } else {
+    } else if (mDownstreamRstReason == CANCEL_ERROR ||
+               mDownstreamRstReason == NO_HTTP_ERROR) {
+      // The server cancelled or gracefully closed this stream; do not retry.
       streamCleanupCode = mInputFrameDataStream->RecvdData()
                               ? NS_ERROR_NET_PARTIAL_TRANSFER
                               : NS_ERROR_NET_INTERRUPT;
+    } else {
+      // Unrecognized RST_STREAM error code. Use NS_ERROR_NET_RESET so the
+      // transaction restart path retries the request.
+      if (mInputFrameDataStream->RecvdData()) {
+        streamCleanupCode = NS_ERROR_NET_PARTIAL_TRANSFER;
+      } else {
+        streamCleanupCode = NS_ERROR_NET_RESET;
+        mInputFrameDataStream->ReuseConnectionOnRestartOK(true);
+      }
     }
 
     if (mDownstreamRstReason == COMPRESSION_ERROR) {

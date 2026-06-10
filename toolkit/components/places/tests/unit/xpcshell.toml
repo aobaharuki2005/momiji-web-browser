@@ -83,6 +83,11 @@ run-if = [
   "buildapp == 'browser'",
 ]
 
+["test_PlacesSemanticHistoryModelSwitch.js"]
+run-if = [
+  "buildapp == 'browser'",
+]
+
 ["test_PlacesUtils_isRootItem.js"]
 
 ["test_PlacesUtils_unwrapNodes.js"]

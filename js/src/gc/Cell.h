@@ -1,18 +1,16 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef gc_Cell_h
 #define gc_Cell_h
 
-#include "mozilla/EndianUtils.h"
-
+#include <bit>
 #include <type_traits>
 
 #include "gc/GCContext.h"
 #include "gc/Heap.h"
+#include "gc/LightLock.h"
 #include "gc/TraceKind.h"
 #include "js/GCAnnotations.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone
@@ -41,6 +39,11 @@ extern void TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc,
                                                      gc::Cell** thingp,
                                                      const char* name);
 
+#ifdef MOZ_TSAN
+extern void TSANMemoryAcquireFence(JSRuntime* runtime);
+extern void TSANMemoryReleaseFence(JSRuntime* runtime);
+#endif
+
 namespace gc {
 
 enum class AllocKind : uint8_t;
@@ -50,6 +53,9 @@ class TenuredCell;
 
 extern void PerformIncrementalReadBarrier(TenuredCell* cell);
 extern void PerformIncrementalPreWriteBarrier(TenuredCell* cell);
+#ifdef ENABLE_WASM_JSPI
+extern void PerformIncrementalPreWriteBarrierAllChildren(JSObject* cell);
+#endif
 extern void PerformIncrementalBarrierDuringFlattening(JSString* str);
 extern void UnmarkGrayGCThingRecursively(TenuredCell* cell);
 
@@ -141,7 +147,8 @@ class HeaderWord {
 // During moving GC operation a Cell may be marked as forwarded. This indicates
 // that a gc::RelocationOverlay is currently stored in the Cell's memory and
 // should be used to find the new location of the Cell.
-struct Cell {
+class Cell {
+ protected:
   // Cell header word. Stores GC flags and derived class data.
   HeaderWord header_;
 
@@ -210,6 +217,13 @@ struct Cell {
   inline JS::Zone* nurseryZone() const;
   inline JS::Zone* nurseryZoneFromAnyThread() const;
 
+  MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
+    return JS::shadow::Zone::from(zone());
+  }
+  MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
+    return JS::shadow::Zone::from(zoneFromAnyThread());
+  }
+
   inline ChunkBase* chunk() const;
 
   // Default implementation for kinds that cannot be permanent. This may be
@@ -264,13 +278,6 @@ class TenuredCell : public Cell {
   inline JS::Zone* zone() const;
   inline JS::Zone* zoneFromAnyThread() const;
   inline bool isInsideZone(JS::Zone* zone) const;
-
-  MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
-    return JS::shadow::Zone::from(zone());
-  }
-  MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
-    return JS::shadow::Zone::from(zoneFromAnyThread());
-  }
 
   template <typename T, typename = std::enable_if_t<JS::IsBaseTraceType_v<T>>>
   inline bool is() const {
@@ -407,7 +414,7 @@ inline JS::TraceKind Cell::getTraceKind() const {
 }
 
 /* static */ MOZ_ALWAYS_INLINE bool Cell::needPreWriteBarrier(JS::Zone* zone) {
-  return JS::shadow::Zone::from(zone)->needsIncrementalBarrier();
+  return JS::shadow::Zone::from(zone)->needsMarkingBarrier();
 }
 
 MOZ_ALWAYS_INLINE bool TenuredCell::isMarkedAny() const {
@@ -465,7 +472,7 @@ JS::Zone* TenuredCell::zone() const {
   return zone;
 }
 
-JS::Zone* TenuredCell::zoneFromAnyThread() const { return arena()->zone(); }
+JS::Zone* TenuredCell::zoneFromAnyThread() const { return chunk()->info.zone; }
 
 bool TenuredCell::isInsideZone(JS::Zone* zone) const {
   return zone == zoneFromAnyThread();
@@ -489,7 +496,7 @@ MOZ_ALWAYS_INLINE void ReadBarrierImpl(TenuredCell* thing) {
   MOZ_ASSERT(thing);
 
   JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
-  if (shadowZone->needsIncrementalBarrier()) {
+  if (shadowZone->needsMarkingBarrier()) {
     PerformIncrementalReadBarrier(thing);
     return;
   }
@@ -529,7 +536,7 @@ MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(TenuredCell* thing) {
   // AutoDisableBarriers.
 
   JS::shadow::Zone* zone = thing->shadowZoneFromAnyThread();
-  if (zone->needsIncrementalBarrier()) {
+  if (zone->needsMarkingBarrier()) {
     PerformIncrementalPreWriteBarrier(thing);
   }
 }
@@ -563,7 +570,7 @@ MOZ_ALWAYS_INLINE void PreWriteBarrier(JS::Zone* zone, T* data,
   MOZ_ASSERT(!CurrentThreadIsGCMarking());
 
   auto* shadowZone = JS::shadow::Zone::from(zone);
-  if (!shadowZone->needsIncrementalBarrier()) {
+  if (!shadowZone->needsMarkingBarrier()) {
     return;
   }
 
@@ -579,6 +586,44 @@ template <typename T>
 MOZ_ALWAYS_INLINE void PreWriteBarrier(JS::Zone* zone, T* data) {
   MOZ_ASSERT(data);
   PreWriteBarrier(zone, data, [](JSTracer* trc, T* data) { data->trace(trc); });
+}
+
+MOZ_ALWAYS_INLINE void MemoryReleaseFence(JS::Zone* zone) {
+#ifdef JS_GC_CONCURRENT_MARKING
+  MOZ_ASSERT(!CurrentThreadIsIonCompiling());
+  MOZ_ASSERT(!CurrentThreadIsGCMarking());
+
+  if (JS::shadow::Zone::from(zone)->needsMarkingBarrier(
+          JS::shadow::Zone::Concurrent)) {
+    std::atomic_thread_fence(std::memory_order_release);
+#  ifdef MOZ_TSAN
+    JSRuntime* runtime = JS::shadow::Zone::from(zone)->runtimeFromMainThread();
+    TSANMemoryReleaseFence(runtime);
+#  endif
+  }
+#endif
+}
+
+template <typename T>
+MOZ_ALWAYS_INLINE void MemoryReleaseFence(T* thing) {
+#ifdef JS_GC_CONCURRENT_MARKING
+  static_assert(std::is_base_of_v<Cell, T>);
+
+  MOZ_ASSERT(!CurrentThreadIsIonCompiling());
+  MOZ_ASSERT(!CurrentThreadIsGCMarking());
+
+  // todo: may not be worth doing isPermanentAndMayBeShared check.
+  // todo: may or may not have concrete type
+  if (!thing) {
+    return;
+  }
+
+  // todo: Ideally this would be zone() but stencil writes into objects
+  // off-thread during under PrivateScriptData::InitFromStencil.
+  JS::Zone* zone = thing->zoneFromAnyThread();
+
+  MemoryReleaseFence(zone);
+#endif
 }
 
 #ifdef DEBUG
@@ -669,28 +714,28 @@ class alignas(gc::CellAlignBytes) CellWithLengthAndFlags : public Cell {
 
   // Offsets for direct field from jit code. A number of places directly
   // access 32-bit length and flags fields so do endian trickery here.
+  static constexpr size_t offsetOfHeaderFlags() {
 #if JS_BITS_PER_WORD == 32
-  static constexpr size_t offsetOfHeaderFlags() {
     return offsetof(CellWithLengthAndFlags, header_);
-  }
-  static constexpr size_t offsetOfHeaderLength() {
-    return offsetof(CellWithLengthAndFlags, length_);
-  }
-#elif MOZ_LITTLE_ENDIAN()
-  static constexpr size_t offsetOfHeaderFlags() {
-    return offsetof(CellWithLengthAndFlags, header_);
-  }
-  static constexpr size_t offsetOfHeaderLength() {
-    return offsetof(CellWithLengthAndFlags, header_) + sizeof(uint32_t);
-  }
 #else
-  static constexpr size_t offsetOfHeaderFlags() {
-    return offsetof(CellWithLengthAndFlags, header_) + sizeof(uint32_t);
+    if constexpr (std::endian::native == std::endian::little) {
+      return offsetof(CellWithLengthAndFlags, header_);
+    } else {
+      return offsetof(CellWithLengthAndFlags, header_) + sizeof(uint32_t);
+    }
+#endif
   }
   static constexpr size_t offsetOfHeaderLength() {
-    return offsetof(CellWithLengthAndFlags, header_);
-  }
+#if JS_BITS_PER_WORD == 32
+    return offsetof(CellWithLengthAndFlags, length_);
+#else
+    if constexpr (std::endian::native == std::endian::little) {
+      return offsetof(CellWithLengthAndFlags, header_) + sizeof(uint32_t);
+    } else {
+      return offsetof(CellWithLengthAndFlags, header_);
+    }
 #endif
+  }
 };
 
 // Base class for non-nursery-allocatable GC things that allows storing a non-GC
@@ -893,6 +938,52 @@ template <>
 inline bool TenuredThingIsMarkedAny<Cell>(Cell* thing) {
   return thing->asTenured().isMarkedAny();
 }
+
+using MarkingLock = LightLock;
+
+// A lock used to synchronize access to some data structures during concurrent
+// marking. This is only intended for use where lock-free approaches are
+// infeasible.
+//
+// Currently this is used for ICScript only. The lock must be taken when
+// mutating data structures owned by ICScript on the main thread. Reading is
+// safe and doesn't require the lock.
+//
+// This is a no op outside concurrent marking builds.
+class MOZ_RAII AutoMarkingLock {
+#ifdef JS_GC_CONCURRENT_MARKING
+  MarkingLock* lock = nullptr;
+  JSRuntime* runtime = nullptr;
+#endif
+
+  AutoMarkingLock(const AutoMarkingLock& other) = delete;
+  AutoMarkingLock& operator=(const AutoMarkingLock& other) = delete;
+
+ public:
+  // Take the lock if concurrent marking is currently happening in zone |zone|.
+  AutoMarkingLock(JS::Zone* zone, MarkingLock& markingLock) {
+#ifdef JS_GC_CONCURRENT_MARKING
+    auto* shadowZone = JS::shadow::Zone::from(zone);
+    if (shadowZone->needsMarkingBarrier(JS::shadow::Zone::Concurrent)) {
+      lock = &markingLock;
+      runtime = shadowZone->runtimeFromAnyThread();
+      lock->lock(runtime);
+    }
+#endif
+  }
+
+  // Take the lock if |trc| is a concurrent marking tracer.
+  inline AutoMarkingLock(JSTracer* trc, MarkingLock& markingLock);
+
+  ~AutoMarkingLock() {
+#ifdef JS_GC_CONCURRENT_MARKING
+    if (lock) {
+      MOZ_ASSERT(runtime);
+      lock->unlock(runtime);
+    }
+#endif
+  }
+};
 
 } /* namespace gc */
 } /* namespace js */

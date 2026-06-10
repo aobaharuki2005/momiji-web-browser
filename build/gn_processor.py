@@ -37,8 +37,8 @@ class MozbuildWriter:
         self.indent = ""
         self._indent_increment = 4
 
-        # We need to correlate a small amount of state here to figure out
-        # which library template to use ("Library()" or "SharedLibrary()")
+        # We need to correlate a small amount of state here to figure out which
+        # library template to use ("Library()" or "GeckoSharedLibrary()")
         self._library_name = None
         self._shared_library = None
 
@@ -52,13 +52,15 @@ class MozbuildWriter:
             return raw.replace("\n", "\n" + self.indent)
         if isinstance(v, bool):
             return repr(v)
-        return f'"{v}"'
+        return json.dumps(v)
 
     def finalize(self):
         if self._library_name:
             self.write("\n")
             if self._shared_library:
-                self.write_ln(f"SharedLibrary({self.mb_serialize(self._library_name)})")
+                self.write_ln(
+                    f"GeckoSharedLibrary({self.mb_serialize(self._library_name)})"
+                )
             else:
                 self.write_ln(f"Library({self.mb_serialize(self._library_name)})")
 
@@ -159,6 +161,22 @@ class MozbuildWriter:
         self.indent = self.indent[self._indent_increment :]
 
 
+def select_gn_target(gn_target_config, target_os):
+    if isinstance(gn_target_config, str):
+        return gn_target_config
+
+    if target_os in gn_target_config:
+        return gn_target_config[target_os]
+
+    if "*" in gn_target_config:
+        return gn_target_config["*"]
+
+    raise Exception(
+        f'No gn_target configured for target_os="{target_os}". '
+        'Expected a string or a dict containing "*" and target_os overrides.'
+    )
+
+
 def find_deps(all_targets, target):
     all_deps = set()
     queue = deque([target])
@@ -224,6 +242,14 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
                         mozpath.relpath(d, path) for d in spec[spec_attr]
                     ]
             gn_out["targets"][target_fullname] = spec
+            continue
+
+        if raw_spec["type"] == "group":
+            gn_out["targets"][target_fullname] = {
+                "type": "group",
+                "deps": raw_spec.get("deps", []),
+            }
+            continue
 
         # TODO: 'executable' will need to be handled here at some point as well.
         if raw_spec["type"] not in ("static_library", "shared_library", "source_set"):
@@ -242,6 +268,7 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
             "cflags_objcc",
             "deps",
             "libs",
+            "output_name",
         ):
             spec[spec_attr] = raw_spec.get(spec_attr, [])
             if spec_attr == "defines":
@@ -288,11 +315,47 @@ def process_gn_config(
     non_unified_sources = set([mozpath.normpath(s) for s in non_unified_sources])
 
     def target_info(fullname):
-        path, name = target_fullname.split(":")
+        path, name = fullname.split(":")
         # Stripping '//' gives us a path relative to the project root,
         # adding a suffix avoids name collisions with libraries already
         # in the tree (like "webrtc").
         return path.lstrip("//"), name + "_gn"
+
+    def get_lib_name(target_name):
+        if target_name.startswith("lib"):
+            return target_name[3:]
+        return target_name
+
+    # Return list of library dependencies for a target, recursing through any group's dependencies.
+    def find_lib_deps(fullname):
+        libs = []
+        seen_targets = set()
+
+        def visit(dep):
+            if dep in seen_targets:
+                return
+            seen_targets.add(dep)
+
+            dep_spec = targets.get(dep)
+            if not dep_spec:
+                return
+
+            dep_type = dep_spec["type"]
+
+            if dep_type in ("static_library", "shared_library", "source_set"):
+                _, name = target_info(dep)
+                libs.append(get_lib_name(name))
+                return
+
+            if dep_type == "group":
+                for child in dep_spec.get("deps", []):
+                    visit(child)
+
+        spec = targets[fullname]
+        for dep in spec.get("deps", []):
+            visit(dep)
+
+        return libs
 
     def resolve_path(path):
         # GN will have resolved all these paths relative to the root of the
@@ -308,13 +371,13 @@ def process_gn_config(
         target_path, target_name = target_info(target_fullname)
         context_attrs = {}
 
-        # Remove leading 'lib' from the target_name if any, and use as
-        # library name.
-        name = target_name
         if spec["type"] in ("static_library", "shared_library", "source_set", "action"):
-            if name.startswith("lib"):
-                name = name[3:]
-            context_attrs["LIBRARY_NAME"] = str(name)
+            # Remove leading 'lib' from the target_name if any, and use as
+            # library name.
+            context_attrs["LIBRARY_NAME"] = get_lib_name(target_name)
+        elif spec["type"] == "group":
+            # groups are only used to propagate deps, so should be skipped here.
+            continue
         else:
             raise Exception(
                 "The following GN target type is not currently "
@@ -325,6 +388,20 @@ def process_gn_config(
 
         if spec["type"] == "shared_library":
             context_attrs["FORCE_SHARED_LIB"] = True
+
+            # Target names are suffixed with "_gn" to avoid collisions, and the
+            # target name by default gets used as the library name. For shared
+            # libraries we should instead use the `output_name` derived from GN
+            # so that consumers can load the expected library names.
+            output_name = spec.get("output_name")
+            if output_name:
+                # `output_name` may already be prefixed with "lib". Mozbuild,
+                # however, will add a "lib" prefix to `SHARED_LIBRARY_NAME` on
+                # non-Windows platforms. Remove the prefix here to avoid a
+                # resulting "liblibX" library name.
+                if gn_config["mozbuild_args"]["OS_TARGET"] != "WINNT":
+                    output_name = get_lib_name(output_name)
+                context_attrs["SHARED_LIBRARY_NAME"] = output_name
 
         if spec["type"] == "action" and "script" in spec:
             flags = [
@@ -347,10 +424,12 @@ def process_gn_config(
             ext = mozpath.splitext(f)[-1]
             extensions.add(ext)
             src = f"{project_relsrcdir}/{f}"
-            if ext in {".h", ".inc"}:
+            if ext in {".h", ".hpp", ".inc"}:
                 continue
             elif ext == ".def":
-                context_attrs["SYMBOLS_FILE"] = src
+                context_attrs["DEFFILE"] = f"/{src}"
+            elif ext == ".rc":
+                context_attrs["RCFILE"] = f"/{src}"
             elif ext != ".S" and src not in non_unified_sources:
                 unified_sources.append(f"/{src}")
             else:
@@ -414,6 +493,9 @@ def process_gn_config(
                     context_attrs.setdefault(var, []).append(f)
                 else:
                     context_attrs.setdefault(var, []).extend(f)
+
+        if "FINAL_LIBRARY" not in sandbox_vars:
+            context_attrs["USE_LIBS"] = find_lib_deps(target_fullname)
 
         context_attrs["OS_LIBS"] = []
         for lib in spec.get("libs", []):
@@ -584,6 +666,11 @@ def write_mozbuild(topsrcdir, write_mozbuild_variables, relsrcdir, configs):
                 mb.write('    CXXFLAGS += CONFIG["MOZ_SYSTEM_LIBAOM_CFLAGS"]\n')
         except KeyError:
             pass
+        try:
+            if relsrcdir in write_mozbuild_variables["INCLUDE_GECKO_ZLIB_HANDLING"]:
+                mb.write('USE_LIBS += [ "zlib" ]\n')
+        except KeyError:
+            pass
 
         all_args = [args for args, _ in configs]
 
@@ -666,6 +753,7 @@ def write_mozbuild_files(
         for attrs in (
             (),
             ("OS_TARGET",),
+            ("OS_TARGET", "MOZ_DEBUG"),
             ("OS_TARGET", "TARGET_CPU"),
             ("OS_TARGET", "TARGET_CPU", "MOZ_X11"),
         ):
@@ -709,7 +797,7 @@ def generate_gn_config(
     gn_binary,
     input_variables,
     sandbox_variables,
-    gn_target,
+    gn_target_config,
     moz_build_flag,
     non_unified_sources,
     mozilla_flags,
@@ -722,6 +810,7 @@ def generate_gn_config(
 
     build_root_dir = topsrcdir / build_root_dir
     srcdir = build_root_dir / target_dir
+    gn_target = select_gn_target(gn_target_config, input_variables["target_os"])
 
     input_variables = input_variables.copy()
     input_variables.update({
@@ -821,6 +910,11 @@ def main():
                     "target_cpu": target_cpu,
                     "target_os": target_os,
                 }
+
+                config_args = config.get("gn_args", {})
+                vars.update(config_args.get("*", {}))
+                vars.update(config_args.get(target_os, {}))
+
                 if target_os == "linux":
                     for enable_x11 in (True, False):
                         vars["ozone_platform_x11"] = enable_x11

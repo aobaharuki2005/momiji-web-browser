@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = Çerca
     .aria-label = Çerca
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Azonzi motô de riçerca
 newtab-topsites-edit-topsites-header = Cangia scito prinçipâ
@@ -178,6 +178,15 @@ newtab-error-fallback-refresh-link = Agiorna pagina pe provâ torna.
 ## Customization Menu
 
 newtab-custom-shortcuts-title = Scorsaieu
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } riga
+           *[other] { $num } righe
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =

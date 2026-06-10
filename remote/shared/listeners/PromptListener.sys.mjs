@@ -85,9 +85,12 @@ export class PromptListener {
    * Handles `DOMModalDialogClosed` events.
    */
   handleEvent(event) {
-    const chromeWin = event.target.opener
-      ? event.target.opener.ownerGlobal
-      : event.target.ownerGlobal;
+    const chromeWin = (() => {
+      if (ChromeUtils.getClassName(event.target) === "Window") {
+        return event.target.opener || event.target;
+      }
+      return event.target.documentGlobal;
+    })();
     const curBrowser = this.#curBrowserFn && this.#curBrowserFn();
 
     // For Marionette (WebDriver classic) we only care about events which come
@@ -136,7 +139,7 @@ export class PromptListener {
    * `domwindowopened` - when a new chrome window opened,
    * `geckoview-prompt-show` - when a modal dialog opened on Android.
    */
-  observe(subject, topic) {
+  async observe(subject, topic) {
     let curBrowser = this.#curBrowserFn && this.#curBrowserFn();
     switch (topic) {
       case "common-dialog-loaded": {
@@ -156,11 +159,14 @@ export class PromptListener {
           curBrowser = { contentBrowser: browsingContext.embedderElement };
         }
 
-        this.emit("opened", {
-          browsingContext,
-          contentBrowser: curBrowser.contentBrowser,
-          prompt: new lazy.modal.Dialog(subject),
-        });
+        this.emit(
+          "opened",
+          await this.#getOpenedEventDetail(
+            browsingContext,
+            curBrowser.contentBrowser,
+            subject
+          )
+        );
 
         break;
       }
@@ -189,10 +195,14 @@ export class PromptListener {
               continue;
             }
 
-            this.emit("opened", {
-              contentBrowser,
-              prompt: new lazy.modal.Dialog(prompt),
-            });
+            this.emit(
+              "opened",
+              await this.#getOpenedEventDetail(
+                subjectObject.owningBrowsingContext,
+                contentBrowser,
+                prompt
+              )
+            );
             return;
           }
         }
@@ -219,6 +229,23 @@ export class PromptListener {
     this.#listening = false;
   }
 
+  async #getOpenedEventDetail(browsingContext, contentBrowser, dialog) {
+    const prompt = new lazy.modal.Dialog(dialog);
+
+    return {
+      browsingContext,
+      contentBrowser,
+      prompt,
+      // Resolve prompt details here to avoid sending an open event
+      // with the data that is resolved after a prompt is handled.
+      promptDetails: {
+        defaultValue:
+          prompt.promptType === "prompt" ? await prompt.getInputText() : null,
+        message: await prompt.getText(),
+      },
+    };
+  }
+
   #hasCommonDialog(contentBrowser, window, prompt) {
     const modalType = prompt.Dialog.args.modalType;
     if (
@@ -232,7 +259,7 @@ export class PromptListener {
       return container.contains(prompt.docShell.chromeEventHandler);
     }
 
-    return prompt.ownerGlobal == window || prompt.opener?.ownerGlobal == window;
+    return prompt == window || prompt.opener == window;
   }
 
   #register() {

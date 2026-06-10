@@ -26,8 +26,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.sys.mjs",
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
+  setEnterpriseGuards: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
 });
@@ -46,7 +48,7 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
     prefix: "Policies",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
     // messages during development. See LOG_LEVELS in Console.sys.mjs for details.
-    maxLogLevel: "error",
+    maxLogLevel: "warn",
     maxLogLevelPref: PREF_LOGLEVEL,
   });
 });
@@ -107,6 +109,63 @@ export var Policies = {
   "3rdparty": {
     onBeforeAddons(manager, param) {
       manager.setExtensionPolicies(param.Extensions);
+    },
+  },
+
+  AIControls: {
+    onBeforeAddons(manager, param) {
+      const features = [
+        [
+          "SidebarChatbot",
+          ["browser.ml.chat.enabled", "browser.ml.chat.page"],
+          "browser.ai.control.sidebarChatbot",
+        ],
+        [
+          "Translations",
+          ["browser.translations.enable"],
+          "browser.ai.control.translations",
+        ],
+        [
+          "PDFAltText",
+          ["pdfjs.enableAltText"],
+          "browser.ai.control.pdfjsAltText",
+        ],
+        [
+          "LinkPreviewKeyPoints",
+          ["browser.ml.linkPreview.enabled"],
+          "browser.ai.control.linkPreviewKeyPoints",
+        ],
+        [
+          "SmartTabGroups",
+          ["browser.tabs.groups.smart.userEnabled"],
+          "browser.ai.control.smartTabGroups",
+        ],
+        ["SmartWindow", [], "browser.ai.control.smartWindow"],
+      ];
+
+      const defaultItem = param.Default;
+      const defaultLocked = defaultItem?.Locked ?? false;
+
+      for (const [key, prefs, aiControlPref] of features) {
+        let item = param[key] ?? defaultItem;
+        if (!item) {
+          continue;
+        }
+        let value = item.Value;
+        let locked = item.Locked ?? defaultLocked;
+        PoliciesUtils.setDefaultPref(aiControlPref, value, locked);
+        for (const pref of prefs) {
+          PoliciesUtils.setDefaultPref(pref, value === "available", locked);
+        }
+      }
+
+      if (defaultItem) {
+        PoliciesUtils.setDefaultPref(
+          "browser.ai.control.default",
+          defaultItem.Value,
+          defaultLocked
+        );
+      }
     },
   },
 
@@ -783,7 +842,8 @@ export var Policies = {
           "limit-foreign": Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,
           "reject-tracker": Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
           "reject-tracker-and-partition-foreign":
-            Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+            Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
+          "partition-foreign": Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN,
         };
         if ("Behavior" in param) {
           newCookieBehavior = behaviors[param.Behavior];
@@ -840,6 +900,29 @@ export var Policies = {
     },
   },
 
+  DefaultSerialGuardSetting: {
+    onBeforeAddons(manager, param) {
+      if (!Number.isInteger(param)) {
+        lazy.log.error(
+          `Non-integer value for DefaultSerialGuardSetting: ${param}`
+        );
+        return;
+      }
+      if (param == 3) {
+        // allow access to serial ports, but don't lock the
+        // pref so it can be manually disabled
+        PoliciesUtils.setDefaultPref("dom.webserial.enabled", true, false);
+      } else if (param == 2) {
+        // do not allow access to serial ports
+        setAndLockPref("dom.webserial.enabled", false);
+      } else {
+        lazy.log.error(
+          `Unrecognized value for DefaultSerialGuardSetting: ${param}`
+        );
+      }
+    },
+  },
+
   DisableAccounts: {
     onBeforeAddons(manager, param) {
       if (param) {
@@ -868,14 +951,25 @@ export var Policies = {
         // don't do anything.
         return;
       }
+      if (!param) {
+        // Ensure PDF.js is not blocked by the pref (no UI exists for this pref).
+        Services.prefs.clearUserPref("pdfjs.disabled");
+        // Only set handleInternally once per policy value; don't override the
+        // user's handler choice on every subsequent startup.
+        runOncePerModification("disableBuiltinPDFViewer", "false", () => {
+          let pdfMIMEInfo = lazy.gMIMEService.getFromTypeAndExtension(
+            "application/pdf",
+            "pdf"
+          );
+          processMIMEInfo({ action: "handleInternally" }, pdfMIMEInfo);
+        });
+        return;
+      }
       let pdfMIMEInfo = lazy.gMIMEService.getFromTypeAndExtension(
         "application/pdf",
         "pdf"
       );
-      let mimeInfo = {
-        action: param ? "useSystemDefault" : "handleInternally",
-      };
-      processMIMEInfo(mimeInfo, pdfMIMEInfo);
+      processMIMEInfo({ action: "useSystemDefault" }, pdfMIMEInfo);
     },
   },
 
@@ -1055,6 +1149,22 @@ export var Policies = {
       if (param) {
         manager.disallowFeature("profileRefresh");
         setAndLockPref("browser.disableResetPrompt", true);
+      }
+    },
+  },
+
+  DisableRemoteImprovements: {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("NimbusRollouts");
+      }
+    },
+  },
+
+  DisableRemoteSettingsAndAcceptSecurityConsequences: {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("remoteSettings");
       }
     },
   },
@@ -1313,13 +1423,6 @@ export var Policies = {
           param.Locked
         );
       }
-      if ("HarmfulAddon" in param) {
-        PoliciesUtils.setDefaultPref(
-          "privacy.trackingprotection.harmfuladdon.enabled",
-          param.HarmfulAddon,
-          param.Locked
-        );
-      }
       if ("Fingerprinting" in param) {
         PoliciesUtils.setDefaultPref(
           "privacy.trackingprotection.fingerprinting.enabled",
@@ -1440,6 +1543,14 @@ export var Policies = {
       } catch (e) {
         lazy.log.error("Invalid ExtensionSettings");
       }
+      try {
+        applyExtensionGuards(param);
+      } catch (e) {
+        lazy.log.error(
+          `Invalid runtime_blocked_hosts/runtime_allowed_hosts in ` +
+            `ExtensionSettings: ${e.message}`
+        );
+      }
     },
     async onBeforeUIStartup(manager, param) {
       let extensionSettings = param;
@@ -1523,7 +1634,8 @@ export var Policies = {
           }
         }
       }
-      if (blockAllExtensions) {
+      let allowedTypes = extensionSettings["*"]?.allowed_types;
+      if (blockAllExtensions || allowedTypes) {
         for (let addon of addons) {
           if (
             addon.isSystem ||
@@ -1532,7 +1644,10 @@ export var Policies = {
           ) {
             continue;
           }
-          if (!allowedExtensions.includes(addon.id)) {
+          if (
+            !allowedExtensions.includes(addon.id) &&
+            (blockAllExtensions || !allowedTypes.includes(addon.type))
+          ) {
             try {
               // Can't use the addon from getActiveAddons since it doesn't have uninstall.
               let addonToUninstall = await lazy.AddonManager.getAddonByID(
@@ -1565,6 +1680,13 @@ export var Policies = {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.showSearch",
           param.Search,
+          param.Locked
+        );
+      }
+      if ("Weather" in param) {
+        PoliciesUtils.setDefaultPref(
+          "browser.newtabpage.activity-stream.showWeather",
+          param.Weather,
           param.Locked
         );
       }
@@ -1662,20 +1784,48 @@ export var Policies = {
 
   GenerativeAI: {
     onBeforeAddons(manager, param) {
+      let policies = Services.policies.getActivePolicies();
+      if (policies.AIControls) {
+        lazy.log.warn("Ignoring GenerativeAI policy in favor of AIControls");
+        return;
+      }
+
       const defaultValue = "Enabled" in param ? param.Enabled : undefined;
 
       const features = [
-        ["Chatbot", ["browser.ml.chat.enabled", "browser.ml.chat.page"]],
-        ["LinkPreviews", ["browser.ml.linkPreview.optin"]],
-        ["TabGroups", ["browser.tabs.groups.smart.userEnabled"]],
+        [
+          "Chatbot",
+          ["browser.ml.chat.enabled", "browser.ml.chat.page"],
+          "browser.ai.control.sidebarChatbot",
+        ],
+        [
+          "LinkPreviews",
+          ["browser.ml.linkPreview.optin"],
+          "browser.ai.control.linkPreviewKeyPoints",
+        ],
+        [
+          "SmartWindow",
+          ["browser.smartwindow.enabled"],
+          "browser.ai.control.smartWindow",
+        ],
+        [
+          "TabGroups",
+          ["browser.tabs.groups.smart.userEnabled"],
+          "browser.ai.control.smartTabGroups",
+        ],
       ];
 
-      for (const [key, prefs] of features) {
+      for (const [key, prefs, aiControlPref] of features) {
         const value = key in param ? param[key] : defaultValue;
         if (value !== undefined) {
           for (const pref of prefs) {
             PoliciesUtils.setDefaultPref(pref, value, param.Locked);
           }
+          PoliciesUtils.setDefaultPref(
+            aiControlPref,
+            value ? "enabled" : "blocked",
+            param.Locked
+          );
         }
       }
     },
@@ -1839,6 +1989,14 @@ export var Policies = {
           );
           manager.disallowFeature("xpinstall");
         }
+      }
+    },
+  },
+
+  IPProtectionAvailable: {
+    onBeforeAddons(manager, param) {
+      if (!param) {
+        setAndLockPref("browser.ipProtection.enabled", false);
       }
     },
   },
@@ -2153,9 +2311,17 @@ export var Policies = {
           blockValue = false;
         }
         setAndLockPref("dom.disable_open_during_load", blockValue);
+        setAndLockPref(
+          "dom.security.framebusting_intervention.enabled",
+          blockValue
+        );
       } else if (param.Default !== undefined) {
         PoliciesUtils.setDefaultPref(
           "dom.disable_open_during_load",
+          !!param.Default
+        );
+        PoliciesUtils.setDefaultPref(
+          "dom.security.framebusting_intervention.enabled",
           !!param.Default
         );
       }
@@ -2178,6 +2344,7 @@ export var Policies = {
         "app.update.",
         "browser.",
         "datareporting.policy.",
+        "devtools.",
         "dom.",
         "extensions.",
         "general.autoScroll",
@@ -2201,6 +2368,7 @@ export var Policies = {
         "privacy.globalprivacycontrol.enabled",
         "privacy.userContext.enabled",
         "privacy.userContext.ui.enabled",
+        "sidebar.",
         "signon.",
         "spellchecker.",
         "svg.context-properties.content.enabled",
@@ -2395,6 +2563,39 @@ export var Policies = {
       lazy.ProxyPolicies.configureProxySettings(
         param,
         PoliciesUtils.setDefaultPref
+      );
+    },
+  },
+
+  RelaunchRequired: {
+    onBeforeUIStartup(_manager, param) {
+      let notificationPeriodHours = 24;
+      let restartTimeOfDay = { Hour: 12, Minute: 0 };
+      if (
+        typeof param.NotificationPeriodHours === "number" &&
+        param.NotificationPeriodHours >= 0
+      ) {
+        notificationPeriodHours = param.NotificationPeriodHours;
+      }
+      if (typeof param.RestartTimeOfDay === "object") {
+        try {
+          const timeOfDay = Temporal.PlainTime.from({
+            hour: param.RestartTimeOfDay.Hour,
+            minute: param.RestartTimeOfDay.Minute,
+          });
+          // Looks like it's a valid time.
+          restartTimeOfDay.Hour = timeOfDay.hour;
+          restartTimeOfDay.Minute = timeOfDay.minute;
+        } catch (ex) {
+          lazy.log.error("Incorrect format for RestartTimeOfDay");
+        }
+      }
+      setAndLockPref(
+        "app.update.compulsory_restart",
+        JSON.stringify({
+          NotificationPeriodHours: notificationPeriodHours,
+          RestartTimeOfDay: restartTimeOfDay,
+        })
       );
     },
   },
@@ -2630,7 +2831,7 @@ export var Policies = {
       }
     },
     onAllWindowsRestored(manager, param) {
-      Services.search.init().then(async () => {
+      lazy.SearchService.init().then(async () => {
         // Adding of engines is handled by the SearchService in the init().
         // Remove can happen after those are added - no engines are allowed
         // to replace the application provided engines, even if they have been
@@ -2642,12 +2843,12 @@ export var Policies = {
             JSON.stringify(param.Remove),
             async function () {
               for (let engineName of param.Remove) {
-                let engine = Services.search.getEngineByName(engineName);
+                let engine = lazy.SearchService.getEngineByName(engineName);
                 if (engine) {
                   try {
-                    await Services.search.removeEngine(
+                    await lazy.SearchService.removeEngine(
                       engine,
-                      Ci.nsISearchService.CHANGE_REASON_ENTERPRISE
+                      lazy.SearchService.CHANGE_REASON.ENTERPRISE
                     );
                   } catch (ex) {
                     lazy.log.error("Unable to remove the search engine", ex);
@@ -2664,7 +2865,9 @@ export var Policies = {
             async () => {
               let defaultEngine;
               try {
-                defaultEngine = Services.search.getEngineByName(param.Default);
+                defaultEngine = lazy.SearchService.getEngineByName(
+                  param.Default
+                );
                 if (!defaultEngine) {
                   throw new Error("No engine by that name could be found");
                 }
@@ -2678,9 +2881,9 @@ export var Policies = {
               }
               if (defaultEngine) {
                 try {
-                  await Services.search.setDefault(
+                  await lazy.SearchService.setDefault(
                     defaultEngine,
-                    Ci.nsISearchService.CHANGE_REASON_ENTERPRISE
+                    lazy.SearchService.CHANGE_REASON.ENTERPRISE
                   );
                 } catch (ex) {
                   lazy.log.error("Unable to set the default search engine", ex);
@@ -2696,7 +2899,7 @@ export var Policies = {
             async () => {
               let defaultPrivateEngine;
               try {
-                defaultPrivateEngine = Services.search.getEngineByName(
+                defaultPrivateEngine = lazy.SearchService.getEngineByName(
                   param.DefaultPrivate
                 );
                 if (!defaultPrivateEngine) {
@@ -2712,9 +2915,9 @@ export var Policies = {
               }
               if (defaultPrivateEngine) {
                 try {
-                  await Services.search.setDefaultPrivate(
+                  await lazy.SearchService.setDefaultPrivate(
                     defaultPrivateEngine,
-                    Ci.nsISearchService.CHANGE_REASON_ENTERPRISE
+                    lazy.SearchService.CHANGE_REASON.ENTERPRISE
                   );
                 } catch (ex) {
                   lazy.log.error(
@@ -2738,7 +2941,7 @@ export var Policies = {
   },
 
   SecurityDevices: {
-    onProfileAfterChange(manager, param) {
+    async _onProfileAfterChangeImpl(manager, param) {
       let pkcs11db = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
         Ci.nsIPKCS11ModuleDB
       );
@@ -2749,7 +2952,7 @@ export var Policies = {
         if (param.Delete) {
           for (let deviceName of param.Delete) {
             try {
-              pkcs11db.deleteModule(deviceName);
+              await pkcs11db.deleteModule(deviceName);
             } catch (e) {
               // Ignoring errors here since it might stick around in policy
               // after removing. Alternative would be to listModules and
@@ -2766,7 +2969,7 @@ export var Policies = {
       }
       for (let deviceName in securityDevices) {
         let foundModule = false;
-        for (let module of pkcs11db.listModules()) {
+        for (let module of await pkcs11db.listModules()) {
           if (module && module.libName === securityDevices[deviceName]) {
             foundModule = true;
             break;
@@ -2776,12 +2979,31 @@ export var Policies = {
           continue;
         }
         try {
-          pkcs11db.addModule(deviceName, securityDevices[deviceName], 0, 0);
+          await pkcs11db.addModule(
+            deviceName,
+            securityDevices[deviceName],
+            0,
+            0
+          );
         } catch (ex) {
           lazy.log.error(`Unable to add security device ${deviceName}`);
           lazy.log.debug(ex);
         }
       }
+    },
+
+    onProfileAfterChange(manager, param) {
+      this._onProfileAfterChangeImpl(manager, param)
+        .then(() => {
+          Services.obs.notifyObservers(
+            null,
+            "test-enterprisepolicies-securitydevices"
+          );
+        })
+        .catch(ex => {
+          lazy.log.error(`Error running SecurityDevices.onProfileAfterChange`);
+          lazy.log.debug(ex);
+        });
     },
   },
 
@@ -2807,6 +3029,110 @@ export var Policies = {
       } else {
         lazy.CustomizableUI.removeWidgetFromArea("home-button");
       }
+    },
+  },
+
+  SitePolicies: {
+    /**
+     * Converts a wildcard domain into a match pattern.
+     *
+     * Any `*.` prefix is stripped and then the remaining domain converted to a base
+     * domain (ETLD + 1). If the pattern isn't long enough to be a base domain then an exception is
+     * thrown. If the pattern is too long then a warning is logged and the base domain is used.
+     *
+     * @param {string} pattern The wildcard domain pattern to convert.
+     * @returns {MatchPattern} The corresponding match pattern.
+     */
+    intoMatchPattern(pattern) {
+      let base = pattern;
+      if (base.startsWith("*.")) {
+        base = base.substring(2);
+      }
+
+      // This will throw an exception if the domain is not long enough to make a site.
+      let site = Services.eTLD.getBaseDomainFromHost(base);
+      if (site != base) {
+        console.warn(
+          `SitePolicies: Pattern ${pattern} is too specific. Using *.${site} instead.`
+        );
+      }
+
+      return new MatchPattern(`*://*.${site}/*`);
+    },
+
+    validate(params) {
+      // The schema will have validated the general structure, we need to validate the patterns
+      for (let param of params) {
+        for (let patterns of [param.Match ?? [], param.Exceptions ?? []]) {
+          try {
+            patterns.forEach(p => {
+              if (p != "*") {
+                this.intoMatchPattern(p);
+              }
+            });
+          } catch (e) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    },
+
+    featuresForPolicies(policies) {
+      let features = {};
+
+      if ("DisableJit" in policies) {
+        features.jit = !policies.DisableJit;
+      }
+
+      return features;
+    },
+
+    onBeforeAddons(manager, params) {
+      let sitePolicies = [];
+
+      for (let policies of params) {
+        let matches = policies.Match ?? [];
+        let exceptions = policies.Exceptions ?? [];
+
+        // If the entire web is an exception then this policy can never apply so
+        // ignore it.
+        if (exceptions.includes("*")) {
+          continue;
+        }
+
+        let exceptionPatterns = exceptions.map(this.intoMatchPattern);
+        let matchPatterns;
+
+        if (!matches.length || matches.includes("*")) {
+          matchPatterns = [new MatchPattern("<all_urls>")];
+        } else {
+          matchPatterns = matches.map(this.intoMatchPattern);
+
+          // Filter out any match patterns that are also exceptions.
+          matchPatterns = matchPatterns.filter(matchPattern => {
+            return !exceptionPatterns.some(
+              exceptionPattern =>
+                exceptionPattern.pattern == matchPattern.pattern
+            );
+          });
+
+          if (!matchPatterns.length) {
+            // If there are no match patterns left then this policy can never
+            // apply so ignore it.
+            continue;
+          }
+        }
+
+        sitePolicies.push({
+          match: new MatchPatternSet(matchPatterns),
+          exceptions: new MatchPatternSet(exceptionPatterns),
+          features: this.featuresForPolicies(policies.Policies),
+        });
+      }
+
+      manager.updateSitePolicies(sitePolicies);
     },
   },
 
@@ -2875,7 +3201,18 @@ export var Policies = {
 
   TranslateEnabled: {
     onBeforeAddons(manager, param) {
+      let policies = Services.policies.getActivePolicies();
+      if (policies.AIControls?.Translations || policies.AIControls?.Default) {
+        lazy.log.warn(
+          "Ignoring TranslateEnabled policy in favor of AIControls"
+        );
+        return;
+      }
       setAndLockPref("browser.translations.enable", param);
+      setAndLockPref(
+        "browser.ai.control.translations",
+        param ? "enabled" : "blocked"
+      );
     },
   },
 
@@ -2957,6 +3294,12 @@ export var Policies = {
   WindowsSSO: {
     onBeforeAddons(manager, param) {
       setAndLockPref("network.http.windows-sso.enabled", param);
+    },
+  },
+
+  XSLTEnabled: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("dom.xslt.enabled", param);
     },
   },
 };
@@ -3219,6 +3562,55 @@ function replacePathVariables(path) {
 }
 
 /**
+ * Validates a list of host patterns intended for runtime_blocked_hosts or
+ * runtime_allowed_hosts. These accept match patterns without a path
+ * component (e.g. `*://*.example.com` or `<all_urls>`), matching Chrome's
+ * ExtensionSettings policy format. Throws on the first invalid pattern.
+ */
+function validateExtensionGuardPatterns(patterns) {
+  for (let pattern of patterns) {
+    if (typeof pattern !== "string") {
+      throw new Error(`Expected a string, got ${typeof pattern}`);
+    }
+    if (pattern === "<all_urls>") {
+      continue;
+    }
+    if (!/^[a-z*][a-z0-9*+.-]*:\/\/[^/]+$/i.test(pattern)) {
+      throw new Error(`Host pattern must not include a path: ${pattern}`);
+    }
+  }
+  // MatchPatternSet throws on any other malformed pattern (bad scheme,
+  // malformed host, etc.). ignorePath:true mirrors the backend's parser
+  // in setEnterpriseGuards; restrictSchemes defaults to true.
+  new MatchPatternSet(patterns, { ignorePath: true });
+}
+
+/**
+ * Build the enterprise guards map from an ExtensionSettings policy value and
+ * apply it via setEnterpriseGuards from ExtensionPermissions.sys.mjs.
+ *
+ * Throws if any pattern is malformed; the caller logs and skips applying
+ * guards in that case.
+ */
+function applyExtensionGuards(extensionSettings) {
+  let guards = {};
+  for (let [extensionID, settings] of Object.entries(extensionSettings)) {
+    let blocked = settings.runtime_blocked_hosts;
+    let allowed = settings.runtime_allowed_hosts;
+    if (!blocked && !allowed) {
+      continue;
+    }
+    validateExtensionGuardPatterns(blocked ?? []);
+    validateExtensionGuardPatterns(allowed ?? []);
+    guards[extensionID] = {
+      runtime_blocked_hosts: blocked ?? [],
+      runtime_allowed_hosts: allowed ?? [],
+    };
+  }
+  lazy.setEnterpriseGuards(guards);
+}
+
+/**
  * installAddonFromURL
  *
  * Helper function that installs an addon from a URL
@@ -3267,6 +3659,19 @@ function installAddonFromURL(url, extensionID, addon) {
         ) {
           lazy.log.debug(
             "Installation cancelled because versions are the same"
+          );
+          install.removeListener(listener);
+          install.cancel();
+        }
+
+        // Cancel install if the addon version downloaded is detected
+        // to be a downgrade compared to the version already installed.
+        if (
+          addon &&
+          Services.vc.compare(addon.version, install.addon.version) > 0
+        ) {
+          lazy.log.warn(
+            `Installation cancelled because installed version ${addon.version} is greater than ${install.addon.version} downloaded from ${url}`
           );
           install.removeListener(listener);
           install.cancel();

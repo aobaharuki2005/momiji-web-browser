@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,6 +7,7 @@
 #include "mozilla/BuiltInStyleSheets.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/HTMLDetailsElementBinding.h"
+#include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsContentUtils.h"
@@ -93,13 +92,14 @@ nsresult HTMLDetailsElement::BindToTree(BindContext& aContext,
 
 void HTMLDetailsElement::SetupShadowTree() {
   const bool kNotify = false;
-  AttachAndSetUAShadowRoot(NotifyUAWidgetSetup::No);
+  AttachAndSetUAShadowRoot(NotifyUAWidget::No, DelegatesFocus::No,
+                           CustomSlotDispatch::Yes);
   RefPtr<ShadowRoot> sr = GetShadowRoot();
   if (NS_WARN_IF(!sr)) {
     return;
   }
 
-  nsNodeInfoManager* nim = OwnerDoc()->NodeInfoManager();
+  nsNodeInfoManager* nim = NodeInfoManager();
   RefPtr<NodeInfo> slotNodeInfo = nim->GetNodeInfo(
       nsGkAtoms::slot, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
   sr->AppendBuiltInStyleSheet(BuiltInStyleSheet::Details);
@@ -122,7 +122,7 @@ void HTMLDetailsElement::SetupShadowTree() {
     }
 
     nsAutoString defaultSummaryText;
-    nsContentUtils::GetMaybeLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+    nsContentUtils::GetMaybeLocalizedString(PropertiesFile::FORMS_PROPERTIES,
                                             "DefaultSummary", OwnerDoc(),
                                             defaultSummaryText);
     RefPtr<nsTextNode> description = new (nim) nsTextNode(nim);
@@ -138,9 +138,45 @@ void HTMLDetailsElement::SetupShadowTree() {
       return;
     }
     if (StaticPrefs::layout_css_details_content_enabled()) {
-      slot->SetPseudoElementType(PseudoStyleType::detailsContent);
+      slot->SetPseudoElementType(PseudoStyleType::DetailsContent);
     }
     sr->AppendChildTo(slot, kNotify, IgnoreErrors());
+  }
+}
+
+void HTMLDetailsElement::GetSlotNameFor(const ShadowRoot&,
+                                        const nsIContent& aContent,
+                                        nsAString& aName) const {
+  const auto* summary = HTMLSummaryElement::FromNode(aContent);
+  if (summary && summary->IsMainSummary()) {
+    aName.AssignLiteral("internal-main-summary");
+  }
+}
+
+void HTMLDetailsElement::OnChildBeforeSlotted(ShadowRoot& aShadow,
+                                              nsIContent& aChild) {
+  if (!aChild.IsHTMLElement(nsGkAtoms::summary)) {
+    return;
+  }
+  HTMLSlotElement* slot =
+      aShadow.GetFirstNamedSlot(u"internal-main-summary"_ns);
+  MOZ_RELEASE_ASSERT(slot);
+  const auto& assigned = slot->AssignedNodes();
+  if (assigned.IsEmpty()) {
+    return;
+  }
+  if (auto* summary = HTMLSummaryElement::FromNode(assigned[0])) {
+    aShadow.MaybeReassignContent(*summary);
+  }
+}
+
+void HTMLDetailsElement::OnChildUnslotted(ShadowRoot& aShadow,
+                                          nsIContent& aChild) {
+  if (!aChild.IsHTMLElement(nsGkAtoms::summary)) {
+    return;
+  }
+  if (HTMLSummaryElement* newMainSummary = GetFirstSummary()) {
+    aShadow.MaybeReassignContent(*newMainSummary);
   }
 }
 
@@ -169,7 +205,10 @@ bool HTMLDetailsElement::HandleCommandInternal(Element* aSource,
     return true;
   }
 
-  MOZ_ASSERT(StaticPrefs::dom_element_commandfor_on_details_enabled());
+  if (!StaticPrefs::dom_element_commandfor_on_details_enabled()) {
+    return false;
+  }
+
   if (aCommand == Command::Toggle) {
     ToggleOpen();
     return true;

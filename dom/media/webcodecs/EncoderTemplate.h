@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -239,6 +237,7 @@ class EncoderTemplate : public DOMEventTargetHelper {
 
   void Configure(RefPtr<ConfigureMessage> aMessage);
   void Reconfigure(RefPtr<ConfigureMessage> aMessage);
+  void DrainAndReconfigure(RefPtr<ConfigureMessage> aMessage);
 
   // Returns true when mAgent can be created.
   bool CreateEncoderAgent(WebCodecsId aId, RefPtr<ConfigTypeInternal> aConfig);
@@ -285,6 +284,10 @@ class EncoderTemplate : public DOMEventTargetHelper {
   // configuration change. See CanReconfigure on the
   // {Audio,Video}EncoderConfigInternal
   RefPtr<EncoderAgent> mAgent;
+  MozPromiseRequestHolder<EncoderAgent::ReconfigurationPromise>
+      mReconfigureRequest;
+  MozPromiseRequestHolder<EncoderAgent::EncodePromise>
+      mDrainAfterReconfigureRequest;
   RefPtr<ConfigTypeInternal> mActiveConfig;
   // This is true when a configure call has just been processed, and it's
   // necessary to pass the new decoding configuration when the callback is

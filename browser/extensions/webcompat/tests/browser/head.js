@@ -29,6 +29,18 @@ const SEC_DELAY_PREF = "security.notification_enable_delay";
 const SMARTBLOCK_EMBEDS_ENABLED_PREF =
   "extensions.webcompat.smartblockEmbeds.enabled";
 
+const CONTENT_CLASSIFIER_TESTING_PREF =
+  "privacy.trackingprotection.content.testing";
+const CONTENT_CLASSIFIER_PROTECTION_ENABLED_PREF =
+  "privacy.trackingprotection.content.protection.enabled";
+const CONTENT_CLASSIFIER_PROTECTION_LIST_URLS_PREF =
+  "privacy.trackingprotection.content.protection.test_list_urls";
+const CONTENT_CLASSIFIER_BLOCK_LIST_URL = `${TEST_ROOT}content_classifier_block_list.txt`;
+// Must match NS_CONTENT_CLASSIFIER_FILTER_LISTS_LOADED_TOPIC in
+// nsIContentClassifierService.idl.
+const CONTENT_CLASSIFIER_LISTS_LOADED_TOPIC =
+  "test-content-classifier-filter-lists-loaded";
+
 const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
@@ -57,15 +69,22 @@ const WebCompatExtension = new (class WebCompatExtension {
   async resetInterventionsAndShimsToDefaults() {
     return this.#run(async function () {
       await content.wrappedJSObject._downgradeForTesting();
-      await content.wrappedJSObject.interventions._resetToDefaultInterventions();
-      await content.wrappedJSObject.shims._resetToDefaultShims();
+    }).catch(_ => {});
+  }
+
+  async allOriginalInterventions() {
+    return this.#run(async function () {
+      const available =
+        content.wrappedJSObject.interventions.getAllOriginalInterventions();
+      // structured cloning won't work, so get the interesting bits for tests.
+      return JSON.parse(JSON.stringify(available));
     });
   }
 
   async availableInterventions() {
     return this.#run(async function () {
       const available =
-        content.wrappedJSObject.interventions._availableInterventions;
+        content.wrappedJSObject.interventions.getAvailableInterventions();
       // structured cloning won't work, so get the interesting bits for tests.
       return JSON.parse(JSON.stringify(available));
     });
@@ -89,41 +108,38 @@ const WebCompatExtension = new (class WebCompatExtension {
     });
   }
 
-  async interventionsReady() {
+  async promiseUpdateReceived(_version) {
+    return this.#run(async function (version) {
+      await new Promise(updated => {
+        const updateCheck = content.setInterval(() => {
+          if (content.wrappedJSObject.latestReceivedUpdate == version) {
+            content.clearInterval(updateCheck);
+            updated();
+          }
+        }, 100);
+      });
+    }, _version);
+  }
+
+  async interventionsSettled() {
     return this.#run(async function () {
-      await content.wrappedJSObject.interventions.ready();
+      await content.wrappedJSObject.interventions.allSettled();
     });
   }
 
   async overrideFirefoxVersion(_ver) {
     this.#run(async function (ver) {
-      content.wrappedJSObject.interventions.versionForTesting = ver;
+      content.wrappedJSObject.interventions.appVersionOverride = ver
+        ? parseFloat(ver)
+        : undefined;
     }, _ver);
-  }
-
-  async noOngoingInterventionChanges() {
-    return this.#run(async function () {
-      await new Promise(lock1 => {
-        return new Promise(lock2 => {
-          content.wrappedJSObject.navigator.locks.request(
-            "pref_check_lock",
-            lock2
-          );
-        }).then(() =>
-          content.wrappedJSObject.navigator.locks.request(
-            "intervention_lock",
-            lock1
-          )
-        );
-      });
-    });
   }
 
   async getInterventionById(_id) {
     return this.#run(function (id) {
-      return content.wrappedJSObject.interventions._availableInterventions.find(
-        i => i.id === id
-      );
+      return content.wrappedJSObject.interventions.getInterventionsByIds(
+        Cu.cloneInto([id], content)
+      )[0];
     }, _id);
   }
 
@@ -148,6 +164,23 @@ const WebCompatExtension = new (class WebCompatExtension {
     });
   }
 
+  // Force a shim's enabled-state transition to fully complete (including the
+  // AllowList registration via browser.trackingProtection.shim/revoke).
+  // Toggling extensions.webcompat.disabled_shims.<id> from the parent process
+  // triggers the extension's pref-change listener which calls
+  // _onEnabledStateChanged but does NOT await it, so the listener finishes
+  // before _allowRequestsInETP has updated the urlclassifier-before-block-
+  // channel AllowList. This explicitly re-invokes and awaits the transition.
+  async settleShimStateChange(_id) {
+    return this.#run(async function (id) {
+      const shim = content.wrappedJSObject.shims.shims.get(id);
+      if (!shim) {
+        return;
+      }
+      await shim._onEnabledStateChanged({ alsoClearResourceCache: true });
+    }, _id);
+  }
+
   async getRegisteredContentScriptsFor(_id) {
     return this.#run(async function (id) {
       const scripts =
@@ -160,12 +193,8 @@ const WebCompatExtension = new (class WebCompatExtension {
 
   async disableInterventions(_ids) {
     return this.#run(async function (ids) {
-      const which =
-        content.wrappedJSObject.interventions._availableInterventions.filter(
-          i => ids.includes(i.id)
-        );
       return await content.wrappedJSObject.interventions.disableInterventions(
-        Cu.cloneInto(which, content)
+        Cu.cloneInto(ids, content)
       );
     }, _ids);
   }
@@ -178,6 +207,11 @@ const WebCompatExtension = new (class WebCompatExtension {
     }, _config);
   }
 })();
+
+registerCleanupFunction(async () => {
+  await WebCompatExtension.overrideFirefoxVersion(undefined);
+  await WebCompatExtension.resetInterventionsAndShimsToDefaults();
+});
 
 async function testShimRuns(
   testPage,
@@ -194,7 +228,7 @@ async function testShimRuns(
   });
 
   const TrackingProtection =
-    tab.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
+    tab.documentGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the tab");
   ok(TrackingProtection.enabled, "TP is enabled");
 
@@ -389,11 +423,62 @@ async function clickOnPagePlaceholder(tab) {
     ok(placeholderImage, "Placeholder image exists");
 
     // Click button to open protections panel
-    await EventUtils.synthesizeMouseAtCenter(placeholderButton, {}, content);
+    EventUtils.synthesizeMouseAtCenter(placeholderButton, {}, content);
   });
 
   // If this await finished, then protections panel is open
   return popupShownPromise;
+}
+
+async function enableContentClassifierBlockList(blockListUrl) {
+  let wasEnabled = Services.prefs.getBoolPref(
+    CONTENT_CLASSIFIER_PROTECTION_ENABLED_PREF,
+    false
+  );
+  let currentUrl = Services.prefs.getStringPref(
+    CONTENT_CLASSIFIER_PROTECTION_LIST_URLS_PREF,
+    ""
+  );
+  let needsLoad = !wasEnabled || currentUrl !== blockListUrl;
+  let listsLoaded = needsLoad
+    ? TestUtils.topicObserved(CONTENT_CLASSIFIER_LISTS_LOADED_TOPIC)
+    : null;
+
+  Services.prefs.setBoolPref(CONTENT_CLASSIFIER_TESTING_PREF, true);
+  Services.prefs.setBoolPref(CONTENT_CLASSIFIER_PROTECTION_ENABLED_PREF, true);
+  Services.prefs.setStringPref(
+    CONTENT_CLASSIFIER_PROTECTION_LIST_URLS_PREF,
+    blockListUrl
+  );
+
+  if (listsLoaded) {
+    await listsLoaded;
+  }
+}
+
+function disableContentClassifier() {
+  Services.prefs.clearUserPref(CONTENT_CLASSIFIER_TESTING_PREF);
+  Services.prefs.clearUserPref(CONTENT_CLASSIFIER_PROTECTION_ENABLED_PREF);
+  Services.prefs.clearUserPref(CONTENT_CLASSIFIER_PROTECTION_LIST_URLS_PREF);
+}
+
+// Wait for the webcompat extension to settle a shim's effective enabled
+// state. Toggling `extensions.webcompat.disabled_shims.<id>` triggers an
+// async pref-change listener in the extension that updates the shim and
+// re-registers its matches with the urlclassifier-before-block-channel
+// AllowList; polling shim.enabled alone only confirms the listener has
+// observed the new pref value, not that the registration has completed,
+// so we follow up with settleShimStateChange.
+async function waitForShimEnabledState(shimId, expectedEnabled) {
+  await TestUtils.waitForCondition(
+    async () => {
+      const shims = await WebCompatExtension.availableShims();
+      const shim = shims.find(s => s.id === shimId);
+      return shim?.enabled === expectedEnabled;
+    },
+    `Shim ${shimId} should be ${expectedEnabled ? "enabled" : "disabled"}`
+  );
+  await WebCompatExtension.settleShimStateChange(shimId);
 }
 
 async function generateTestShims() {
@@ -480,6 +565,37 @@ async function generateTestShims() {
       ],
     },
     {
+      id: "MochitestShimXHR",
+      platform: "all",
+      name: "Test shim for fetch blocking",
+      bug: "mochitest",
+      file: "empty-shim.txt",
+      matches: [
+        "*://itisatracker.org/browser/browser/extensions/webcompat/tests/browser/shims_test_fetch.txt",
+      ],
+      onlyIfBlockedByETP: true,
+    },
+    {
+      // Shim used by browser_shims.js content-classifier tests. Registers
+      // a match for the fetch URL so the urlclassifier-before-block-channel
+      // listener will call channel.replace(). No file/target/runFirst so
+      // there is no webRequest redirect and the content classifier sees
+      // the original URL.
+      disabled: true,
+      id: "MochitestShimContent",
+      platform: "all",
+      name: "Test shim for content classifier replace path",
+      bug: "mochitest",
+      matches: [
+        {
+          patterns: [
+            "*://itisatracker.org/browser/browser/extensions/webcompat/tests/browser/shims_test_fetch.txt",
+          ],
+          types: ["xmlhttprequest"],
+        },
+      ],
+    },
+    {
       id: "EmbedTestShim",
       platform: "desktop",
       name: "Test shim for smartblock embed unblocking",
@@ -497,6 +613,7 @@ async function generateTestShims() {
         "embedClicked",
         "smartblockEmbedReplaced",
         "smartblockGetFluentString",
+        "shouldShowEmbedContentInPlaceholders",
       ],
       isSmartblockEmbedShim: true,
       onlyIfBlockedByETP: true,

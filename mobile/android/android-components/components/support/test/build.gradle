@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+plugins {
+    alias(libs.plugins.dependency.analysis)
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -19,6 +23,7 @@ dependencies {
     implementation libs.androidx.test.core
     implementation libs.androidx.test.junit
     implementation libs.kotlin.reflect
+    implementation libs.kotlin.test
     implementation libs.kotlinx.coroutines
     implementation libs.kotlinx.coroutines.test
     implementation libs.robolectric

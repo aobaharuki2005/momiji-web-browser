@@ -17,8 +17,6 @@ support-files = [
   "!/accessible/tests/mochitest/moz.png",
 ]
 prefs = [
-  # Required for the commandfor tests
-  "dom.element.commandfor.enabled=true",
   # Required for the eval in invokeContentTask in shared-head.js
   "security.allow_eval_with_system_principal=true"
 ]
@@ -35,6 +33,8 @@ prefs = [
 https_first_disabled = true
 
 ["browser_caching_domnodeid.js"]
+
+["browser_caching_headinglevel.js"]
 
 ["browser_caching_hyperlink.js"]
 
@@ -60,11 +60,6 @@ skip-if = [
 ["browser_caching_value.js"]
 
 # Events tests
-
-["browser_events_announcement.js"]
-skip-if = [
-  "os == 'win'", # Bug 1288839
-]
 
 ["browser_events_caretmove.js"]
 

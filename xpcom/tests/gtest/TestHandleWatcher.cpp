@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -93,7 +91,7 @@ class TestHandleWatcher : public testing::Test {
   static already_AddRefed<mozilla::SharedThreadPool> GetPool() {
     AssertIsLive();
     if (!sPool) {
-      sPool = mozilla::SharedThreadPool::Get("Test Pool"_ns);
+      sPool = mozilla::SharedThreadPool::Get("Test Pool");
     }
     return do_AddRef(sPool);
   }
@@ -447,6 +445,8 @@ class MockEventTarget final : public nsIEventTarget {
   NS_IMETHOD UnregisterShutdownTask(nsITargetShutdownTask* task) override {
     return mShutdownTasks.RemoveTask(task);
   }
+  NS_IMETHOD_(FeatureFlags) GetFeatures() override { return SUPPORTS_BASE; }
+
   void RegisterDeathAction(std::function<void(void)>&& f) {
     mDeathAction = std::move(f);
   }

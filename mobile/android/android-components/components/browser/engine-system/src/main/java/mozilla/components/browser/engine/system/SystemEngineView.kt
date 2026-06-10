@@ -62,7 +62,7 @@ import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
-import mozilla.components.support.utils.DownloadUtils
+import mozilla.components.support.utils.DefaultDownloadFileUtils
 
 /**
  * WebView-based implementation of EngineView.
@@ -594,14 +594,18 @@ class SystemEngineView @JvmOverloads constructor(
 
     internal fun createDownloadListener(): DownloadListener {
         return DownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
-            session?.internalNotifyObservers {
-                val fileName = DownloadUtils.guessFileName(
-                    contentDisposition = contentDisposition,
-                    url = url,
-                    mimeType = mimetype,
-                )
-                val cookie = CookieManager.getInstance().getCookie(url)
-                onExternalResource(url, fileName, contentLength, mimetype, cookie, userAgent)
+            session?.let { session ->
+                session.internalNotifyObservers {
+                    val fileName = DefaultDownloadFileUtils(
+                        context = context,
+                    ).guessFileName(
+                        contentDisposition = contentDisposition,
+                        url = url,
+                        mimeType = mimetype,
+                    )
+                    val cookie = CookieManager.getInstance().getCookie(url)
+                    onExternalResource(url, fileName, contentLength, mimetype, cookie, userAgent)
+                }
             }
         }
     }

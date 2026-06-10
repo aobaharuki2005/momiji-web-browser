@@ -1,10 +1,9 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFilePicker_h__
-#define nsFilePicker_h__
+#ifndef nsFilePicker_h_
+#define nsFilePicker_h_
 
 #include <gtk/gtk.h>
 
@@ -68,7 +67,7 @@ class nsFilePicker final : public nsBaseFilePicker {
 
   void DoneCommon(ResultCode);
 
-  nsCOMPtr<nsIWidget> mParentWidget;
+  RefPtr<nsWindow> mParentWidget;
   nsCOMPtr<nsIFilePickerShownCallback> mCallback;
   nsCOMArray<nsIFile> mFiles;
 

@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsLayoutUtils_h__
-#define nsLayoutUtils_h__
+#ifndef nsLayoutUtils_h_
+#define nsLayoutUtils_h_
 
 #include <algorithm>
 #include <limits>
@@ -299,6 +297,18 @@ class nsLayoutUtils {
   static mozilla::dom::Element* GetBackdropPseudo(const nsIContent* aContent);
   static nsIFrame* GetBackdropFrame(const nsIContent* aContent);
 
+  /**
+   * Returns the ::checkmark pseudo-element for aContent, if any.
+   */
+  static mozilla::dom::Element* GetCheckmarkPseudo(const nsIContent* aContent);
+  static nsIFrame* GetCheckmarkFrame(const nsIContent* aContent);
+
+  /**
+   * Stores generated content pseudos such as ::after into aPseudos.
+   */
+  static void AppendGeneratedContentPseudos(
+      const mozilla::dom::Element* aElement, nsTArray<nsIContent*>& aPseudos);
+
 #ifdef ACCESSIBILITY
   /**
    * Set aText to the spoken text for the given ::marker content (aContent)
@@ -545,6 +555,10 @@ class nsLayoutUtils {
    * another an iframe document domain B, such as A1 -> B1 ->A2 document tree.
    */
   static bool IsAncestorFrameCrossDocInProcess(
+      const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
+      const nsIFrame* aCommonAncestor = nullptr);
+
+  static bool IsAncestorFrameCrossDocInProcessConsideringContinuations(
       const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
       const nsIFrame* aCommonAncestor = nullptr);
 
@@ -1303,6 +1317,7 @@ class nsLayoutUtils {
     UseMarginBox,
     // Similar to UseMarginBox, but the 'auto' margins are resolved as zero.
     UseMarginBoxWithAutoResolvedAsZero,
+    UseInkOverflowAsBox
   };
   using GetAllInFlowRectsFlags = mozilla::EnumSet<GetAllInFlowRectsFlag>;
   static void GetAllInFlowRects(nsIFrame* aFrame, const nsIFrame* aRelativeTo,
@@ -1386,7 +1401,8 @@ class nsLayoutUtils {
   static already_AddRefed<nsFontMetrics> GetFontMetricsForComputedStyle(
       const ComputedStyle* aComputedStyle, nsPresContext* aPresContext,
       float aSizeInflation = 1.0f,
-      uint8_t aVariantWidth = NS_FONT_VARIANT_WIDTH_NORMAL);
+      uint8_t aVariantWidth = NS_FONT_VARIANT_WIDTH_NORMAL,
+      bool aForceHorizontalMetrics = false);
 
   /**
    * Get the font metrics of emphasis marks corresponding to the given
@@ -1409,6 +1425,14 @@ class nsLayoutUtils {
    */
   static nsIFrame* FindChildContainingDescendant(nsIFrame* aParent,
                                                  nsIFrame* aDescendantFrame);
+
+  /**
+   * Returns true if aFrame or any of its descendants have absolutely
+   * positioned children. This is used in a fragmented context to determine
+   * whether a measuring reflow is required for computing unfragmented
+   * positions of absolutely positioned elements.
+   */
+  static bool HasAbsolutelyPositionedDescendants(const nsIFrame* aFrame);
 
   /**
    * Find the nearest ancestor that's a block
@@ -1673,7 +1697,7 @@ class nsLayoutUtils {
    *   internally work with variables that unconditionally represent a
    *   content-box size, regardless of the 'box-sizing' value; and for those
    *   cases, it would be appropriate to unconditionally pass
-   *   StyleBoxSizing::Content to this function, or to just use the
+   *   StyleBoxSizing::ContentBox to this function, or to just use the
    *   convenience-wrapper that has "ContentBox" in the function name.
    */
   static inline nscoord ComputeStretchBSize(
@@ -1683,7 +1707,7 @@ class nsLayoutUtils {
                  "We don't handle situations with unconstrained "
                  "aSizeToFill; caller should handle that!");
     nscoord stretchSize = aSizeToFill - aMargin;
-    if (aBoxSizing == mozilla::StyleBoxSizing::Content) {
+    if (aBoxSizing == mozilla::StyleBoxSizing::ContentBox) {
       stretchSize -= aBorderPadding;
     }
     return std::max(0, stretchSize);
@@ -1693,7 +1717,7 @@ class nsLayoutUtils {
                                                       nscoord aMargin,
                                                       nscoord aBorderPadding) {
     return ComputeStretchBSize(aSizeToFill, aMargin, aBorderPadding,
-                               mozilla::StyleBoxSizing::Content);
+                               mozilla::StyleBoxSizing::ContentBox);
   }
   // Similar to the above convenience-wrapper, but now for inline-axis.
   // TODO(dholbert): would it be useful to add a box-sizing-aware version of
@@ -2360,6 +2384,14 @@ class nsLayoutUtils {
                               aSurfaceFlags, target);
   }
 
+  // Computes the target size for a resize operation given the source size
+  // and optional resize dimensions. If only one dimension is given, the other
+  // is computed to preserve the aspect ratio. Returns Nothing on overflow.
+  static mozilla::Maybe<mozilla::gfx::IntSize> ComputeResizedSize(
+      const mozilla::gfx::IntSize& aSrcSize,
+      const mozilla::Maybe<int32_t>& aResizeWidth,
+      const mozilla::Maybe<int32_t>& aResizeHeight);
+
   // There are a bunch of callers of SurfaceFromElement.  Just mark it as
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static mozilla::SurfaceFromElementResult SurfaceFromElement(
@@ -2427,11 +2459,10 @@ class nsLayoutUtils {
    * want to maintain a mapping from gfxFontEntry to InspectorFontFace
    * records, so use a temporary hashtable for that.
    */
-  typedef nsTArray<mozilla::UniquePtr<mozilla::dom::InspectorFontFace>>
-      UsedFontFaceList;
-  typedef nsTHashMap<nsPtrHashKey<gfxFontEntry>,
-                     mozilla::dom::InspectorFontFace*>
-      UsedFontFaceTable;
+  using UsedFontFaceList =
+      nsTArray<mozilla::UniquePtr<mozilla::dom::InspectorFontFace>>;
+  using UsedFontFaceTable =
+      nsTHashMap<nsPtrHashKey<gfxFontEntry>, mozilla::dom::InspectorFontFace*>;
 
   /**
    * Adds all font faces used in the frame tree starting from aFrame
@@ -2613,7 +2644,7 @@ class nsLayoutUtils {
    */
   static bool InvalidationDebuggingIsEnabled() {
     return mozilla::StaticPrefs::nglayout_debug_invalidation() ||
-           getenv("MOZ_DUMP_INVALIDATION") != 0;
+           getenv("MOZ_DUMP_INVALIDATION") != nullptr;
   }
 
   static void Initialize();
@@ -3139,6 +3170,11 @@ class nsLayoutUtils {
    */
   static ComputedStyle* StyleForScrollbar(const nsIFrame* aScrollbarPart);
 
+  static bool UseOverlayScrollbars(const nsIFrame* aScrollbarPart);
+
+  static mozilla::StyleScrollbarWidth ScrollbarWidthFor(
+      const nsIFrame* aScrollbarPart);
+
   /**
    * Returns true if |aFrame| is scrolled out of view by a scrollable element in
    * a cross-process ancestor document.
@@ -3188,17 +3224,26 @@ class nsLayoutUtils {
    */
   static void RecomputeSmoothScrollDefault();
 
+  struct CombinedFragments {
+    // Previous continuation, if exists, that got skipped due to being on a
+    // different page, or a different containing block continuation.
+    const nsIFrame* mSkippedPrevContinuation = nullptr;
+    // Same as above, but next continuation.
+    const nsIFrame* mSkippedNextContinuation = nullptr;
+    // The overall frame rect formed by unioning the frame's fragment rects.
+    nsRect mRect;
+  };
   /**
    * Get the union of the rects of aFrame and its continuations (but not if the
    * context is paginated and they're on a different page, as it doesn't make
    * sense to "merge" their rects in that case).
    *
    * @param aFrame The target frame whose combined fragments are wanted.
-   * @param aRelativeToSelf If true, return rect relative to aFrame's origin;
-   *                        if false, return rect in aFrame's parent's space.
+   * @param aContainingBlock If provided, union fragments only up to its
+   * fragmentation boundary.
    */
-  static nsRect GetCombinedFragmentRects(const nsIFrame* aFrame,
-                                         bool aRelativeToSelf = true);
+  static CombinedFragments GetCombinedFragmentRects(
+      const nsIFrame* aFrame, const nsIFrame* aContainingBlock = nullptr);
 
  private:
   /**
@@ -3439,4 +3484,4 @@ class MOZ_RAII SetAndNullOnExit {
   T** mVariable;
 };
 
-#endif  // nsLayoutUtils_h__
+#endif  // nsLayoutUtils_h_

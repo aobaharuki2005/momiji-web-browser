@@ -7,6 +7,8 @@ prefs = [
   "intl.multilingual.aboutWelcome.languageMismatchEnabled=false",
 ]
 
+["browser_aboutwelcome_animation_play_pause.js"]
+
 ["browser_aboutwelcome_attribution.js"]
 run-if = [
   "os == 'mac'", #  import is only available on Windows and macOS
@@ -56,6 +58,8 @@ skip-if = [
 ["browser_aboutwelcome_multistage_mr.js"]
 
 ["browser_aboutwelcome_multistage_transitions.js"]
+
+["browser_aboutwelcome_nimbus_gate.js"]
 
 ["browser_aboutwelcome_observer.js"]
 https_first_disabled = true

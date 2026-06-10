@@ -31,7 +31,12 @@ const IGNORE = [
   /eslint-plugin-mozilla/,
 ];
 const IMPORT =
-  /(\bimport |import\(|require\(|\.(importESModule|defineESModuleGetters?|declareLazy|defineLazy)\()[^;]+/gm;
+  /(?<!@)(\bimport |import\(|require\(|\.(importESModule|defineESModuleGetters?|declareLazy|defineLazy)\()[^;]+/gm;
+// TypeScript imports have no `;` so cannot be included in the IMPORT regular
+// expression. Therefore we have a separate expression to handle the TypeScript
+// specific imports which will be within comments.
+const TYPESCRIPT_IMPORT =
+  /\/\*\*?\s*@import\s.*?\s+from\s+["'][^"']+["']\s*\*\//gm;
 const URI = /("|')((resource|chrome|moz-src):\/\/[\w\d\/_.-]+\.m?js)\1/gm;
 
 function ignore(filePath) {
@@ -51,8 +56,10 @@ function scan(root, dir, files) {
 
 // Emit path mapping for all found module URIs.
 function emitPaths(files, uris, modules, relativeBasePath) {
+  /** @type {Record<string, string[]>} */
   let paths = {};
   for (let uri of [...uris].sort()) {
+    // Fixed URIs need to go at the end, with their own URIs
     if (uri in fixed) {
       continue;
     }
@@ -63,7 +70,7 @@ function emitPaths(files, uris, modules, relativeBasePath) {
     // Check for a substitution .d.ts file from processed/generated sources.
     let sub = parts.at(-1).replace(/\.(m)?js$/, ".d.$1ts");
     if (fs.existsSync(`${__dirname}/../@types/subs/${sub}`)) {
-      paths[uri] = [`tools/@types/subs/${sub}`];
+      paths[uri] = [`${relativeBasePath}/tools/@types/subs/${sub}`];
       continue;
     }
 
@@ -76,7 +83,7 @@ function emitPaths(files, uris, modules, relativeBasePath) {
 
     // Unique match is almost certainy correct.
     if (matches.length === 1) {
-      paths[uri] = [matches[0]];
+      paths[uri] = [`${relativeBasePath}/${matches[0]}`];
     } else {
       // URI matched more than one, or failed to match any file.
       console.warn("[WARN]", uri);
@@ -84,9 +91,11 @@ function emitPaths(files, uris, modules, relativeBasePath) {
     }
   }
 
-  Object.assign(paths, fixed);
-  let tspaths = { compilerOptions: { baseUrl: relativeBasePath, paths } };
-  return JSON.stringify(tspaths, null, 2) + "\n";
+  for (let [uri, fixedPaths] of Object.entries(fixed)) {
+    // console.log(uri, fixedPaths);
+    paths[uri] = fixedPaths?.map(p => `${relativeBasePath}/${p}`);
+  }
+  return JSON.stringify({ compilerOptions: { paths } }, null, 2) + "\n";
 }
 
 // Emit type mapping for all modules imported via lazy getters.
@@ -110,7 +119,10 @@ function main(root_dir, paths_json, lib_lazy) {
   for (let file of files) {
     let src = fs.readFileSync(`${root_dir}/${file}`, "utf-8");
 
-    for (let [exp, , method] of src.matchAll(IMPORT)) {
+    for (let [exp, , method] of [
+      ...src.matchAll(IMPORT),
+      ...src.matchAll(TYPESCRIPT_IMPORT),
+    ]) {
       for (let [, , uri, proto] of exp.matchAll(URI)) {
         if (proto !== "moz-src") {
           uris.add(uri);

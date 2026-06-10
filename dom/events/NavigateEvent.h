@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_NavigateEvent_h___
-#define mozilla_dom_NavigateEvent_h___
+#ifndef mozilla_dom_NavigateEvent_h_
+#define mozilla_dom_NavigateEvent_h_
 
 #include "js/RootingAPI.h"
 #include "js/Value.h"
@@ -118,6 +116,8 @@ class NavigateEvent final : public Event {
 
   Document* GetAssociatedDocument() const;
 
+  void Cancel();
+
  private:
   MOZ_CAN_RUN_SCRIPT
   void PotentiallyResetFocus();
@@ -167,4 +167,4 @@ class NavigateEvent final : public Event {
 
 }  // namespace mozilla::dom
 
-#endif  // mozilla_dom_NavigateEvent_h___
+#endif  // mozilla_dom_NavigateEvent_h_

@@ -7,410 +7,21 @@
 /* import-globals-from main.js */
 
 // HOME PAGE
+const { BLANK_HOMEPAGE_URL } = ChromeUtils.importESModule(
+  "chrome://browser/content/preferences/config/home-startup.mjs",
+  { global: "current" }
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
 });
-
-/*
- * Preferences:
- *
- * browser.startup.homepage
- * - the user's home page, as a string; if the home page is a set of tabs,
- *   this will be those URLs separated by the pipe character "|"
- * browser.newtabpage.enabled
- * - determines that is shown on the user's new tab page.
- *   true = Activity Stream is shown,
- *   false = about:blank is shown
- */
-
-const DEFAULT_HOMEPAGE_URL = "about:home";
-const BLANK_HOMEPAGE_URL = "chrome://browser/content/blanktab.html";
-
-Preferences.addAll([
-  { id: "browser.startup.homepage", type: "string" },
-  { id: "pref.browser.homepage.disable_button.current_page", type: "bool" },
-  { id: "pref.browser.homepage.disable_button.bookmark_page", type: "bool" },
-  {
-    id: "pref.browser.homepage.disable_button.restore_default",
-    type: "bool",
-  },
-  { id: "browser.newtabpage.enabled", type: "bool" },
-]);
-
-if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
-  // Homepage / New Windows
-  Preferences.addSetting(
-    /** @type {{ useCustomHomepage: boolean } & SettingConfig } */ ({
-      id: "homepageNewWindows",
-      pref: "browser.startup.homepage",
-      useCustomHomepage: false,
-      get(prefVal) {
-        if (this.useCustomHomepage) {
-          return "custom";
-        }
-        switch (prefVal) {
-          case DEFAULT_HOMEPAGE_URL:
-            return "home";
-          case BLANK_HOMEPAGE_URL:
-            return "blank";
-          // Bug 1969951 - Custom value can be any string so leaving it as default value to catch
-          // non-default/blank entires.
-          default:
-            return "custom";
-        }
-      },
-      set(inputVal, _, setting) {
-        let wasCustomHomepage = this.useCustomHomepage;
-        this.useCustomHomepage = inputVal == "custom";
-        if (wasCustomHomepage != this.useCustomHomepage) {
-          setting.onChange();
-        }
-        switch (inputVal) {
-          case "home":
-            return DEFAULT_HOMEPAGE_URL;
-          case "blank":
-            return BLANK_HOMEPAGE_URL;
-          case "custom":
-            // Bug 1969951 - Add values set in subpage here
-            return setting.pref.value;
-          default:
-            throw new Error("No handler for this value");
-        }
-      },
-    })
-  );
-
-  // Homepage / Choose Custom Homepage URL Button
-  Preferences.addSetting({
-    id: "homepageGoToCustomHomepageUrlPanel",
-    deps: ["homepageNewWindows"],
-    visible: ({ homepageNewWindows }) => {
-      return homepageNewWindows.value == "custom";
-    },
-    onUserClick: () => {
-      // Bug 1969951 - Navigate to Custom Homepage Subpage
-    },
-  });
-
-  // Homepage / New Tabs
-  Preferences.addSetting({
-    id: "homepageNewTabs",
-    pref: "browser.newtabpage.enabled",
-    get(prefVal) {
-      return prefVal.toString();
-    },
-    set(inputVal) {
-      return inputVal === "true";
-    },
-  });
-
-  // Homepage / Restore Defaults button
-  Preferences.addSetting({
-    id: "homepageRestoreDefaults",
-    pref: "pref.browser.homepage.disable_button.restore_default",
-    deps: ["homepageNewWindows", "homepageNewTabs"],
-    disabled: ({ homepageNewWindows, homepageNewTabs }) => {
-      return (
-        homepageNewWindows.value === "home" && homepageNewTabs.value === "true"
-      );
-    },
-    onUserClick: (e, { homepageNewWindows, homepageNewTabs }) => {
-      e.preventDefault();
-
-      // Bug 1969951 - This is temporary until the custom URL subpage is implemented.
-      // Once users can set custom URLs in the subpage, this will properly reset those values.
-      homepageNewWindows.value = "home";
-      homepageNewTabs.value = "true";
-    },
-  });
-}
 
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
 const URL_OVERRIDES_TYPE = "url_overrides";
 const NEW_TAB_KEY = "newTabURL";
-
-// New Prefs UI: we need to check for this setting before registering prefs
-// so that old-style prefs continue working
-if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
-  Preferences.addAll([
-    { id: "browser.newtabpage.activity-stream.showSearch", type: "bool" },
-    {
-      id: "browser.newtabpage.activity-stream.system.showWeather",
-      type: "bool",
-    },
-    { id: "browser.newtabpage.activity-stream.showWeather", type: "bool" },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.system.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.system.lists.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.lists.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.system.focusTimer.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.focusTimer.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.feeds.topsites",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.topSitesRows",
-      type: "int",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.feeds.system.topstories",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.feeds.section.topstories",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.discoverystream.sections.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.discoverystream.topicLabels.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.discoverystream.sections.personalization.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.discoverystream.sections.customizeMenuPanel.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.showSponsoredCheckboxes",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.showSponsoredTopSites",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.showSponsored",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.feeds.section.highlights",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.section.highlights.rows",
-      type: "int",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.section.highlights.includeVisited",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.section.highlights.includeBookmarks",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.section.highlights.includeDownloads",
-      type: "bool",
-    },
-  ]);
-
-  // Search
-  Preferences.addSetting({
-    id: "webSearch",
-    pref: "browser.newtabpage.activity-stream.showSearch",
-  });
-
-  // Weather
-  Preferences.addSetting({
-    id: "showWeather",
-    pref: "browser.newtabpage.activity-stream.system.showWeather",
-  });
-
-  Preferences.addSetting({
-    id: "weather",
-    pref: "browser.newtabpage.activity-stream.showWeather",
-    deps: ["showWeather"],
-    visible: ({ showWeather }) => showWeather.value,
-  });
-
-  // Widgets: general
-  Preferences.addSetting({
-    id: "widgetsEnabled",
-    pref: "browser.newtabpage.activity-stream.widgets.system.enabled",
-  });
-
-  Preferences.addSetting({
-    id: "widgets",
-    pref: "browser.newtabpage.activity-stream.widgets.enabled",
-    deps: ["widgetsEnabled"],
-    visible: ({ widgetsEnabled }) => widgetsEnabled.value,
-  });
-
-  // Widgets: lists
-  Preferences.addSetting({
-    id: "listsEnabled",
-    pref: "browser.newtabpage.activity-stream.widgets.system.lists.enabled",
-  });
-
-  Preferences.addSetting({
-    id: "lists",
-    pref: "browser.newtabpage.activity-stream.widgets.lists.enabled",
-    deps: ["listsEnabled"],
-    visible: ({ listsEnabled }) => listsEnabled.value,
-  });
-
-  // Widgets: timer
-  Preferences.addSetting({
-    id: "timerEnabled",
-    pref: "browser.newtabpage.activity-stream.widgets.system.focusTimer.enabled",
-  });
-
-  Preferences.addSetting({
-    id: "timer",
-    pref: "browser.newtabpage.activity-stream.widgets.focusTimer.enabled",
-    deps: ["timerEnabled"],
-    visible: ({ timerEnabled }) => timerEnabled.value,
-  });
-
-  // Shortcuts
-  Preferences.addSetting({
-    id: "shortcuts",
-    pref: "browser.newtabpage.activity-stream.feeds.topsites",
-  });
-  Preferences.addSetting({
-    id: "shortcutsRows",
-    pref: "browser.newtabpage.activity-stream.topSitesRows",
-  });
-
-  // Stories
-  Preferences.addSetting({
-    id: "stories",
-    pref: "browser.newtabpage.activity-stream.feeds.section.topstories",
-  });
-  Preferences.addSetting({
-    id: "sectionsEnabled",
-    pref: "browser.newtabpage.activity-stream.discoverystream.sections.enabled",
-  });
-  Preferences.addSetting({
-    id: "topicLabelsEnabled",
-    pref: "browser.newtabpage.activity-stream.discoverystream.topicLabels.enabled",
-  });
-  Preferences.addSetting({
-    id: "sectionsPersonalizationEnabled",
-    pref: "browser.newtabpage.activity-stream.discoverystream.sections.personalization.enabled",
-  });
-  Preferences.addSetting({
-    id: "sectionsCustomizeMenuPanelEnabled",
-    pref: "browser.newtabpage.activity-stream.discoverystream.sections.customizeMenuPanel.enabled",
-  });
-  Preferences.addSetting({
-    id: "manageTopics",
-    deps: [
-      "sectionsEnabled",
-      "topicLabelsEnabled",
-      "sectionsPersonalizationEnabled",
-      "sectionsCustomizeMenuPanelEnabled",
-      "sectionTopstories",
-    ],
-    visible: ({
-      sectionsEnabled,
-      topicLabelsEnabled,
-      sectionsPersonalizationEnabled,
-      sectionsCustomizeMenuPanelEnabled,
-      sectionTopstories,
-    }) =>
-      sectionsEnabled.value &&
-      topicLabelsEnabled.value &&
-      sectionsPersonalizationEnabled.value &&
-      sectionsCustomizeMenuPanelEnabled.value &&
-      sectionTopstories.value,
-  });
-
-  // Dependency prefs for sponsored stories visibility
-  Preferences.addSetting({
-    id: "systemTopstories",
-    pref: "browser.newtabpage.activity-stream.feeds.system.topstories",
-  });
-  Preferences.addSetting({
-    id: "sectionTopstories",
-    pref: "browser.newtabpage.activity-stream.feeds.section.topstories",
-  });
-
-  // Support Firefox: sponsored content
-  Preferences.addSetting({
-    id: "supportFirefox",
-    pref: "browser.newtabpage.activity-stream.showSponsoredCheckboxes",
-    deps: ["sponsoredShortcuts", "sponsoredStories"],
-    onUserChange(value, { sponsoredShortcuts, sponsoredStories }) {
-      // When supportFirefox changes, automatically update child preferences to match
-      sponsoredShortcuts.value = !!value;
-      sponsoredStories.value = !!value;
-    },
-  });
-  Preferences.addSetting({
-    id: "topsitesEnabled",
-    pref: "browser.newtabpage.activity-stream.feeds.topsites",
-  });
-  Preferences.addSetting({
-    id: "sponsoredShortcuts",
-    pref: "browser.newtabpage.activity-stream.showSponsoredTopSites",
-    deps: ["topsitesEnabled"],
-    disabled: ({ topsitesEnabled }) => !topsitesEnabled.value,
-  });
-  Preferences.addSetting({
-    id: "sponsoredStories",
-    pref: "browser.newtabpage.activity-stream.showSponsored",
-    deps: ["systemTopstories", "sectionTopstories"],
-    visible: ({ systemTopstories }) => !!systemTopstories.value,
-    disabled: ({ sectionTopstories }) => !sectionTopstories.value,
-  });
-  Preferences.addSetting({
-    id: "supportFirefoxPromo",
-    deps: ["supportFirefox"],
-  });
-
-  // Recent activity
-  Preferences.addSetting({
-    id: "recentActivity",
-    pref: "browser.newtabpage.activity-stream.feeds.section.highlights",
-  });
-  Preferences.addSetting({
-    id: "recentActivityRows",
-    pref: "browser.newtabpage.activity-stream.section.highlights.rows",
-  });
-  Preferences.addSetting({
-    id: "recentActivityVisited",
-    pref: "browser.newtabpage.activity-stream.section.highlights.includeVisited",
-  });
-  Preferences.addSetting({
-    id: "recentActivityBookmarks",
-    pref: "browser.newtabpage.activity-stream.section.highlights.includeBookmarks",
-  });
-  Preferences.addSetting({
-    id: "recentActivityDownloads",
-    pref: "browser.newtabpage.activity-stream.section.highlights.includeDownloads",
-  });
-
-  Preferences.addSetting({
-    id: "chooseWallpaper",
-  });
-}
+const RESET_DEFAULTS_BUTTON_ENABLED = false;
 
 var gHomePane = {
   HOME_MODE_FIREFOX_HOME: "0",
@@ -426,20 +37,8 @@ var gHomePane = {
     );
   },
 
-  get isPocketNewtabEnabled() {
-    const value = Services.prefs.getStringPref(
-      "browser.newtabpage.activity-stream.discoverystream.config",
-      ""
-    );
-    if (value) {
-      try {
-        return JSON.parse(value).enabled;
-      } catch (e) {
-        console.error("Failed to parse Discovery Stream pref.");
-      }
-    }
-
-    return false;
+  get isResetDefaultsButtonEnabled() {
+    return RESET_DEFAULTS_BUTTON_ENABLED;
   },
 
   async syncToNewTabPref() {
@@ -992,9 +591,8 @@ var gHomePane = {
    * Check all Home Tab preferences for user set values.
    */
   _changedHomeTabDefaultPrefs() {
-    // If Discovery Stream is enabled Firefox Home Content preference options are hidden
     const homeContentChanged =
-      !this.isPocketNewtabEnabled &&
+      this.isResetDefaultsButtonEnabled &&
       this.homePanePrefs.some(pref => pref.hasUserValue);
     const newtabPref = Preferences.get(this.NEWTAB_ENABLED_PREF);
     const extensionControlled = Preferences.get(
@@ -1033,16 +631,17 @@ var gHomePane = {
    */
   restoreDefaultPrefsForHome() {
     this.restoreDefaultHomePage();
-    // If Discovery Stream is enabled Firefox Home Content preference options are hidden
-    if (!this.isPocketNewtabEnabled) {
+    if (this.isResetDefaultsButtonEnabled) {
       this.homePanePrefs.forEach(pref => Services.prefs.clearUserPref(pref.id));
     }
   },
 
   init() {
-    initSettingGroup("homepage");
-    initSettingGroup("home");
-
+    // The redesign renders the home pane via setting-pane elements;
+    // the legacy XUL-based init must not run alongside it.
+    if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
+      return;
+    }
     // Event Listeners
     document
       .getElementById("homePageUrl")

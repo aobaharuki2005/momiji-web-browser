@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -125,7 +123,7 @@ class DOMSVGAnimatedLengthList final : public nsWrapperCache {
    */
   static already_AddRefed<DOMSVGAnimatedLengthList> GetDOMWrapper(
       SVGAnimatedLengthList* aList, dom::SVGElement* aElement,
-      uint8_t aAttrEnum, uint8_t aAxis);
+      uint8_t aAttrEnum, SVGLength::Axis aAxis);
 
   /**
    * This method returns the DOMSVGAnimatedLengthList wrapper for an internal
@@ -170,7 +168,7 @@ class DOMSVGAnimatedLengthList final : public nsWrapperCache {
    * type.
    */
   DOMSVGAnimatedLengthList(dom::SVGElement* aElement, uint8_t aAttrEnum,
-                           uint8_t aAxis)
+                           SVGLength::Axis aAxis)
       : mBaseVal(nullptr),
         mAnimVal(nullptr),
         mElement(aElement),
@@ -194,7 +192,7 @@ class DOMSVGAnimatedLengthList final : public nsWrapperCache {
   RefPtr<dom::SVGElement> mElement;
 
   uint8_t mAttrEnum;
-  uint8_t mAxis;
+  SVGLength::Axis mAxis;
 };
 
 }  // namespace dom

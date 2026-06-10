@@ -4,30 +4,32 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.core.net.toUri
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.customannotations.SkipLeaks
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.disableWifiNetworkConnection
 import org.mozilla.fenix.helpers.AppAndSystemHelper.enableDataSaverSystemSetting
+import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.firstForeignWebPageAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.secondForeignWebPageAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
-import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
-import org.mozilla.fenix.tabstray.browser.compose.createListReorderState
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.translationsRobot
+import androidx.compose.ui.test.junit4.v2.AndroidComposeTestRule as AndroidComposeTestRuleV2
 
-class TranslationsTest : TestSetup() {
-    @get:Rule
+class TranslationsTest {
+    @get:Rule(order = 0)
+    val fenixTestRule: FenixTestRule = FenixTestRule()
+
+    private val mockWebServer get() = fenixTestRule.mockWebServer
+
+    @get:Rule(order = 1)
     val composeTestRule =
-        AndroidComposeTestRule(
+        AndroidComposeTestRuleV2(
             HomeActivityIntentTestRule(
                 skipOnboarding = true,
                 isMenuRedesignCFREnabled = false,
@@ -35,13 +37,12 @@ class TranslationsTest : TestSetup() {
             ),
         ) { it.activity }
 
-    @get:Rule
-    val memoryLeaksRule = DetectMemoryLeaksRule()
+    @get:Rule(order = 2)
+    val memoryLeaksRule = DetectMemoryLeaksRule(composeTestRule = { composeTestRule })
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2436643
     @SmokeTest
     @Test
-    @SkipLeaks
     fun verifyTheFirstTranslationNotNowButtonFunctionalityTest() {
         val testPage = mockWebServer.firstForeignWebPageAsset
 
@@ -241,8 +242,10 @@ class TranslationsTest : TestSetup() {
     fun verifyTheSiteDeletionFromTheNeverTranslateListTest() {
         val firstTestPage = mockWebServer.firstForeignWebPageAsset
 
-        navigationToolbar(composeTestRule) {
-        }.enterURLAndEnterToBrowser(firstTestPage.url) {
+        browserScreen(composeTestRule) {
+        }.openTabDrawer(composeTestRule) {
+        }.openNewTab {
+        }.submitQuery(firstTestPage.url.toString()) {
         }
         translationsRobot(composeTestRule) {
             verifyTranslationSheetIsDisplayed(isDisplayed = true)
@@ -250,9 +253,6 @@ class TranslationsTest : TestSetup() {
             verifyTheNeverTranslateThisSiteOptionIsChecked(isChecked = false)
             clickNeverTranslateThisSiteOption()
             verifyTheNeverTranslateThisSiteOptionIsChecked(isChecked = true)
-            verifyAlwaysOfferToTranslateOptionIsEnabled(isEnabled = false)
-            verifyAlwaysTranslateOptionIsEnabled(isEnabled = false)
-            verifyTheNeverTranslateLanguageOptionIsEnabled(isEnabled = false)
         }.clickTranslationSettingsButton {
             clickNeverTranslateTheseSitesButton()
             verifyNeverTranslateThisSiteRemoveButton("${firstTestPage.url.scheme}://${firstTestPage.url.authority}")
@@ -264,6 +264,7 @@ class TranslationsTest : TestSetup() {
             clickConfirmDeleteNeverTranslateThisSiteDialog()
         }.goBackToTranslationSettingsSubMenu {
         }.goBackToTranslationOptionSheet {
+            verifyAlwaysOfferToTranslateOptionIsChecked(isChecked = true)
             verifyTheNeverTranslateThisSiteOptionIsChecked(isChecked = false)
         }
     }
@@ -296,7 +297,6 @@ class TranslationsTest : TestSetup() {
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2437990
     @Test
-    @SkipLeaks
     fun verifyTheAlwaysOfferToTranslateOptionTest() {
         val firstTestPage = mockWebServer.firstForeignWebPageAsset
         val secondTestPage = mockWebServer.secondForeignWebPageAsset

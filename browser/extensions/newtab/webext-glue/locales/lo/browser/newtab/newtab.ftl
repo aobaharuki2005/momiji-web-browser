@@ -41,7 +41,7 @@ newtab-search-box-input =
     .placeholder = ຄົ້ນຫາເວັບໄຊທ
     .aria-label = ຄົ້ນຫາເວັບໄຊທ
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = ເພີ່ມ Search Engine
 newtab-topsites-add-shortcut-header = ທາງລັດໃໝ່
@@ -240,9 +240,17 @@ newtab-error-fallback-refresh-link = ຟື້ນຟູໜ້າເພື່ອ�
 
 newtab-custom-shortcuts-title = ທາງລັດ
 newtab-custom-shortcuts-subtitle = ເວັບໄຊທທີ່ທ່ານໄດ້ບັນທຶກໄວ້ ຫລື ເຂົ້າໄປເບິງມາ
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = ທາງລັດ
     .description = ເວັບໄຊທທີ່ທ່ານໄດ້ບັນທຶກໄວ້ ຫລື ເຂົ້າໄປເບິງມາ
+newtab-custom-shortcuts-nova =
+    .label = ທາງລັດ
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label = { $num } ແຖວ
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector = { $num } ແຖວ

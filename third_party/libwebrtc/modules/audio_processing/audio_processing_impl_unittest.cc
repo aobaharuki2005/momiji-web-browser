@@ -15,12 +15,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#include "api/array_view.h"
 #include "api/audio/audio_processing.h"
 #include "api/audio/builtin_audio_processing_builder.h"
 #include "api/audio/echo_control.h"
@@ -90,12 +90,12 @@ class TestEchoDetector : public EchoDetector {
       : analyze_render_audio_called_(false),
         last_render_audio_first_sample_(0.f) {}
   ~TestEchoDetector() override = default;
-  void AnalyzeRenderAudio(ArrayView<const float> render_audio) override {
+  void AnalyzeRenderAudio(std::span<const float> render_audio) override {
     last_render_audio_first_sample_ = render_audio[0];
     analyze_render_audio_called_ = true;
   }
   void AnalyzeCaptureAudio(
-      ArrayView<const float> /* capture_audio */) override {}
+      std::span<const float> /* capture_audio */) override {}
   void Initialize(int /* capture_sample_rate_hz */,
                   int /* num_capture_channels */,
                   int /* render_sample_rate_hz */,
@@ -125,7 +125,7 @@ class TestRenderPreProcessor : public CustomProcessing {
   void Initialize(int /* sample_rate_hz */, int /* num_channels */) override {}
   void Process(AudioBuffer* audio) override {
     for (size_t k = 0; k < audio->num_channels(); ++k) {
-      ArrayView<float> channel_view(audio->channels()[k], audio->num_frames());
+      std::span<float> channel_view(audio->channels()[k], audio->num_frames());
       std::transform(channel_view.begin(), channel_view.end(),
                      channel_view.begin(), ProcessSample);
     }
@@ -971,5 +971,28 @@ INSTANTIATE_TEST_SUITE_P(
             .gain_controller2 = {.enabled = true,
                                  .input_volume_controller = {.enabled = true},
                                  .adaptive_digital = {.enabled = true}}}));
+
+TEST(AudioProcessingImplTest, DoesNotFailProcessReverseStreamAfterApplyConfig) {
+  AudioProcessing::Config apm_config;
+  apm_config.echo_canceller.enabled = true;
+  constexpr int kSampleRateHz = 48000;
+  constexpr size_t kNumChannels = 1;
+  std::array<int16_t, kNumChannels * kSampleRateHz / 100> frame;
+  StreamConfig stream_config(kSampleRateHz, kNumChannels);
+
+  scoped_refptr<AudioProcessing> apm =
+      BuiltinAudioProcessingBuilder().Build(CreateEnvironment());
+  apm->Initialize({{
+      StreamConfig(16000, /*num_channels=*/1),
+      StreamConfig(16000, /*num_channels=*/1),
+      stream_config,
+      stream_config,
+  }});
+  apm->ApplyConfig(apm_config);
+  frame.fill(0);
+  ASSERT_EQ(AudioProcessing::Error::kNoError,
+            apm->ProcessReverseStream(frame.data(), stream_config,
+                                      stream_config, frame.data()));
+}
 
 }  // namespace webrtc

@@ -19,7 +19,7 @@ add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
-  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const rule = getRuleViewRuleEditorAt(view, 1).rule;
 
   info("Check that the correct rules are visible");
   is(rule.selectorText, "#testid", "Second rule is #testid.");

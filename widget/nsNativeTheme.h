@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,8 +5,8 @@
 // This defines a common base class for nsITheme implementations, to reduce
 // code duplication.
 
-#ifndef _NSNATIVETHEME_H_
-#define _NSNATIVETHEME_H_
+#ifndef NSNATIVETHEME_H_
+#define NSNATIVETHEME_H_
 
 #include "nsAtom.h"
 #include "nsColor.h"
@@ -104,4 +103,4 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   AutoTArray<nsCOMPtr<nsIContent>, 20> mAnimatedContentList;
 };
 
-#endif  // _NSNATIVETHEME_H_
+#endif  // NSNATIVETHEME_H_

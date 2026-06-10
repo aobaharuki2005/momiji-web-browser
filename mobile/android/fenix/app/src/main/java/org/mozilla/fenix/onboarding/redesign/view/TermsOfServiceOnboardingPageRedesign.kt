@@ -5,9 +5,15 @@
 package org.mozilla.fenix.onboarding.redesign.view
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.LocalOverscrollFactory
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -18,26 +24,39 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.LinkText
+import mozilla.components.compose.base.LinkTextState
 import mozilla.components.compose.base.button.FilledButton
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.LinkText
-import org.mozilla.fenix.compose.LinkTextState
+import org.mozilla.fenix.compose.ScrollIndicator
 import org.mozilla.fenix.onboarding.view.Action
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.onboarding.view.OnboardingTermsOfService
 import org.mozilla.fenix.onboarding.view.OnboardingTermsOfServiceEventHandler
 import org.mozilla.fenix.theme.FirefoxTheme
+
+private val TOU_IMAGE_HEIGHT = 176.dp
+private val TOU_IMAGE_HEIGHT_SMALL_DEVICE = 130.dp
+
+private val kitImageResources = listOf(
+    R.drawable.nova_onboarding_tou,
+    R.drawable.nova_onboarding_tou_2,
+)
 
 /**
  * A Composable for displaying the terms of service onboarding page content.
@@ -52,34 +71,61 @@ fun TermsOfServiceOnboardingPageRedesign(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        elevation = CardDefaults.cardElevation(if (pageState.shouldShowElevation) 6.dp else 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
+            modifier = Modifier.padding(
+                horizontal = 16.dp,
+                vertical = if (pageState.isSmallDevice) 0.dp else 24.dp,
+            ),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.weight(TITLE_TOP_SPACER_WEIGHT))
+            val scrollState = rememberScrollState()
 
-            Column(
-                modifier = Modifier
-                    .weight(CONTENT_WEIGHT)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Header(pageState)
-
-                Spacer(Modifier.weight(1f))
-
-                pageState.termsOfService?.let { BodyText(it, eventHandler) }
-
-                Spacer(Modifier.height(26.dp))
+            if (pageState.isSmallDevice) {
+                Spacer(modifier = Modifier.height(16.dp))
+            } else {
+                Spacer(modifier = Modifier.weight(TITLE_TOP_SPACER_WEIGHT))
             }
 
+            // Use a Box to overlay the scrollbar on top of the content column, aligned to the right.
+            Box(
+                modifier = Modifier
+                    .weight(CONTENT_WEIGHT)
+                    .fillMaxWidth(),
+            ) {
+                // Disable the overscroll glow/stretch effect to keep the onboarding UI clean.
+                CompositionLocalProvider(
+                    LocalOverscrollFactory provides null,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(end = 12.dp)
+                            .verticalScroll(scrollState),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Header(pageState)
+
+                        Spacer(Modifier.weight(1f))
+
+                        pageState.termsOfService?.let { BodyText(it, eventHandler) }
+
+                        Spacer(Modifier.height(26.dp))
+                    }
+
+                    ScrollIndicator(
+                        scrollState = scrollState,
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        enabled = pageState.isSmallDevice,
+                    )
+                }
+            }
             FilledButton(
                 text = pageState.primaryButton.text,
                 modifier = Modifier
                     .width(width = FirefoxTheme.layout.size.maxWidth.small)
+                    .defaultMinSize(minHeight = FirefoxTheme.layout.size.static600)
                     .semantics {
                         testTag = pageState.title + "onboarding_card_redesign.positive_button"
                     },
@@ -88,19 +134,29 @@ fun TermsOfServiceOnboardingPageRedesign(
         }
     }
 
-    LaunchedEffect(pageState) {
+    LaunchedEffect(Unit) {
         pageState.onRecordImpressionEvent()
     }
 }
 
 @Composable
 private fun Header(pageState: OnboardingPageState) {
+    val currentImageIndex = remember { mutableIntStateOf(0) }
+    val currentImageRes = kitImageResources[currentImageIndex.intValue]
+
     Image(
-        painter = painterResource(id = pageState.imageRes),
+        painter = painterResource(id = currentImageRes),
         contentDescription = null, // Decorative image only.
         modifier = Modifier
-            .height(IconSize.heightDp)
-            .width(IconSize.widthDp),
+            .height(pageState.imageHeight())
+            .clickable(
+                role = Role.Button,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null, // Prevents onClick press/ripple animation
+            ) {
+                currentImageIndex.intValue =
+                    nextCyclicImageIndex(currentImageIndex.intValue, kitImageResources.size)
+            },
     )
 
     Spacer(Modifier.height(20.dp))
@@ -111,29 +167,28 @@ private fun Header(pageState: OnboardingPageState) {
         style = MaterialTheme.typography.headlineMedium,
     )
 
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(20.dp))
 
-    pageState.termsOfService?.let { Subheaders(it) }
+    pageState.termsOfService?.subheaderOneText?.let { SubHeader(it) }
 }
 
-@Composable
-private fun Subheaders(termsOfService: OnboardingTermsOfService) {
-    with(termsOfService) {
-        Spacer(Modifier.height(10.dp))
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            subheaderOneText?.let { SubHeaderText(it) }
-            subheaderTwoText?.let { SubHeaderText(it) }
-            subheaderThreeText?.let { SubHeaderText(it) }
-        }
-    }
+private fun OnboardingPageState.imageHeight() = if (isSmallDevice) {
+    TOU_IMAGE_HEIGHT_SMALL_DEVICE
+} else {
+    TOU_IMAGE_HEIGHT
 }
 
+/**
+ * Advances the image index to the next item, wrapping back to the start when the end of the list
+ * is reached. This ensures the index always stays within valid bounds.
+ */
+private fun nextCyclicImageIndex(
+    currentImageIndex: Int,
+    imageResourcesSize: Int,
+) = (currentImageIndex + 1) % imageResourcesSize
+
 @Composable
-private fun SubHeaderText(text: String) {
+private fun SubHeader(text: String) {
     Text(
         text = text,
         style = FirefoxTheme.typography.body2.copy(
@@ -202,14 +257,7 @@ private fun BodyLinkText(
     )
 }
 
-private fun String.updateFirstPlaceholder(text: String) = replace("%1\$s", text)
-
-private object IconSize {
-    val heightDp = 60.dp
-    val widthDp = 58.dp
-}
-
-// *** Code below used for previews only *** //
+private fun String.updateFirstPlaceholder(text: String) = replace($$"%1$s", text)
 
 @PreviewLightDark
 @Composable
@@ -217,25 +265,23 @@ private fun OnboardingPagePreview() {
     FirefoxTheme {
         TermsOfServiceOnboardingPageRedesign(
             pageState = OnboardingPageState(
-                title = stringResource(id = R.string.onboarding_redesign_tou_title),
+                title = stringResource(id = R.string.onboarding_welcome_to_firefox),
                 description = "",
                 termsOfService = OnboardingTermsOfService(
-                    subheaderOneText = stringResource(id = R.string.onboarding_redesign_tou_subheader_one),
-                    subheaderTwoText = stringResource(id = R.string.onboarding_redesign_tou_subheader_two),
-                    subheaderThreeText = stringResource(id = R.string.onboarding_redesign_tou_subheader_three),
-                    lineOneText = stringResource(id = R.string.onboarding_redesign_tou_body_one),
-                    lineOneLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_one_link_text),
+                    subheaderOneText = stringResource(id = R.string.nova_onboarding_tou_subtitle),
+                    lineOneText = stringResource(id = R.string.nova_onboarding_tou_body_line_1),
+                    lineOneLinkText = stringResource(id = R.string.nova_onboarding_tou_body_line_1_link_text),
                     lineOneLinkUrl = "URL",
-                    lineTwoText = stringResource(id = R.string.onboarding_redesign_tou_body_two),
-                    lineTwoLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_two_link_text),
+                    lineTwoText = stringResource(id = R.string.nova_onboarding_tou_body_line_2),
+                    lineTwoLinkText = stringResource(id = R.string.nova_onboarding_tou_body_line_2_link_text),
                     lineTwoLinkUrl = "URL",
-                    lineThreeText = stringResource(id = R.string.onboarding_redesign_tou_body_three),
-                    lineThreeLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_three_link_text),
+                    lineThreeText = stringResource(id = R.string.nova_onboarding_tou_body_line_3),
+                    lineThreeLinkText = stringResource(id = R.string.nova_onboarding_tou_body_line_3_link_text),
                 ),
-                imageRes = R.drawable.ic_firefox,
+                imageRes = R.drawable.nova_onboarding_tou,
                 primaryButton = Action(
                     text = stringResource(
-                        id = R.string.onboarding_redesign_tou_agree_and_continue_button_label,
+                        id = R.string.nova_onboarding_continue_button,
                     ),
                     onClick = {},
                 ),

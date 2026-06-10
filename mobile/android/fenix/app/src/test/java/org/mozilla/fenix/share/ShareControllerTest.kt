@@ -26,12 +26,12 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
+import mozilla.components.concept.sync.TabPrivacy
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -46,6 +46,7 @@ import org.mozilla.fenix.components.appstate.AppAction.ShareAction
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class ShareControllerTest {
@@ -58,8 +59,8 @@ class ShareControllerTest {
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
     private val tabsData = listOf(
-        TabData("title0", "url0"),
-        TabData("title1", "url1"),
+        TabData("title0", "url0", TabPrivacy.Normal),
+        TabData("title1", "url1", TabPrivacy.Normal),
     )
     private val textToShare = "${shareData[0].url}\n\n${shareData[1].url}"
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
@@ -71,7 +72,8 @@ class ShareControllerTest {
         every { currentDestination?.id } returns R.id.shareFragment
     }
 
-    private val dismiss = mockk<(ShareController.Result) -> Unit>(relaxed = true)
+    private val dismissSink: DismissSink = mockk(relaxed = true)
+    private val dismiss: (ShareController.Result) -> Unit = { dismissSink.onDismiss(it) }
     private val recentAppStorage = mockk<RecentAppsStorage>(relaxed = true)
 
     @get:Rule
@@ -87,6 +89,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -102,7 +105,7 @@ class ShareControllerTest {
 
             controller.handleShareClosed()
 
-            verify { dismiss(ShareController.Result.DISMISSED) }
+            verify { dismissSink.onDismiss(ShareController.Result.DISMISSED) }
         }
 
     @Test
@@ -123,6 +126,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 mockk(),
                 mockk(),
                 mockk(),
@@ -170,7 +174,7 @@ class ShareControllerTest {
             verify { recentAppStorage.updateRecentApp(appShareOption.activityName) }
             verifyOrder {
                 activityContext.startActivity(shareIntent.captured)
-                dismiss(ShareController.Result.SUCCESS)
+                dismissSink.onDismiss(ShareController.Result.SUCCESS)
             }
         }
 
@@ -192,6 +196,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 mockk(),
                 mockk(),
                 mockk(),
@@ -239,6 +244,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 mockk(),
                 mockk(),
                 mockk(),
@@ -285,6 +291,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = shareSubject,
                 shareData = shareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -304,7 +311,7 @@ class ShareControllerTest {
             verifyOrder {
                 activityContext.startActivity(shareIntent.captured)
                 appStore.dispatch(ShareAction.ShareToAppFailed)
-                dismiss(ShareController.Result.SHARE_ERROR)
+                dismissSink.onDismiss(ShareController.Result.SHARE_ERROR)
             }
         }
 
@@ -324,6 +331,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = shareSubject,
                 shareData = shareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -343,7 +351,7 @@ class ShareControllerTest {
             verifyOrder {
                 activityContext.startActivity(shareIntent.captured)
                 appStore.dispatch(ShareAction.ShareToAppFailed)
-                dismiss(ShareController.Result.SHARE_ERROR)
+                dismissSink.onDismiss(ShareController.Result.SHARE_ERROR)
             }
         }
 
@@ -355,6 +363,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = shareSubject,
                 shareData = shareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = saveToPdfUseCase,
                 printUseCase = mockk(),
@@ -370,7 +379,7 @@ class ShareControllerTest {
 
             verify {
                 saveToPdfUseCase.invoke("tabID")
-                dismiss(ShareController.Result.DISMISSED)
+                dismissSink.onDismiss(ShareController.Result.DISMISSED)
             }
         }
 
@@ -382,6 +391,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = shareSubject,
                 shareData = shareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = printUseCase,
@@ -397,7 +407,7 @@ class ShareControllerTest {
 
             verify {
                 printUseCase.invoke("tabID")
-                dismiss(ShareController.Result.DISMISSED)
+                dismissSink.onDismiss(ShareController.Result.DISMISSED)
             }
 
             assertNotNull(Events.shareMenuAction.testGetValue())
@@ -415,6 +425,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = shareSubject,
                 shareData = shareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -438,6 +449,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = null,
                 shareData = shareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -465,6 +477,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = null,
                 shareData = partialTitlesShareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -492,6 +505,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = null,
                 shareData = noTitleShareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -519,6 +533,7 @@ class ShareControllerTest {
                 context = activityContext,
                 shareSubject = null,
                 shareData = noTitleShareData,
+                isPrivate = false,
                 sendTabUseCases = mockk(),
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -541,6 +556,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -584,7 +600,7 @@ class ShareControllerTest {
 
             verifyOrder {
                 sendTabUseCases.sendToDeviceAsync(capture(deviceId), capture(tabsShared))
-                dismiss(ShareController.Result.SUCCESS)
+                dismissSink.onDismiss(ShareController.Result.SUCCESS)
             }
 
             assertTrue(deviceId.isCaptured)
@@ -601,6 +617,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -648,7 +665,7 @@ class ShareControllerTest {
 
             verifyOrder {
                 sendTabUseCases.sendToAllAsync(capture(tabsShared))
-                dismiss(ShareController.Result.SUCCESS)
+                dismissSink.onDismiss(ShareController.Result.SUCCESS)
             }
 
             // SendTabUseCases should send a the `shareTabs` mapped to tabData
@@ -664,6 +681,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -690,7 +708,7 @@ class ShareControllerTest {
                     ),
                     null,
                 )
-                dismiss(ShareController.Result.DISMISSED)
+                dismissSink.onDismiss(ShareController.Result.DISMISSED)
             }
         }
 
@@ -702,6 +720,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -724,7 +743,7 @@ class ShareControllerTest {
                     ),
                     null,
                 )
-                dismiss(ShareController.Result.DISMISSED)
+                dismissSink.onDismiss(ShareController.Result.DISMISSED)
             }
         }
 
@@ -735,6 +754,7 @@ class ShareControllerTest {
             appStore,
             shareSubject,
             shareData,
+            false,
             sendTabUseCases,
             saveToPdfUseCase,
             printUseCase,
@@ -771,6 +791,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -806,6 +827,7 @@ class ShareControllerTest {
             appStore,
             shareSubject,
             shareData,
+            false,
             sendTabUseCases,
             saveToPdfUseCase,
             printUseCase,
@@ -834,6 +856,7 @@ class ShareControllerTest {
             appStore = appStore,
             shareSubject = shareSubject,
             shareData = shareData,
+            isPrivate = false,
             sendTabUseCases = sendTabUseCases,
             saveToPdfUseCase = mockk(),
             printUseCase = mockk(),
@@ -857,6 +880,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -881,6 +905,7 @@ class ShareControllerTest {
                 appStore = appStore,
                 shareSubject = null,
                 shareData = shareData,
+                isPrivate = false,
                 sendTabUseCases = sendTabUseCases,
                 saveToPdfUseCase = mockk(),
                 printUseCase = mockk(),
@@ -902,6 +927,7 @@ class ShareControllerTest {
             appStore,
             shareSubject,
             shareData,
+            false,
             sendTabUseCases,
             saveToPdfUseCase,
             printUseCase,
@@ -932,6 +958,7 @@ class ShareControllerTest {
                 appStore,
                 shareSubject,
                 shareData,
+                false,
                 sendTabUseCases,
                 saveToPdfUseCase,
                 printUseCase,
@@ -947,8 +974,8 @@ class ShareControllerTest {
 
             var tabData: List<TabData>
             val expected = listOf(
-                TabData(title = "title0", url = ""),
-                TabData(title = "title1", url = "data:,Hello%2C%20World!"),
+                TabData(title = "title0", url = "", privacy = TabPrivacy.Normal),
+                TabData(title = "title1", url = "data:,Hello%2C%20World!", privacy = TabPrivacy.Normal),
             )
 
             with(controller) {
@@ -960,4 +987,44 @@ class ShareControllerTest {
 
             assertEquals(expected, tabData)
         }
+
+    @Test
+    fun `ShareTab#toTabData respects private browsing mode`() {
+        runTest(testDispatcher) {
+            val privateController = DefaultShareController(
+                context = testContext,
+                appStore = appStore,
+                shareSubject = null,
+                shareData = shareData,
+                isPrivate = true,
+                sendTabUseCases = sendTabUseCases,
+                saveToPdfUseCase = mockk(),
+                printUseCase = mockk(),
+                sentFromFirefoxManager = sentFromFirefoxManager,
+                navController = navController,
+                recentAppsStorage = recentAppStorage,
+                viewLifecycleScope = this,
+                ioDispatcher = testDispatcher,
+                dismiss = dismiss,
+            )
+
+            var tabData: List<TabData>
+            val expected = listOf(
+                TabData(title = "title0", url = "url0", privacy = TabPrivacy.Private),
+                TabData(title = "title1", url = "url1", privacy = TabPrivacy.Private),
+            )
+
+            with(privateController) {
+                tabData = shareData.toTabData()
+            }
+            assertEquals(expected, tabData)
+        }
+    }
+
+    // SAM routed through mockk so verifyOrder can still span dismiss calls and other mocked
+    // interactions. A user-defined interface keeps ByteBuddy out of the kotlin.jvm.functions
+    // TypeCache bucket that Robolectric's shared classloader can race on.
+    private fun interface DismissSink {
+        fun onDismiss(result: ShareController.Result)
+    }
 }

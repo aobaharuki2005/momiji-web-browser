@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,6 +36,7 @@ void CoalescedTouchData::Coalesce(const WidgetTouchEvent& aEvent,
                                   const uint64_t& aInputBlockId,
                                   const nsEventStatus& aApzResponse) {
   MOZ_ASSERT(aEvent.mMessage == eTouchMove);
+  MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
   if (IsEmpty()) {
     CreateCoalescedTouchEvent(aEvent);
     mGuid = aGuid;
@@ -91,6 +90,7 @@ bool CoalescedTouchData::CanCoalesce(const WidgetTouchEvent& aEvent,
                                      const uint64_t& aInputBlockId,
                                      const nsEventStatus& aApzResponse) {
   MOZ_ASSERT(!IsEmpty());
+  MOZ_ASSERT(!mCoalescedInputEvent->mFlags.mIsSynthesizedForTests);
   if (mGuid != aGuid || mInputBlockId != aInputBlockId ||
       mCoalescedInputEvent->mModifiers != aEvent.mModifiers ||
       mCoalescedInputEvent->mInputSource != aEvent.mInputSource ||

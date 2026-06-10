@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -377,6 +376,7 @@ bool NativeEventLogger::NativeEventLoggerInternal() {
       }
       const char* resultMsg = [&]() {
         if (!mResult.isSome()) return "initial call";
+        if (!mResult.value()) return "false";
         if (mMsg == WM_NCHITTEST) {
           auto const& htr = HitTestResults();
           if (auto const it = htr.find(mRetValue); it != htr.end()) {
@@ -384,7 +384,7 @@ bool NativeEventLogger::NativeEventLoggerInternal() {
           }
           return "undocumented value?";
         }
-        return mResult.value() ? "true" : "false";
+        return "true";
       }();
 
       nsAutoCString logMessage;
@@ -392,10 +392,10 @@ bool NativeEventLogger::NativeEventLoggerInternal() {
           "%s | %6ld %08" PRIX64 " - 0x%04X %s%s%s: 0x%08" PRIX64 " (%s)\n",
           mMsgLoopName, mEventCounter.valueOr(gEventCounter),
           reinterpret_cast<uint64_t>(mHwnd), mMsg,
-          !msgText.IsEmpty() ? msgText.Data() : "Unknown",
+          !msgText.IsEmpty() ? msgText.get() : "Unknown",
           paramInfo.IsEmpty() ? "" : " ", paramInfo.get(),
           mResult.isSome() ? static_cast<uint64_t>(mRetValue) : 0, resultMsg);
-      const char* logMessageData = logMessage.Data();
+      const char* logMessageData = logMessage.get();
       MOZ_LOG(gWindowsEventLog, targetLogLevel, ("%s", logMessageData));
     }
     return true;
@@ -561,9 +561,12 @@ void VirtualKeyParamInfo(nsCString& result, uint64_t param, const char* name,
                          bool /* isPreCall */) {
   // check that `name` is of length 2
   constexpr static const auto ASCII_KEY_ENTRY_HELPER =
-      [](const char(&name)[2]) -> uint64_t { return name[0]; };
+      [](const char (&name)[2]) -> uint64_t { return name[0]; };
 
-#define ASCII_KEY_ENTRY(name) {ASCII_KEY_ENTRY_HELPER(name), name}
+#define ASCII_KEY_ENTRY(name)          \
+  {                                    \
+    ASCII_KEY_ENTRY_HELPER(name), name \
+  }
 
   const static std::unordered_map<uint64_t, const char*> virtualKeys{
       VALANDNAME_ENTRY(VK_LBUTTON),

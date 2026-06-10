@@ -185,6 +185,11 @@ void SharedWorkerOp::StartOnMainThread(RefPtr<RemoteWorkerChild>& aOwner) {
     RefPtr<UpdateWindowIDRunnable> r = new UpdateWindowIDRunnable(
         mOpArgs.get_SharedWorkerRemoveWindowIDOpArgs().windowID(), false);
     (void)r->Dispatch(workerPrivate);
+  } else if (mOpArgs.type() ==
+             SharedWorkerOpArgs::TSharedWorkerSetLocaleOverrideOpArgs) {
+    const auto& args = mOpArgs.get_SharedWorkerSetLocaleOverrideOpArgs();
+    workerPrivate->UpdateLanguageOverride(args.languageOverride(),
+                                          args.languages());
   } else {
     MOZ_CRASH("Unknown SharedWorkerOpArgs type!");
   }

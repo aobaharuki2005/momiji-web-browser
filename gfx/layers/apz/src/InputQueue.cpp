@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -501,7 +499,10 @@ APZEventResult InputQueue::ReceivePanGestureInput(
     const bool waitingForContentResponse =
         MaybeRequestContentResponse(aTarget, block);
 
-    if (event.AllowsSwipe() && !CanScrollTargetHorizontally(event, block)) {
+    bool targetCanScrollHorizontally =
+        CanScrollTargetHorizontally(event, block);
+    result.mTargetCanScrollHorizontally = targetCanScrollHorizontally;
+    if (event.AllowsSwipe() && !targetCanScrollHorizontally) {
       // We will ask the browser whether this pan event is going to be used for
       // swipe or not, so we need to wait the response.
       block->SetNeedsToWaitForBrowserGestureResponse(true);

@@ -147,6 +147,22 @@ impl From<&cubeb::StreamParamsRef> for StreamParams {
     }
 }
 
+impl StreamParams {
+    pub fn frame_size_in_bytes(&self) -> usize {
+        let format = self.format.into();
+        let sample_size = match format {
+            cubeb::SampleFormat::S16LE
+            | cubeb::SampleFormat::S16BE
+            | cubeb::SampleFormat::S16NE => 2usize,
+            cubeb::SampleFormat::Float32LE
+            | cubeb::SampleFormat::Float32BE
+            | cubeb::SampleFormat::Float32NE => 4usize,
+        };
+        let channel_count = self.channels as usize;
+        sample_size * channel_count
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StreamCreateParams {
     pub input_stream_params: Option<StreamParams>,
@@ -203,7 +219,7 @@ pub struct RegisterDeviceCollectionChanged {
 // ServerConn::process_msg doesn't have a catch-all case.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ServerMessage {
-    ClientConnect(u32),
+    ClientConnect,
     ClientDisconnect,
 
     ContextGetBackendId,
@@ -275,11 +291,7 @@ pub enum ClientMessage {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum CallbackReq {
-    Data {
-        nframes: isize,
-        input_frame_size: usize,
-        output_frame_size: usize,
-    },
+    Data { nframes: isize },
     State(ffi::cubeb_state),
     DeviceChange,
 }

@@ -15,9 +15,9 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <span>
 #include <utility>
 
-#include "api/array_view.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/units/time_delta.h"
 #include "common_audio/vad/include/vad.h"
@@ -32,7 +32,7 @@
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::InSequence;
-using ::testing::Invoke;
+
 using ::testing::Not;
 using ::testing::Optional;
 using ::testing::Return;
@@ -98,7 +98,7 @@ class AudioEncoderCngTest : public ::testing::Test {
   void Encode() {
     ASSERT_TRUE(cng_) << "Must call CreateCng() first.";
     encoded_info_ = cng_->Encode(
-        timestamp_, ArrayView<const int16_t>(audio_, num_audio_samples_10ms_),
+        timestamp_, std::span<const int16_t>(audio_, num_audio_samples_10ms_),
         &encoded_);
     timestamp_ += static_cast<uint32_t>(num_audio_samples_10ms_);
   }
@@ -114,8 +114,7 @@ class AudioEncoderCngTest : public ::testing::Test {
     }
     info.encoded_bytes = kMockReturnEncodedBytes;
     EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-        .WillOnce(
-            Invoke(MockAudioEncoder::FakeEncoding(kMockReturnEncodedBytes)));
+        .WillOnce(MockAudioEncoder::FakeEncoding(kMockReturnEncodedBytes));
   }
 
   // Verifies that the cng_ object waits until it has collected
@@ -416,8 +415,7 @@ TEST_F(AudioEncoderCngTest, VerifySidFrameAfterSpeech) {
   EXPECT_CALL(*mock_vad_, VoiceActivity(_, _, _))
       .WillOnce(Return(Vad::kActive));
   EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
-      .WillOnce(
-          Invoke(MockAudioEncoder::FakeEncoding(kMockReturnEncodedBytes)));
+      .WillOnce(MockAudioEncoder::FakeEncoding(kMockReturnEncodedBytes));
   Encode();
   EXPECT_EQ(kMockReturnEncodedBytes, encoded_info_.encoded_bytes);
 

@@ -11,13 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -36,10 +34,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.button.IconButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -65,15 +64,16 @@ fun DownloadSearchField(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(horizontal = 8.dp, vertical = 8.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.small)
                 .fillMaxWidth(),
         ) {
             IconButton(
                 onClick = onSearchDismissRequest,
+                contentDescription = stringResource(R.string.download_close_search_description),
             ) {
                 Icon(
                     painter = painterResource(iconsR.drawable.mozac_ic_back_24),
-                    contentDescription = stringResource(R.string.download_close_search_description),
+                    contentDescription = null,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -104,10 +104,11 @@ fun DownloadSearchField(
                             delete(0, state.text.length)
                         }
                     },
+                    contentDescription = stringResource(R.string.download_clear_search_description),
                 ) {
                     Icon(
                         painter = painterResource(iconsR.drawable.mozac_ic_cross_circle_fill_20),
-                        contentDescription = stringResource(R.string.download_clear_search_description),
+                        contentDescription = null,
                     )
                 }
             }
@@ -136,7 +137,7 @@ private fun PlaceholderText() {
 @Preview
 @Composable
 private fun DownloadSearchFieldPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         Surface {

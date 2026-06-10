@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -97,6 +95,10 @@ void ModuleLoadRequest::ModuleLoaded() {
   MOZ_ASSERT(IsFetching());
 
   mModuleScript = mLoader->GetFetchedModule(ModuleMapKey(URI(), mModuleType));
+
+  if (FetchInfo()->IsForModulePreload() != mLoadContext->IsPreload()) {
+    FetchInfo()->SetForModulePreload(mLoadContext->IsPreload());
+  }
 }
 
 void ModuleLoadRequest::LoadFailed() {
@@ -127,9 +129,14 @@ void ModuleLoadRequest::ModuleErrored() {
 
   MOZ_ASSERT(!IsFinished());
 
+  // Although the “error to rethrow” is only updated during static imports, a
+  // module loaded via a dynamic import may have had its module script
+  // previously fetched by a top-level module load or a static import, which
+  // would have already set the “error to rethrow”. Therefore, if hasRethrow is
+  // true, we do not assert that this request originates from a static import
+  // or a top-level module load.
   mozilla::DebugOnly<bool> hasRethrow =
       mModuleScript && mModuleScript->HasErrorToRethrow();
-  MOZ_ASSERT_IF(hasRethrow, !IsDynamicImport());
 
   // When LoadRequestedModules fails, we will set error to rethrow to the module
   // script or call SetErroredLoadingImports() and then call ModuleErrored().

@@ -1,9 +1,12 @@
 [DEFAULT]
-tags = "local"
+subsuite = "integration"
+tags = "local os_integration"
 
 ["test_log_files.py"]
 
 ["test_persist_closed_tabs_restore_manually.py"]
+
+["test_restore_aiwindow.py"]
 
 ["test_restore_loading_tab.py"]
 
@@ -35,10 +38,16 @@ run-if = [
 ]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86'", # Bug 1727691
+  "os == 'win' && os_version == '11.26200' && arch == 'x86'", # Bug 1727691
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'", # Bug 1727691
+  "os == 'win' && os_version == '11.26200' && arch == 'x86_64'", # Bug 1727691
 ]
 
+["test_splitview_restore.py"]
+
 ["test_tabgroups_restore.py"]
+
+["test_tabnotes_canonicalurl_restore.py"]
 
 ["test_taskbartab_restore.py"]
 run-if = [

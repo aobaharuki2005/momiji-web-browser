@@ -6,7 +6,7 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { Region } from "resource://gre/modules/Region.sys.mjs";
 import {
-  RemoteSettingsConfig2,
+  RemoteSettingsConfig,
   RemoteSettingsContext,
   RemoteSettingsServer,
   RemoteSettingsService,
@@ -23,7 +23,7 @@ import { Utils } from "resource://services-settings/Utils.sys.mjs";
  * general-purpose Remote settings client, use the JS one:
  *
  * - https://firefox-source-docs.mozilla.org/services/settings/index.html
- * - https://searchfox.org/mozilla-central/source/services/settings/remote-settings.sys.mjs
+ * - https://searchfox.org/firefox-main/source/services/settings/remote-settings.sys.mjs
  */
 class _SharedRemoteSettingsService {
   #config;
@@ -35,7 +35,7 @@ class _SharedRemoteSettingsService {
       "remote-settings"
     );
 
-    this.#config = new RemoteSettingsConfig2({
+    this.#config = new RemoteSettingsConfig({
       server: this.#makeServer(Utils.SERVER_URL),
       bucketName: Utils.actualBucketName("main"),
       appContext: new RemoteSettingsContext({
@@ -90,6 +90,16 @@ class _SharedRemoteSettingsService {
   updateServer(opts = {}) {
     this.#config.server = this.#makeServer(opts.url ?? Utils.SERVER_URL);
     this.#config.bucketName = opts.bucketName ?? Utils.actualBucketName("main");
+    this.#updateConfig();
+  }
+
+  /**
+   * Update the Remote settings config
+   *
+   * Note: this currently schedules an async call to avoid the deadlock from
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=2012955.
+   */
+  #updateConfig() {
     this.#rustService.updateConfig(this.#config);
   }
 
@@ -114,7 +124,7 @@ class _SharedRemoteSettingsService {
         const newCountry = subj.data;
         if (newCountry != this.#config.appContext.country) {
           this.#config.appContext.country = newCountry;
-          this.#rustService.updateConfig(this.#config);
+          this.#updateConfig();
         }
         break;
       }
@@ -122,7 +132,7 @@ class _SharedRemoteSettingsService {
         const newLocale = Services.locale.appLocaleAsBCP47;
         if (newLocale != this.#config.appContext.locale) {
           this.#config.appContext.locale = newLocale;
-          this.#rustService.updateConfig(this.#config);
+          this.#updateConfig();
         }
         break;
       }
@@ -150,7 +160,7 @@ class _SharedRemoteSettingsService {
     //
     // * In contrast, `RemoteSettingsService::update_config` returns the error
     //   when it parses a cannot-be-a-base `config.server.url`.
-    return !Utils.shouldSkipRemoteActivityDueToTests || url != Utils.SERVER_URL
+    return !Utils.shouldSkipRemoteActivity || url != Utils.SERVER_URL
       ? new RemoteSettingsServer.Custom({ url })
       : null;
   }

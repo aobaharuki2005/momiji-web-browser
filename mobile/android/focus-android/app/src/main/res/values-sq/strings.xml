@@ -562,6 +562,8 @@
   <string name="tabs_tray_action_erase">Fshi historik shfletimesh</string>
   <!-- Label for the option in the Focus "tabs tray" to clos the other tabs except the current tab. -->
   <string name="tabs_tray_action_erase_other">Mbylli skedat e tjera</string>
+  <!-- Label for the option in the Focus "tabs tray" to add a new tab. -->
+  <string name="tabs_tray_action_add_new_tab">Shtoni skedë të re</string>
   <!--
     If the user decides to open the current page in another browser and if Firefox is not installed then we show this
     item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play).
@@ -582,6 +584,13 @@
   <string name="security_popup_security_verified">Verifikuar nga: %1$s</string>
   <!-- Content Description of Security Icon in toolbar -->
   <string name="site_security_icon_content_description">Siguri Sajti</string>
+  <!--
+    %1$s will be replaced with the organization for which the certificate
+    used by the site was issued. For example, the certificate in use by
+    the site https://eidas.ec.europa.eu/ was issued to "The European
+    Commission".
+  -->
+  <string name="qualified_identity">Dëshmi lëshuar për %1$s</string>
   <string name="preference_autocomplete_duplicate_url_error">Ka tashmë një URL të tillë</string>
   <!-- Label for the Find in page button -->
   <string name="find_in_page">Gjej në Faqe</string>

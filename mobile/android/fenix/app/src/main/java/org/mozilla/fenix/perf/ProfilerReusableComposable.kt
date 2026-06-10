@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,8 +33,8 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.compose.base.button.TextButton
 import org.mozilla.fenix.compose.list.RadioButtonListItem
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemeProvider
 
 /**
  * Top-level card container for profiler dialogs
@@ -47,7 +46,7 @@ private fun ProfilerDialogueCard(content: @Composable () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
     ) {
         content()
     }
@@ -198,7 +197,7 @@ fun ProfilerErrorDialog(
 @Preview
 @Composable
 private fun ProfilerDialogueCardPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     val radioOptions = listOf("Firefox", "Graphics", "Media", "Networking")
     val selectedOption = remember { mutableStateOf("Firefox") }

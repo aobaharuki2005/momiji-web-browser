@@ -58,18 +58,20 @@ var openInspectorSidebarTab = async function (id) {
 
   info("Selecting the " + id + " sidebar");
 
-  const onSidebarSelect = inspector.sidebar.once("select");
   if (id === "layoutview") {
+    await inspector.sidebar.select(id);
+
     // The layout view should wait until the box-model and grid-panel are ready.
-    const onBoxModelViewReady = inspector.once("boxmodel-view-updated");
-    const onGridPanelReady = inspector.once("grid-panel-updated");
-    inspector.sidebar.select(id);
-    await onBoxModelViewReady;
-    await onGridPanelReady;
+    // inspector.getPanel does create the panel, so we want to wait until the panel
+    // are create
+    await waitFor(
+      () => inspector.hasPanel("boxmodel") && inspector.hasPanel("layoutview")
+    );
+    await inspector.getPanel("boxmodel").initialized;
+    await inspector.getPanel("layoutview").gridInspector.initialized;
   } else {
-    inspector.sidebar.select(id);
+    await inspector.sidebar.select(id);
   }
-  await onSidebarSelect;
 
   return {
     toolbox,
@@ -187,8 +189,8 @@ function selectRuleView(inspector) {
  *        The opened inspector panel
  * @return {CssComputedView} the computed view
  */
-function selectComputedView(inspector) {
-  inspector.sidebar.select("computedview");
+async function selectComputedView(inspector) {
+  await inspector.sidebar.select("computedview");
   return inspector.getPanel("computedview").computedView;
 }
 
@@ -199,8 +201,8 @@ function selectComputedView(inspector) {
  *        The opened inspector panel
  * @return {ChangesView} the changes view
  */
-function selectChangesView(inspector) {
-  inspector.sidebar.select("changesview");
+async function selectChangesView(inspector) {
+  await inspector.sidebar.select("changesview");
   return inspector.getPanel("changesview");
 }
 
@@ -210,8 +212,8 @@ function selectChangesView(inspector) {
  * @param  {InspectorPanel} inspector
  * @return {BoxModel} the box model
  */
-function selectLayoutView(inspector) {
-  inspector.sidebar.select("layoutview");
+async function selectLayoutView(inspector) {
+  await inspector.sidebar.select("layoutview");
   return inspector.getPanel("boxmodel");
 }
 
@@ -553,7 +555,7 @@ var focusEditableField = async function (
       xOffset,
       yOffset,
       options,
-      editable.ownerGlobal
+      editable.documentGlobal
     );
     options.type = "mouseup";
     EventUtils.synthesizeMouse(
@@ -561,7 +563,7 @@ var focusEditableField = async function (
       xOffset,
       yOffset,
       options,
-      editable.ownerGlobal
+      editable.documentGlobal
     );
   } else {
     EventUtils.synthesizeMouse(
@@ -569,7 +571,7 @@ var focusEditableField = async function (
       xOffset,
       yOffset,
       options,
-      editable.ownerGlobal
+      editable.documentGlobal
     );
   }
   await onFocus;
@@ -835,7 +837,7 @@ function openStyleContextMenuAndGetAllItems(view, target) {
  * @return An array of MenuItems
  */
 function openContextMenuAndGetAllItems(inspector, options) {
-  const menu = inspector.markup.contextMenu._openMenu(options);
+  const menu = inspector.markup.contextMenu.openMenu(options);
   return buildContextMenuItems(menu);
 }
 
@@ -849,9 +851,9 @@ function openContextMenuAndGetAllItems(inspector, options) {
  */
 async function waitUntilVisitedState(tab, selectors) {
   await asyncWaitUntil(async () => {
-    const hasVisitedState = await ContentTask.spawn(
+    const hasVisitedState = await SpecialPowers.spawn(
       tab.linkedBrowser,
-      selectors,
+      [selectors],
       args => {
         // ElementState::VISITED
         const ELEMENT_STATE_VISITED = 1 << 18;
@@ -1016,25 +1018,24 @@ async function removeContentPageElementAttribute(selector, attribute) {
 }
 
 /**
- * Get the rule editor from the rule-view given its index
+ * Get the rule editor from the rule-view given its index.
+ * The index is based on the list of all the applied rule
+ * for the currently selected DOM Element.
+ * This starts with any pseudo element rules (if any, and
+ * which may be hidden by default), then the element rule
+ * and finally all the other rules (including the inherited
+ * at the end).
  *
  * @param {CssRuleView} ruleView
  *        The instance of the rule-view panel
- * @param {number} childrenIndex
- *        The children index of the element to get
- * @param {number} nodeIndex
- *        The child node index of the element to get
+ * @param {number} index
+ *        The index of the element to get
  * @return {DOMNode} The rule editor if any at this index
  */
-function getRuleViewRuleEditor(ruleView, childrenIndex, nodeIndex) {
-  const child = ruleView.element.children[childrenIndex];
-  if (!child) {
-    return null;
-  }
-
-  return nodeIndex !== undefined
-    ? child.childNodes[nodeIndex]?._ruleEditor
-    : child._ruleEditor;
+function getRuleViewRuleEditorAt(ruleView, index) {
+  const ruleEl =
+    ruleView.styleDocument.querySelectorAll(".ruleview-rule")[index];
+  return ruleEl?._ruleEditor;
 }
 
 /**
@@ -1051,7 +1052,7 @@ function getRuleViewRuleEditor(ruleView, childrenIndex, nodeIndex) {
  * @return {TextProperty}
  */
 function getTextProperty(ruleView, ruleIndex, declaration) {
-  const ruleEditor = getRuleViewRuleEditor(ruleView, ruleIndex);
+  const ruleEditor = getRuleViewRuleEditorAt(ruleView, ruleIndex);
   const [[name, value]] = Object.entries(declaration);
   const textProp = ruleEditor.rule.textProps.find(prop => {
     return prop.name === name && prop.value === value;
@@ -1213,4 +1214,16 @@ async function searchInMarkupView(inspector, search) {
 
   info("Wait for the search results highlighted to be updated");
   await onSearchResultHighlightingUpdated;
+}
+
+/**
+ * Assert the number of rules displayed in the Rules View.
+ */
+async function assertDisplayedRulesCount(
+  view,
+  expected,
+  message = "Got the expected number of displayed rules in the rules view"
+) {
+  const ruleElements = view.element.querySelectorAll(".ruleview-rule");
+  is(ruleElements.length, expected, message);
 }

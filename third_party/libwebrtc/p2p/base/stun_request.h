@@ -16,6 +16,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 
 #include "api/environment/environment.h"
@@ -43,7 +44,7 @@ class StunRequestManager {
  public:
   StunRequestManager(
       TaskQueueBase* thread,
-      std::function<void(const void*, size_t, StunRequest*)> send_packet);
+      std::function<void(std::span<const uint8_t>, StunRequest*)> send_packet);
   ~StunRequestManager();
 
   // Starts sending the given request (perhaps after a delay).
@@ -69,7 +70,7 @@ class StunRequestManager {
   // Determines whether the given message is a response to one of the
   // outstanding requests, and if so, processes it appropriately.
   bool CheckResponse(StunMessage* msg);
-  bool CheckResponse(const char* data, size_t size);
+  bool CheckResponse(std::span<const uint8_t> payload);
 
   // Called from a StunRequest when a timeout occurs.
   void OnRequestTimedOut(StunRequest* request);
@@ -78,14 +79,16 @@ class StunRequestManager {
 
   TaskQueueBase* network_thread() const { return thread_; }
 
-  void SendPacket(const void* data, size_t size, StunRequest* request);
+  void SendPacket(std::span<const uint8_t> data, StunRequest* request);
 
  private:
-  typedef std::map<std::string, std::unique_ptr<StunRequest>> RequestMap;
+  typedef std::map<std::string, std::unique_ptr<StunRequest>, std::less<>>
+      RequestMap;
 
   TaskQueueBase* const thread_;
   RequestMap requests_ RTC_GUARDED_BY(thread_);
-  const std::function<void(const void*, size_t, StunRequest*)> send_packet_;
+  const std::function<void(std::span<const uint8_t>, StunRequest*)>
+      send_packet_;
 };
 
 // Represents an individual request to be sent.  The STUN message can either be

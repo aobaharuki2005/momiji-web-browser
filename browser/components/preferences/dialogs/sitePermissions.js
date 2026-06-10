@@ -10,6 +10,9 @@ var { AppConstants } = ChromeUtils.importESModule(
 const { SitePermissions } = ChromeUtils.importESModule(
   "resource:///modules/SitePermissions.sys.mjs"
 );
+const { PermissionUI } = ChromeUtils.importESModule(
+  "resource:///modules/PermissionUI.sys.mjs"
+);
 
 const sitePermissionsL10n = {
   "desktop-notification": {
@@ -50,7 +53,7 @@ const sitePermissionsL10n = {
     window: "permissions-site-autoplay-window2",
     description: "permissions-site-autoplay-desc",
   },
-  localhost: {
+  "loopback-network": {
     window: "permissions-site-localhost-window",
     description: "permissions-site-localhost-desc",
     disableLabel: "permissions-site-localhost-disable-label",
@@ -429,6 +432,7 @@ var gSitePermissionsManager = {
     if (
       type !== this._type ||
       !PERMISSION_STATES.includes(perm.capability) ||
+      !SitePermissions.isSupportedPrincipal(perm.principal) ||
       // Skip private browsing session permissions
       (perm.principal.privateBrowsingId !==
         Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID &&
@@ -589,6 +593,15 @@ var gSitePermissionsManager = {
     // to update the UI
     this.uninit();
 
+    // Record telemetry for notification permission revocation via preferences
+    if (this._type === "desktop-notification") {
+      for (let group of this._permissionsToDelete.values()) {
+        Glean.webNotificationPermission.permissionRevokedPreferences.record({
+          site_category: PermissionUI.getSiteCategory(group.principal),
+        });
+      }
+    }
+
     // Delete even _permissionsToChange to clear out double-keyed permissions
     for (let group of [
       ...this._permissionsToDelete.values(),
@@ -666,7 +679,7 @@ var gSitePermissionsManager = {
       SitePermissions.setDefault("autoplay-media", Number(menulist.value));
     });
 
-    menulist.menupopup.setAttribute("incontentshell", "false");
+    menulist.menupopup.setAttribute("escapecontentshell", true);
 
     menulist.disabled = Services.prefs.prefIsLocked(AUTOPLAY_PREF);
 

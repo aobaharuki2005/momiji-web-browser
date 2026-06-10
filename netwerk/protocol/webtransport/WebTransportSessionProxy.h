@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -195,8 +194,9 @@ class WebTransportSessionProxy final
   nsTArray<std::function<void(nsresult)>> mPendingCreateStreamEvents
       MOZ_GUARDED_BY(mMutex);
   nsCOMPtr<nsIEventTarget> mTarget MOZ_GUARDED_BY(mMutex);
-  nsTArray<RefPtr<nsIWebTransportHash>> mServerCertHashes;
-  bool mDedicatedConnection;  // for WebTranport
+  nsTArray<RefPtr<nsIWebTransportHash>> mServerCertHashes
+      MOZ_GUARDED_BY(mMutex);
+  bool mDedicatedConnection = false;  // for WebTranport
   nsIWebTransport::HTTPVersion mHTTPVersion = nsIWebTransport::HTTPVersion::h3;
 };
 

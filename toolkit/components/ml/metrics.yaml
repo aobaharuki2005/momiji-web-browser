@@ -107,18 +107,22 @@ firefox.ai.runtime:
     notification_emails:
       - tziade@mozilla.com
     expires: never
-    labels:
+    labels: &engine_labels
       - autofill-ml
       - pdfjs
       - ml-suggest-intent
       - ml-suggest-ner
       - about-inference
       - webextension
-      - wllamapreview
+      - link-preview
       - default-engine
       - smart-tab-embedding-engine
       - smart-tab-topic-engine
       - smart-intent
+      - smart-openai
+      - title-generation-engine
+      - smart-openai-memories-generation
+      - smart-openai-memories-usage
 
   engine_creation_failure:
     type: event
@@ -248,18 +252,7 @@ firefox.ai.runtime:
     notification_emails:
       - tziade@mozilla.com
     expires: never
-    labels:
-      - autofill-ml
-      - pdfjs
-      - ml-suggest-intent
-      - ml-suggest-ner
-      - about-inference
-      - webextension
-      - wllamapreview
-      - default-engine
-      - smart-tab-embedding-engine
-      - smart-tab-topic-engine
-      - smart-intent
+    labels: *engine_labels
 
   model_download:
     type: event
@@ -369,9 +362,19 @@ firefox.ai.runtime:
       backend:
         type: string
         description: The backend that is being used, e.g. onnx, onnx-native, wllama
+      token_count:
+        description: The number of tokens generated for text generation tasks.
+        type: quantity
+      character_count:
+        description: The number of characters generated for text generation tasks.
+        type: quantity
+      system_memory_mb:
+        description: The total physical system memory in MB.
+        type: quantity
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1992779
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1997016
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2029250
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1992779
       - https://phabricator.services.mozilla.com/D270909

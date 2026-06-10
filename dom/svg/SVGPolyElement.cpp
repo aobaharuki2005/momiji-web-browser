@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -59,7 +57,7 @@ void SVGPolyElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
     return;
   }
 
-  aMarks->AppendElement(SVGMark(px, py, 0, SVGMark::eStart));
+  aMarks->AppendElement(SVGMark(px, py, 0, SVGMark::Type::Start));
 
   for (uint32_t i = 1; i < points.Length(); ++i) {
     float x = points[i].mX * zoom;
@@ -78,7 +76,7 @@ void SVGPolyElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
           SVGContentUtils::AngleBisect(prevAngle, angle);
     }
 
-    aMarks->AppendElement(SVGMark(x, y, 0, SVGMark::eMid));
+    aMarks->AppendElement(SVGMark(x, y, 0, SVGMark::Type::Mid));
 
     prevAngle = angle;
     px = x;
@@ -86,7 +84,7 @@ void SVGPolyElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
   }
 
   aMarks->LastElement().angle = prevAngle;
-  aMarks->LastElement().type = SVGMark::eEnd;
+  aMarks->LastElement().type = SVGMark::Type::End;
 }
 
 bool SVGPolyElement::GetGeometryBounds(Rect* aBounds,

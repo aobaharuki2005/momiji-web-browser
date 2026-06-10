@@ -95,14 +95,6 @@ class WebExtensionsMenuBinding(
                     )
                 }
 
-                if (webExtensionMenuItems.isEmpty() && eligibleExtensions.filter { !it.isBuiltIn }
-                        .all { !it.enabled }
-                ) {
-                    menuStore.dispatch(MenuAction.UpdateShowDisabledExtensionsOnboarding(true))
-                } else {
-                    menuStore.dispatch(MenuAction.UpdateShowDisabledExtensionsOnboarding(false))
-                }
-
                 menuStore.dispatch(
                     MenuAction.UpdateWebExtensionBrowserMenuItems(webExtensionMenuItems),
                 )
@@ -135,7 +127,9 @@ class WebExtensionsMenuBinding(
             return null
         }
 
-        val title = action.title ?: return null
+        val title = action.title?.takeUnless { it.isBlank() }
+            ?: extension.name
+            ?: return null
 
         val loadIcon = action.loadIcon?.invoke(iconSize)
 

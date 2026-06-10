@@ -245,6 +245,17 @@ const gSelects = {
      <option selected="true">{"end": "true"}</option>
    </select></body></html>
 `,
+
+  BG_IMAGE_ON_SELECT: `
+ <html><head><style>
+   select { background-image: linear-gradient(#fff); }
+   option { color: #2b2b2b; background-color: #fff; }
+ </style></head><body><select id='one'>
+  <option>{"unstyled": "true"}</option>
+  <option>{"unstyled": "true"}</option>
+  <option selected="true">{"end": "true"}</option>
+ </select></body></html>
+`,
 };
 
 function rgbaToString(parsedColor) {
@@ -610,7 +621,7 @@ add_task(
     let options = {
       skipSelectColorTest: true,
       waitForComputedStyle: {
-        property: "--panel-color",
+        property: "--panel-text-color",
         value: "rgb(255, 0, 0)",
       },
     };
@@ -677,7 +688,7 @@ add_task(
       selectColor: "rgb(128, 0, 128)",
       selectBgColor: kDefaultSelectStyles.backgroundColor,
       waitForComputedStyle: {
-        property: "--panel-color",
+        property: "--panel-text-color",
         value: "rgb(128, 0, 128)",
       },
       leaveOpen: true,
@@ -792,6 +803,13 @@ add_task(async function test_scrollbar_props() {
 
   await hideSelectPopup("escape");
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_bg_image() {
+  await testSelectColors("BG_IMAGE_ON_SELECT", 3, {
+    unstyled: true,
+    skipSelectColorTest: true,
+  });
 });
 
 if (AppConstants.platform == "win") {

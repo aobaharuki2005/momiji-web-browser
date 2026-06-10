@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,10 +9,10 @@
 #include "LayoutConstants.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ReflowInput.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
 #include "nsFrameManager.h"
-#include "nsGkAtoms.h"
 #include "nsGridContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
@@ -27,20 +26,6 @@
 
 using namespace mozilla;
 using namespace mozilla::layout;
-
-nscoord nsTableWrapperFrame::SynthesizeFallbackBaseline(
-    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  const auto marginBlockEnd = GetLogicalUsedMargin(aWM).BEnd(aWM);
-  if (aWM.IsCentralBaseline()) {
-    return (BSize(aWM) + marginBlockEnd) / 2;
-  }
-  // Our fallback baseline is the block-end margin-edge, with respect to the
-  // given writing mode.
-  if (aBaselineGroup == BaselineSharingGroup::Last) {
-    return -marginBlockEnd;
-  }
-  return BSize(aWM) + marginBlockEnd;
-}
 
 Maybe<nscoord> nsTableWrapperFrame::GetNaturalBaselineBOffset(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup,
@@ -289,7 +274,7 @@ StyleSize nsTableWrapperFrame::ReduceStyleSizeBy(
     const StyleSize& aStyleSize, const nscoord aAmountToReduce) const {
   MOZ_ASSERT(aStyleSize.ConvertsToLength(), "Only handles 'Length' StyleSize!");
   const nscoord size = std::max(0, aStyleSize.ToLength() - aAmountToReduce);
-  return StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(size));
+  return StyleSize::FromAppUnits(size);
 }
 
 StyleSizeOverrides nsTableWrapperFrame::ComputeSizeOverridesForInnerTable(
@@ -305,7 +290,7 @@ StyleSizeOverrides nsTableWrapperFrame::ComputeSizeOverridesForInnerTable(
 
   const auto wm = aTableFrame->GetWritingMode();
   LogicalSize areaOccupied(wm, 0, aBSizeOccupiedByCaption);
-  if (aTableFrame->StylePosition()->mBoxSizing == StyleBoxSizing::Content) {
+  if (aTableFrame->StylePosition()->mBoxSizing == StyleBoxSizing::ContentBox) {
     // If the inner table frame has 'box-sizing: content', enlarge the occupied
     // area by adding border & padding because they should also be subtracted
     // from the size overrides.

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -28,15 +27,16 @@ static const double kPointsPerTenthMM = 72.0 / 254.0;
 static const double kPointsPerInch = 72.0;
 
 nsPrinterWin::nsPrinterWin(const CommonPaperInfoArray* aArray,
-                           const nsAString& aName)
-    : nsPrinterBase(aArray),
+                           const nsAString& aName, bool aSortAfterLocal)
+    : nsPrinterBase(aArray, aSortAfterLocal),
       mName(aName),
       mDefaultDevmodeWStorage("nsPrinterWin::mDefaultDevmodeWStorage") {}
 
 // static
 already_AddRefed<nsPrinterWin> nsPrinterWin::Create(
-    const CommonPaperInfoArray* aArray, const nsAString& aName) {
-  return do_AddRef(new nsPrinterWin(aArray, aName));
+    const CommonPaperInfoArray* aArray, const nsAString& aName,
+    bool aSortAfterLocal) {
+  return do_AddRef(new nsPrinterWin(aArray, aName, aSortAfterLocal));
 }
 
 template <class T>
@@ -277,7 +277,7 @@ mozilla::gfx::MarginDouble nsPrinterWin::GetMarginsForPaper(
   auto* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
 
   devmode->dmFields = DM_PAPERSIZE;
-  devmode->dmPaperSize = _wtoi((const wchar_t*)aPaperId.BeginReading());
+  devmode->dmPaperSize = _wtoi((const wchar_t*)aPaperId.get());
   HDC dc;
   {
     MutexAutoLock autoLock(mDriverMutex);
@@ -440,8 +440,8 @@ PrintSettingsInitializer nsPrinterWin::GetValidatedSettings(
   // Copy the settings from aSettingsToValidate into our DEVMODE.
   DEVMODEW* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
   if (!aSettingsToValidate.mPaperInfo.mId.IsEmpty()) {
-    devmode->dmPaperSize = _wtoi(
-        (const wchar_t*)aSettingsToValidate.mPaperInfo.mId.BeginReading());
+    devmode->dmPaperSize =
+        _wtoi((const wchar_t*)aSettingsToValidate.mPaperInfo.mId.get());
     devmode->dmFields |= DM_PAPERSIZE;
   } else {
     devmode->dmPaperSize = 0;

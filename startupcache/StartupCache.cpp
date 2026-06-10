@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +6,7 @@
 #include "PLDHashTable.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/AutoMemMap.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/IOBuffers.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MemUtils.h"
@@ -99,6 +98,8 @@ static uint8_t STARTUP_CACHE_WRITE_TIMEOUT = 60;
 
 #define STARTUP_CACHE_NAME "startupCache." SC_WORDSIZE "." SC_ENDIAN
 
+#define INITIAL_WRITE_TOPIC "browser-idle-startup-tasks-finished"
+
 static inline Result<Ok, nsresult> Write(PRFileDesc* fd, const void* data,
                                          int32_t len) {
   if (PR_Write(fd, data, len) != len) {
@@ -160,13 +161,14 @@ StaticRefPtr<StartupCache> StartupCache::gStartupCache;
 bool StartupCache::gShutdownInitiated;
 bool StartupCache::gIgnoreDiskCache;
 bool StartupCache::gFoundDiskCacheOnInit;
+bool StartupCache::gWantInitialWrite;
 
 NS_IMPL_ISUPPORTS(StartupCache, nsIMemoryReporter)
 
 StartupCache::StartupCache()
     : mTableLock("StartupCache::mTableLock"),
       mDirty(false),
-      mWrittenOnce(false),
+      mRegularWriteDone(false),
       mCurTableReferenced(false),
       mRequestedCount(0),
       mCacheEntriesBaseOffset(0) {}
@@ -220,6 +222,8 @@ nsresult StartupCache::Init() {
   }
 
   mListener = new StartupCacheListener();
+  rv = mObserverService->AddObserver(mListener, INITIAL_WRITE_TOPIC, false);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = mObserverService->AddObserver(mListener, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -237,6 +241,7 @@ nsresult StartupCache::Init() {
   }
 
   gFoundDiskCacheOnInit = rv != NS_ERROR_FILE_NOT_FOUND;
+  gWantInitialWrite = !gFoundDiskCacheOnInit;
 
   // Sometimes we don't have a cache yet, that's ok.
   // If it's corrupted, just remove it and start over.
@@ -506,13 +511,11 @@ size_t StartupCache::HeapSizeOfIncludingThis(
 }
 
 /**
- * WriteToDisk writes the cache out to disk. Callers of WriteToDisk need to call
- * WaitOnWriteComplete to make sure there isn't a write
- * happening on another thread.
+ * WriteToDisk writes the cache out to disk.
  * We own the mTableLock here.
  */
-Result<Ok, nsresult> StartupCache::WriteToDisk() {
-  if (!mDirty || mWrittenOnce) {
+Result<Ok, nsresult> StartupCache::WriteToDisk(WriteType aWriteType) {
+  if (!mDirty || mRegularWriteDone) {
     return Ok();
   }
 
@@ -609,7 +612,9 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
 
   mDirty = false;
-  mWrittenOnce = true;
+  if (aWriteType == WriteType::RegularWrite) {
+    mRegularWriteDone = true;
+  }
 
   return Ok();
 }
@@ -619,10 +624,10 @@ void StartupCache::InvalidateCache(bool memoryOnly) {
   // Ensure we're not writing using mTable...
   MutexAutoLock lock(mTableLock);
 
-  mWrittenOnce = false;
+  mRegularWriteDone = false;
   if (memoryOnly) {
     // This should only be called in tests.
-    auto writeResult = WriteToDisk();
+    auto writeResult = WriteToDisk(WriteType::RegularWrite);
     if (NS_WARN_IF(writeResult.isErr())) {
       gIgnoreDiskCache = true;
       return;
@@ -664,20 +669,28 @@ void StartupCache::InvalidateCache(bool memoryOnly) {
 
 void StartupCache::CountAllowedInvalidation() { mAllowedInvalidationsCount++; }
 
-void StartupCache::MaybeInitShutdownWrite() {
+void StartupCache::MaybeKickOffInitialWrite() {
+  if (gWantInitialWrite) {
+    gWantInitialWrite = false;
+    MaybeWriteOffMainThread(WriteType::InitialWrite);
+  }
+}
+
+void StartupCache::MaybeKickOffShutdownWrite() {
   if (mTimer) {
     mTimer->Cancel();
   }
   gShutdownInitiated = true;
 
-  MaybeWriteOffMainThread();
+  MaybeWriteOffMainThread(WriteType::RegularWrite);
 }
 
 void StartupCache::EnsureShutdownWriteComplete() {
   MutexAutoLock lock(mTableLock);
   // If we've already written or there's nothing to write,
   // we don't need to do anything. This is the common case.
-  if (mWrittenOnce || (mCacheData.initialized() && !ShouldCompactCache())) {
+  if (mRegularWriteDone ||
+      (mCacheData.initialized() && !ShouldCompactCache())) {
     return;
   }
   // Otherwise, ensure the write happens. The timer should have been cancelled
@@ -691,11 +704,8 @@ void StartupCache::EnsureShutdownWriteComplete() {
   // Most of this should be redundant given MaybeWriteOffMainThread should
   // have run before now.
 
-  auto writeResult = WriteToDisk();
+  auto writeResult = WriteToDisk(WriteType::RegularWrite);
   (void)NS_WARN_IF(writeResult.isErr());
-  // We've had the lock, and `WriteToDisk()` sets mWrittenOnce and mDirty
-  // when done, and checks for them when starting, so we don't need to do
-  // anything else.
 }
 
 void StartupCache::IgnoreDiskCache() {
@@ -752,16 +762,17 @@ void StartupCache::WriteTimeout(nsITimer* aTimer, void* aClosure) {
    * if the StartupCache object is valid.
    */
   StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
-  startupCacheObj->MaybeWriteOffMainThread();
+  startupCacheObj->MaybeWriteOffMainThread(WriteType::RegularWrite);
 }
 
 /*
  * See StartupCache::WriteTimeout above - this is just the non-static body.
  */
-void StartupCache::MaybeWriteOffMainThread() {
+void StartupCache::MaybeWriteOffMainThread(WriteType aWriteType) {
   {
     MutexAutoLock lock(mTableLock);
-    if (mWrittenOnce || (mCacheData.initialized() && !ShouldCompactCache())) {
+    if (mRegularWriteDone ||
+        (mCacheData.initialized() && !ShouldCompactCache())) {
       return;
     }
   }
@@ -774,10 +785,13 @@ void StartupCache::MaybeWriteOffMainThread() {
   }
 
   RefPtr<StartupCache> self = this;
-  nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableFunction("StartupCache::Write", [self]() mutable {
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+      "StartupCache::Write", [self, aWriteType]() mutable {
+        // Writing the cache is non-critical; use idle I/O priority so it
+        // doesn't compete with foreground reads during startup.
+        nsAutoLowPriorityIO lowPriority;
         MutexAutoLock lock(self->mTableLock);
-        auto result = self->WriteToDisk();
+        auto result = self->WriteToDisk(aWriteType);
         (void)NS_WARN_IF(result.isErr());
       });
   NS_DispatchBackgroundTask(runnable.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
@@ -792,7 +806,9 @@ nsresult StartupCacheListener::Observe(nsISupports* subject, const char* topic,
   StartupCache* sc = StartupCache::GetSingleton();
   if (!sc) return NS_OK;
 
-  if (strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+  if (strcmp(topic, INITIAL_WRITE_TOPIC) == 0) {
+    sc->MaybeKickOffInitialWrite();
+  } else if (strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     // Do not leave the thread running past xpcom shutdown
     sc->WaitOnPrefetch();
     StartupCache::gShutdownInitiated = true;
@@ -865,7 +881,7 @@ nsresult StartupCache::ResetStartupWriteTimer() {
 bool StartupCache::StartupWriteComplete() {
   // Need to have written to disk and not added new things since;
   MutexAutoLock lock(mTableLock);
-  return !mDirty && mWrittenOnce;
+  return !mDirty && mRegularWriteDone;
 }
 
 // StartupCacheDebugOutputStream implementation

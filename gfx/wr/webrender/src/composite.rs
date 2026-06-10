@@ -14,9 +14,9 @@ use crate::internal_types::{FrameAllocator, FrameMemory, FrameVec, TextureSource
 use crate::invalidation::compare::ImageDependency;
 use crate::tile_cache::{TileCacheInstance, TileSurface};
 use crate::tile_cache::TileId;
-use crate::prim_store::DeferredResolve;
+use crate::prim_store::{DeferredResolve, PrimitiveInstanceIndex};
 use crate::resource_cache::{ImageRequest, ResourceCache};
-use crate::segment::EdgeAaSegmentMask;
+use crate::segment::EdgeMask;
 use crate::util::{extract_inner_rect_safe, Preallocator, ScaleOffset};
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::device::Device;
@@ -192,6 +192,7 @@ pub fn tile_kind(surface: &CompositeTileSurface, is_opaque: bool) -> TileKind {
     }
 }
 
+#[derive(Clone)]
 pub enum ExternalSurfaceDependency {
     Yuv {
         image_dependencies: [ImageDependency; 3],
@@ -207,6 +208,7 @@ pub enum ExternalSurfaceDependency {
 /// Describes information about drawing a primitive as a compositor surface.
 /// For now, we support only YUV images as compositor surfaces, but in future
 /// this will also support RGBA images.
+#[derive(Clone)]
 pub struct ExternalSurfaceDescriptor {
     // Normalized rectangle of this surface in local coordinate space
     // TODO(gw): Fix up local_rect unit kinds in ExternalSurfaceDescriptor (many flow on effects)
@@ -227,6 +229,7 @@ pub struct ExternalSurfaceDescriptor {
     pub update_params: Option<DeviceIntSize>,
     /// If using external compositing, a user key for the client
     pub external_image_id: Option<ExternalImageId>,
+    pub prim_instance_index: PrimitiveInstanceIndex,
 }
 
 impl ExternalSurfaceDescriptor {
@@ -618,7 +621,7 @@ pub struct CompositorTransform {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct CompositorClip {
     pub rect: DeviceRect,
     pub radius: BorderRadius,
@@ -628,7 +631,7 @@ pub struct CompositorClip {
 pub struct CompositeRoundedCorner {
     pub rect: LayoutRect,
     pub radius: LayoutSize,
-    pub edge_flags: EdgeAaSegmentMask,
+    pub edge_flags: EdgeMask,
 }
 
 impl Eq for CompositeRoundedCorner {}
@@ -681,6 +684,8 @@ pub struct CompositeState {
     low_quality_pinch_zoom: bool,
     /// List of registered clips used by picture cache and/or external surfaces
     pub clips: FrameVec<CompositorClip>,
+    /// Set to true when any tile is rasterized (has is_valid = false)
+    pub did_rasterize_any_tile: bool,
 }
 
 impl CompositeState {
@@ -713,10 +718,11 @@ impl CompositeState {
             transforms: memory.new_vec(),
             low_quality_pinch_zoom,
             clips,
+            did_rasterize_any_tile: false,
         }
     }
 
-    fn compositor_clip_params(
+    pub fn compositor_clip_params(
         &self,
         clip_index: Option<CompositorClipIndex>,
         default_rect: DeviceRect,

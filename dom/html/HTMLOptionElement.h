@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_HTMLOptionElement_h__
-#define mozilla_dom_HTMLOptionElement_h__
+#ifndef mozilla_dom_HTMLOptionElement_h_
+#define mozilla_dom_HTMLOptionElement_h_
 
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsGenericHTMLElement.h"
@@ -73,7 +71,8 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aValue, aRv);
   }
 
-  HTMLFormElement* GetForm();
+  Element* GetFormForBindings();
+  HTMLFormElement* GetFormInternal();
 
   void GetRenderedLabel(nsAString& aLabel) {
     if (!GetAttr(nsGkAtoms::label, aLabel) || aLabel.IsEmpty()) {
@@ -121,12 +120,8 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   bool mSelectedChanged = false;
-
-  // True only while we're under the SetOptionsSelectedByIndex call when our
-  // "selected" attribute is changing and mSelectedChanged is false.
-  bool mIsInSetDefaultSelected = false;
 };
 
 }  // namespace mozilla::dom
 
-#endif  // mozilla_dom_HTMLOptionElement_h__
+#endif  // mozilla_dom_HTMLOptionElement_h_

@@ -20,7 +20,7 @@ add_task(async function () {
   await selectNode("#testid", inspector);
 
   info("Get the color property editor");
-  const ruleEditor = getRuleViewRuleEditor(view, 0);
+  const ruleEditor = getRuleViewRuleEditorAt(view, 0);
   const propEditor = ruleEditor.rule.textProps[0].editor;
   is(ruleEditor.rule.textProps[0].name, "color");
 

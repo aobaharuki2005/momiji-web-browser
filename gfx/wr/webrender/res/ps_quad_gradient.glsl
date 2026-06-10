@@ -105,19 +105,17 @@ void pattern_vertex(PrimitiveInfo info) {
     vec4[3] gradient = fetch_from_gpu_buffer_3f(address);
     ivec4 header = decode_gradient_header(address + 2, gradient[2]);
 
-    vec2 pos = info.local_pos - info.local_prim_rect.p0;
-
     switch (header.x) {
         case GRADIENT_KIND_LINEAR: {
-            linear_gradient_vertex(pos, gradient[0]);
+            linear_gradient_vertex(info.local_pos, gradient[0]);
             break;
         }
         case GRADIENT_KIND_RADIAL: {
-            radial_gradient_vertex(pos, gradient[0], gradient[1]);
+            radial_gradient_vertex(info.local_pos, gradient[0], gradient[1]);
             break;
         }
         case GRADIENT_KIND_CONIC: {
-            conic_gradient_vertex(pos, gradient[0], gradient[1]);
+            conic_gradient_vertex(info.local_pos, gradient[0], gradient[1]);
             break;
         }
         default: {
@@ -303,7 +301,16 @@ float linear_gradient_fragment() {
     float start_offset = v_flat_data.z;
 
     // Project position onto a direction vector to compute offset.
-    return dot(pos, scale_dir) - start_offset;
+    float offset = dot(pos, scale_dir) - start_offset;
+
+    // Due to precision issues with interpolated varyings if a row/column or diagonal
+    // of pixels are exactly on the hard stop boundary, pixels along the hard stop may
+    // fall on either side of the boundary inconsistently which creates a very noticeable
+    // jagged look. The issue is hardware-dependent but has been observed with multiple
+    // GPU vendors.
+    // We work around it by adding a tiny amount to the offset as it makes it much less
+    // likely for typical gradient stop offset values to land exactly on pixel centers.
+    return offset + 0.000001;
 }
 
 float radial_gradient_fragment() {

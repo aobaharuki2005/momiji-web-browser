@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,22 +6,19 @@
 
 #include <algorithm>
 
-#include "HTMLSelectEventListener.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ReflowInput.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
-#include "mozilla/dom/MouseEvent.h"
-#include "mozilla/dom/MouseEventBinding.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsComboboxControlFrame.h"
@@ -51,9 +46,6 @@ nsListControlFrame::nsListControlFrame(ComputedStyle* aStyle,
                                        nsPresContext* aPresContext)
     : ScrollContainerFrame(aStyle, aPresContext, kClassID, false),
       mChangesSinceDragStart(false),
-      mIsAllContentHere(false),
-      mIsAllFramesHere(false),
-      mHasBeenInitialized(false),
       mNeedToReset(true),
       mPostChildrenLoadedReset(false),
       mMightNeedSecondPass(false),
@@ -67,20 +59,12 @@ Maybe<nscoord> nsListControlFrame::GetNaturalBaselineBOffset(
   // Unlike scroll frames which we inherit from, we don't export a baseline.
   return Nothing{};
 }
-// for Bug 47302 (remove this comment later)
 void nsListControlFrame::Destroy(DestroyContext& aContext) {
-  // get the receiver interface from the browser button's content node
-  NS_ENSURE_TRUE_VOID(mContent);
-
-  // Clear the frame pointer on our event listener, just in case the
-  // event listener can outlive the frame.
-
-  mEventListener->Detach();
   ScrollContainerFrame::Destroy(aContext);
 }
 
 HTMLOptionElement* nsListControlFrame::GetCurrentOption() const {
-  return mEventListener->GetCurrentOption();
+  return Select().GetCurrentOption();
 }
 
 bool nsListControlFrame::IsFocused() const {
@@ -90,7 +74,6 @@ bool nsListControlFrame::IsFocused() const {
 void nsListControlFrame::InvalidateFocus() { InvalidateFrame(); }
 
 NS_QUERYFRAME_HEAD(nsListControlFrame)
-  NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
   NS_QUERYFRAME_ENTRY(nsListControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(ScrollContainerFrame)
 
@@ -181,17 +164,6 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
   const bool hadPendingInterrupt = aPresContext->HasPendingInterrupt();
 
   SchedulePaint();
-
-  // If all the content and frames are here
-  // then initialize it before reflow
-  if (mIsAllContentHere && !mHasBeenInitialized) {
-    if (!mIsAllFramesHere) {
-      CheckIfAllFramesHere();
-    }
-    if (mIsAllFramesHere && !mHasBeenInitialized) {
-      mHasBeenInitialized = true;
-    }
-  }
 
   MarkInReflow();
   // Due to the fact that our intrinsic block size depends on the block
@@ -311,10 +283,6 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
       !hadPendingInterrupt && aPresContext->HasPendingInterrupt();
 }
 
-bool nsListControlFrame::ShouldPropagateComputedBSizeToScrolledContent() const {
-  return true;
-}
-
 //---------------------------------------------------------
 bool nsListControlFrame::ExtendedSelection(int32_t aStartIndex,
                                            int32_t aEndIndex, bool aClearAll) {
@@ -325,7 +293,7 @@ bool nsListControlFrame::ExtendedSelection(int32_t aStartIndex,
 bool nsListControlFrame::SingleSelection(int32_t aClickedIndex,
                                          bool aDoToggle) {
 #ifdef ACCESSIBILITY
-  nsCOMPtr<nsIContent> prevOption = mEventListener->GetCurrentOption();
+  nsCOMPtr<nsIContent> prevOption = Select().GetCurrentOption();
 #endif
   bool wasChanged = false;
   // Get Current selection
@@ -486,16 +454,15 @@ bool nsListControlFrame::PerformSelection(int32_t aClickedIndex, bool aIsShift,
 }
 
 //---------------------------------------------------------
-bool nsListControlFrame::HandleListSelection(dom::Event* aEvent,
-                                             int32_t aClickedIndex) {
-  MouseEvent* mouseEvent = aEvent->AsMouseEvent();
+bool nsListControlFrame::HandleListSelection(
+    const WidgetMouseEvent& aMouseEvent, int32_t aClickedIndex) {
   bool isControl;
 #ifdef XP_MACOSX
-  isControl = mouseEvent->MetaKey();
+  isControl = aMouseEvent.IsMeta();
 #else
-  isControl = mouseEvent->CtrlKey();
+  isControl = aMouseEvent.IsControl();
 #endif
-  bool isShift = mouseEvent->ShiftKey();
+  bool isShift = aMouseEvent.IsShift();
   return PerformSelection(aClickedIndex, isShift,
                           isControl);  // might destroy us
 }
@@ -561,20 +528,6 @@ nsresult nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
   return ScrollContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-//---------------------------------------------------------
-void nsListControlFrame::SetInitialChildList(ChildListID aListID,
-                                             nsFrameList&& aChildList) {
-  if (aListID == FrameChildListID::Principal) {
-    // First check to see if all the content has been added
-    mIsAllContentHere = Select().IsDoneAddingChildren();
-    if (!mIsAllContentHere) {
-      mIsAllFramesHere = false;
-      mHasBeenInitialized = false;
-    }
-  }
-  ScrollContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
-}
-
 bool nsListControlFrame::GetMultiple() const {
   return mContent->AsElement()->HasAttr(nsGkAtoms::multiple);
 }
@@ -587,14 +540,6 @@ HTMLSelectElement& nsListControlFrame::Select() const {
 void nsListControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                               nsIFrame* aPrevInFlow) {
   ScrollContainerFrame::Init(aContent, aParent, aPrevInFlow);
-
-  // we shouldn't have to unregister this listener because when
-  // our frame goes away all these content node go away as well
-  // because our frame is the only one who references them.
-  // we need to hook up our listeners before the editor is initialized
-  mEventListener = new HTMLSelectEventListener(
-      Select(), HTMLSelectEventListener::SelectType::Listbox);
-
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
 }
@@ -607,20 +552,17 @@ dom::HTMLOptionElement* nsListControlFrame::GetOption(uint32_t aIndex) const {
   return Select().Item(aIndex);
 }
 
-NS_IMETHODIMP
-nsListControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected) {
+void nsListControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected) {
   if (aSelected) {
     ScrollToIndex(aIndex);
   }
-  return NS_OK;
 }
 
 void nsListControlFrame::OnContentReset() { ResetList(true); }
 
 void nsListControlFrame::ResetList(bool aAllowScrolling) {
-  // if all the frames aren't here
-  // don't bother reseting
-  if (!mIsAllFramesHere) {
+  // if all the frames aren't here don't bother reseting
+  if (!Select().IsDoneAddingChildren()) {
     return;
   }
 
@@ -675,59 +617,15 @@ uint32_t nsListControlFrame::GetNumberOfOptions() {
   return options->Length();
 }
 
-//----------------------------------------------------------------------
-// nsISelectControlFrame
-//----------------------------------------------------------------------
-bool nsListControlFrame::CheckIfAllFramesHere() {
-  // XXX Need to find a fail proof way to determine that
-  // all the frames are there
-  mIsAllFramesHere = true;
+void nsListControlFrame::DoneAddingChildren() { ResetList(true); }
 
-  // now make sure we have a frame each piece of content
-
-  return mIsAllFramesHere;
-}
-
-NS_IMETHODIMP
-nsListControlFrame::DoneAddingChildren(bool aIsDone) {
-  mIsAllContentHere = aIsDone;
-  if (mIsAllContentHere) {
-    // Here we check to see if all the frames have been created
-    // for all the content.
-    // If so, then we can initialize;
-    if (!mIsAllFramesHere) {
-      // if all the frames are now present we can initialize
-      if (CheckIfAllFramesHere()) {
-        mHasBeenInitialized = true;
-        ResetList(true);
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsListControlFrame::AddOption(int32_t aIndex) {
-  if (!mIsAllContentHere) {
-    mIsAllContentHere = Select().IsDoneAddingChildren();
-    if (!mIsAllContentHere) {
-      mIsAllFramesHere = false;
-      mHasBeenInitialized = false;
-    } else {
-      mIsAllFramesHere =
-          (aIndex == static_cast<int32_t>(GetNumberOfOptions() - 1));
-    }
-  }
-
+void nsListControlFrame::OptionsAdded() {
   // Make sure we scroll to the selected option as needed
   mNeedToReset = true;
 
-  if (!mHasBeenInitialized) {
-    return NS_OK;
+  if (Select().IsDoneAddingChildren()) {
+    mPostChildrenLoadedReset = true;
   }
-
-  mPostChildrenLoadedReset = mIsAllContentHere;
-  return NS_OK;
 }
 
 static int32_t DecrementAndClamp(int32_t aSelectionIndex, int32_t aLength) {
@@ -735,8 +633,7 @@ static int32_t DecrementAndClamp(int32_t aSelectionIndex, int32_t aLength) {
                       : std::max(0, aSelectionIndex - 1);
 }
 
-NS_IMETHODIMP
-nsListControlFrame::RemoveOption(int32_t aIndex) {
+void nsListControlFrame::RemoveOption(int32_t aIndex) {
   MOZ_ASSERT(aIndex >= 0, "negative <option> index");
 
   // Need to reset if we're a dropdown
@@ -764,7 +661,6 @@ nsListControlFrame::RemoveOption(int32_t aIndex) {
   }
 
   InvalidateFocus();
-  return NS_OK;
 }
 
 //---------------------------------------------------------
@@ -807,21 +703,18 @@ bool nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex) {
 
 // Dispatch event and such
 bool nsListControlFrame::UpdateSelection() {
-  if (mIsAllFramesHere) {
-    // if it's a combobox, display the new text. Note that after
-    // FireOnInputAndOnChange we might be dead, as that can run script.
+  if (Select().IsDoneAddingChildren()) {
+    // Note that after UserFinishedInteracting we might be dead, as that can
+    // run script.
     AutoWeakFrame weakFrame(this);
-    if (mIsAllContentHere) {
-      RefPtr listener = mEventListener;
-      listener->FireOnInputAndOnChange();
-    }
+    RefPtr select = &Select();
+    select->UserFinishedInteracting(/* aChanged = */ true);
     return weakFrame.IsAlive();
   }
   return true;
 }
 
-NS_IMETHODIMP_(void)
-nsListControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) {
+void nsListControlFrame::OnSetSelectedIndex(int32_t aNewIndex) {
 #ifdef ACCESSIBILITY
   nsCOMPtr<nsIContent> prevOption = GetCurrentOption();
 #endif
@@ -831,20 +724,15 @@ nsListControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) {
   if (!weakFrame.IsAlive()) {
     return;
   }
-  mStartSelectionIndex = aNewIndex;
-  mEndSelectionIndex = aNewIndex;
+  mStartSelectionIndex = mEndSelectionIndex = aNewIndex;
   InvalidateFocus();
 
 #ifdef ACCESSIBILITY
-  if (aOldIndex != aNewIndex) {
+  if (prevOption != GetCurrentOption()) {
     FireMenuItemActiveEvent(prevOption);
   }
 #endif
 }
-
-//----------------------------------------------------------------------
-// End nsISelectControlFrame
-//----------------------------------------------------------------------
 
 class AsyncReset final : public Runnable {
  public:
@@ -876,7 +764,7 @@ bool nsListControlFrame::ReflowFinished() {
     // scrolling to the selected element, when the ResetList was probably only
     // caused by content loading normally.
     const bool scroll = !DidHistoryRestore() || mPostChildrenLoadedReset;
-    nsContentUtils::AddScriptRunner(new AsyncReset(this, scroll));
+    nsContentUtils::AddScriptRunner(MakeAndAddRef<AsyncReset>(this, scroll));
   }
   mReflowWasInterrupted = false;
   return ScrollContainerFrame::ReflowFinished();
@@ -945,12 +833,12 @@ void nsListControlFrame::FireMenuItemActiveEvent(nsIContent* aPreviousOption) {
 }
 #endif
 
-nsresult nsListControlFrame::GetIndexFromDOMEvent(dom::Event* aMouseEvent,
-                                                  int32_t& aCurIndex) {
+nsresult nsListControlFrame::GetIndexFromEvent(const WidgetMouseEvent& aEvent,
+                                               int32_t& aCurIndex) {
   if (PresShell::GetCapturingContent() != mContent) {
     // If we're not capturing, then ignore movement in the border
     nsPoint pt =
-        nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aMouseEvent, this);
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(&aEvent, RelativeTo{this});
     nsRect borderInnerEdge = GetScrollPortRect();
     if (!borderInnerEdge.Contains(pt)) {
       return NS_ERROR_FAILURE;
@@ -958,8 +846,8 @@ nsresult nsListControlFrame::GetIndexFromDOMEvent(dom::Event* aMouseEvent,
   }
 
   RefPtr<dom::HTMLOptionElement> option;
-  for (nsCOMPtr<nsIContent> content =
-           PresContext()->EventStateManager()->GetEventTargetContent(nullptr);
+  for (nsIContent* content =
+           PresContext()->EventStateManager()->GetEventTargetContent();
        content && !option; content = content->GetParent()) {
     option = dom::HTMLOptionElement::FromNode(content);
   }
@@ -974,14 +862,14 @@ nsresult nsListControlFrame::GetIndexFromDOMEvent(dom::Event* aMouseEvent,
 }
 
 nsresult nsListControlFrame::HandleLeftButtonMouseDown(
-    dom::Event* aMouseEvent) {
+    const WidgetMouseEvent& aMouseEvent) {
   int32_t selectedIndex;
-  if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
+  if (NS_SUCCEEDED(GetIndexFromEvent(aMouseEvent, selectedIndex))) {
     // Handle Like List
     CaptureMouseEvents(true);
     AutoWeakFrame weakFrame(this);
-    bool change =
-        HandleListSelection(aMouseEvent, selectedIndex);  // might destroy us
+    bool change = HandleListSelection(aMouseEvent,
+                                      selectedIndex);  // might destroy us
     if (!weakFrame.IsAlive()) {
       return NS_OK;
     }
@@ -990,7 +878,7 @@ nsresult nsListControlFrame::HandleLeftButtonMouseDown(
   return NS_OK;
 }
 
-nsresult nsListControlFrame::HandleLeftButtonMouseUp(dom::Event* aMouseEvent) {
+nsresult nsListControlFrame::HandleLeftButtonMouseUp() {
   if (!StyleVisibility()->IsVisible()) {
     return NS_OK;
   }
@@ -999,29 +887,25 @@ nsresult nsListControlFrame::HandleLeftButtonMouseUp(dom::Event* aMouseEvent) {
     // reset this so that future MouseUps without a prior MouseDown
     // won't fire onchange
     mChangesSinceDragStart = false;
-    RefPtr listener = mEventListener;
-    listener->FireOnInputAndOnChange();
+    RefPtr select = &Select();
+    select->UserFinishedInteracting(/* aChanged = */ true);
     // Note that `this` may be dead now, as the above call runs script.
   }
   return NS_OK;
 }
 
-nsresult nsListControlFrame::DragMove(dom::Event* aMouseEvent) {
-  NS_ASSERTION(aMouseEvent, "aMouseEvent is null.");
-
+nsresult nsListControlFrame::DragMove(const WidgetMouseEvent& aMouseEvent) {
   int32_t selectedIndex;
-  if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
+  if (NS_SUCCEEDED(GetIndexFromEvent(aMouseEvent, selectedIndex))) {
     // Don't waste cycles if we already dragged over this item
     if (selectedIndex == mEndSelectionIndex) {
       return NS_OK;
     }
-    MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
-    NS_ASSERTION(mouseEvent, "aMouseEvent is not a MouseEvent!");
     bool isControl;
 #ifdef XP_MACOSX
-    isControl = mouseEvent->MetaKey();
+    isControl = aMouseEvent.IsMeta();
 #else
-    isControl = mouseEvent->CtrlKey();
+    isControl = aMouseEvent.IsControl();
 #endif
     AutoWeakFrame weakFrame(this);
     // Turn SHIFT on when you are dragging, unless control is on.
@@ -1055,8 +939,8 @@ void nsListControlFrame::ScrollToFrame(dom::HTMLOptionElement& aOptElement) {
   // otherwise we find the content's frame and scroll to it
   if (nsIFrame* childFrame = aOptElement.GetPrimaryFrame()) {
     RefPtr<mozilla::PresShell> presShell = PresShell();
-    presShell->ScrollFrameIntoView(childFrame, Nothing(), ScrollAxis(),
-                                   ScrollAxis(),
+    presShell->ScrollFrameIntoView(childFrame, Nothing(), AxisScrollParams(),
+                                   AxisScrollParams(),
                                    ScrollFlags::ScrollOverflowHidden |
                                        ScrollFlags::ScrollFirstAncestorOnly);
   }

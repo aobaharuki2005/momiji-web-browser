@@ -15,12 +15,12 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "api/array_view.h"
 #include "api/environment/environment_factory.h"
 #include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
@@ -62,6 +62,7 @@
 #include "test/create_test_field_trials.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/near_matcher.h"
 
 namespace webrtc {
 namespace {
@@ -125,7 +126,7 @@ class MockModuleRtpRtcp : public RTCPReceiver::ModuleRtpRtcp {
   MOCK_METHOD(void, OnReceivedNack, (const std::vector<uint16_t>&), (override));
   MOCK_METHOD(void,
               OnReceivedRtcpReportBlocks,
-              (ArrayView<const ReportBlockData>),
+              (std::span<const ReportBlockData>),
               (override));
 };
 
@@ -138,10 +139,6 @@ class MockVideoBitrateAllocationObserver
               (override));
 };
 
-MATCHER_P2(Near, value, margin, "") {
-  return value - margin <= arg && arg <= value + margin;
-}
-
 // SSRC of remote peer, that sends rtcp packet to the rtcp receiver under test.
 constexpr uint32_t kSenderSsrc = 0x10203;
 // SSRCs of local peer, that rtcp packet addressed to.
@@ -153,7 +150,6 @@ constexpr uint32_t kNotToUsSsrc = 0x654321;
 constexpr uint32_t kUnknownSenderSsrc = 0x54321;
 
 constexpr int64_t kRtcpIntervalMs = 1000;
-constexpr TimeDelta kEpsilon = TimeDelta::Millis(1);
 
 }  // namespace
 
@@ -270,7 +266,7 @@ TEST(RtcpReceiverTest, InjectSrPacketCalculatesRTT) {
   EXPECT_CALL(mocks.network_link_rtcp_observer, OnRttUpdate);
   receiver.IncomingPacket(sr.Build());
 
-  EXPECT_THAT(receiver.LastRtt(), Near(kRtt, TimeDelta::Millis(1)));
+  EXPECT_THAT(receiver.LastRtt(), Near(kRtt));
 }
 
 TEST(RtcpReceiverTest, InjectSrPacketCalculatesNegativeRTTAsOneMs) {
@@ -824,7 +820,7 @@ TEST(RtcpReceiverTest, InjectExtendedReportsDlrrPacketWithSubBlock) {
   uint32_t compact_ntp_now = CompactNtp(mocks.clock.CurrentNtpTime());
   uint32_t rtt_ntp = compact_ntp_now - kDelay - kLastRR;
   EXPECT_THAT(receiver.GetAndResetXrRrRtt(),
-              Near(CompactNtpRttToTimeDelta(rtt_ntp), kEpsilon));
+              Near(CompactNtpRttToTimeDelta(rtt_ntp)));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_GT(non_sender_rtt_stats.round_trip_time(), TimeDelta::Zero());
@@ -852,7 +848,7 @@ TEST(RtcpReceiverTest, InjectExtendedReportsDlrrPacketWithMultipleSubBlocks) {
   uint32_t compact_ntp_now = CompactNtp(mocks.clock.CurrentNtpTime());
   uint32_t rtt_ntp = compact_ntp_now - kDelay - kLastRR;
   EXPECT_THAT(receiver.GetAndResetXrRrRtt(),
-              Near(CompactNtpRttToTimeDelta(rtt_ntp), kEpsilon));
+              Near(CompactNtpRttToTimeDelta(rtt_ntp)));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_GT(non_sender_rtt_stats.round_trip_time(), TimeDelta::Zero());
@@ -945,7 +941,7 @@ TEST(RtcpReceiverTest, RttCalculatedAfterExtendedReportsDlrr) {
 
   receiver.IncomingPacket(xr.Build());
 
-  EXPECT_THAT(receiver.GetAndResetXrRrRtt(), Near(kRtt, kEpsilon));
+  EXPECT_THAT(receiver.GetAndResetXrRrRtt(), Near(kRtt));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_TRUE(non_sender_rtt_stats.round_trip_time().has_value());
@@ -977,7 +973,7 @@ TEST(RtcpReceiverTest, SetterEnablesReceiverRtt) {
 
   receiver.IncomingPacket(xr.Build());
 
-  EXPECT_THAT(receiver.GetAndResetXrRrRtt(), Near(kRtt, kEpsilon));
+  EXPECT_THAT(receiver.GetAndResetXrRrRtt(), Near(kRtt));
   RTCPReceiver::NonSenderRttStats non_sender_rtt_stats =
       receiver.GetNonSenderRTT();
   EXPECT_TRUE(non_sender_rtt_stats.round_trip_time().has_value());

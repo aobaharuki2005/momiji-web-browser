@@ -6,14 +6,15 @@
 
 /* import-globals-from ../mochitest/common.js */
 /* import-globals-from ../mochitest/layout.js */
-/* import-globals-from ../mochitest/promisified-events.js */
+/* import-globals-from ../mochitest/events.js */
 
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
             CURRENT_CONTENT_DIR, loadScripts, loadContentScripts, snippetToURL,
             Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation,
-            DEFAULT_IFRAME_ID, DEFAULT_IFRAME_DOC_BODY_ID, invokeContentTask,
+            DEFAULT_CONTENT_DOC_BODY_ID, DEFAULT_IFRAME_ID,
+            DEFAULT_IFRAME_DOC_BODY_ID, invokeContentTask,
             matchContentDoc, currentContentDoc, getContentDPR,
             waitForImageMap, getContentBoundsForDOMElm, untilCacheIs,
             untilCacheOk, testBoundsWithContent, waitForContentPaint,
@@ -35,7 +36,7 @@ const MOCHITESTS_DIR =
  * A base URL for test files used in content.
  */
 // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-const CURRENT_CONTENT_DIR = `http://example.com${CURRENT_FILE_DIR}`;
+const CURRENT_CONTENT_DIR = `https://example.com${CURRENT_FILE_DIR}`;
 
 const LOADED_CONTENT_SCRIPTS = new Map();
 
@@ -427,12 +428,13 @@ function wrapWithIFrame(doc, options = {}) {
  */
 function snippetToURL(doc, options = {}) {
   const { contentDocBodyAttrs = {} } = options;
+  const isIframe = options.iframe || options.remoteIframe;
   const attrs = {
     id: DEFAULT_CONTENT_DOC_BODY_ID,
     ...contentDocBodyAttrs,
   };
 
-  if (gIsIframe) {
+  if (isIframe) {
     doc = wrapWithIFrame(doc, options);
   } else if (options.contentSetup) {
     // Hide the body initially so we can ensure that any changes made by
@@ -454,7 +456,7 @@ function snippetToURL(doc, options = {}) {
   );
 
   let url = `data:text/html;charset=utf-8,${encodedDoc}`;
-  if (!gIsIframe && options.urlSuffix) {
+  if (!isIframe && options.urlSuffix) {
     url += options.urlSuffix;
   }
   return url;
@@ -511,6 +513,16 @@ function accessibleTask(doc, task, options = {}) {
       url = `${CURRENT_CONTENT_DIR}${doc}${urlSuffix}`;
     } else {
       url = snippetToURL(doc, options);
+    }
+
+    if (doc.endsWith("xhtml")) {
+      await SpecialPowers.pushPermissions([
+        {
+          type: "allowXULXBL",
+          allow: true,
+          context: CURRENT_CONTENT_DIR,
+        },
+      ]);
     }
 
     registerCleanupFunction(() => {
@@ -965,7 +977,7 @@ async function getContentBoundsForDOMElm(browser, id) {
   });
 }
 
-const CACHE_WAIT_TIMEOUT_MS = 5000;
+const CACHE_WAIT_TIMEOUT_MS = 20000;
 
 /**
  * Wait for a predicate to be true after cache ticks.

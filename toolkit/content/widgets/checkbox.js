@@ -18,26 +18,6 @@
       `;
     }
 
-    constructor() {
-      super();
-
-      // While it would seem we could do this by handling oncommand, we need can't
-      // because any external oncommand handlers might get called before ours, and
-      // then they would see the incorrect value of checked.
-      this.addEventListener("click", event => {
-        if (event.button === 0 && !this.disabled) {
-          this.checked = !this.checked;
-        }
-      });
-      this.addEventListener("keypress", event => {
-        if (event.key == " ") {
-          this.checked = !this.checked;
-          // Prevent page from scrolling on the space key.
-          event.preventDefault();
-        }
-      });
-    }
-
     static get inheritedAttributes() {
       return {
         ".checkbox-check": "disabled,checked,native",
@@ -59,13 +39,7 @@
 
     set checked(val) {
       val = !!val;
-      let change = val != this.hasAttribute("checked");
       this.toggleAttribute("checked", val);
-      if (change) {
-        let event = document.createEvent("Events");
-        event.initEvent("CheckboxStateChange", true, true);
-        this.dispatchEvent(event);
-      }
     }
 
     get checked() {

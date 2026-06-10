@@ -406,8 +406,10 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
     additionalProperties: true,
   };
 
-  const { sandbox, loader, manager, initExperimentAPI, cleanup } =
-    await setupTest({ init: false, experiments: [recipe] });
+  const { sandbox, loader, manager, cleanup } = await setupTest({
+    init: false,
+    experiments: [recipe],
+  });
 
   sandbox.spy(loader, "updateRecipes");
   sandbox.spy(EnrollmentsContext.prototype, "_generateVariablesOnlySchema");
@@ -416,7 +418,7 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
   sandbox.spy(manager, "enroll");
   sandbox.spy(manager, "_unenroll");
 
-  await initExperimentAPI();
+  await ExperimentAPI.init();
 
   Assert.ok(
     manager.onRecipe.calledOnceWith(recipe, "rs-loader", {
@@ -469,7 +471,7 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
   await cleanup();
 });
 
-async function test_updateRecipes_invalidFeatureAfterUpdate() {
+add_task(async function test_updateRecipes_invalidFeatureAfterUpdate() {
   const featureConfig = { featureId: "bogus", value: {} };
 
   const { manager, cleanup } = await setupTest({
@@ -521,15 +523,6 @@ async function test_updateRecipes_invalidFeatureAfterUpdate() {
   );
 
   await cleanup();
-}
-
-add_task(test_updateRecipes_invalidFeatureAfterUpdate);
-add_task(async function test_updateRecipes_invalidFeatureAfterUpdate_db() {
-  const resetNimbusEnrollmentPrefs = NimbusTestUtils.enableNimbusEnrollments({
-    read: true,
-  });
-  await test_updateRecipes_invalidFeatureAfterUpdate();
-  resetNimbusEnrollmentPrefs();
 });
 
 add_task(async function test_updateRecipes_validationTelemetry() {
@@ -589,14 +582,14 @@ add_task(async function test_updateRecipes_validationTelemetry() {
   for (const { recipe, reason, events, callCount } of TEST_CASES) {
     info(`Testing validation failed telemetry for reason = "${reason}" ...`);
 
-    const { sandbox, initExperimentAPI, cleanup } = await setupTest({
+    const { sandbox, cleanup } = await setupTest({
       init: false,
       experiments: [recipe],
     });
 
     sandbox.spy(NimbusTelemetry, "recordValidationFailure");
 
-    await initExperimentAPI();
+    await ExperimentAPI.init();
 
     Assert.equal(
       NimbusTelemetry.recordValidationFailure.callCount,
@@ -667,7 +660,7 @@ add_task(async function test_updateRecipes_validationDisabled() {
   });
 
   for (const recipe of [invalidRecipe, invalidBranch, invalidFeature]) {
-    const { sandbox, manager, initExperimentAPI, cleanup } = await setupTest({
+    const { sandbox, manager, cleanup } = await setupTest({
       init: false,
       experiments: [recipe],
     });
@@ -676,7 +669,7 @@ add_task(async function test_updateRecipes_validationDisabled() {
     sandbox.spy(manager, "onRecipe");
     sandbox.spy(NimbusTelemetry, "recordValidationFailure");
 
-    await initExperimentAPI();
+    await ExperimentAPI.init();
 
     Assert.ok(
       NimbusTelemetry.recordValidationFailure.notCalled,
@@ -1455,9 +1448,7 @@ add_task(async function test_update_experiments_ordered_by_published_date() {
 
 add_task(
   async function test_record_is_ready_no_value_for_nimbus_is_ready_feature() {
-    const { loader, cleanup } = await NimbusTestUtils.setupTest({
-      clearTelemetry: true,
-    });
+    const { loader, cleanup } = await setupTest();
 
     await Services.fog.testFlushAllChildren();
     Services.fog.testResetFOG();
@@ -1478,7 +1469,7 @@ add_task(
       value: { eventCount: 3 },
     });
 
-    const { loader, manager, cleanup } = await NimbusTestUtils.setupTest();
+    const { loader, manager, cleanup } = await setupTest();
 
     await Services.fog.testFlushAllChildren();
     Services.fog.testResetFOG();
@@ -1551,7 +1542,7 @@ add_task(async function test_updateRecipes_secure() {
   ] of TEST_CASES.entries()) {
     info(`Running test ${idx}`);
 
-    const { sandbox, manager, initExperimentAPI, cleanup } = await setupTest({
+    const { sandbox, manager, cleanup } = await setupTest({
       init: false,
       experiments,
       secureExperiments,
@@ -1559,7 +1550,7 @@ add_task(async function test_updateRecipes_secure() {
 
     sandbox.stub(manager, "onRecipe");
 
-    await initExperimentAPI();
+    await ExperimentAPI.init();
 
     const enrolledSlugs = manager.onRecipe
       .getCalls()
@@ -1592,22 +1583,12 @@ add_task(async function test_updateRecipesClearsOptIns() {
   const recipes = [
     NimbusTestUtils.factories.recipe("opt-in-1", {
       isFirefoxLabsOptIn: true,
-      firefoxLabsTitle: "opt-in-1-title",
-      firefoxLabsDescription: "opt-in-1-desc",
-      firefoxLabsDescriptionLinks: null,
-      firefoxLabsGroup: "group",
-      requiresRestart: false,
       isRollout: true,
       targeting: "true",
       publishedDate: new Date(now).toISOString(),
     }),
     NimbusTestUtils.factories.recipe("opt-in-2", {
       isFirefoxLabsOptIn: true,
-      firefoxLabsTitle: "opt-in-2-title",
-      firefoxLabsDescription: "opt-in-2-desc",
-      firefoxLabsDescriptionLinks: null,
-      firefoxLabsGroup: "group",
-      requiresRestart: false,
       isRollout: true,
       targeting: "false",
       publishedDate: new Date(now + 10000).toISOString(),
@@ -1619,11 +1600,44 @@ add_task(async function test_updateRecipesClearsOptIns() {
 
   await loader.updateRecipes();
 
-  Assert.deepEqual(manager.optInRecipes, recipes);
+  const expectedLabs = recipes.map(recipe => ({ recipe, source: "rs-loader" }));
+  const forceEnroll = NimbusTestUtils.factories.recipe("force-enroll", {
+    isFirefoxLabsOptIn: true,
+    isRollout: true,
+    targeting: "true",
+    publishedDate: new Date(now + 20000).toISOString(),
+  });
+
+  Assert.ok(manager.registerOptIn(forceEnroll, "force-enrollment"));
+  expectedLabs.push({ recipe: forceEnroll, source: "force-enrollment" });
+
+  Assert.deepEqual(manager.optIns, expectedLabs);
 
   await loader.updateRecipes();
 
-  Assert.deepEqual(manager.optInRecipes, recipes);
+  Assert.deepEqual(
+    manager.optIns.toSorted(orderByRecipePublishedDate),
+    expectedLabs
+  );
+
+  recipes.splice(1, 1);
+  expectedLabs.splice(1, 1);
+
+  await loader.updateRecipes();
+
+  Assert.deepEqual(
+    manager.optIns.toSorted(orderByRecipePublishedDate),
+    expectedLabs
+  );
+
+  recipes.splice(0, 1);
+  expectedLabs.splice(0, 1);
+
+  await loader.updateRecipes();
+  Assert.deepEqual(
+    manager.optIns.toSorted(orderByRecipePublishedDate),
+    expectedLabs
+  );
 
   await cleanup();
 });
@@ -1631,33 +1645,20 @@ add_task(async function test_updateRecipesClearsOptIns() {
 add_task(async function test_updateRecipes_optInsStayEnrolled() {
   info("testing opt-ins stay enrolled after update");
 
-  const recipe = NimbusTestUtils.factories.recipe("opt-in", {
-    branches: [
-      {
-        ...NimbusTestUtils.factories.recipe.branches[0],
-        slug: "branch-0",
-        firefoxLabsTitle: "branch-0-title",
-      },
-      {
-        ...NimbusTestUtils.factories.recipe.branches[1],
-        slug: "branch-1",
-        firefoxLabsTitle: "branch-1-title",
-      },
-    ],
-    targeting: "true",
-    isFirefoxLabsOptIn: true,
-    firefoxLabsTitle: "opt-in-title",
-    firefoxLabsDescription: "opt-in-desc",
-    firefoxLabsDescriptionLinks: null,
-    firefoxLabsGroup: "group",
-    requiresRestart: false,
-  });
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "opt-in",
+    { featureId: "no-feature-firefox-desktop" },
+    {
+      isFirefoxLabsOptIn: true,
+      isRollout: true,
+    }
+  );
 
   const { loader, manager, cleanup } = await setupTest({
     experiments: [recipe],
   });
 
-  await manager.enroll(recipe, "rs-loader", { branchSlug: "branch-0" });
+  await manager.enroll(recipe, "rs-loader", { branchSlug: "control" });
   Assert.ok(manager.store.get("opt-in")?.active, "Opt-in was enrolled");
 
   await loader.updateRecipes();
@@ -1671,33 +1672,20 @@ add_task(async function test_updateRecipes_optInsStayEnrolled() {
 add_task(async function test_updateRecipes_optInsUnerollOnFalseTargeting() {
   info("testing opt-ins unenroll after targeting becomes false");
 
-  const recipe = NimbusTestUtils.factories.recipe("opt-in", {
-    branches: [
-      {
-        ...NimbusTestUtils.factories.recipe.branches[0],
-        slug: "branch-0",
-        firefoxLabsTitle: "branch-0-title",
-      },
-      {
-        ...NimbusTestUtils.factories.recipe.branches[1],
-        slug: "branch-1",
-        firefoxLabsTitle: "branch-1-title",
-      },
-    ],
-    targeting: "true",
-    isFirefoxLabsOptIn: true,
-    firefoxLabsTitle: "opt-in-title",
-    firefoxLabsDescription: "opt-in-desc",
-    firefoxLabsDescriptionLinks: null,
-    firefoxLabsGroup: "group",
-    requiresRestart: false,
-  });
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "opt-in",
+    { featureId: "no-feature-firefox-desktop" },
+    {
+      isFirefoxLabsOptIn: true,
+      isRollout: true,
+    }
+  );
 
   const { loader, manager, cleanup } = await setupTest({
     experiments: [recipe],
   });
 
-  await manager.enroll(recipe, "rs-loader", { branchSlug: "branch-0" });
+  await manager.enroll(recipe, "rs-loader", { branchSlug: "control" });
   Assert.ok(manager.store.get("opt-in")?.active, "Opt-in was enrolled");
 
   recipe.targeting = "false";
@@ -1710,28 +1698,20 @@ add_task(async function test_updateRecipes_optInsUnerollOnFalseTargeting() {
 add_task(async function test_updateRecipes_bucketingCausesOptInUnenrollments() {
   info("testing opt-in rollouts unenroll after if bucketing changes");
 
-  const recipe = NimbusTestUtils.factories.recipe("opt-in", {
-    branches: [
-      {
-        ...NimbusTestUtils.factories.recipe.branches[0],
-        slug: "branch-0",
-      },
-    ],
-    targeting: "true",
-    isFirefoxLabsOptIn: true,
-    isRollout: true,
-    firefoxLabsTitle: "opt-in-title",
-    firefoxLabsDescription: "opt-in-desc",
-    firefoxLabsDescriptionLinks: null,
-    firefoxLabsGroup: "group",
-    requiresRestart: false,
-  });
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "opt-in",
+    { featureId: "no-feature-firefox-desktop" },
+    {
+      isFirefoxLabsOptIn: true,
+      isRollout: true,
+    }
+  );
 
   const { loader, manager, cleanup } = await setupTest({
     experiments: [recipe],
   });
 
-  await manager.enroll(recipe, "rs-loader", { branchSlug: "branch-0" });
+  await manager.enroll(recipe, "rs-loader", { branchSlug: "control" });
   Assert.ok(manager.store.get("opt-in")?.active, "Opt-in was enrolled");
 
   recipe.bucketConfig.count = 0;
@@ -1745,29 +1725,20 @@ add_task(async function test_updateRecipes_reEnrollRolloutOptin() {
   info(
     "testing opt-in rollouts do not re-enroll automatically if bucketing changes"
   );
-
-  const recipe = NimbusTestUtils.factories.recipe("opt-in", {
-    branches: [
-      {
-        ...NimbusTestUtils.factories.recipe.branches[0],
-        slug: "branch-0",
-      },
-    ],
-    targeting: "true",
-    isFirefoxLabsOptIn: true,
-    isRollout: true,
-    firefoxLabsTitle: "opt-in-title",
-    firefoxLabsDescription: "opt-in-desc",
-    firefoxLabsDescriptionLinks: null,
-    firefoxLabsGroup: "group",
-    requiresRestart: false,
-  });
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "opt-in",
+    { featureId: "no-feature-firefox-desktop" },
+    {
+      isFirefoxLabsOptIn: true,
+      isRollout: true,
+    }
+  );
 
   const { loader, manager, cleanup } = await setupTest({
     experiments: [recipe],
   });
 
-  await manager.enroll(recipe, "rs-loader", { branchSlug: "branch-0" });
+  await manager.enroll(recipe, "rs-loader", { branchSlug: "control" });
   Assert.ok(manager.store.get("opt-in")?.active, "Opt-in was enrolled");
 
   recipe.bucketConfig.count = 0;
@@ -1782,14 +1753,6 @@ add_task(async function test_updateRecipes_reEnrollRolloutOptin() {
 });
 
 add_task(async function test_updateRecipes_enrollmentStatus_telemetry() {
-  Services.fog.applyServerKnobsConfig(
-    JSON.stringify({
-      metrics_enabled: {
-        "nimbus_events.enrollment_status": true,
-      },
-    })
-  );
-
   // Create a feature for each experiment so that they aren't competing.
   const features = [
     new ExperimentFeature("test-feature-0", { variables: {} }),
@@ -2005,14 +1968,6 @@ add_task(async function test_updateRecipes_enrollmentStatus_telemetry() {
 });
 
 add_task(async function test_updateRecipes_enrollmentStatus_notEnrolled() {
-  Services.fog.applyServerKnobsConfig(
-    JSON.stringify({
-      metrics_enabled: {
-        "nimbus_events.enrollment_status": true,
-      },
-    })
-  );
-
   const features = [
     new ExperimentFeature("test-feature-0", { variables: {} }),
     new ExperimentFeature("test-feature-1", { variables: {} }),
@@ -2126,6 +2081,142 @@ add_task(async function test_updateRecipes_enrollmentStatus_notEnrolled() {
 
   cleanupFeatures();
   await cleanup();
+});
+
+async function doEnrollmentStatusOptOutTest(
+  expectedEvents,
+  expectedEnrollments
+) {
+  const recipes = [
+    NimbusTestUtils.factories.recipe.withFeatureConfig("previous-experiment", {
+      featureId: "no-feature-firefox-desktop",
+    }),
+    NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "previous-rollout",
+      { featureId: "no-feature-firefox-desktop" },
+      { isRollout: true }
+    ),
+    NimbusTestUtils.factories.recipe.withFeatureConfig("experiment", {
+      featureId: "no-feature-firefox-desktop",
+    }),
+    NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "rollout",
+      { featureId: "no-feature-firefox-desktop" },
+      { isRollout: true }
+    ),
+    NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "labs",
+      { featureId: "no-feature-firefox-desktop" },
+      {
+        isRollout: true,
+        isFirefoxLabsOptIn: true,
+        firefoxLabsTitle: "title",
+        firefoxLabsDescription: "description",
+        firefoxLabsDescriptionLinks: null,
+        firefoxLabsGroup: "group",
+        requiresRestart: false,
+      }
+    ),
+  ];
+
+  const { cleanup } = await setupTest({
+    storePath: await NimbusTestUtils.createStoreWith(store => {
+      NimbusTestUtils.addEnrollmentForRecipe(recipes[0], {
+        store,
+        extra: {
+          active: false,
+          unenrollReason: NimbusTelemetry.UnenrollReason.STUDIES_OPT_OUT,
+        },
+      });
+
+      NimbusTestUtils.addEnrollmentForRecipe(recipes[1], {
+        store,
+        extra: {
+          active: false,
+          unenrollReason: NimbusTelemetry.UnenrollReason.ROLLOUTS_OPT_OUT,
+        },
+      });
+    }),
+    migrationState: NimbusTestUtils.migrationState.LATEST,
+    experiments: recipes,
+    init: false,
+  });
+
+  await GleanPings.nimbusTargetingContext.testSubmission(
+    () => {
+      Assert.deepEqual(
+        Glean.nimbusEvents.enrollmentStatus
+          .testGetValue("nimbus-targeting-context")
+          ?.map(ev => ev.extra),
+        expectedEvents
+      );
+    },
+    () => ExperimentAPI.init()
+  );
+
+  await ExperimentAPI._rsLoader.finishedUpdating();
+
+  await NimbusTestUtils.cleanupManager(expectedEnrollments);
+  await cleanup();
+}
+
+add_task(async function testUpdateRecipesEnrollmentStatusStudiesOptOut() {
+  Services.prefs.setBoolPref("app.shield.optoutstudies.enabled", false);
+  await doEnrollmentStatusOptOutTest(
+    [
+      {
+        slug: "previous-experiment",
+        status: "NotEnrolled",
+        reason: "OptOut",
+      },
+      {
+        slug: "previous-rollout",
+        status: "Enrolled",
+        reason: "Qualified",
+        branch: "control",
+      },
+      {
+        slug: "experiment",
+        status: "NotEnrolled",
+        reason: "OptOut",
+      },
+      {
+        slug: "rollout",
+        status: "Enrolled",
+        reason: "Qualified",
+        branch: "control",
+      },
+    ],
+    ["previous-rollout", "rollout"]
+  );
+  Services.prefs.setBoolPref("app.shield.optoutstudies.enabled", true);
+});
+
+add_task(async function testUpdateRecipesEnrollmentStatusRolloutsOptOut() {
+  Services.prefs.setBoolPref("nimbus.rollouts.enabled", false);
+
+  await doEnrollmentStatusOptOutTest(
+    [
+      {
+        slug: "previous-rollout",
+        status: "NotEnrolled",
+        reason: "OptOut",
+      },
+      {
+        slug: "experiment",
+        status: "Enrolled",
+        reason: "Qualified",
+        branch: "control",
+      },
+      {
+        slug: "rollout",
+        status: "NotEnrolled",
+        reason: "OptOut",
+      },
+    ],
+    ["experiment"]
+  );
+  Services.prefs.setBoolPref("nimbus.rollouts.enabled", true);
 });
 
 add_task(async function test_updateRecipesWithPausedEnrollment() {
@@ -2409,14 +2500,6 @@ add_task(async function testUnenrolledInAnotherProfileBeforeUpdate() {
     profileId: otherProfileId2,
   });
 
-  Services.fog.applyServerKnobsConfig(
-    JSON.stringify({
-      metrics_enabled: {
-        "nimbus_events.enrollment_status": true,
-      },
-    })
-  );
-
   const resetEnrollmentPrefs = await NimbusTestUtils.enableNimbusEnrollments({
     read: true,
     sync: true,
@@ -2572,14 +2655,6 @@ add_task(async function testUnenrolledInAnotherProfileBetweenUpdates() {
     profileId: otherProfileId2,
   });
 
-  Services.fog.applyServerKnobsConfig(
-    JSON.stringify({
-      metrics_enabled: {
-        "nimbus_events.enrollment_status": true,
-      },
-    })
-  );
-
   await GleanPings.nimbusTargetingContext.testSubmission(
     () => {
       Assert.deepEqual(
@@ -2696,9 +2771,7 @@ add_task(async function test_remoteSettingsSyncError_backwardsSync() {
 
   await assertSyncTimestamps({}, "No timestamps");
 
-  const { manager, loader, cleanup } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-  });
+  const { manager, loader, cleanup } = await setupTest();
   Services.fog.testResetFOG(); // Clear the empty events that were triggered during initialization.
 
   await assertSyncTimestamps(
@@ -2994,9 +3067,7 @@ add_task(async function test_remoteSettingsSyncError_empty() {
   );
 
   Services.fog.testResetFOG();
-  const { manager, loader, cleanup } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-  });
+  const { manager, loader, cleanup } = await setupTest();
 
   // If both collections are empty we will see telemetry for both. There is a
   // migration event and an enabled event during startup.
@@ -3134,9 +3205,7 @@ add_task(async function test_remoteSettingsSyncError_empty() {
 });
 
 add_task(async function test_remoteSettingsSyncError_getException() {
-  const { loader, cleanup } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-  });
+  const { loader, cleanup } = await setupTest();
   Services.fog.testResetFOG(); // Clear the empty events that were triggered during initialization.
 
   loader.remoteSettingsClients.experiments.get.rejects(new Error("ruh roh"));
@@ -3161,9 +3230,7 @@ add_task(async function test_remoteSettingsSyncError_getException() {
 });
 
 add_task(async function test_remoteSettingsSyncError_invalidLastModified() {
-  const { loader, cleanup } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-  });
+  const { loader, cleanup } = await setupTest();
   Services.fog.testResetFOG(); // Clear the empty events that were triggered during initialization.
 
   loader.remoteSettingsClients.experiments.db.getLastModified.resolves("never");
@@ -3197,9 +3264,7 @@ add_task(async function test_remoteSettingsSyncError_invalidLastModified() {
 });
 
 add_task(async function test_remoteSettingsSyncError_lastModifiedException() {
-  const { loader, cleanup } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-  });
+  const { loader, cleanup } = await setupTest();
   Services.fog.testResetFOG(); // Clear the empty events that were triggered during initialization.
 
   loader.remoteSettingsClients.experiments.db.getLastModified.rejects(
@@ -3241,9 +3306,7 @@ add_task(async function test_remoteSettingsSyncError_nullLastModified() {
     }
   );
 
-  const { manager, loader, cleanup } = await NimbusTestUtils.setupTest({
-    clearTelemetry: true,
-  });
+  const { manager, loader, cleanup } = await setupTest();
   Services.fog.testResetFOG(); // Clear the empty events that were triggered during initialization.
 
   // If the experiments collection contains an experiment but the
@@ -3359,6 +3422,163 @@ add_task(async function test_remoteSettingsSyncError_nullLastModified() {
       },
     ],
     "Submitted failure telemetry"
+  );
+
+  await cleanup();
+});
+
+add_task(async function testUpdateRecipesOnlyFeatureIds() {
+  const recipeA = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "previous-recipe",
+    { featureId: "no-feature-firefox-desktop" }
+  );
+
+  const recipeB = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "new-recipe",
+    { featureId: "testFeature" }
+  );
+
+  const { cleanup, loader, manager } = await setupTest({
+    experiments: [recipeA],
+  });
+
+  Assert.ok(
+    manager.store.get(recipeA.slug)?.active,
+    "Enrolled in previous-recipe"
+  );
+
+  // recipeB becomes published.
+  loader.remoteSettingsClients.experiments.get.resolves([recipeA, recipeB]);
+
+  // We look only for testFeature recipes. recipeA should stay enrolled and
+  // recipeB should be newly enrolled.
+  await loader.updateRecipes("test", {
+    onlyFeatureIds: new Set(["testFeature"]),
+  });
+
+  Assert.ok(
+    manager.store.get(recipeA.slug).active,
+    "Still enrolled in recipeA"
+  );
+  Assert.ok(manager.store.get(recipeB.slug)?.active, "Enrolled in recipeB");
+
+  // We update only feature "unknown", which does not find any nor does it
+  // affect current enrollments.
+  await loader.updateRecipes("test", { onlyFeatureIds: new Set("unknown") });
+
+  Assert.ok(
+    manager.store.get(recipeA.slug).active,
+    "Still enrolled in recipeA"
+  );
+  Assert.ok(
+    manager.store.get(recipeB.slug).active,
+    "Still enrolled in recipeB"
+  );
+
+  // recipeA becomes unpublished.
+  loader.remoteSettingsClients.experiments.get.resolves([recipeB]);
+
+  // We update only testFeature and so recipeA does not unenroll.
+  await loader.updateRecipes("test", {
+    onlyFeatureIds: new Set(["testFeature"]),
+  });
+
+  Assert.ok(
+    manager.store.get(recipeA.slug).active,
+    "Still enrolled in recipeA"
+  );
+  Assert.ok(
+    manager.store.get(recipeB.slug).active,
+    "Still enrolled in recipeB"
+  );
+
+  // recipeB becomes unpublished.
+  loader.remoteSettingsClients.experiments.get.resolves([]);
+
+  // We update only no-feature-firefox-desktop. recipeA unenrolls but recipeB stays enrolled.
+  await loader.updateRecipes("test", {
+    onlyFeatureIds: new Set(["no-feature-firefox-desktop"]),
+  });
+  {
+    const enrollment = manager.store.get(recipeA.slug);
+    Assert.ok(!enrollment.active, "No longer enrolled in recipeA");
+    Assert.equal(enrollment.unenrollReason, "recipe-not-seen");
+
+    Assert.ok(
+      manager.store.get(recipeB.slug).active,
+      "Still enrolled in recipeB"
+    );
+  }
+
+  // Finally a regular update unenrolls recipeB.
+  await loader.updateRecipes("test");
+  Assert.ok(
+    !manager.store.get(recipeB.slug).active,
+    "No longer enrolled in recipeB"
+  );
+
+  await cleanup();
+});
+
+add_task(async function testUpdateRecipesOnlyFeatureIdsLabs() {
+  const now = new Date().getTime();
+  const experiments = [
+    NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "no-feature-firefox-desktop",
+      { featureId: "no-feature-firefox-desktop" },
+      {
+        isFirefoxLabsOptIn: true,
+        firefoxLabsTitle: "opt-in-1-title",
+        firefoxLabsDescription: "opt-in-1-desc",
+        firefoxLabsDescriptionLinks: null,
+        firefoxLabsGroup: "group",
+        requiresRestart: false,
+        isRollout: true,
+        targeting: "true",
+        publishedDate: new Date(now).toISOString(),
+      }
+    ),
+    NimbusTestUtils.factories.recipe.withFeatureConfig(
+      "updated-separately",
+      { featureId: "updated-separately" },
+      {
+        isFirefoxLabsOptIn: true,
+        firefoxLabsTitle: "opt-in-2-title",
+        firefoxLabsDescription: "opt-in-2-desc",
+        firefoxLabsDescriptionLinks: null,
+        firefoxLabsGroup: "group",
+        requiresRestart: false,
+        isRollout: true,
+        targeting: "false",
+        publishedDate: new Date(now - 10000).toISOString(),
+      }
+    ),
+  ];
+
+  const features = [
+    new ExperimentFeature("updated-separately", {
+      isEarlyStartup: false,
+      variables: {},
+    }),
+  ];
+
+  const { cleanup, manager, loader } = await NimbusTestUtils.setupTest({
+    experiments,
+    features,
+  });
+
+  Assert.deepEqual(
+    manager.optIns.toSorted(orderByRecipePublishedDate).map(r => r.recipe.slug),
+    ["updated-separately", "no-feature-firefox-desktop"]
+  );
+
+  await loader.updateRecipes("test", {
+    onlyFeatureIds: new Set(["updated-separately"]),
+  });
+
+  Assert.deepEqual(
+    manager.optIns.toSorted(orderByRecipePublishedDate).map(r => r.recipe.slug),
+    ["updated-separately", "no-feature-firefox-desktop"]
   );
 
   await cleanup();

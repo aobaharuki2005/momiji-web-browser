@@ -29,7 +29,7 @@ add_task(async function () {
 });
 
 async function testEditProperty(inspector, ruleView) {
-  const idRule = getRuleViewRuleEditor(ruleView, 1).rule;
+  const idRule = getRuleViewRuleEditorAt(ruleView, 1).rule;
   const prop = getTextProperty(ruleView, 1, { "background-color": "blue" });
 
   let editor = await focusEditableField(ruleView, prop.editor.nameSpan);

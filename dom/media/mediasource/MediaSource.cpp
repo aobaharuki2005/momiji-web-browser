@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -180,12 +178,6 @@ void MediaSource::IsTypeSupported(const nsAString& aType,
     return;
   }
   if (mimeType == MEDIAMIMETYPE("video/webm")) {
-    if (!StaticPrefs::media_mediasource_webm_enabled() &&
-        !shouldResistFingerprinting) {
-      // Don't leak information about the fact that it's pref-disabled; just act
-      // like we can't play it.  Or should this throw "Unknown type"?
-      return aRv.ThrowNotSupportedError("Can't play type");
-    }
     if (!StaticPrefs::media_mediasource_vp9_enabled() && hasVP9 &&
         !IsVP9Forced(aDiagnostics) && !shouldResistFingerprinting) {
       // Don't leak information about the fact that it's pref-disabled; just act
@@ -195,12 +187,6 @@ void MediaSource::IsTypeSupported(const nsAString& aType,
     return;
   }
   if (mimeType == MEDIAMIMETYPE("audio/webm")) {
-    if (!StaticPrefs::media_mediasource_webm_enabled() &&
-        !shouldResistFingerprinting) {
-      // Don't leak information about the fact that it's pref-disabled; just act
-      // like we can't play it.  Or should this throw "Unknown type"?
-      return aRv.ThrowNotSupportedError("Can't play type");
-    }
     return;
   }
 

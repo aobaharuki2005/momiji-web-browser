@@ -46,7 +46,7 @@
   color: var(--theme-selection-color);
 }
 
-.result-list li .dbg-img-result-item-icon {
+.result-list li .result-item-icon {
   background-color: var(--theme-icon-dimmed-color);
 }
 
@@ -56,11 +56,11 @@
   margin-inline-start: 4px;
 }
 
-.result-list .dbg-img-result-item-icon {
+.result-list .result-item-icon {
   display: block;
 }
 
-.result-list .selected .dbg-img-result-item-icon {
+.result-list .selected .result-item-icon {
   background-color: var(--theme-selection-color);
 }
 
@@ -69,12 +69,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  /** https://searchfox.org/firefox-main/source/devtools/client/themes/variables.css **/
   color: var(--grey-90);
 }
 
 .theme-dark .result-list li .title {
-  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  /** https://searchfox.org/firefox-main/source/devtools/client/themes/variables.css **/
   color: var(--grey-30);
 }
 
@@ -93,7 +93,7 @@
 
 .result-list.big li .subtitle {
   word-break: break-all;
-  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  /** https://searchfox.org/firefox-main/source/devtools/client/themes/variables.css **/
   color: var(--grey-40);
   margin-left: 15px;
   text-overflow: ellipsis;

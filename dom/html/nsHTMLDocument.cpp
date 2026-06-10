@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,13 +8,13 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/ContentList.h"
 #include "mozilla/dom/PrototypeDocumentContentSink.h"
 #include "mozilla/parser/PrototypeDocumentParser.h"
 #include "nsArrayUtils.h"
 #include "nsAttrName.h"
 #include "nsCOMPtr.h"
 #include "nsCommandManager.h"
-#include "nsContentList.h"
 #include "nsContentUtils.h"
 #include "nsDOMString.h"
 #include "nsDocShell.h"
@@ -91,10 +89,6 @@ using namespace mozilla::dom;
 // ==================================================================
 // =
 // ==================================================================
-
-static bool IsAsciiCompatible(const Encoding* aEncoding) {
-  return aEncoding->IsAsciiCompatible() || aEncoding == ISO_2022_JP_ENCODING;
-}
 
 nsresult NS_NewHTMLDocument(Document** aInstancePtrResult,
                             nsIPrincipal* aPrincipal,
@@ -191,11 +185,11 @@ void nsHTMLDocument::TryReloadCharset(nsIDocumentViewer* aViewer,
       aViewer->ForgetReloadEncoding();
 
       if (reloadEncodingSource <= aCharsetSource ||
-          !IsAsciiCompatible(aEncoding)) {
+          !aEncoding->IsAsciiCompatible()) {
         return;
       }
 
-      if (reloadEncoding && IsAsciiCompatible(reloadEncoding)) {
+      if (reloadEncoding && reloadEncoding->IsAsciiCompatible()) {
         aCharsetSource = reloadEncodingSource;
         aEncoding = WrapNotNull(reloadEncoding);
       }
@@ -219,7 +213,7 @@ void nsHTMLDocument::TryUserForcedCharset(nsIDocumentViewer* aViewer,
   }
 
   // mCharacterSet not updated yet for channel, so check aEncoding, too.
-  if (WillIgnoreCharsetOverride() || !IsAsciiCompatible(aEncoding)) {
+  if (WillIgnoreCharsetOverride() || !aEncoding->IsAsciiCompatible()) {
     return;
   }
 
@@ -251,8 +245,8 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
   if (kCharsetFromInitialUserForcedAutoDetection == parentSource ||
       kCharsetFromFinalUserForcedAutoDetection == parentSource) {
     if (WillIgnoreCharsetOverride() ||
-        !IsAsciiCompatible(aEncoding) ||  // if channel said UTF-16
-        !IsAsciiCompatible(parentCharset)) {
+        !aEncoding->IsAsciiCompatible() ||  // if channel said UTF-16
+        !parentCharset->IsAsciiCompatible()) {
       return;
     }
     aEncoding = WrapNotNull(parentCharset);
@@ -268,7 +262,7 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
   if (kCharsetFromInitialAutoDetectionASCII <= parentSource) {
     // Make sure that's OK
     if (!NodePrincipal()->Equals(parentPrincipal) ||
-        !IsAsciiCompatible(parentCharset)) {
+        !parentCharset->IsAsciiCompatible()) {
       return;
     }
 
@@ -566,7 +560,7 @@ void nsHTMLDocument::NamedGetter(JSContext* aCx, const nsAString& aName,
     return;
   }
 
-  nsBaseContentList* list = entry->GetDocumentNameContentList();
+  BaseContentList* list = entry->GetDocumentNameContentList();
   if (!list || list->Length() == 0) {
     return;
   }
@@ -636,7 +630,7 @@ void nsHTMLDocument::NamedGetter(JSContext* aCx, const nsAString& aName,
     AutoTArray<nsString, 1> params;
     params.AppendElement(aName);
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns, this,
-                                    nsContentUtils::eDOM_PROPERTIES,
+                                    PropertiesFile::DOM_PROPERTIES,
                                     "DocumentShadowingBlockedWarning", params);
     return;
   }
@@ -669,7 +663,7 @@ bool nsHTMLDocument::ResolveNameForWindow(JSContext* aCx,
     return false;
   }
 
-  nsBaseContentList* list = entry->GetNameContentList();
+  BaseContentList* list = entry->GetNameContentList();
   uint32_t length = list ? list->Length() : 0;
 
   nsIContent* node;
@@ -761,8 +755,7 @@ bool nsHTMLDocument::WillIgnoreCharsetOverride() {
   if (mCharacterSetSource >= kCharsetFromByteOrderMark) {
     return true;
   }
-  if (!mCharacterSet->IsAsciiCompatible() &&
-      mCharacterSet != ISO_2022_JP_ENCODING) {
+  if (!mCharacterSet->IsAsciiCompatible()) {
     return true;
   }
   nsIURI* uri = GetOriginalURI();
@@ -809,8 +802,29 @@ bool nsHTMLDocument::WillIgnoreCharsetOverride() {
   return !potentialEffect;
 }
 
-void nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
-                                             nsContentList** aFormControlList) {
+class nsHTMLDocument::ContentListHolder : public mozilla::Runnable {
+ public:
+  ContentListHolder(nsHTMLDocument* aDocument,
+                    mozilla::dom::ContentList* aFormList,
+                    mozilla::dom::ContentList* aFormControlList)
+      : mozilla::Runnable("ContentListHolder"),
+        mDocument(aDocument),
+        mFormList(aFormList),
+        mFormControlList(aFormControlList) {}
+
+  ~ContentListHolder() {
+    MOZ_ASSERT(!mDocument->mContentListHolder ||
+               mDocument->mContentListHolder == this);
+    mDocument->mContentListHolder = nullptr;
+  }
+
+  RefPtr<nsHTMLDocument> mDocument;
+  RefPtr<mozilla::dom::ContentList> mFormList;
+  RefPtr<mozilla::dom::ContentList> mFormControlList;
+};
+
+void nsHTMLDocument::GetFormsAndFormControls(ContentList** aFormList,
+                                             ContentList** aFormControlList) {
   RefPtr<ContentListHolder> holder = mContentListHolder;
   if (!holder) {
     // Flush our content model so it'll be up to date
@@ -821,7 +835,7 @@ void nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
     //         anymore.
     FlushPendingNotifications(FlushType::Content);
 
-    RefPtr<nsContentList> htmlForms = GetExistingForms();
+    RefPtr<ContentList> htmlForms = GetExistingForms();
     if (!htmlForms) {
       // If the document doesn't have an existing forms content list, create a
       // new one which will be released soon by ContentListHolder.  The idea is
@@ -829,13 +843,13 @@ void nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
       // down future DOM mutations.
       //
       // Please keep this in sync with Document::Forms().
-      htmlForms = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::form,
-                                    nsGkAtoms::form,
-                                    /* aDeep = */ true,
-                                    /* aLiveList = */ true);
+      htmlForms = new ContentList(this, kNameSpaceID_XHTML, nsGkAtoms::form,
+                                  nsGkAtoms::form,
+                                  /* aDeep = */ true,
+                                  /* aLiveList = */ true);
     }
 
-    RefPtr<nsContentList> htmlFormControls = new nsContentList(
+    RefPtr htmlFormControls = new ContentList(
         this, nsHTMLDocument::MatchFormControls, nullptr, nullptr,
         /* aDeep = */ true,
         /* aMatchAtom = */ nullptr,

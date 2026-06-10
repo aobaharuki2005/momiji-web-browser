@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -128,8 +127,7 @@ static inline size_t CountUnicodes(const char16_t* aText, uint32_t aLength) {
   return total;
 }
 
-bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
-                                  const char16_t* aText, uint32_t aOffset,
+bool gfxGraphiteShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
                                   uint32_t aLength, Script aScript,
                                   nsAtom* aLanguage, bool aVertical,
                                   RoundingFlags aRounding,
@@ -174,8 +172,8 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
     // determine whether petite-caps falls back to small-caps
     if (style->variantCaps != NS_FONT_VARIANT_CAPS_NORMAL) {
       switch (style->variantCaps) {
-        case NS_FONT_VARIANT_CAPS_ALLPETITE:
-        case NS_FONT_VARIANT_CAPS_PETITECAPS:
+        case NS_FONT_VARIANT_CAPS_ALL_PETITE_CAPS:
+        case NS_FONT_VARIANT_CAPS_PETITE_CAPS:
           bool synLower, synUpper;
           mFont->SupportsVariantCaps(aScript, style->variantCaps,
                                      mFallbackToSmallCaps, synLower, synUpper);

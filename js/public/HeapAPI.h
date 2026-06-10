@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -34,7 +32,7 @@ static constexpr size_t TypicalCacheLineSize = 64;
 namespace gc {
 
 class Arena;
-struct Cell;
+class Cell;
 class ArenaChunk;
 class StoreBuffer;
 class TenuredCell;
@@ -155,6 +153,7 @@ class ChunkBase {
 // Information about tenured heap chunks containing arenas.
 struct ArenaChunkInfo {
  private:
+  friend class ArenaChunk;
   friend class ChunkPool;
   ArenaChunk* next = nullptr;
   ArenaChunk* prev = nullptr;
@@ -168,6 +167,9 @@ struct ArenaChunkInfo {
 
   /* Whether this chunk is the chunk currently being allocated from. */
   bool isCurrentChunk = false;
+
+  // The zone this chunk is associated with, or nullptr for empty chunks.
+  JS::Zone* zone = nullptr;
 };
 
 /*
@@ -407,8 +409,7 @@ const size_t ChunkStoreBufferOffset = offsetof(ChunkBase, storeBuffer);
 const size_t ChunkMarkBitmapOffset = offsetof(ArenaChunkBase, markBits);
 
 // Hardcoded offsets into Arena class.
-const size_t ArenaZoneOffset = 2 * sizeof(uint32_t);
-const size_t ArenaHeaderSize = ArenaZoneOffset + 2 * sizeof(uintptr_t) +
+const size_t ArenaHeaderSize = 2 * sizeof(uint32_t) + 1 * sizeof(uintptr_t) +
                                sizeof(size_t) + sizeof(uintptr_t);
 
 // The first word of a GC thing has certain requirements from the GC and is used
@@ -664,9 +665,9 @@ static MOZ_ALWAYS_INLINE ArenaChunkBase* GetCellChunkBase(
 static MOZ_ALWAYS_INLINE JS::Zone* GetTenuredGCThingZone(const void* ptr) {
   // This takes a void* because the compiler can't see type relationships in
   // this header. |ptr| must be a pointer to a tenured GC thing.
-  MOZ_ASSERT(ptr);
-  const uintptr_t zone_addr = (uintptr_t(ptr) & ~ArenaMask) | ArenaZoneOffset;
-  return *reinterpret_cast<JS::Zone**>(zone_addr);
+  ChunkBase* chunk = GetGCAddressChunkBase(ptr);
+  MOZ_ASSERT(chunk->kind == ChunkKind::TenuredArenas);
+  return static_cast<ArenaChunkBase*>(chunk)->info.zone;
 }
 
 static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedBlack(
@@ -758,6 +759,15 @@ MOZ_ALWAYS_INLINE bool InCollectedNurseryRegion(const JSObject* obj) {
   return InCollectedNurseryRegion(reinterpret_cast<const Cell*>(obj));
 }
 
+// Helper function to convert GC cell types to the base Cell pointer as
+// consumers can't see the inheritance relationship externally.
+#define EXPAND_TO_CELL(_1, type, _2, _3)        \
+  MOZ_ALWAYS_INLINE Cell* ToCell(type* thing) { \
+    return reinterpret_cast<Cell*>(thing);      \
+  }
+JS_FOR_EACH_TRACEKIND(EXPAND_TO_CELL)
+#undef EXPAND_TO_CELL
+
 MOZ_ALWAYS_INLINE bool IsCellPointerValid(const void* ptr) {
   auto addr = uintptr_t(ptr);
   if (addr < ChunkSize || addr % CellAlignBytes != 0) {
@@ -818,10 +828,9 @@ static MOZ_ALWAYS_INLINE bool GCThingIsMarkedGray(GCCellPtr thing) {
   return js::gc::detail::CellIsMarkedGrayIfKnown(tenuredCell);
 }
 
-// Specialised gray marking check for use by the cycle collector. This is not
+// Specialised gray marking checks for use by the cycle collector. These are not
 // called during incremental GC or when the gray bits are invalid.
-static MOZ_ALWAYS_INLINE bool GCThingIsMarkedGrayInCC(GCCellPtr thing) {
-  js::gc::Cell* cell = thing.asCell();
+static MOZ_ALWAYS_INLINE bool GCThingIsMarkedGrayInCC(js::gc::Cell* cell) {
   if (IsInsideNursery(cell)) {
     return false;
   }
@@ -829,6 +838,9 @@ static MOZ_ALWAYS_INLINE bool GCThingIsMarkedGrayInCC(GCCellPtr thing) {
   auto* tenuredCell = reinterpret_cast<js::gc::TenuredCell*>(cell);
   MOZ_ASSERT(js::gc::detail::CanCheckGrayBits(tenuredCell));
   return js::gc::detail::TenuredCellIsMarkedGray(tenuredCell);
+}
+static MOZ_ALWAYS_INLINE bool GCThingIsMarkedGrayInCC(GCCellPtr thing) {
+  return GCThingIsMarkedGrayInCC(thing.asCell());
 }
 
 extern JS_PUBLIC_API JS::TraceKind GCThingTraceKind(void* thing);
@@ -868,8 +880,9 @@ namespace gc {
 extern JS_PUBLIC_API void PerformIncrementalReadBarrier(JS::GCCellPtr thing);
 
 static MOZ_ALWAYS_INLINE void ExposeGCThingToActiveJS(JS::GCCellPtr thing) {
-  // js::jit::ReadBarrier is a specialized version of this function designed to
-  // be called from jitcode. If this code is changed, it should be kept in sync.
+  // js::jit::WeakMapValueReadBarrier inlines a specialized version of this
+  // function designed to be called from jitcode. If this code is changed, it
+  // should be kept in sync.
 
   // TODO: I'd like to assert !RuntimeHeapIsBusy() here but this gets
   // called while we are tracing the heap, e.g. during memory reporting
@@ -892,7 +905,7 @@ static MOZ_ALWAYS_INLINE void ExposeGCThingToActiveJS(JS::GCCellPtr thing) {
   MOZ_ASSERT(!thing.mayBeOwnedByOtherRuntime());
 
   auto* zone = JS::shadow::Zone::from(detail::GetTenuredGCThingZone(cell));
-  if (zone->needsIncrementalBarrier()) {
+  if (zone->needsMarkingBarrier()) {
     PerformIncrementalReadBarrier(thing);
   } else if (!zone->isGCPreparing() && detail::NonBlackCellIsMarkedGray(cell)) {
     MOZ_ALWAYS_TRUE(JS::UnmarkGrayGCThingRecursively(thing));
@@ -911,8 +924,7 @@ static MOZ_ALWAYS_INLINE void IncrementalReadBarrier(JS::GCCellPtr thing) {
 
   auto* cell = reinterpret_cast<TenuredCell*>(thing.asCell());
   auto* zone = JS::shadow::Zone::from(detail::GetTenuredGCThingZone(cell));
-  if (zone->needsIncrementalBarrier() &&
-      !detail::TenuredCellIsMarkedBlack(cell)) {
+  if (zone->needsMarkingBarrier() && !detail::TenuredCellIsMarkedBlack(cell)) {
     // GC things owned by other runtimes are always black.
     MOZ_ASSERT(!thing.mayBeOwnedByOtherRuntime());
     PerformIncrementalReadBarrier(thing);

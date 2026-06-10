@@ -17,6 +17,7 @@
 \.gcov$
 \.tsbuildinfo$
 (^|/)compile_commands\.json$
+(^|/)ccache\.conf$
 
 # emacs backup files #filename# in any directory.
 # lint-ignore-next-line: syntax-difference
@@ -194,7 +195,6 @@ _OPT\.OBJ/
 ^remote/test/puppeteer/experimental/
 ^remote/test/puppeteer/lib/
 ^remote/test/puppeteer/node_modules/
-^remote/test/puppeteer/package-lock\.json
 ^remote/test/puppeteer/packages/browsers/src/generated
 ^remote/test/puppeteer/packages/ng-schematics/test/build
 ^remote/test/puppeteer/packages/puppeteer/.*/README\.md
@@ -238,7 +238,6 @@ _OPT\.OBJ/
 ^mobile/android/.*/build
 ^mobile/android/.*/.kotlin
 ^mobile/android/.*/bin
-^mobile/android/.*/generated
 
 # app-services build artifacts.
 services/app-services/tools/nimbus-gradle-plugin/.gradle
@@ -261,6 +260,9 @@ services/app-services/tools/nimbus-gradle-plugin/build
 ^dom/base/rust/target/
 ^servo/components/style/target/
 ^dom/webgpu/tests/cts/vendor/target/
+^third_party/application-services/.*/target/
+^third_party/application-services/.*/Cargo.lock
+^tools/update-verify/marannon/target/
 
 # Ignore mozharness execution files
 ^testing/mozharness/\.tox/
@@ -324,6 +326,9 @@ tps_result\.json$
 \.vscode/
 \.user$
 
+# Ignore Zed editor configuration files.
+\.zed/
+
 # Thunderbird source tree
 ^comm/
 
@@ -382,7 +387,7 @@ toolkit/themes/shared/design-system/node_modules/
 ^mobile/android/annotations/bin/
 
 # Ignore generated log files under media/libvpx
-^media/libvpx/config/.*/config.log
+^media/libvpx/config/.*/config\.log
 
 # Ignore generated files resulting from building the minidump analyzer binary.
 ^toolkit/crashreporter/minidump-analyzer/target/
@@ -392,4 +397,11 @@ toolkit/themes/shared/design-system/node_modules/
 
 # Ignore personal preferences files
 ^CLAUDE\.local\.md
-.claude/settings.local.json
+\.claude/settings\.local\.json
+
+# Ignore claude scheduled task lock file
+\.claude/scheduled_tasks\.lock
+
+# Ignore Claude Code worktrees
+\.claude/worktrees/
+\.worktreeinclude

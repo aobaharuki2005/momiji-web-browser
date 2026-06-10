@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,34 +11,74 @@
 #include "js/Value.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/JSONStringWriteFuncs.h"
+#include "platform.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
+#include "nsIFileURL.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "platform.h"
+JSString* mozilla::ProfileGenerationAdditionalInformation::
+    MaybeCreateJSStringFromSourceData(
+        JSContext* aCx, const ProfilerJSSourceData& aSourceData) const {
+  JS::Rooted<JSString*> result(aCx);
+  aSourceData.data().match(
+      [&](const ProfilerJSSourceData::SourceTextUTF16& srcText) {
+        result =
+            JS_NewUCStringCopyN(aCx, srcText.chars().get(), srcText.length());
+      },
+      [&](const ProfilerJSSourceData::SourceTextUTF8& srcText) {
+        result =
+            JS_NewStringCopyN(aCx, srcText.chars().get(), srcText.length());
+      },
+      [&](const ProfilerJSSourceData::RetrievableFile&) {
+        const char* filename = aSourceData.filePath();
+        // Keep it in sync with what ReadSourceFromFilename does.
+        const char* arrow;
+        while ((arrow = strstr(filename, " -> "))) {
+          filename = arrow + strlen(" -> ");
+        }
 
-JSString*
-mozilla::ProfileGenerationAdditionalInformation::CreateJSStringFromSourceData(
-    JSContext* aCx, const ProfilerJSSourceData& aSourceData) const {
-  return aSourceData.data().match(
-      [&](const ProfilerJSSourceData::SourceTextUTF16& srcText) -> JSString* {
-        return JS_NewUCStringCopyN(aCx, srcText.chars().get(),
-                                   srcText.length());
-      },
-      [&](const ProfilerJSSourceData::SourceTextUTF8& srcText) -> JSString* {
-        return JS_NewStringCopyN(aCx, srcText.chars().get(), srcText.length());
-      },
-      [&](const ProfilerJSSourceData::RetrievableFile&) -> JSString* {
+        nsCOMPtr<nsIURI> uri;
+        if (NS_FAILED(
+                NS_NewURI(getter_AddRefs(uri), nsDependentCString(filename)))) {
+          return;
+        }
+        nsCString scheme;
+        if (NS_FAILED(uri->GetScheme(scheme))) {
+          return;
+        }
+        if (scheme.EqualsLiteral("file")) {
+          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(uri);
+          if (!fileURL) {
+            return;
+          }
+          nsCOMPtr<nsIFile> scriptFile;
+          if (NS_FAILED(fileURL->GetFile(getter_AddRefs(scriptFile)))) {
+            return;
+          }
+          nsCOMPtr<nsIFile> greDir;
+          if (NS_FAILED(
+                  NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greDir)))) {
+            return;
+          }
+          bool contains = false;
+          if (NS_FAILED(greDir->Contains(scriptFile, &contains)) || !contains) {
+            return;
+          }
+        }
+
         ProfilerJSSourceData retrievedData =
             js::RetrieveProfilerSourceContent(aCx, aSourceData.filePath());
         const auto& data = retrievedData.data();
-        MOZ_RELEASE_ASSERT(data.is<ProfilerJSSourceData::SourceTextUTF8>(),
-                           "Retrieved JS source has to be utf-8");
+        if (!data.is<ProfilerJSSourceData::SourceTextUTF8>()) {
+          return;
+        }
 
         const auto& srcText = data.as<ProfilerJSSourceData::SourceTextUTF8>();
-        return JS_NewStringCopyN(aCx, srcText.chars().get(), srcText.length());
+        result =
+            JS_NewStringCopyN(aCx, srcText.chars().get(), srcText.length());
       },
-      [&](const ProfilerJSSourceData::Unavailable&) -> JSString* {
-        return JS_NewStringCopyZ(aCx, "[unavailable]");
-      });
+      [&](const ProfilerJSSourceData::Unavailable&) {});
+  return result;
 }
 
 void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
@@ -59,15 +97,16 @@ void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
                                  buffer16.Length(), &sharedLibrariesVal));
   }
 
-  // Create jsSources object, which is UUID to source text mapping for
+  // Create jsSources object, which is ID to source text mapping for
   // WebChannel.
   JS::Rooted<JSObject*> jsSourcesObj(aCx, JS_NewPlainObject(aCx));
   if (jsSourcesObj) {
     for (const auto& entry : mJSSourceEntries) {
-      JSString* sourceStr = CreateJSStringFromSourceData(aCx, entry.sourceData);
+      JSString* sourceStr =
+          MaybeCreateJSStringFromSourceData(aCx, entry.sourceData);
       if (sourceStr) {
         JS::Rooted<JS::Value> sourceVal(aCx, JS::StringValue(sourceStr));
-        JS_SetProperty(aCx, jsSourcesObj, PromiseFlatCString(entry.uuid).get(),
+        JS_SetProperty(aCx, jsSourcesObj, PromiseFlatCString(entry.id).get(),
                        sourceVal);
       }
     }
@@ -79,7 +118,6 @@ void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
   JS_SetProperty(aCx, additionalInfoObj, "jsSources", jsSourcesVal);
   aRetVal.setObject(*additionalInfoObj);
 }
-#endif  // MOZ_GECKO_PROFILER
 
 namespace IPC {
 
@@ -162,6 +200,34 @@ constexpr uint8_t kSourceTextUTF8Tag = 1;
 constexpr uint8_t kRetrievableFileTag = 2;
 constexpr uint8_t kUnavailableTag = 3;
 
+// Bounded, overflow-safe read of a length-prefixed char buffer from an IPC
+// message. The caller has already read aLength (as size_t) from the wire; this
+// validates it, allocates, reads the payload, and null-terminates.
+template <typename CharT>
+static bool ReadSourceBuffer(
+    IPC::MessageReader* aReader, size_t aLength,
+    mozilla::UniquePtr<CharT[], JS::FreePolicy>* aOut) {
+  constexpr size_t kMaxLength = (UINT32_MAX / sizeof(CharT)) - 1;
+  if (aLength > kMaxLength) {
+    return false;
+  }
+  uint32_t byteLen = static_cast<uint32_t>(aLength * sizeof(CharT));
+  if (!aReader->HasBytesAvailable(byteLen)) {
+    return false;
+  }
+  CharT* chars = static_cast<CharT*>(js_malloc((aLength + 1) * sizeof(CharT)));
+  if (!chars) {
+    return false;
+  }
+  if (!aReader->ReadBytesInto(chars, byteLen)) {
+    js_free(chars);
+    return false;
+  }
+  chars[aLength] = CharT(0);
+  aOut->reset(chars);
+  return true;
+}
+
 void IPC::ParamTraits<ProfilerJSSourceData>::Write(MessageWriter* aWriter,
                                                    const paramType& aParam) {
   // Write sourceId and filePath first
@@ -170,6 +236,17 @@ void IPC::ParamTraits<ProfilerJSSourceData>::Write(MessageWriter* aWriter,
   if (aParam.filePathLength() > 0) {
     aWriter->WriteBytes(aParam.filePath(),
                         aParam.filePathLength() * sizeof(char));
+  }
+
+  // Write startLine and startColumn.
+  WriteParam(aWriter, aParam.startLine());
+  WriteParam(aWriter, aParam.startColumn());
+
+  // Write sourceMapURL
+  WriteParam(aWriter, aParam.sourceMapURLLength());
+  if (aParam.sourceMapURLLength() > 0) {
+    aWriter->WriteBytes(aParam.sourceMapURL(),
+                        aParam.sourceMapURLLength() * sizeof(char16_t));
   }
 
   // Then write the specific data type
@@ -209,15 +286,27 @@ bool IPC::ParamTraits<ProfilerJSSourceData>::Read(MessageReader* aReader,
 
   // Read filePath if present
   JS::UniqueChars filePath;
-  if (pathLength > 0) {
-    char* chars =
-        static_cast<char*>(js_malloc((pathLength + 1) * sizeof(char)));
-    if (!chars || !aReader->ReadBytesInto(chars, pathLength * sizeof(char))) {
-      js_free(chars);
-      return false;
-    }
-    chars[pathLength] = '\0';
-    filePath.reset(chars);
+  if (pathLength > 0 && !ReadSourceBuffer(aReader, pathLength, &filePath)) {
+    return false;
+  }
+
+  // Read startLine and startColumn.
+  uint32_t startLine;
+  uint32_t startColumn;
+  if (!ReadParam(aReader, &startLine) || !ReadParam(aReader, &startColumn)) {
+    return false;
+  }
+
+  // Read sourceMapURL if present
+  size_t sourceMapURLLength;
+  if (!ReadParam(aReader, &sourceMapURLLength)) {
+    return false;
+  }
+
+  JS::UniqueTwoByteChars sourceMapURL;
+  if (sourceMapURLLength > 0 &&
+      !ReadSourceBuffer(aReader, sourceMapURLLength, &sourceMapURL)) {
+    return false;
   }
 
   // Then read the specific data type
@@ -232,24 +321,13 @@ bool IPC::ParamTraits<ProfilerJSSourceData>::Read(MessageReader* aReader,
       if (!ReadParam(aReader, &length)) {
         return false;
       }
-      if (length > 0) {
-        // Allocate one extra element for null terminator
-        char16_t* chars =
-            static_cast<char16_t*>(js_malloc((length + 1) * sizeof(char16_t)));
-        if (!chars ||
-            !aReader->ReadBytesInto(chars, length * sizeof(char16_t))) {
-          js_free(chars);
-          return false;
-        }
-        // Ensure null termination
-        chars[length] = u'\0';
-        *aResult =
-            ProfilerJSSourceData(sourceId, JS::UniqueTwoByteChars(chars),
-                                 length, std::move(filePath), pathLength);
-      } else {
-        *aResult = ProfilerJSSourceData(sourceId, JS::UniqueTwoByteChars(), 0,
-                                        std::move(filePath), pathLength);
+      JS::UniqueTwoByteChars chars;
+      if (length > 0 && !ReadSourceBuffer(aReader, length, &chars)) {
+        return false;
       }
+      *aResult = ProfilerJSSourceData(
+          sourceId, std::move(chars), length, std::move(filePath), pathLength,
+          startLine, startColumn, std::move(sourceMapURL), sourceMapURLLength);
       return true;
     }
     case kSourceTextUTF8Tag: {
@@ -257,33 +335,25 @@ bool IPC::ParamTraits<ProfilerJSSourceData>::Read(MessageReader* aReader,
       if (!ReadParam(aReader, &length)) {
         return false;
       }
-      if (length > 0) {
-        // Allocate one extra byte for null terminator
-        char* chars =
-            static_cast<char*>(js_malloc((length + 1) * sizeof(char)));
-        if (!chars || !aReader->ReadBytesInto(chars, length * sizeof(char))) {
-          js_free(chars);
-          return false;
-        }
-        // Ensure null termination
-        chars[length] = '\0';
-        *aResult =
-            ProfilerJSSourceData(sourceId, JS::UniqueChars(chars), length,
-                                 std::move(filePath), pathLength);
-      } else {
-        *aResult = ProfilerJSSourceData(sourceId, JS::UniqueChars(), 0,
-                                        std::move(filePath), pathLength);
+      JS::UniqueChars chars;
+      if (length > 0 && !ReadSourceBuffer(aReader, length, &chars)) {
+        return false;
       }
+      *aResult = ProfilerJSSourceData(
+          sourceId, std::move(chars), length, std::move(filePath), pathLength,
+          startLine, startColumn, std::move(sourceMapURL), sourceMapURLLength);
       return true;
     }
     case kRetrievableFileTag: {
       *aResult = ProfilerJSSourceData::CreateRetrievableFile(
-          sourceId, std::move(filePath), pathLength);
+          sourceId, std::move(filePath), pathLength, startLine, startColumn,
+          std::move(sourceMapURL), sourceMapURLLength);
       return true;
     }
     case kUnavailableTag: {
-      *aResult =
-          ProfilerJSSourceData(sourceId, std::move(filePath), pathLength);
+      *aResult = ProfilerJSSourceData(
+          sourceId, std::move(filePath), pathLength, startLine, startColumn,
+          std::move(sourceMapURL), sourceMapURLLength);
       return true;
     }
     default:
@@ -293,13 +363,13 @@ bool IPC::ParamTraits<ProfilerJSSourceData>::Read(MessageReader* aReader,
 
 void IPC::ParamTraits<mozilla::JSSourceEntry>::Write(MessageWriter* aWriter,
                                                      const paramType& aParam) {
-  WriteParam(aWriter, aParam.uuid);
+  WriteParam(aWriter, aParam.id);
   WriteParam(aWriter, aParam.sourceData);
 }
 
 bool IPC::ParamTraits<mozilla::JSSourceEntry>::Read(MessageReader* aReader,
                                                     paramType* aResult) {
-  return (ReadParam(aReader, &aResult->uuid) &&
+  return (ReadParam(aReader, &aResult->id) &&
           ReadParam(aReader, &aResult->sourceData));
 }
 
@@ -316,6 +386,25 @@ bool IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Read(
   }
 
   if (!ReadParam(aReader, &aResult->mJSSourceEntries)) {
+    return false;
+  }
+
+  return true;
+}
+
+void IPC::ParamTraits<mozilla::ProfileAndAdditionalInformation>::Write(
+    MessageWriter* aWriter, const paramType& aParam) {
+  WriteParam(aWriter, aParam.mProfile);
+  WriteParam(aWriter, aParam.mAdditionalInformation);
+}
+
+bool IPC::ParamTraits<mozilla::ProfileAndAdditionalInformation>::Read(
+    MessageReader* aReader, paramType* aResult) {
+  if (!ReadParam(aReader, &aResult->mProfile)) {
+    return false;
+  }
+
+  if (!ReadParam(aReader, &aResult->mAdditionalInformation)) {
     return false;
   }
 

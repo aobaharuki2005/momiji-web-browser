@@ -57,19 +57,19 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--arrowpanel-background",
+    "--panel-background-color",
     {
       lwtProperty: "popup",
     },
   ],
   [
-    "--arrowpanel-color",
+    "--panel-text-color",
     {
       lwtProperty: "popup_text",
     },
   ],
   [
-    "--arrowpanel-border-color",
+    "--panel-border-color",
     {
       lwtProperty: "popup_border",
     },
@@ -82,19 +82,19 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--toolbar-bgcolor",
+    "--toolbar-background-color",
     {
       lwtProperty: "toolbarColor",
     },
   ],
   [
-    "--toolbar-color",
+    "--toolbar-text-color",
     {
       lwtProperty: "toolbar_text",
     },
   ],
   [
-    "--toolbar-field-color",
+    "--toolbar-field-text-color",
     {
       lwtProperty: "toolbar_field_text",
       fallbackColor: "black",
@@ -108,7 +108,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--toolbar-field-focus-background-color",
+    "--toolbar-field-background-color-focus",
     {
       lwtProperty: "toolbar_field_focus",
       fallbackProperty: "toolbar_field",
@@ -132,7 +132,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--toolbar-field-focus-color",
+    "--toolbar-field-text-color-focus",
     {
       lwtProperty: "toolbar_field_text_focus",
       fallbackProperty: "toolbar_field_text",
@@ -140,7 +140,7 @@ const toolkitVariableMap = [
     },
   ],
   [
-    "--toolbar-field-focus-border-color",
+    "--toolbar-field-border-color-focus",
     {
       lwtProperty: "toolbar_field_border_focus",
     },
@@ -219,6 +219,10 @@ const toolkitVariableMap = [
   ],
 ];
 
+LightweightThemeConsumer.init = function (window) {
+  new LightweightThemeConsumer(window.document);
+};
+
 export function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
@@ -231,6 +235,18 @@ export function LightweightThemeConsumer(aDocument) {
     "browser.theme.forced-colors-override.enabled",
     true,
     () => this._update(this._lastData)
+  );
+
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this,
+    "_toolbarTheme",
+    "browser.theme.toolbar-theme",
+    2,
+    () => {
+      if (this._isAIWindow) {
+        this._update(this._lastData);
+      }
+    }
   );
 
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
@@ -266,9 +282,7 @@ LightweightThemeConsumer.prototype = {
       return;
     }
 
-    if (!this._isAIWindow) {
-      this._update(data);
-    }
+    this._update(data);
   },
 
   handleEvent(aEvent) {
@@ -296,26 +310,31 @@ LightweightThemeConsumer.prototype = {
   },
 
   _update(themeData) {
+    const manager = lazy.LightweightThemeManager;
+
+    // Store user's theme before replacing with aiThemeData.
+    this._lastData = themeData;
+
     if (this._isAIWindow) {
-      const manager = lazy.LightweightThemeManager;
       if (manager.aiThemeData) {
         themeData = manager.aiThemeData;
       } else {
         manager.promiseAIThemeData().then(() => {
-          if (this._isAIWindow) {
-            this._update(manager.aiThemeData);
+          if (this._isAIWindow && this._win && !this._win.closed) {
+            this._update(this._lastData);
           }
         });
+        return;
       }
     }
-    this._lastData = themeData;
 
-    let supportsDarkTheme =
-      !!themeData.darkTheme ||
-      !themeData.theme ||
-      themeData.theme.id == DEFAULT_THEME_ID;
     let updateGlobalThemeData = true;
     const useDarkTheme = (() => {
+      let supportsDarkTheme =
+        !!themeData.darkTheme ||
+        !themeData.theme ||
+        themeData.theme.id == DEFAULT_THEME_ID;
+
       if (!supportsDarkTheme) {
         return false;
       }
@@ -355,6 +374,17 @@ LightweightThemeConsumer.prototype = {
     this._doc.forceNonNativeTheme = !!builtinThemeConfig?.nonNative;
     let root = this._doc.documentElement;
     root.toggleAttribute("lwtheme-image", !!(hasTheme && theme.headerURL));
+    root.toggleAttribute(
+      "lwtheme-image-y-align",
+      hasTheme &&
+        !!theme.backgroundsAlignment?.split(",").some(alignment => {
+          if (alignment == "center" || alignment == "bottom") {
+            return true;
+          }
+          let [, y] = alignment.split(" ");
+          return y == "center" || y == "bottom";
+        })
+    );
     this._setExperiment(hasTheme, themeData.experiment, theme.experimental);
     _setImage(this._win, root, hasTheme, "--lwt-header-image", theme.headerURL);
     _setImage(

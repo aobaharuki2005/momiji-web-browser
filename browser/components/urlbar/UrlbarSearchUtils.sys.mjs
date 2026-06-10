@@ -10,12 +10,18 @@
  */
 
 /**
- * @typedef {typeof import("UrlbarUtils.sys.mjs").UrlbarUtils.RESULT_SOURCE} RESULT_SOURCE
+ * @typedef {typeof import("./UrlbarUtils.sys.mjs").UrlbarUtils.RESULT_SOURCE} RESULT_SOURCE
+ * @import {SearchEngine} from "moz-src:///toolkit/components/search/SearchEngine.sys.mjs"
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = XPCOMUtils.declareLazy({
+  AppProvidedConfigEngine:
+    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
+  ConfigSearchEngine:
+    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
   separatePrivateDefaultUIEnabled: {
@@ -43,7 +49,7 @@ class SearchUtils {
   }
 
   /**
-   * Initializes the instance and also Services.search.
+   * Initializes the instance and also SearchService.
    */
   async init() {
     if (!this._initPromise) {
@@ -63,7 +69,7 @@ class SearchUtils {
    *   Match at each sub domain, for example "a.b.c.com" will be matched at
    *   "a.b.c.com", "b.c.com", and "c.com". Partial matches are always returned
    *   after perfect matches.
-   * @returns {Promise<nsISearchEngine[]>}
+   * @returns {Promise<SearchEngine[]>}
    *   An array of all matching engines. An empty array if there are none.
    */
   async enginesForDomainPrefix(prefix, { matchAllDomainLevels = false } = {}) {
@@ -88,7 +94,7 @@ class SearchUtils {
     // Array of perfectly matched engines. We also keep a Set for O(1) lookup.
     let perfectMatchEngines = [];
     let perfectMatchEngineSet = new Set();
-    for (let engine of await Services.search.getVisibleEngines()) {
+    for (let engine of await lazy.SearchService.getVisibleEngines()) {
       if (engine.hideOneOffButton) {
         continue;
       }
@@ -138,7 +144,7 @@ class SearchUtils {
    * @param {string} [searchString]
    *   Optional. If provided, we also enforce that there must be a space after
    *   the alias in the search string.
-   * @returns {Promise<nsISearchEngine>}
+   * @returns {Promise<SearchEngine>}
    *   The matching engine or null if there isn't one.
    */
   async engineForAlias(alias, searchString = null) {
@@ -172,7 +178,7 @@ class SearchUtils {
     }
 
     let tokenAliasEngines = [];
-    for (let engine of await Services.search.getVisibleEngines()) {
+    for (let engine of await lazy.SearchService.getVisibleEngines()) {
       let tokenAliases = this._aliasesForEngine(engine).filter(a =>
         a.startsWith("@")
       );
@@ -184,7 +190,7 @@ class SearchUtils {
   }
 
   /**
-   * @param {nsISearchEngine} engine
+   * @param {SearchEngine} engine
    *   The engine to get the root domain of
    * @returns {string}
    *   The root domain of a search engine. e.g. If `engine` has the domain
@@ -213,19 +219,19 @@ class SearchUtils {
   /**
    * @param {boolean} [isPrivate]
    *   True if in a private context.
-   * @returns {nsISearchEngine}
+   * @returns {SearchEngine}
    *   The default engine or null if SearchService has not initialized.
    */
   getDefaultEngine(isPrivate = false) {
-    if (!Services.search.hasSuccessfullyInitialized) {
+    if (!lazy.SearchService.hasSuccessfullyInitialized) {
       return null;
     }
 
     return lazy.separatePrivateDefaultUIEnabled &&
       lazy.separatePrivateDefault &&
       isPrivate
-      ? Services.search.defaultPrivateEngine
-      : Services.search.defaultEngine;
+      ? lazy.SearchService.defaultPrivateEngine
+      : lazy.SearchService.defaultEngine;
   }
 
   /**
@@ -257,11 +263,11 @@ class SearchUtils {
   getSearchModeScalarKey(searchMode) {
     let scalarKey;
     if (searchMode.engineName) {
-      let engine = Services.search.getEngineByName(searchMode.engineName);
+      let engine = lazy.SearchService.getEngineByName(searchMode.engineName);
       let resultDomain = engine.searchUrlDomain;
       // For config engines, sanitize the data in a few special cases to make
       // analysis easier.
-      if (!engine.isConfigEngine) {
+      if (!(engine instanceof lazy.ConfigSearchEngine)) {
         scalarKey = "other";
       } else if (resultDomain.includes("amazon.")) {
         // Group all the localized Amazon sites together.
@@ -285,7 +291,7 @@ class SearchUtils {
    *
    * @param {UrlbarResult} result
    *   The result to evaluate
-   * @param {Array<RESULT_SOURCE>} [allowedSources]
+   * @param {Values<typeof lazy.UrlbarUtils.RESULT_SOURCE>[]} [allowedSources]
    *   Array of allowed result sources. if defined, the result must be from one
    *   of these sources to be evaluated as a SERP, otherwise this will return
    *   false.
@@ -297,14 +303,25 @@ class SearchUtils {
       return false;
     }
     try {
-      return !!Services.search.parseSubmissionURL(result.payload.url)?.engine;
+      return !!lazy.SearchService.parseSubmissionURL(result.payload.url)
+        ?.engine;
     } catch (ex) {
       return false;
     }
   }
 
+  /**
+   * Test-only function to reset the init promise, allowing init() to re-run
+   * _initInternal() on the next call. Use this after manipulating SearchService
+   * initialization state in tests to ensure UrlbarSearchUtils re-initializes
+   * against the restored service.
+   */
+  resetInitPromiseForTests() {
+    this._initPromise = null;
+  }
+
   async _initInternal() {
-    await Services.search.init();
+    await lazy.SearchService.init();
     await this._refreshEnginesByAlias();
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC, true);
   }
@@ -314,12 +331,53 @@ class SearchUtils {
     // class is for O(1) case-insensitive lookup for search aliases, which is
     // facilitated by _enginesByAlias.
     this._enginesByAlias = new Map();
-    for (let engine of await Services.search.getVisibleEngines()) {
-      if (!engine.hidden) {
-        for (let alias of this._aliasesForEngine(engine)) {
-          this._enginesByAlias.set(alias, engine);
-        }
+
+    // The alias map is built using a specific order, so that if there are
+    // duplicates, we try and reflect what the user would expect. In the sections
+    // below, if a duplicate is found later, then it is skipped.
+
+    // First add the default engines to the map.
+    let defaultEngine = lazy.SearchService.defaultEngine;
+    this.#addAliasesForEngine(defaultEngine);
+    let defaultPrivateEngine = lazy.SearchService.defaultPrivateEngine;
+    if (defaultPrivateEngine) {
+      this.#addAliasesForEngine(defaultPrivateEngine);
+    }
+
+    let engines = await lazy.SearchService.getVisibleEngines();
+
+    // Now add the application provided engines. Generally if there's a duplicate
+    // within these, it will be because the duplicate was added by an add-on or
+    // other search engine. Hence we prefer the application provided one, unless
+    // the other engine has been set as duplicate.
+    for (let engine of engines) {
+      if (engine instanceof lazy.AppProvidedConfigEngine) {
+        this.#addAliasesForEngine(engine);
       }
+    }
+
+    // For any other engines, we add them to the map if the alias doesn't exist
+    // yet.
+    for (let engine of engines) {
+      if (
+        !(engine instanceof lazy.AppProvidedConfigEngine) &&
+        engine != defaultEngine &&
+        engine != defaultPrivateEngine
+      ) {
+        this.#addAliasesForEngine(engine);
+      }
+    }
+  }
+
+  /**
+   * Adds the aliases for the engine to the engines by alias map, if the alias
+   * does not already exist within the map.
+   *
+   * @param {SearchEngine} engine
+   */
+  #addAliasesForEngine(engine) {
+    for (let alias of this._aliasesForEngine(engine)) {
+      this._enginesByAlias.getOrInsert(alias, engine);
     }
   }
 
@@ -368,7 +426,7 @@ class SearchUtils {
    * `engine.aliases`.  Additionally, the returned aliases will be lower-cased
    * to make lookups and comparisons easier.
    *
-   * @param {nsISearchEngine} engine
+   * @param {SearchEngine} engine
    *   The aliases of this search engine will be returned.
    * @returns {Array}
    *   An array of lower-cased string aliases as described above.
@@ -388,16 +446,16 @@ class SearchUtils {
   /**
    * @param {string} engineName
    *   Name of the search engine.
-   * @returns {nsISearchEngine}
+   * @returns {SearchEngine}
    *   The engine based on engineName or null if SearchService has not
    *   initialized.
    */
   getEngineByName(engineName) {
-    if (!Services.search.hasSuccessfullyInitialized) {
+    if (!lazy.SearchService.hasSuccessfullyInitialized) {
       return null;
     }
 
-    return Services.search.getEngineByName(engineName);
+    return lazy.SearchService.getEngineByName(engineName);
   }
 
   observe(subject, topic, data) {
@@ -406,6 +464,7 @@ class SearchUtils {
       case "engine-changed":
       case "engine-removed":
       case "engine-default":
+      case "engine-default-private":
         this._refreshEnginesByAliasPromise = this._refreshEnginesByAlias();
         break;
     }

@@ -9,7 +9,7 @@ use std::fmt;
 use neqo_transport::StreamId;
 use sfv::{BareItem, Dictionary, Integer, Item, ListEntry, Parser};
 
-use crate::{frames::HFrame, Error, Res};
+use crate::{Error, Res, frames::HFrame};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Priority {
@@ -128,7 +128,7 @@ impl PriorityHandler {
         }
     }
 
-    pub fn priority_update_sent(&mut self) {
+    pub const fn priority_update_sent(&mut self) {
         self.last_send_priority = self.priority;
     }
 
@@ -155,7 +155,7 @@ impl PriorityHandler {
 mod test {
     use neqo_transport::StreamId;
 
-    use crate::{priority::PriorityHandler, HFrame, Priority};
+    use crate::{HFrame, Priority, priority::PriorityHandler};
 
     #[test]
     fn priority_updates_ignore_same() {
@@ -226,5 +226,18 @@ mod test {
 
         let p = Priority::from_bytes(b"u=-1").unwrap();
         assert_eq!(p, Priority::default());
+    }
+
+    #[test]
+    fn priority_display_urgency_and_incremental() {
+        assert_eq!(Priority::new(5, true).to_string(), "u=5,i");
+    }
+
+    #[test]
+    fn priority_update_push_stream() {
+        let mut p = PriorityHandler::new(true, Priority::new(5, false));
+        assert!(p.maybe_update_priority(Priority::new(6, false)));
+        let frame = p.maybe_encode_frame(StreamId::new(4));
+        assert!(matches!(frame, Some(HFrame::PriorityUpdatePush { .. })));
     }
 }

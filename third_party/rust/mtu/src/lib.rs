@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+#![cfg_attr(all(coverage_nightly, test), feature(coverage_attribute))]
 
 //! A crate to return the name and maximum transmission unit (MTU) of the local network interface
 //! towards a given destination `SocketAddr`, optionally from a given local `SocketAddr`.
@@ -45,7 +45,7 @@
 //! # Contributing
 //!
 //! We're happy to receive PRs that improve this crate. Please take a look at our [community
-//! guidelines](CODE_OF_CONDUCT.md) beforehand.
+//! guidelines](https://github.com/mozilla/neqo/blob/main/CODE_OF_CONDUCT.md) beforehand.
 
 use std::{
     io::{Error, ErrorKind, Result},
@@ -133,8 +133,6 @@ pub fn interface_and_mtu(remote: IpAddr) -> Result<(String, usize)> {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod test {
-    #![expect(clippy::unwrap_used, reason = "OK in tests.")]
-
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
     use crate::interface_and_mtu;
@@ -144,7 +142,7 @@ mod test {
 
     impl PartialEq<NameMtu<'_>> for (String, usize) {
         fn eq(&self, other: &NameMtu<'_>) -> bool {
-            other.0.map_or(true, |name| name == self.0) && other.1 == self.1
+            other.0.is_none_or(|name| name == self.0) && other.1 == self.1
         }
     }
 
@@ -239,5 +237,20 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn default_error() {
+        let err = crate::default_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
+        assert!(err.to_string().contains("Local interface MTU not found"));
+    }
+
+    #[test]
+    #[should_panic(expected = "test error")]
+    #[cfg(not(target_os = "windows"))]
+    #[cfg(debug_assertions)]
+    fn unlikely_error_panics() {
+        crate::unlikely_err("test error".to_string());
     }
 }

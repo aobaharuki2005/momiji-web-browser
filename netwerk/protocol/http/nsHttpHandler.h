@@ -1,20 +1,21 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHttpHandler_h__
-#define nsHttpHandler_h__
+#ifndef nsHttpHandler_h_
+#define nsHttpHandler_h_
 
 #include <functional>
 
 #include "nsHttp.h"
 #include "nsHttpAuthCache.h"
-#include "nsHttpConnectionMgr.h"
+#include "nsHttpConnectionInfo.h"
 #include "AlternateServices.h"
 #include "ASpdySession.h"
 #include "HttpTrafficAnalyzer.h"
+#include "EventTokenBucket.h"
 
+#include "mozilla/DataMutex.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
@@ -22,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "mozilla/net/Dictionary.h"
+#include "mozilla/net/HttpConnectionMgrShell.h"
 
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserver.h"
@@ -46,6 +48,7 @@ class nsICancelable;
 class nsICookieService;
 class nsIIOService;
 class nsIRequestContextService;
+class nsISiteIntegrityService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 
@@ -53,6 +56,7 @@ namespace mozilla::net {
 
 class ATokenBucketEvent;
 class EventTokenBucket;
+class HttpActivityArgs;
 class Tickler;
 class nsHttpConnection;
 class nsHttpConnectionInfo;
@@ -161,7 +165,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   PRIntervalTime SpdyPingThreshold() { return mSpdyPingThreshold; }
   PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
   bool AllowAltSvc() { return mEnableAltSvc; }
-  bool AllowAltSvcOE() { return mEnableAltSvcOE; }
   uint32_t ConnectTimeout() { return mConnectTimeout; }
   uint32_t TLSHandshakeTimeout() { return mTLSHandshakeTimeout; }
   uint32_t ParallelSpeculativeConnectLimit() {
@@ -314,10 +317,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   [[nodiscard]] nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
                                             nsIInterfaceRequestor* callbacks,
                                             uint32_t caps,
-                                            SpeculativeTransaction* aTrans) {
-    RefPtr<nsHttpConnectionInfo> clone = ci->Clone();
-    return mConnMgr->SpeculativeConnect(clone, callbacks, caps, aTrans);
-  }
+                                            SpeculativeTransaction* aTrans);
 
   // Alternate Services Maps are main thread only
   void UpdateAltServiceMapping(AltSvcMapping* map, nsProxyInfo* proxyInfo,
@@ -338,9 +338,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
       const OriginAttributes& originAttributes, bool aHttp2Allowed,
-      bool aHttp3Allowed) {
-    return mAltSvcCache->GetAltServiceMapping(
-        scheme, host, port, pb, originAttributes, aHttp2Allowed, aHttp3Allowed);
+      bool aHttp3Allowed, bool aForceHttp3First = false) {
+    return mAltSvcCache->GetAltServiceMapping(scheme, host, port, pb,
+                                              originAttributes, aHttp2Allowed,
+                                              aHttp3Allowed, aForceHttp3First);
   }
 
   //
@@ -349,6 +350,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   //
   [[nodiscard]] nsresult GetIOService(nsIIOService** result);
   nsICookieService* GetCookieService();  // not addrefed
+  nsISiteIntegrityService* GetSiteIntegrityService();
   nsISiteSecurityService* GetSSService();
 
   // Called by the channel synchronously during asyncOpen
@@ -557,6 +559,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // cached services
   nsMainThreadPtrHandle<nsIIOService> mIOService;
   nsMainThreadPtrHandle<nsICookieService> mCookieService;
+  nsMainThreadPtrHandle<nsISiteIntegrityService> mSiteIntegrityService;
   nsMainThreadPtrHandle<nsISiteSecurityService> mSSService;
 
   // the authentication credentials cache
@@ -672,7 +675,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   uint32_t mDebugObservations : 1;
 
   uint32_t mEnableAltSvc : 1;
-  uint32_t mEnableAltSvcOE : 1;
 
   // Try to use SPDY features instead of HTTP/1.1 over SSL
   SpdyInformation mSpdyInfo;
@@ -794,19 +796,18 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   uint32_t mProcessId{0};
 
   // The last time any of the active tab page load optimization took place.
-  // This is accessed on multiple threads, hence a lock is needed.
+  // This is accessed on multiple threads, hence a DataMutex is needed.
   // On the parent process this is updated to now every time a scheduling
   // or rate optimization related to the active/background tab is hit.
   // We carry this value through each http channel's onstoprequest notification
   // to the parent process.  On the content process then we just update this
-  // value from ipc onstoprequest arguments.  This is a sufficent way of passing
-  // it down to the content process, since the value will be used only after
-  // onstoprequest notification coming from an http channel.
-  Mutex mLastActiveTabLoadOptimizationLock{
+  // value from ipc onstoprequest arguments.  This is a sufficient way of
+  // passing it down to the content process, since the value will be used only
+  // after onstoprequest notification coming from an http channel.
+  DataMutex<TimeStamp> mLastActiveTabLoadOptimizationHit{
       "nsHttpConnectionMgr::LastActiveTabLoadOptimization"};
-  TimeStamp mLastActiveTabLoadOptimizationHit;
 
-  Mutex mHttpExclusionLock MOZ_UNANNOTATED{"nsHttpHandler::HttpExclusion"};
+  Mutex mHttpExclusionLock{"nsHttpHandler::HttpExclusion"};
 
  public:
   [[nodiscard]] uint64_t NewChannelId();
@@ -829,8 +830,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 #endif
 
  private:
-  nsTHashSet<nsCString> mExcludedHttp2Origins;
-  nsTHashSet<nsCString> mExcludedHttp3Origins;
+  nsTHashSet<nsCString> mExcludedHttp2Origins
+      MOZ_GUARDED_BY(mHttpExclusionLock);
+  nsTHashSet<nsCString> mExcludedHttp3Origins
+      MOZ_GUARDED_BY(mHttpExclusionLock);
   nsTHashSet<nsCString> mExcluded0RttTcpOrigins;
   // A set of hosts that we should not upgrade to HTTPS with HTTPS RR.
   nsTHashSet<nsCString> mExcludedHostsForHTTPSRRUpgrade;
@@ -928,4 +931,4 @@ class HSTSDataCallbackWrapper final {
 
 }  // namespace mozilla::net
 
-#endif  // nsHttpHandler_h__
+#endif  // nsHttpHandler_h_

@@ -132,6 +132,7 @@ function renderChat() {
   const browserContainer = document.getElementById("browser-container");
   browser.setAttribute("disableglobalhistory", "true");
   browser.setAttribute("maychangeremoteness", "true");
+  browser.setAttribute("messagemanagergroup", "chatbot-browser");
   browser.setAttribute("nodefaultsrc", "true");
   browser.setAttribute("remote", "true");
   browser.setAttribute("type", "content");
@@ -296,6 +297,12 @@ function handleChange({ target }) {
         });
       } else {
         Services.prefs.setStringPref("browser.ml.chat.provider", value);
+        // Reset Permissions UI by changing provider
+        topChromeWindow.dispatchEvent(
+          new CustomEvent("sidebarbrowserchanged", {
+            bubble: true,
+          })
+        );
       }
       break;
   }
@@ -601,3 +608,7 @@ window.onNewPrompt = async function (opt = {}) {
     clearWarningMessage();
   }
 };
+
+window.addEventListener("SidebarFocused", () =>
+  document.querySelector("#browser-container browser").focus()
+);

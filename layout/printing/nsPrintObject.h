@@ -1,10 +1,8 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsPrintObject_h___
-#define nsPrintObject_h___
+#ifndef nsPrintObject_h_
+#define nsPrintObject_h_
 
 #include "mozilla/UniquePtr.h"
 
@@ -76,10 +74,10 @@ class nsPrintObject final {
   // nsPrintObject.
   float mShrinkRatio = 1.0;
 
- private:
   nsPrintObject& operator=(const nsPrintObject& aOther) = delete;
 
+ private:
   bool mPrintingIsEnabled = false;
 };
 
-#endif /* nsPrintObject_h___ */
+#endif /* nsPrintObject_h_ */

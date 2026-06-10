@@ -9,7 +9,6 @@ import signal
 import tempfile
 import threading
 
-from mozdevice import ADBDevice
 from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
 
@@ -17,6 +16,7 @@ from mozperftest.layers import Layer
 from mozperftest.utils import (
     ON_TRY,
     download_file,
+    get_adb_device_or_emu,
     get_output_dir,
     get_pretty_app_name,
     install_package,
@@ -220,7 +220,7 @@ class ProxyRunner(Layer):
 
         if metadata.flavor == "mobile-browser":
             self.info("Setting reverse port fw for android device")
-            device = ADBDevice()
+            device = get_adb_device_or_emu()
             device.create_socket_connection("reverse", "tcp:%s" % port, "tcp:%s" % port)
 
         return metadata

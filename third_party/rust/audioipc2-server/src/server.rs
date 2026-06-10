@@ -16,7 +16,7 @@ use audioipc::{ipccore, rpccore, sys, PlatformHandle};
 use cubeb::InputProcessingParams;
 use cubeb_core as cubeb;
 use cubeb_core::ffi;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::ffi::CStr;
 use std::mem::size_of;
 use std::os::raw::{c_int, c_long, c_void};
@@ -204,9 +204,9 @@ impl rpccore::Client for CallbackClient {
 
 struct ServerStreamCallbacks {
     /// Size of input frame in bytes
-    input_frame_size: u16,
+    input_frame_size: Option<usize>,
     /// Size of output frame in bytes
-    output_frame_size: u16,
+    output_frame_size: Option<usize>,
     /// Shared memory buffer for transporting audio data to/from client
     shm: SharedMem,
     /// RPC interface for data_callback (on OS audio thread) to server callback thread
@@ -234,7 +234,7 @@ impl ServerStreamCallbacks {
             return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
         }
 
-        if self.input_frame_size != 0 {
+        if self.input_frame_size.is_some() {
             if input.len() > self.shm.get_size() {
                 debug!(
                     "bad input size: input={} shm={}",
@@ -251,7 +251,9 @@ impl ServerStreamCallbacks {
             }
         }
 
-        if self.output_frame_size != 0 && output.len() > self.shm.get_size() {
+        if self.output_frame_size.is_some()
+            && (output.is_empty() || output.len() > self.shm.get_size())
+        {
             debug!(
                 "bad output size: output={} shm={}",
                 output.len(),
@@ -265,16 +267,32 @@ impl ServerStreamCallbacks {
             return 0;
         }
 
-        let r = self.data_callback_rpc.call(CallbackReq::Data {
-            nframes,
-            input_frame_size: self.input_frame_size as usize,
-            output_frame_size: self.output_frame_size as usize,
-        });
+        let r = self.data_callback_rpc.call(CallbackReq::Data { nframes });
 
         match r {
             Ok(CallbackResp::Data(frames)) => {
-                if frames >= 0 && self.output_frame_size != 0 {
-                    let nbytes = frames as usize * self.output_frame_size as usize;
+                if frames < 0 || frames > nframes {
+                    debug!(
+                        "bad callback response: frames={} nframes={}",
+                        frames, nframes
+                    );
+                    return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
+                }
+                if let (Ok(frames), Some(output_frame_size)) =
+                    (usize::try_from(frames), self.output_frame_size)
+                {
+                    let Some(nbytes) = frames.checked_mul(output_frame_size) else {
+                        return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
+                    };
+                    if nbytes > output.len() || nbytes > self.shm.get_size() {
+                        debug!(
+                            "bad callback response: nbytes={} output={} shm={}",
+                            nbytes,
+                            output.len(),
+                            self.shm.get_size()
+                        );
+                        return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
+                    }
                     unsafe {
                         output[..nbytes].copy_from_slice(self.shm.get_slice(nbytes).unwrap());
                     }
@@ -412,9 +430,6 @@ impl rpccore::Server for CubebServer {
     type ClientMessage = ClientMessage;
 
     fn process(&mut self, req: Self::ServerMessage) -> Self::ClientMessage {
-        if let ServerMessage::ClientConnect(pid) = req {
-            self.remote_pid = Some(pid);
-        }
         with_local_context(|context, manager| match *context {
             Err(_) => error(cubeb::Error::Error),
             Ok(ref context) => self.process_msg(context, manager, &req),
@@ -447,13 +462,14 @@ impl CubebServer {
     pub fn new(
         callback_thread: ipccore::EventLoopHandle,
         device_collection_thread: ipccore::EventLoopHandle,
+        remote_pid: u32,
         shm_area_size: usize,
     ) -> Self {
         CubebServer {
             callback_thread,
             device_collection_thread,
             streams: slab::Slab::<ServerStream>::new(),
-            remote_pid: None,
+            remote_pid: Some(remote_pid),
             device_collection_change_callbacks: None,
             devidmap: DevIdMap::new(),
             shm_area_size,
@@ -468,8 +484,7 @@ impl CubebServer {
         msg: &ServerMessage,
     ) -> ClientMessage {
         let resp: ClientMessage = match *msg {
-            ServerMessage::ClientConnect(_) => {
-                // remote_pid is set before cubeb initialization, just verify here.
+            ServerMessage::ClientConnect => {
                 assert!(self.remote_pid.is_some());
                 ClientMessage::ClientConnected
             }
@@ -662,12 +677,20 @@ impl CubebServer {
             #[cfg(target_os = "linux")]
             ServerMessage::PromoteThreadToRealTime(thread_info) => {
                 let info = RtPriorityThreadInfo::deserialize(thread_info);
-                match promote_thread_to_real_time(info, 0, 48000) {
-                    Ok(_) => {
-                        info!("Promotion of content process thread to real-time OK");
-                    }
-                    Err(_) => {
-                        warn!("Promotion of content process thread to real-time error");
+                if info.pid() as u32 != self.remote_pid.unwrap() {
+                    warn!(
+                        "PromoteThreadToRealTime: client supplied pid {} doesn't match trusted pid {}",
+                        info.pid(),
+                        self.remote_pid.unwrap()
+                    );
+                } else {
+                    match promote_thread_to_real_time(info, 0, 48000) {
+                        Ok(_) => {
+                            info!("Promotion of content process thread to real-time OK");
+                        }
+                        Err(_) => {
+                            warn!("Promotion of content process thread to real-time error");
+                        }
                     }
                 }
                 ClientMessage::ThreadPromoted
@@ -703,34 +726,24 @@ impl CubebServer {
 
     // Stream create is special, so it's been separated from process_msg.
     fn process_stream_create(&mut self, params: &StreamCreateParams) -> Result<ClientMessage> {
-        fn frame_size_in_bytes(params: Option<&StreamParams>) -> u16 {
-            params
-                .map(|p| {
-                    let format = p.format.into();
-                    let sample_size = match format {
-                        cubeb::SampleFormat::S16LE
-                        | cubeb::SampleFormat::S16BE
-                        | cubeb::SampleFormat::S16NE => 2,
-                        cubeb::SampleFormat::Float32LE
-                        | cubeb::SampleFormat::Float32BE
-                        | cubeb::SampleFormat::Float32NE => 4,
-                    };
-                    let channel_count = p.channels as u16;
-                    sample_size * channel_count
-                })
-                .unwrap_or(0u16)
-        }
-
         // Create the callback handling struct which is attached the cubeb stream.
-        let input_frame_size = frame_size_in_bytes(params.input_stream_params.as_ref());
-        let output_frame_size = frame_size_in_bytes(params.output_stream_params.as_ref());
+        let input_frame_size = params
+            .input_stream_params
+            .as_ref()
+            .map(StreamParams::frame_size_in_bytes);
+        let output_frame_size = params
+            .output_stream_params
+            .as_ref()
+            .map(StreamParams::frame_size_in_bytes);
 
         // Estimate a safe shmem size for this stream configuration.  If the server was configured with a fixed
         // shm_area_size override, use that instead.
         // TODO: Add a new cubeb API to query the precise buffer size required for a given stream config.
         // https://github.com/mozilla/audioipc-2/issues/124
         let shm_area_size = if self.shm_area_size == 0 {
-            let frame_size = output_frame_size.max(input_frame_size) as u32;
+            let in_fs = input_frame_size.unwrap_or(0);
+            let out_fs = output_frame_size.unwrap_or(0);
+            let frame_size = out_fs.max(in_fs) as u32;
             let in_rate = params.input_stream_params.map(|p| p.rate).unwrap_or(0);
             let out_rate = params.output_stream_params.map(|p| p.rate).unwrap_or(0);
             let rate = out_rate.max(in_rate);
@@ -786,6 +799,26 @@ impl CubebServer {
         stm_tok: usize,
         params: &StreamInitParams,
     ) -> Result<ClientMessage> {
+        fn valid_stream_params(p: &StreamParams) -> bool {
+            const MAX_CHANNELS: u32 = 64;
+            const MIN_RATE: u32 = 1_000;
+            const MAX_RATE: u32 = 768_000;
+            p.channels >= 1
+                && p.channels <= MAX_CHANNELS
+                && p.rate >= MIN_RATE
+                && p.rate <= MAX_RATE
+        }
+        for p in params
+            .input_stream_params
+            .iter()
+            .chain(params.output_stream_params.iter())
+        {
+            if !valid_stream_params(p) {
+                self.streams.remove(stm_tok);
+                return Err(cubeb::Error::InvalidParameter.into());
+            }
+        }
+
         // Create cubeb stream from params
         let stream_name = params
             .stream_name
@@ -878,13 +911,13 @@ unsafe extern "C" fn data_cb_c(
         let input = if input_buffer.is_null() {
             &[]
         } else {
-            let nbytes = nframes * c_long::from(cbs.input_frame_size);
+            let nbytes = nframes * cbs.input_frame_size.unwrap_or(0) as c_long;
             slice::from_raw_parts(input_buffer as *const u8, nbytes as usize)
         };
         let output: &mut [u8] = if output_buffer.is_null() {
             &mut []
         } else {
-            let nbytes = nframes * c_long::from(cbs.output_frame_size);
+            let nbytes = nframes * cbs.output_frame_size.unwrap_or(0) as c_long;
             slice::from_raw_parts_mut(output_buffer as *mut u8, nbytes as usize)
         };
         cbs.data_callback(input, output, nframes as isize) as c_long

@@ -1,4 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,6 +20,7 @@ export class NetErrorChild extends RemotePageChild {
     const exportableFunctions = [
       "RPMGetAppBuildID",
       "RPMGetHostForDisplay",
+      "RPMGetInnermostAsciiHost",
       "RPMRecordGleanEvent",
       "RPMCheckAlternateHostAvailable",
       "RPMGetHttpResponseHeader",
@@ -75,7 +75,22 @@ export class NetErrorChild extends RemotePageChild {
     // Note: not document.documentURIObject, which will be the network error
     // page's URI - we want the URI of the page that failed to load.
     let uri = document.mozDocumentURIIfNotForErrorPages;
-    return lazy.BrowserUtils.formatURIForDisplay(uri);
+    return lazy.BrowserUtils.formatURIForDisplay(uri, { showWWW: true });
+  }
+
+  /**
+   * Use this to get the ascii host for the load that showed an error.
+   * Do NOT rely on `document.location.href` or similar as it will not work
+   * reliably for nested URLs like view-source.
+   *
+   * @returns {string} ASCII (potentially punycode) version of the hostname.
+   */
+  RPMGetInnermostAsciiHost() {
+    let uri = this.contentWindow.document.mozDocumentURIIfNotForErrorPages;
+    if (uri instanceof Ci.nsINestedURI) {
+      uri = uri.QueryInterface(Ci.nsINestedURI).innermostURI;
+    }
+    return uri.asciiHost;
   }
 
   RPMGetAppBuildID() {
@@ -123,14 +138,23 @@ export class NetErrorChild extends RemotePageChild {
         link.setAttribute("data-l10n-name", "website");
 
         let span = doc.createElement("span");
+        span.id = "dns-suggestion";
         span.appendChild(link);
         doc.l10n.setAttributes(span, "neterror-dns-not-found-with-suggestion", {
           hostAndPath: displayHost + pathQueryRef,
         });
 
         const shortDesc = doc.getElementById("errorShortDesc");
-        shortDesc.textContent += " ";
-        shortDesc.appendChild(span);
+        if (shortDesc) {
+          shortDesc.textContent += " ";
+          shortDesc.appendChild(span);
+        } else {
+          const intro =
+            doc.querySelector("net-error-card")?.wrappedJSObject?.errorIntro;
+          if (intro) {
+            intro.after(span);
+          }
+        }
       },
     };
 

@@ -14,7 +14,7 @@ newtab-search-box-search-button =
     .title = नागिर
     .aria-label = नागिर
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = नागिरनाय इन्जिनखौ दाजाबदेर
 newtab-topsites-edit-topsites-header = गिबि साइटखौ सुजु

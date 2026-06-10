@@ -13,6 +13,10 @@ support-files = [
 ["browser_ml_embeddings_generator.js"]
 
 ["browser_ml_engine_e2e.js"]
+support-files = [
+  "ml_engine_e2e_backend_stub.worker.mjs",
+  "ml_engine_e2e_cancel_stub.worker.mjs",
+]
 
 ["browser_ml_engine_lifetime.js"]
 
@@ -23,6 +27,8 @@ support-files = [
 ["browser_ml_engine_rs_hub.js"]
 
 ["browser_ml_engine_security.js"]
+
+["browser_ml_mock_llm_engine.js"]
 
 ["browser_ml_native.js"]
 skip-if = [
@@ -49,6 +55,9 @@ skip-if = [
 ["browser_ml_telemetry.js"]
 skip-if = [
   "verify",
+]
+support-files = [
+  "ml_telemetry_stub.worker.mjs",
 ]
 
 ["browser_ml_thompson_sample.js"]

@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,18 +6,18 @@
 
 #include "mozilla/FloatingPoint.h"
 
+#include "builtin/Date.h"
 #include "builtin/MapObject.h"
 #include "builtin/String.h"
 #include "gc/Cell.h"
 #include "gc/GC.h"
-#include "jit/arm/Simulator-arm.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineIC.h"
 #include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
-#include "jit/mips64/Simulator-mips64.h"
 #include "jit/Simulator.h"
+#include "js/Date.h"
 #include "js/experimental/JitInfo.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
@@ -535,8 +533,8 @@ bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
     // we can use normal construction code without creating an extraneous
     // object.
     if (thisv.isMagic()) {
-      MOZ_ASSERT(thisv.whyMagic() == JS_IS_CONSTRUCTING ||
-                 thisv.whyMagic() == JS_UNINITIALIZED_LEXICAL);
+      MOZ_RELEASE_ASSERT(thisv.whyMagic() == JS_IS_CONSTRUCTING ||
+                         thisv.whyMagic() == JS_UNINITIALIZED_LEXICAL);
 
       RootedObject obj(cx);
       if (!Construct(cx, fval, cargs, newTarget, &obj)) {
@@ -900,13 +898,23 @@ bool GetIntrinsicValue(JSContext* cx, Handle<PropertyName*> name,
   return GlobalObject::getIntrinsicValue(cx, cx->global(), name, rval);
 }
 
+static uint32_t NumTraceableArgsForCreateThis(HandleFunction fun,
+                                              uint32_t argc) {
+  uint32_t numActualArgs = std::max(argc, uint32_t(fun->nargs()));
+  return numActualArgs + 1;  // Add 1 for newTarget
+}
+
 bool CreateThisFromIC(JSContext* cx, HandleObject callee,
-                      HandleObject newTarget, MutableHandleValue rval) {
+                      HandleObject newTarget, Value* argv, uint32_t argc,
+                      MutableHandleValue rval) {
   HandleFunction fun = callee.as<JSFunction>();
   MOZ_ASSERT(fun->isInterpreted());
   MOZ_ASSERT(fun->isConstructor());
   MOZ_ASSERT(cx->realm() == fun->realm(),
              "Realm switching happens before creating this");
+
+  RootedExternalValueArray args(cx, NumTraceableArgsForCreateThis(fun, argc),
+                                argv);
 
   // CreateThis expects rval to be this magic value.
   rval.set(MagicValue(JS_IS_CONSTRUCTING));
@@ -916,6 +924,38 @@ bool CreateThisFromIC(JSContext* cx, HandleObject callee,
   }
 
   MOZ_ASSERT_IF(rval.isObject(), fun->realm() == rval.toObject().nonCCWRealm());
+  return true;
+}
+
+bool CreateThisFromICWithAllocSite(JSContext* cx, HandleObject callee,
+                                   HandleObject newTarget, gc::AllocSite* site,
+                                   Value* argv, uint32_t argc,
+                                   MutableHandleValue rval) {
+  HandleFunction fun = callee.as<JSFunction>();
+  MOZ_ASSERT(fun->isInterpreted());
+  MOZ_ASSERT(fun->isConstructor());
+  MOZ_ASSERT(cx->realm() == fun->realm(),
+             "Realm switching happens before creating this");
+  MOZ_ASSERT(!fun->constructorNeedsUninitializedThis());
+
+  RootedExternalValueArray args(cx, NumTraceableArgsForCreateThis(fun, argc),
+                                argv);
+
+  Rooted<SharedShape*> shape(cx, ThisShapeForFunction(cx, fun, newTarget));
+  if (!shape) {
+    return false;
+  }
+
+  gc::AllocKind allocKind = gc::GetGCObjectKind(shape->numFixedSlots());
+  gc::Heap initialHeap = site->initialHeap();
+  PlainObject* obj = NativeObject::create<PlainObject>(
+      cx, allocKind, initialHeap, shape, site);
+  if (!obj) {
+    return false;
+  }
+
+  MOZ_ASSERT(fun->realm() == obj->nonCCWRealm());
+  rval.setObject(*obj);
   return true;
 }
 
@@ -1362,10 +1402,10 @@ bool LeaveWith(JSContext* cx, BaselineFrame* frame) {
   return true;
 }
 
-bool InitBaselineFrameForOsr(BaselineFrame* frame,
+void InitBaselineFrameForOsr(BaselineFrame* frame,
                              InterpreterFrame* interpFrame,
                              uint32_t numStackValues) {
-  return frame->initForOsr(interpFrame, numStackValues);
+  frame->initForOsr(interpFrame, numStackValues);
 }
 
 JSString* StringReplace(JSContext* cx, HandleString string,
@@ -1513,35 +1553,38 @@ JSObject* ObjectKeysFromIterator(JSContext* cx, HandleObject iterObj) {
   return array;
 }
 
-bool ObjectKeysLength(JSContext* cx, HandleObject obj, int32_t* length) {
-  MOZ_ASSERT(!obj->is<ProxyObject>());
-  return js::obj_keys_length(cx, obj, *length);
-}
-
 void JitValuePreWriteBarrier(JSRuntime* rt, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(vp->isGCThing());
+#ifndef JS_GC_CONCURRENT_MARKING
   MOZ_ASSERT(!vp->toGCThing()->isMarkedBlack());
+#endif
   gc::ValuePreWriteBarrier(*vp);
 }
 
 void JitStringPreWriteBarrier(JSRuntime* rt, JSString** stringp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(*stringp);
+#ifndef JS_GC_CONCURRENT_MARKING
   MOZ_ASSERT(!(*stringp)->isMarkedBlack());
+#endif
   gc::PreWriteBarrier(*stringp);
 }
 
 void JitObjectPreWriteBarrier(JSRuntime* rt, JSObject** objp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(*objp);
+#ifndef JS_GC_CONCURRENT_MARKING
   MOZ_ASSERT(!(*objp)->isMarkedBlack());
+#endif
   gc::PreWriteBarrier(*objp);
 }
 
 void JitShapePreWriteBarrier(JSRuntime* rt, Shape** shapep) {
   AutoUnsafeCallWithABI unsafe;
+#ifndef JS_GC_CONCURRENT_MARKING
   MOZ_ASSERT(!(*shapep)->isMarkedBlack());
+#endif
   gc::PreWriteBarrier(*shapep);
 }
 
@@ -1608,7 +1651,7 @@ bool CallDOMGetter(JSContext* cx, const JSJitInfo* info, HandleObject obj,
 #endif
 
   // Loading DOM_OBJECT_SLOT, which must be the first slot.
-  JS::Value val = JS::GetReservedSlot(obj, 0);
+  JS::Value val = obj->as<NativeObject>().getReservedSlot(0);
   JSJitGetterOp getter = info->getter;
   return getter(cx, obj, val.toPrivate(), JSJitGetterCallArgs(result));
 }
@@ -1642,7 +1685,7 @@ bool CallDOMSetter(JSContext* cx, const JSJitInfo* info, HandleObject obj,
 #endif
 
   // Loading DOM_OBJECT_SLOT, which must be the first slot.
-  JS::Value val = JS::GetReservedSlot(obj, 0);
+  JS::Value val = obj->as<NativeObject>().getReservedSlot(0);
   JSJitSetterOp setter = info->setter;
 
   RootedValue v(cx, value);
@@ -1750,9 +1793,11 @@ static MOZ_ALWAYS_INLINE bool MaybeGetNativePropertyAndWriteToCache(
           return true;
         }
 
-        RootedValue getter(cx, nobj->getGetterValue(prop));
-        RootedValue receiver(cx, ObjectValue(*obj));
-        RootedValue rootedValue(cx);
+        RootedTuple<Value, Value, Value> roots(cx);
+        RootedField<Value, 0> getter(roots, nobj->getGetterValue(prop));
+        RootedField<Value, 1> receiver(roots, ObjectValue(*obj));
+        RootedField<Value, 2> rootedValue(roots);
+
         if (js::CallGetter(cx, receiver, getter, &rootedValue)) {
           *vp = rootedValue;
           return true;
@@ -2231,13 +2276,13 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
   return true;
 }
 
-// Fast path for setting/adding a plain object property. This is the common case
-// for megamorphic SetProp/SetElem.
+// Fast path for setting/adding a native object property. This is the common
+// case for megamorphic SetProp/SetElem.
 template <bool UseCache>
-static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
-                                           Handle<PlainObject*> obj,
-                                           PropertyKey key, HandleValue value,
-                                           bool* optimized) {
+static bool TryAddOrSetNativeObjectProperty(JSContext* cx,
+                                            Handle<NativeObject*> obj,
+                                            PropertyKey key, HandleValue value,
+                                            bool* optimized) {
   MOZ_ASSERT(!*optimized);
 
   Shape* receiverShape = obj->shape();
@@ -2306,13 +2351,19 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
   // properties).
   JSObject* proto = obj->staticPrototype();
   while (proto) {
-    if (!proto->is<PlainObject>()) {
+    if (!proto->is<NativeObject>()) {
       return true;
     }
-    PlainObject* plainProto = &proto->as<PlainObject>();
-    if (plainProto->hasNonWritableOrAccessorPropExclProto()) {
+    NativeObject* nativeProto = &proto->as<NativeObject>();
+    if (nativeProto->is<TypedArrayObject>() ||
+        nativeProto->getClass()->getResolve() ||
+        nativeProto->getClass()->getOpsLookupProperty()) {
+      return true;
+    }
+
+    if (nativeProto->hasNonWritableOrAccessorPropExclProto()) {
       uint32_t index;
-      if (PropMap* map = plainProto->shape()->lookup(cx, key, &index)) {
+      if (PropMap* map = nativeProto->shape()->lookup(cx, key, &index)) {
         PropertyInfo prop = map->getPropertyInfo(index);
         if (!prop.isDataProperty() || !prop.writable()) {
           return true;
@@ -2320,7 +2371,7 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
         break;
       }
     }
-    proto = plainProto->staticPrototype();
+    proto = nativeProto->staticPrototype();
   }
 
 #ifdef DEBUG
@@ -2342,7 +2393,8 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
   Rooted<Shape*> receiverShapeRoot(cx, receiverShape);
   uint32_t resultSlot = 0;
   size_t numDynamic = obj->numDynamicSlots();
-  bool res = AddDataPropertyToPlainObject(cx, obj, keyRoot, value, &resultSlot);
+  bool res = AddDataPropertyToNativeObjectNoHooks(cx, obj, keyRoot, value,
+                                                  &resultSlot);
 
   if constexpr (UseCache) {
     if (res && obj->shape()->isShared() &&
@@ -2364,12 +2416,13 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 template <bool Cached>
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
                            HandleValue value, bool strict) {
-  if (obj->is<PlainObject>()) {
+  if (obj->is<NativeObject>() &&
+      obj.as<NativeObject>()->canDoSetPropertyFastpath()) {
     PropertyKey key;
     if (ValueToAtomOrSymbolPure(cx, index, &key)) {
       bool optimized = false;
-      if (!TryAddOrSetPlainObjectProperty<Cached>(cx, obj.as<PlainObject>(),
-                                                  key, value, &optimized)) {
+      if (!TryAddOrSetNativeObjectProperty<Cached>(cx, obj.as<NativeObject>(),
+                                                   key, value, &optimized)) {
         return false;
       }
       if (optimized) {
@@ -2391,10 +2444,11 @@ template bool SetElementMegamorphic<true>(JSContext* cx, HandleObject obj,
 template <bool Cached>
 bool SetPropertyMegamorphic(JSContext* cx, HandleObject obj, HandleId id,
                             HandleValue value, bool strict) {
-  if (obj->is<PlainObject>()) {
+  if (obj->is<NativeObject>() &&
+      obj.as<NativeObject>()->canDoSetPropertyFastpath()) {
     bool optimized = false;
-    if (!TryAddOrSetPlainObjectProperty<Cached>(cx, obj.as<PlainObject>(), id,
-                                                value, &optimized)) {
+    if (!TryAddOrSetNativeObjectProperty<Cached>(cx, obj.as<NativeObject>(), id,
+                                                 value, &optimized)) {
       return false;
     }
     if (optimized) {
@@ -3215,6 +3269,76 @@ void DateFillLocalTimeSlots(DateObject* dateObj) {
   dateObj->fillLocalTimeSlots();
 }
 
+double DateNow(JSContext* cx) {
+  AutoUnsafeCallWithABI unsafe;
+
+  // ClippedTime can return non-canonical NaN, so canonicalize explicitly.
+  return JS::CanonicalizeNaN(js::DateNow(cx).toDouble());
+}
+
+double DateParse(JSContext* cx, const JSString* str) {
+  AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(str->isLinear());
+
+  const auto* linear = &str->asLinear();
+
+  // ClippedTime can return non-canonical NaN, so canonicalize explicitly.
+  return JS::CanonicalizeNaN(js::DateParse(cx, linear).toDouble());
+}
+
+double DateLocalTimeToUTC(JSContext* cx, int64_t localTime) {
+  AutoUnsafeCallWithABI unsafe;
+
+  // ClippedTime can return non-canonical NaN, so canonicalize explicitly.
+  return JS::CanonicalizeNaN(js::LocalTimeToUTC(cx, localTime).toDouble());
+}
+
+double DateYearFromTime(JSContext* cx, double utcTime) {
+  AutoUnsafeCallWithABI unsafe;
+
+  auto clipped = JS::TimeClip(utcTime);
+  if (!clipped.isValid()) {
+    return JS::GenericNaN();
+  }
+
+  int64_t localTime = js::UTCToLocalTime(cx, int64_t(clipped.toDouble()));
+  return double(ToYearMonthDay(localTime).year);
+}
+
+double DateMonthFromTime(JSContext* cx, double utcTime) {
+  AutoUnsafeCallWithABI unsafe;
+
+  auto clipped = JS::TimeClip(utcTime);
+  if (!clipped.isValid()) {
+    return JS::GenericNaN();
+  }
+
+  int64_t localTime = js::UTCToLocalTime(cx, int64_t(clipped.toDouble()));
+  return double(ToYearMonthDay(localTime).month);
+}
+
+double DateDateFromTime(JSContext* cx, double utcTime) {
+  AutoUnsafeCallWithABI unsafe;
+
+  auto clipped = JS::TimeClip(utcTime);
+  if (!clipped.isValid()) {
+    return JS::GenericNaN();
+  }
+
+  int64_t localTime = js::UTCToLocalTime(cx, int64_t(clipped.toDouble()));
+  return double(ToYearMonthDay(localTime).day);
+}
+
+JSObject* NewDateObject(JSContext* cx, double utcTime) {
+  auto clipped = JS::TimeClip(utcTime);
+  MOZ_ASSERT(
+      mozilla::NumbersAreBitwiseIdentical(
+          utcTime, clipped.isValid() ? clipped.toDouble() : JS::GenericNaN()),
+      "JIT code must have time-clipped the double");
+  return NewDateObjectMsec(cx, clipped);
+}
+
 JSAtom* AtomizeStringNoGC(JSContext* cx, JSString* str) {
   // IC code calls this directly so we shouldn't GC.
   AutoUnsafeCallWithABI unsafe;
@@ -3319,25 +3443,32 @@ void AssertPropertyLookup(NativeObject* obj, PropertyKey id, uint32_t slot) {
 #endif
 }
 
-// This is a specialized version of ExposeJSThingToActiveJS
-void ReadBarrier(gc::Cell* cell) {
+// This is a specialized version of WeakMap::valueReadBarrier.
+
+void WeakMapValueReadBarrier(js::gc::TenuredCell* cell, Zone* mapZone) {
   AutoUnsafeCallWithABI unsafe;
 
-  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
-  MOZ_ASSERT(!gc::IsInsideNursery(cell));
+  // This is an inlined and specialized copy of ExposeGCThingToActiveJS.
+  {
+    MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
+    MOZ_ASSERT(!gc::IsInsideNursery(cell));
 
-  gc::TenuredCell* tenured = &cell->asTenured();
-  MOZ_ASSERT(!gc::detail::TenuredCellIsMarkedBlack(tenured));
-
-  Zone* zone = tenured->zone();
-  if (zone->needsIncrementalBarrier()) {
-    gc::PerformIncrementalReadBarrier(tenured);
-  } else if (!zone->isGCPreparing() &&
-             gc::detail::NonBlackCellIsMarkedGray(tenured)) {
-    gc::UnmarkGrayGCThingRecursively(tenured);
+    if (!cell->isMarkedBlack()) {
+      Zone* cellZone = cell->zone();
+      if (cellZone->needsMarkingBarrier()) {
+        gc::PerformIncrementalReadBarrier(cell);
+      } else if (!cellZone->isGCPreparing() &&
+                 gc::detail::NonBlackCellIsMarkedGray(cell)) {
+        gc::UnmarkGrayGCThingRecursively(cell);
+      }
+      MOZ_ASSERT_IF(!cellZone->isGCPreparing(),
+                    !gc::detail::TenuredCellIsMarkedGray(cell));
+    }
   }
-  MOZ_ASSERT_IF(!zone->isGCPreparing(),
-                !gc::detail::TenuredCellIsMarkedGray(tenured));
+
+  if (MOZ_UNLIKELY(cell->is<JS::Symbol>())) {
+    gc::MarkSymbolForWeakMapReadBarrier(mapZone, cell->as<JS::Symbol>());
+  }
 }
 
 void AssumeUnreachable(const char* output) {

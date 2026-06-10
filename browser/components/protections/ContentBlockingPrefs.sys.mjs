@@ -7,7 +7,6 @@ const PREFS_CHANGING_CATEGORY = new Set([
   "network.cookie.cookieBehavior.pbmode",
   "network.http.referer.disallowCrossSiteRelaxingDefault",
   "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation",
-  "privacy.partition.network_state.ocsp_cache",
   "privacy.query_stripping.enabled",
   "privacy.query_stripping.enabled.pbmode",
   "privacy.fingerprintingProtection",
@@ -156,16 +155,6 @@ export let ContentBlockingPrefs = {
           "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation"
         ] = false;
         break;
-      case "ocsp":
-        this.CATEGORY_PREFS[type][
-          "privacy.partition.network_state.ocsp_cache"
-        ] = true;
-        break;
-      case "-ocsp":
-        this.CATEGORY_PREFS[type][
-          "privacy.partition.network_state.ocsp_cache"
-        ] = false;
-        break;
       case "qps":
         this.CATEGORY_PREFS[type]["privacy.query_stripping.enabled"] = true;
         break;
@@ -216,7 +205,7 @@ export let ContentBlockingPrefs = {
         break;
       case "cookieBehavior5":
         this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] =
-          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+          Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN;
         break;
       case "cookieBehaviorPBM0":
         this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
@@ -240,7 +229,7 @@ export let ContentBlockingPrefs = {
         break;
       case "cookieBehaviorPBM5":
         this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
-          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+          Ci.nsICookieService.BEHAVIOR_PARTITION_FOREIGN;
         break;
       case "3pcd":
         this.CATEGORY_PREFS[type][
@@ -303,7 +292,6 @@ export let ContentBlockingPrefs = {
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation":
           null,
-        "privacy.partition.network_state.ocsp_cache": null,
         "privacy.query_stripping.enabled": null,
         "privacy.query_stripping.enabled.pbmode": null,
         "privacy.fingerprintingProtection": null,
@@ -330,7 +318,6 @@ export let ContentBlockingPrefs = {
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation":
           null,
-        "privacy.partition.network_state.ocsp_cache": null,
         "privacy.query_stripping.enabled": null,
         "privacy.query_stripping.enabled.pbmode": null,
         "privacy.fingerprintingProtection": null,
@@ -423,7 +410,7 @@ export let ContentBlockingPrefs = {
     }
   },
 
-  updateCBCategory(preserveAllowListSettings = false) {
+  updateCBCategory(preserveAllowListSettings = true) {
     if (
       this.switchingCategory ||
       !Services.prefs.prefHasUserValue(this.PREF_CB_CATEGORY)
@@ -490,9 +477,9 @@ export let ContentBlockingPrefs = {
     }
   },
 
-  setPrefExpectationsAndUpdate(preserveAllowListSettings = false) {
+  setPrefExpectationsAndUpdate() {
     this.setPrefExpectations();
-    this.updateCBCategory(preserveAllowListSettings);
+    this.updateCBCategory();
   },
 
   observe(subject, topic, data) {
@@ -521,17 +508,16 @@ export let ContentBlockingPrefs = {
     if (data.startsWith("privacy.trackingprotection")) {
       this.setPrefExpectations();
     } else if (data == this.PREF_CB_CATEGORY) {
-      this.updateCBCategory();
+      this.updateCBCategory(false);
     } else if (data == "browser.contentblocking.features.strict") {
       this.setPrefExpectationsAndUpdate();
     } else if (data == this.PREF_LNA_ETP_ENABLED) {
-      // updates tagging of LNA restrictions with ETP strict mode
       this.setPrefExpectationsAndUpdate();
     }
   },
 
   init() {
-    this.setPrefExpectationsAndUpdate(true);
+    this.setPrefExpectationsAndUpdate();
     this.matchCBCategory();
 
     for (let prefix of PREF_PREFIXES_TO_OBSERVE) {
@@ -550,7 +536,6 @@ const PREF_PREFIXES_TO_OBSERVE = new Set([
   "privacy.trackingprotection",
   "network.cookie.cookieBehavior",
   "network.http.referer.disallowCrossSiteRelaxingDefault",
-  "privacy.partition.network_state.ocsp_cache",
   "privacy.query_stripping.enabled",
   "privacy.fingerprintingProtection",
   ContentBlockingPrefs.PREF_CB_CATEGORY,

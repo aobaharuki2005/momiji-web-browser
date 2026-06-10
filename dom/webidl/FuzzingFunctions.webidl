@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -70,7 +69,7 @@ namespace FuzzingFunctions {
    *                           events, you need to set one of key values
    *                           defined by "UI Events KeyboardEvent key Values".
    *                           You can check our current support values in
-   *                           dom/events/KeyNameList.h
+   *                           dom/events/KeyNameList.inc
    *                           If you want to synthesize printable key events,
    *                           you can set any string value including empty
    *                           string.
@@ -85,7 +84,7 @@ namespace FuzzingFunctions {
    *                           string or known code value defined by "UI Events
    *                           KeyboardEvent code Values".  You can check our
    *                           current support values in
-   *                           dom/events/PhysicalKeyCodeNameList.h.
+   *                           dom/events/PhysicalKeyCodeNameList.inc.
    *                           If |keyCode| is omitted or 0, this guesses
    *                           proper keyCode value in US-English keyboard.
    *                           If |location| is omitted or 0, this assumes

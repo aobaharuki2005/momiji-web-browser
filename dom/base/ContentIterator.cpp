@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -474,7 +472,7 @@ ContentIteratorBase<NodeType>::Initializer::DetermineLastNode() const {
         if (result && result != mIterator.mFirst &&
             NS_WARN_IF(!NodeIsInTraversalRange(
                 result, mIterator.mOrder == Order::Pre,
-                RawRangeBoundary(mIterator.mFirst, 0u), mEnd))) {
+                RawRangeBoundary::StartOfParent(*mIterator.mFirst), mEnd))) {
           return nullptr;
         }
 
@@ -1006,9 +1004,7 @@ nsresult ContentSubtreeIterator::InitWithAllowCrossShadowBoundary(
 
   mRange = aRange;
 
-  if (StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()) {
-    mAllowCrossShadowBoundary = AllowRangeCrossShadowBoundary::Yes;
-  }
+  mAllowCrossShadowBoundary = AllowRangeCrossShadowBoundary::Yes;
   return InitWithRange();
 }
 
@@ -1065,12 +1061,7 @@ nsIContent* ContentSubtreeIterator::DetermineCandidateForFirstContent() const {
     const auto& startRef = IterAllowCrossShadowBoundary()
                                ? mRange->MayCrossShadowBoundaryStartRef()
                                : mRange->StartRef();
-    const uint32_t startOffset = ShadowDOMSelectionHelpers::StartOffset(
-        mRange, mAllowCrossShadowBoundary);
-    MOZ_ASSERT(child ==
-               (startRef.GetTreeKind() == TreeKind::Flat
-                    ? startContainer->GetChildAtInFlatTree(startOffset)
-                    : startContainer->GetChildAt_Deprecated(startOffset)));
+    MOZ_ASSERT(startRef.IsSetAndValid());
 #endif
     if (!child) {
       // offset after last child
@@ -1144,10 +1135,7 @@ nsIContent* ContentSubtreeIterator::DetermineCandidateForLastContent() const {
     const auto& endRef = IterAllowCrossShadowBoundary()
                              ? mRange->MayCrossShadowBoundaryEndRef()
                              : mRange->EndRef();
-    MOZ_ASSERT(lastCandidate ==
-               (endRef.GetTreeKind() == TreeKind::Flat
-                    ? endContainer->GetChildAtInFlatTree(offset - 1)
-                    : endContainer->GetChildAt_Deprecated(offset - 1)));
+    MOZ_ASSERT(endRef.IsSetAndValid());
 #endif
     NS_ASSERTION(lastCandidate,
                  "tree traversal trouble in ContentSubtreeIterator::Init");
@@ -1175,24 +1163,21 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   mClosestCommonInclusiveAncestor =
       mRange->GetClosestCommonInclusiveAncestor(mAllowCrossShadowBoundary);
 
-  nsINode* startContainer = ShadowDOMSelectionHelpers::GetStartContainer(
-      mRange, mAllowCrossShadowBoundary);
-  const int32_t startOffset =
-      ShadowDOMSelectionHelpers::StartOffset(mRange, mAllowCrossShadowBoundary);
-  nsINode* endContainer = ShadowDOMSelectionHelpers::GetEndContainer(
-      mRange, mAllowCrossShadowBoundary);
-  const int32_t endOffset =
-      ShadowDOMSelectionHelpers::EndOffset(mRange, mAllowCrossShadowBoundary);
-  MOZ_ASSERT(mClosestCommonInclusiveAncestor && startContainer && endContainer);
+  const RawRangeBoundary startRef =
+      ShadowDOMSelectionHelpers::StartRef(mRange, mAllowCrossShadowBoundary);
+  const RawRangeBoundary endRef =
+      ShadowDOMSelectionHelpers::EndRef(mRange, mAllowCrossShadowBoundary);
+  MOZ_ASSERT(mClosestCommonInclusiveAncestor && startRef.IsSet() &&
+             endRef.IsSet());
   // Bug 767169
-  MOZ_ASSERT(uint32_t(startOffset) <= startContainer->Length() &&
-             uint32_t(endOffset) <= endContainer->Length());
+  MOZ_ASSERT(startRef.IsSetAndValid());
+  MOZ_ASSERT(endRef.IsSetAndValid());
 
   // short circuit when start node == end node
-  if (startContainer == endContainer) {
-    nsINode* child = startContainer->GetFirstChild();
+  if (startRef.GetContainer() == endRef.GetContainer()) {
+    nsINode* child = startRef.GetContainer()->GetFirstChild();
 
-    if (!child || startOffset == endOffset) {
+    if (!child || startRef == endRef) {
       // Text node, empty container, or collapsed
       SetEmpty();
       return NS_OK;
@@ -1418,6 +1403,176 @@ nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(
   }
 
   MOZ_CRASH("This should only be possible if aNode was null");
+}
+
+nsresult RangeSubtreeIterator::Init(
+    AbstractRange* aRange,
+    dom::AllowRangeCrossShadowBoundary aAllowCrossShadowBoundary) {
+  mIterState = eDone;
+  if (aRange->AreNormalRangeAndCrossShadowBoundaryRangeCollapsed()) {
+    return NS_OK;
+  }
+
+  // Grab the start point of the range and QI it to
+  // a CharacterData pointer. If it is CharacterData store
+  // a pointer to the node.
+
+  if (!aRange->IsPositioned()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsINode* node = aRange->GetMayCrossShadowBoundaryStartContainer();
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (node->IsCharacterData() ||
+      (node->IsElement() && node->AsElement()->GetChildCount() ==
+                                aRange->MayCrossShadowBoundaryStartOffset())) {
+    mStart = node;
+  }
+
+  // Grab the end point of the range and QI it to
+  // a CharacterData pointer. If it is CharacterData store
+  // a pointer to the node.
+
+  node = aRange->GetMayCrossShadowBoundaryEndContainer();
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (node->IsCharacterData() ||
+      (node->IsElement() && aRange->MayCrossShadowBoundaryEndOffset() == 0)) {
+    mEnd = node;
+  }
+
+  if (mStart && mStart == mEnd) {
+    // The range starts and stops in the same CharacterData
+    // node. Null out the end pointer so we only visit the
+    // node once!
+
+    mEnd = nullptr;
+  } else {
+    // Now create a Content Subtree Iterator to be used
+    // for the subtrees between the end points!
+
+    mSubtreeIter.emplace();
+
+    nsresult res =
+        aAllowCrossShadowBoundary == dom::AllowRangeCrossShadowBoundary::Yes
+            ? mSubtreeIter->InitWithAllowCrossShadowBoundary(aRange)
+            : mSubtreeIter->Init(aRange);
+    if (NS_FAILED(res)) return res;
+
+    if (mSubtreeIter->IsDone()) {
+      // The subtree iterator thinks there's nothing
+      // to iterate over, so just free it up so we
+      // don't accidentally call into it.
+
+      mSubtreeIter.reset();
+    }
+  }
+
+  // Initialize the iterator by calling First().
+  // Note that we are ignoring the return value on purpose!
+
+  First();
+
+  return NS_OK;
+}
+
+already_AddRefed<nsINode> RangeSubtreeIterator::GetCurrentNode() {
+  nsCOMPtr<nsINode> node;
+
+  if (mIterState == eUseStart && mStart) {
+    node = mStart;
+  } else if (mIterState == eUseEnd && mEnd) {
+    node = mEnd;
+  } else if (mIterState == eUseIterator && mSubtreeIter) {
+    node = mSubtreeIter->GetCurrentNode();
+  }
+
+  return node.forget();
+}
+
+void RangeSubtreeIterator::First() {
+  if (mStart) {
+    mIterState = eUseStart;
+  } else if (mSubtreeIter) {
+    mSubtreeIter->First();
+
+    mIterState = eUseIterator;
+  } else if (mEnd) {
+    mIterState = eUseEnd;
+  } else {
+    mIterState = eDone;
+  }
+}
+
+void RangeSubtreeIterator::Last() {
+  if (mEnd) {
+    mIterState = eUseEnd;
+  } else if (mSubtreeIter) {
+    mSubtreeIter->Last();
+
+    mIterState = eUseIterator;
+  } else if (mStart) {
+    mIterState = eUseStart;
+  } else {
+    mIterState = eDone;
+  }
+}
+
+void RangeSubtreeIterator::Next() {
+  if (mIterState == eUseStart) {
+    if (mSubtreeIter) {
+      mSubtreeIter->First();
+
+      mIterState = eUseIterator;
+    } else if (mEnd) {
+      mIterState = eUseEnd;
+    } else {
+      mIterState = eDone;
+    }
+  } else if (mIterState == eUseIterator) {
+    mSubtreeIter->Next();
+
+    if (mSubtreeIter->IsDone()) {
+      if (mEnd) {
+        mIterState = eUseEnd;
+      } else {
+        mIterState = eDone;
+      }
+    }
+  } else {
+    mIterState = eDone;
+  }
+}
+
+void RangeSubtreeIterator::Prev() {
+  if (mIterState == eUseEnd) {
+    if (mSubtreeIter) {
+      mSubtreeIter->Last();
+
+      mIterState = eUseIterator;
+    } else if (mStart) {
+      mIterState = eUseStart;
+    } else {
+      mIterState = eDone;
+    }
+  } else if (mIterState == eUseIterator) {
+    mSubtreeIter->Prev();
+
+    if (mSubtreeIter->IsDone()) {
+      if (mStart) {
+        mIterState = eUseStart;
+      } else {
+        mIterState = eDone;
+      }
+    }
+  } else {
+    mIterState = eDone;
+  }
 }
 
 #undef NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD

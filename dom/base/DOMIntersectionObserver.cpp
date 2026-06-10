@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -194,9 +192,9 @@ static void LazyLoadCallback(
     Element* target = entry->Target();
     if (entry->IsIntersecting()) {
       if (auto* image = HTMLImageElement::FromNode(target)) {
-        image->StopLazyLoading();
+        image->StopLazyLoading(HTMLImageElement::StartLoad::Yes);
       } else if (auto* iframe = HTMLIFrameElement::FromNode(target)) {
-        iframe->StopLazyLoading();
+        iframe->StopLazyLoading(HTMLIFrameElement::TriggerLoad::Yes);
       } else {
         MOZ_ASSERT_UNREACHABLE(
             "Only <img> and <iframe> should be observed by lazy load observer");
@@ -262,6 +260,10 @@ void DOMIntersectionObserver::GetScrollMargin(nsACString& aRetVal) {
 
 void DOMIntersectionObserver::GetThresholds(nsTArray<double>& aRetVal) {
   aRetVal = mThresholds.Clone();
+}
+
+bool DOMIntersectionObserver::Observes(Element& aTarget) const {
+  return mObservationTargetMap.Contains(&aTarget);
 }
 
 // https://w3c.github.io/IntersectionObserver/#observe-target-element
@@ -691,21 +693,23 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
   if (aRoot && aRoot->IsElement()) {
     if ((rootFrame = aRoot->AsElement()->GetPrimaryFrame())) {
       nsRect rootRectRelativeToRootFrame;
-      if (ScrollContainerFrame* scrollContainerFrame =
-              do_QueryFrame(rootFrame)) {
-        // rootRectRelativeToRootFrame should be the content rect of rootFrame,
-        // not including the scrollbars.
-        rootRectRelativeToRootFrame =
-            scrollContainerFrame
-                ->GetScrollPortRectAccountingForDynamicToolbar();
-      } else {
-        // rootRectRelativeToRootFrame should be the border rect of rootFrame.
-        rootRectRelativeToRootFrame = rootFrame->GetRectRelativeToSelf();
-      }
       nsIFrame* containingBlock =
           nsLayoutUtils::GetContainingBlockForClientRect(rootFrame);
-      rootRect = nsLayoutUtils::TransformFrameRectToAncestor(
-          rootFrame, rootRectRelativeToRootFrame, containingBlock);
+      if (ScrollContainerFrame* scrollContainerFrame =
+              do_QueryFrame(rootFrame)) {
+        // rootRect should be the content rect of rootFrame, not including the
+        // scrollbars.
+        rootRect = nsLayoutUtils::TransformFrameRectToAncestor(
+            rootFrame,
+            scrollContainerFrame
+                ->GetScrollPortRectAccountingForDynamicToolbar(),
+            containingBlock);
+      } else {
+        // rootRect should be the border rect of rootFrame.
+        rootRect = nsLayoutUtils::GetAllInFlowRectsUnion(
+            rootFrame, containingBlock,
+            nsLayoutUtils::GetAllInFlowRectsFlag::AccountForTransforms);
+      }
     }
   } else {
     MOZ_ASSERT(!aRoot || aRoot->IsDocument());
@@ -818,8 +822,8 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   // clarification in
   // https://github.com/w3c/IntersectionObserver/issues/456.
   if (aInput.mRootFrame == aTargetFrame ||
-      !nsLayoutUtils::IsAncestorFrameCrossDocInProcess(aInput.mRootFrame,
-                                                       aTargetFrame)) {
+      !nsLayoutUtils::IsAncestorFrameCrossDocInProcessConsideringContinuations(
+          aInput.mRootFrame, aTargetFrame)) {
     return {isSimilarOrigin};
   }
 

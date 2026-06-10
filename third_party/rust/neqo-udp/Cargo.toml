@@ -10,10 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
-rust-version = "1.81.0"
+edition = "2024"
+rust-version = "1.90.0"
 name = "neqo-udp"
-version = "0.21.0"
+version = "0.28.1"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
 autolib = false
@@ -47,7 +47,6 @@ bench = [
     "neqo-common/bench",
     "log/release_max_level_info",
 ]
-fast-apple-datapath = ["quinn-udp/fast-apple-datapath"]
 
 [lib]
 name = "neqo_udp"
@@ -62,12 +61,16 @@ default-features = false
 path = "./../neqo-common"
 
 [dependencies.quinn-udp]
-version = "0.5.13"
-features = ["direct-log"]
+version = "0.6"
+features = [
+    "log",
+    "fast-apple-datapath",
+]
 default-features = false
 
-[build-dependencies]
-cfg_aliases = "0.2"
+[build-dependencies.cfg_aliases]
+version = "0.2"
+default-features = false
 
 [target."cfg(unix)".dependencies.libc]
 version = "0.2"
@@ -93,12 +96,13 @@ float_cmp_const = "warn"
 fn_to_numeric_cast_any = "warn"
 get_unwrap = "warn"
 if_then_some_else_none = "warn"
+impl_trait_in_params = "warn"
 infinite_loop = "warn"
 iter_over_hash_type = "warn"
 large_include_file = "warn"
 let_underscore_must_use = "warn"
 let_underscore_untyped = "warn"
-literal_string_with_formatting_args = "allow"
+literal_string_with_formatting_args = "warn"
 lossy_float_literal = "warn"
 map_with_unused_argument_over_ranges = "warn"
 mem_forget = "warn"
@@ -153,10 +157,12 @@ priority = -1
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"
+ambiguous_negative_literals = "warn"
 explicit_outlives_requirements = "warn"
 macro_use_extern_crate = "warn"
 missing_abi = "warn"
 non_ascii_idents = "warn"
+redundant_imports = "warn"
 redundant_lifetimes = "warn"
 trivial_numeric_casts = "warn"
 unit_bindings = "warn"

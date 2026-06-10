@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -62,6 +63,8 @@ internal fun FullDisplayToolbar(
     browserActionsEnd: List<Action>,
     onInteraction: (BrowserToolbarEvent) -> Unit,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    outlineColor: Color = DividerDefaults.color,
     browserActionsStartModifier: Modifier = Modifier,
     pageActionsStartModifier: Modifier = Modifier,
     originModifier: Modifier = Modifier,
@@ -73,18 +76,18 @@ internal fun FullDisplayToolbar(
         windowSizeClass.minWidthDp < WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
     }
 
-    Surface {
+    Surface(color = backgroundColor) {
         Box(
             modifier = modifier
-                .padding(
+                .semantics { testTagsAsResourceId = true },
+        ) {
+            Row(
+                modifier = Modifier.padding(
                     horizontal = when (isSmallWidthScreen) {
                         true -> NO_TOOLBAR_PADDING_DP.dp
                         else -> LARGE_TOOLBAR_PADDING_DP.dp
                     },
-                )
-                .semantics { testTagsAsResourceId = true },
-        ) {
-            Row(
+                ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (browserActionsStart.isNotEmpty()) {
@@ -114,8 +117,8 @@ internal fun FullDisplayToolbar(
                         )
                         .height(48.dp)
                         .background(
-                            color = MaterialTheme.colorScheme.surfaceDim,
-                            shape = RoundedCornerShape(90.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shape = CircleShape,
                         )
                         .padding(
                             start = when (pageActionsStart.isEmpty()) {
@@ -181,6 +184,7 @@ internal fun FullDisplayToolbar(
                         Bottom -> Alignment.TopCenter
                     },
                 ),
+                color = outlineColor,
             )
 
             if (progressBarConfig != null) {

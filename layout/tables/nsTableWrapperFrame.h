@@ -1,9 +1,8 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsTableWrapperFrame_h__
-#define nsTableWrapperFrame_h__
+#ifndef nsTableWrapperFrame_h_
+#define nsTableWrapperFrame_h_
 
 #include "LayoutConstants.h"
 #include "mozilla/Maybe.h"
@@ -55,9 +54,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
 
-  nscoord SynthesizeFallbackBaseline(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
   Maybe<nscoord> GetNaturalBaselineBOffset(
       mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
       BaselineExportContext aExportContext) const override;

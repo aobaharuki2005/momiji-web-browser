@@ -22,7 +22,7 @@ import { Provider } from "react-redux";
 import { combineReducers, createStore } from "redux";
 
 const DEFAULT_PROPS = {
-  url: "about:robots",
+  url: "https://example.com",
   title: "title",
   raw_image_src: "https://picsum.photos/200",
   icon_src: "https://picsum.photos/200",
@@ -31,8 +31,6 @@ const DEFAULT_PROPS = {
   },
   DiscoveryStream: INITIAL_STATE.DiscoveryStream,
   Prefs: INITIAL_STATE.Prefs,
-  fetchTimestamp: new Date("March 20, 2024 10:30:44").getTime(),
-  firstVisibleTimestamp: new Date("March 21, 2024 10:11:12").getTime(),
 };
 
 describe("<DSCard>", () => {
@@ -254,8 +252,6 @@ describe("<DSCard>", () => {
             card_type: "organic",
             recommendation_id: undefined,
             tile_id: "fooidx",
-            fetchTimestamp: DEFAULT_PROPS.fetchTimestamp,
-            firstVisibleTimestamp: DEFAULT_PROPS.firstVisibleTimestamp,
             scheduled_corpus_item_id: undefined,
             corpus_item_id: undefined,
             recommended_at: undefined,
@@ -316,8 +312,6 @@ describe("<DSCard>", () => {
             card_type: "spoc",
             recommendation_id: undefined,
             tile_id: "fooidx",
-            fetchTimestamp: DEFAULT_PROPS.fetchTimestamp,
-            firstVisibleTimestamp: DEFAULT_PROPS.firstVisibleTimestamp,
             scheduled_corpus_item_id: undefined,
             corpus_item_id: undefined,
             recommended_at: undefined,
@@ -381,8 +375,6 @@ describe("<DSCard>", () => {
             recommendation_id: undefined,
             tile_id: "fooidx",
             shim: "click shim",
-            fetchTimestamp: DEFAULT_PROPS.fetchTimestamp,
-            firstVisibleTimestamp: DEFAULT_PROPS.firstVisibleTimestamp,
             scheduled_corpus_item_id: undefined,
             corpus_item_id: undefined,
             recommended_at: undefined,
@@ -610,7 +602,7 @@ describe("<DSCard>", () => {
       const standardImageSize = {
         mediaMatcher: "default",
         width: 296,
-        height: 148,
+        height: 160,
       };
       const image = wrapper.find(DSImage);
       assert.deepEqual(image.props().sizes[0], standardImageSize);
@@ -779,7 +771,7 @@ describe("<DSCard>", () => {
         },
         medium: {
           width: 300,
-          height: 150,
+          height: 160,
         },
         large: {
           width: 190,
@@ -841,6 +833,26 @@ describe("<DSCard>", () => {
       assert.equal(image.at(3).props().sizes[0].height, cardSizes.large.height);
       assert.equal(image.at(3).props().sizes[0].width, cardSizes.large.width);
     });
+  });
+
+  it("should render topic label when isDailyBrief is true", () => {
+    const store = createStore(combineReducers(reducers), INITIAL_STATE);
+    wrapper = mount(
+      <Provider store={store}>
+        <DSCard {...DEFAULT_PROPS} isDailyBrief={true} topic="technology" />
+      </Provider>
+    );
+
+    const dsCardInstance = wrapper.find(DSCard).instance();
+    dsCardInstance.setState({ isSeen: true });
+    wrapper.update();
+
+    const topicLabel = wrapper.find(".ds-card-daily-brief-topic");
+    assert.lengthOf(topicLabel, 1);
+    assert.equal(
+      topicLabel.prop("data-l10n-id"),
+      "newtab-topic-label-technology"
+    );
   });
 });
 

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,6 +24,7 @@
 #include "mozilla/StyleAnimationValue.h"  // for StyleAnimationValue, etc
 #include "NonCustomCSSPropertyId.h"       // for eCSSProperty_offset_path, etc
 #include "nsDisplayList.h"                // for nsDisplayTransform, etc
+#include "nsStyleTransformMatrix.h"
 
 namespace mozilla::layers {
 
@@ -246,8 +245,12 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
 #endif
     }
 
-    uint32_t segmentIndex = 0;
     size_t segmentSize = animation.mSegments.Length();
+    if (segmentSize == 0) {
+      return AnimationHelper::SampleResult();
+    }
+
+    uint32_t segmentIndex = 0;
     PropertyAnimation::SegmentData* segment = animation.mSegments.Elements();
     while (segment->mEndPortion < computedTiming.mProgress.Value() &&
            segmentIndex < segmentSize - 1) {

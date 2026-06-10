@@ -6,51 +6,59 @@ This transform passes options from `mach perftest` to the corresponding task.
 """
 
 from datetime import date, timedelta
+from typing import Optional, Union
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util import json
 from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import join_symbol, split_symbol
-from voluptuous import Any, Extra, Optional
+
+from gecko_taskgraph.transforms.test import linux_perf_platform_restrictions
 
 transforms = TransformSequence()
 
 
-perftest_description_schema = Schema({
+class PerftestDescriptionSchema(Schema, forbid_unknown_fields=False, kw_only=True):
     # The test names and the symbols to use for them: [test-symbol, test-path]
-    Optional("perftest"): [[str]],
+    perftest: Optional[list[list[str]]] = None
     # Metrics to gather for the test. These will be merged
     # with options specified through perftest-perfherder-global
-    Optional("perftest-metrics"): optionally_keyed_by(
-        "perftest",
-        Any(
-            [str],
-            {str: Any(None, {str: Any(None, str, [str])})},
-        ),
-    ),
+    perftest_metrics: Optional[
+        optionally_keyed_by(
+            "perftest",
+            Union[
+                list[str],
+                dict[str, Union[None, dict[str, Union[None, str, list[str]]]]],
+            ],
+            use_msgspec=True,
+        )
+    ] = None
     # Perfherder data options that will be applied to
     # all metrics gathered.
-    Optional("perftest-perfherder-global"): optionally_keyed_by(
-        "perftest", {str: Any(None, str, [str])}
-    ),
+    perftest_perfherder_global: Optional[
+        optionally_keyed_by(
+            "perftest",
+            dict[str, Union[None, str, list[str]]],
+            use_msgspec=True,
+        )
+    ] = None
     # Extra options to add to the test's command
-    Optional("perftest-extra-options"): optionally_keyed_by("perftest", [str]),
+    perftest_extra_options: Optional[
+        optionally_keyed_by("perftest", list[str], use_msgspec=True)
+    ] = None
     # Variants of the test to make based on extra browsertime
     # arguments. Expecting:
     #    [variant-suffix, options-to-use]
     # If variant-suffix is `null` then the options will be added
     # to the existing task. Otherwise, a new variant is created
     # with the given suffix and with its options replaced.
-    Optional("perftest-btime-variants"): optionally_keyed_by(
-        "perftest", [[Any(None, str)]]
-    ),
-    # These options will be parsed in the next schemas
-    Extra: object,
-})
+    perftest_btime_variants: Optional[
+        optionally_keyed_by("perftest", list[list[Optional[str]]], use_msgspec=True)
+    ] = None
 
 
-transforms.add_validate(perftest_description_schema)
+transforms.add_validate(PerftestDescriptionSchema)
 
 
 @transforms.add
@@ -254,51 +262,78 @@ def setup_perftest_extra_options(config, jobs):
 
 
 @transforms.add
-def create_duplicate_simpleperf_jobs(config, jobs):
-    for job in jobs:
-        if (
-            "startup" in job["name"]
-            and "cold" not in job["name"]
-            and "chrome-m" not in job["name"]
-        ):
-            new_job = deepcopy(job)
-            new_job["run-on-projects"] = []
-            new_job["attributes"] = {"cron": False}
-            new_job["dependencies"] = {
-                "android-aarch64-shippable": "build-android-aarch64-shippable/opt"
-            }
-            new_job["name"] += "-profiling"
-            new_job["run"]["command"] += (
-                " --simpleperf --simpleperf-path $MOZ_FETCHES_DIR/android-simpleperf --geckoprofiler"
-            )
-            new_job["description"] = str(new_job["description"]).replace(
-                "Run", "Profile"
-            )
-            new_job["treeherder"]["symbol"] = str(
-                new_job["treeherder"]["symbol"]
-            ).replace(")", "-profile)")
-            new_job["fetches"]["toolchain"].extend([
-                "linux64-android-simpleperf-linux-repack",
-                "linux64-samply",
-                "symbolicator-cli",
-            ])
-            new_job["fetches"]["android-aarch64-shippable"] = [
-                {
-                    "artifact": "target.crashreporter-symbols.zip",
-                    "extract": False,
-                }
-            ]
-            yield new_job
-        yield job
-
-
-@transforms.add
 def pass_perftest_options(config, jobs):
     for job in jobs:
         env = job.setdefault("worker", {}).setdefault("env", {})
         env["PERFTEST_OPTIONS"] = json.dumps(
             config.params["try_task_config"].get("perftest-options")
         )
+        yield job
+
+
+@transforms.add
+def setup_gecko_profile_from_try_config(config, jobs):
+    """Apply gecko-profile settings when --gecko-profile is used with ./mach try fuzzy.
+
+    This mimics the logic from the gecko_profile action but applies it during
+    task generation instead of as a post-hoc action.
+    """
+    gecko_profile = config.params.get("try_task_config", {}).get("gecko-profile", False)
+    simpleperf_compatible_tests = ["-homeview-", "-applink-", "-restore-"]
+
+    for job in jobs:
+        # For simpleperf-compatible startup tests, add simpleperf support
+        if (
+            any(test in job["name"] for test in simpleperf_compatible_tests)
+            and gecko_profile
+        ):
+            # Append simpleperf flags directly to the command
+            # This avoids conflicts with try_task_config_env overwriting PERF_FLAGS
+            simpleperf_args = [
+                "--simpleperf",
+                "--simpleperf-path",
+                "$MOZ_FETCHES_DIR/android-simpleperf",
+                "--geckoprofiler",
+            ]
+            job["run"]["command"] += " " + " ".join(simpleperf_args)
+
+            # Add required toolchain dependencies
+            fetches = job.setdefault("fetches", {})
+            fetch_toolchains = fetches.setdefault("toolchain", [])
+
+            simpleperf_deps = [
+                "linux64-android-simpleperf-linux-repack",
+                "linux64-samply",
+                "profiler-node-tools",
+            ]
+            for dep in simpleperf_deps:
+                if dep not in fetch_toolchains:
+                    fetch_toolchains.append(dep)
+
+            # Add build dependency for symbols
+            dependencies = job.setdefault("dependencies", {})
+            if "android-aarch64-shippable" not in dependencies:
+                dependencies["android-aarch64-shippable"] = (
+                    "build-android-aarch64-shippable/opt"
+                )
+
+            # Add symbols artifact fetch
+            fetches.setdefault("android-aarch64-shippable", []).append({
+                "artifact": "target.crashreporter-symbols.zip",
+                "extract": False,
+            })
+
+            # Add scope for android-simpleperf artifact
+            scopes = job.setdefault("scopes", [])
+            simpleperf_scope = "queue:get-artifact:project/gecko/android-simpleperf/*"
+            if simpleperf_scope not in scopes:
+                scopes.append(simpleperf_scope)
+
+            # Update treeherder symbol to indicate profiling
+            job["treeherder"]["symbol"] = job["treeherder"]["symbol"].replace(
+                ")", "-p)"
+            )
+
         yield job
 
 
@@ -356,7 +391,8 @@ def setup_regression_detector(config, jobs):
 
             base_project = None
             if (
-                config.params.get("try_task_config", {})
+                config.params
+                .get("try_task_config", {})
                 .get("env", {})
                 .get("PERF_BASE_REVISION", None)
                 is not None
@@ -392,4 +428,40 @@ def set_perftest_attributes(config, jobs):
     for job in jobs:
         attributes = job.setdefault("attributes", {})
         attributes["perftest_name"] = job["name"]
+        yield job
+
+
+# Restrict most perftest jobs to Ubuntu 24.04, keeping only allowed exceptions on 18.04.
+transforms.add(linux_perf_platform_restrictions.restrict_perftest_to_2404)
+
+
+@transforms.add
+def setup_autoland_retriggers(config, jobs):
+
+    def _allow_task_duplicates(label):
+        if "hw-a55-aarch64-shippable-startup-fenix" in label:
+            return True
+        return False
+
+    for job in jobs:
+        attrs = job.setdefault("attributes", {})
+        if config.params["project"] == "autoland" and _allow_task_duplicates(
+            job["name"]
+        ):
+            attrs["task_duplicates"] = 4
+        yield job
+
+
+# Apply platform restrictions for perftest jobs failing on Ubuntu 24.04
+transforms.add(linux_perf_platform_restrictions.restrict_perftest_to_1804)
+
+
+@transforms.add
+def hide_cmd_exe_window_on_windows(config, jobs):
+    for job in jobs:
+        platform = job.get("platform", "")
+        platforms = [platform] if isinstance(platform, str) else platform
+        if any(p.startswith("windows") for p in platforms):
+            worker = job.setdefault("worker", {})
+            worker["hide-cmd-window"] = True
         yield job

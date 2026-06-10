@@ -96,10 +96,16 @@ scheme = "https"
 skip-if = [
   "os == 'android'", # Bug 1312791
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1781388
+  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && opt", # Bug 1781388
 ]
 support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"]
 
 ["test_multiple_touches.html"]
+
+["test_pointer_boundary_events_iframe.html"]
+skip-if = [
+  "os == 'android'", # Bug 2014260
+]
 
 ["test_pointercancel_target_at_dragstart.html"]
 
@@ -120,12 +126,14 @@ support-files = [
   "file_pointercapture_xorigin_iframe_touch.html",
 ]
 skip-if = [
-  "display == 'wayland' && os_version == '22.04'", # Bug 1856971
+  "os == 'linux' && os_version == '22.04' && display == 'wayland'", # Bug 1856971
 ]
+
+["test_pointerevent_altitude_azimuth_angle.html"]
 
 ["test_pointermove_drag_scrollbar.html"]
 run-if = [
-  "os == '!android'", # scrollbar not showed on mobile
+  "os != 'android'", # scrollbar not showed on mobile
 ]
 
 ["test_pointermove_isPrimary_subsequent_pens.html"]
@@ -143,6 +151,7 @@ support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js
 skip-if = [
   "os == 'android'", # Bug 1312791
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1781388
+  "os == 'win' && os_version == '11.26200' && arch == 'x86_64' && opt", # Bug 1781388
 ]
 
 ["test_remove_frame_when_got_pointer_capture.html"]

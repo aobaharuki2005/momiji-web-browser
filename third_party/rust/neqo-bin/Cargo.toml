@@ -10,12 +10,12 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
-rust-version = "1.81.0"
+edition = "2024"
+rust-version = "1.90.0"
 name = "neqo-bin"
-version = "0.21.0"
+version = "0.28.1"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
-build = false
+build = "build.rs"
 autolib = false
 autobins = false
 autoexamples = false
@@ -39,11 +39,18 @@ categories = [
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
 
-[package.metadata.bench.main.codspeed]
-mode = "walltime"
-
 [package.metadata.cargo-machete]
-ignored = ["log"]
+ignored = [
+    "cfg_aliases",
+    "criterion",
+]
+
+[[package.metadata.bench]]
+name = "main"
+
+[package.metadata.bench.codspeed]
+mode = "walltime"
+memory = false
 
 [features]
 bench = [
@@ -56,7 +63,6 @@ draft-29 = [
     "neqo-http3/draft-29",
     "neqo-transport/draft-29",
 ]
-fast-apple-datapath = ["quinn-udp/fast-apple-datapath"]
 
 [lib]
 name = "neqo_bin"
@@ -80,7 +86,7 @@ harness = false
 required-features = ["bench"]
 
 [dependencies.clap]
-version = "4.5"
+version = "4"
 features = [
     "std",
     "help",
@@ -92,7 +98,7 @@ features = [
 default-features = false
 
 [dependencies.clap-verbosity-flag]
-version = "3.0"
+version = "3"
 features = ["log"]
 default-features = false
 
@@ -103,6 +109,11 @@ default-features = false
 
 [dependencies.hex]
 version = "0.4"
+features = ["std"]
+default-features = false
+
+[dependencies.http]
+version = "1"
 features = ["std"]
 default-features = false
 
@@ -117,9 +128,6 @@ default-features = false
 [dependencies.neqo-common]
 path = "./../neqo-common"
 
-[dependencies.neqo-crypto]
-path = "./../neqo-crypto"
-
 [dependencies.neqo-http3]
 path = "./../neqo-http3"
 
@@ -129,23 +137,31 @@ path = "./../neqo-transport"
 [dependencies.neqo-udp]
 path = "./../neqo-udp"
 
+[dependencies.nss]
+git = "https://github.com/mozilla/nss-rs"
+rev = "0.9.0"
+package = "nss-rs"
+
 [dependencies.qlog]
-version = "0.15.1"
+version = "0.16.0"
 default-features = false
 
 [dependencies.quinn-udp]
-version = "0.5.13"
-features = ["direct-log"]
-default-features = false
-
-[dependencies.regex]
-version = "1.9"
-features = ["unicode-perl"]
+version = "0.6"
+features = [
+    "log",
+    "fast-apple-datapath",
+]
 default-features = false
 
 [dependencies.rustc-hash]
 version = "2.1"
 features = ["std"]
+default-features = false
+
+[dependencies.strum]
+version = "0.27"
+features = ["derive"]
 default-features = false
 
 [dependencies.thiserror]
@@ -160,11 +176,6 @@ features = [
     "macros",
     "rt",
 ]
-default-features = false
-
-[dependencies.url]
-version = "2.5"
-features = ["std"]
 default-features = false
 
 [dev-dependencies.criterion]
@@ -182,6 +193,10 @@ version = "1"
 features = ["sync"]
 default-features = false
 
+[build-dependencies.cfg_aliases]
+version = "0.2"
+default-features = false
+
 [lints.clippy]
 allow_attributes = "warn"
 allow_attributes_without_reason = "warn"
@@ -197,12 +212,13 @@ float_cmp_const = "warn"
 fn_to_numeric_cast_any = "warn"
 get_unwrap = "warn"
 if_then_some_else_none = "warn"
+impl_trait_in_params = "warn"
 infinite_loop = "warn"
 iter_over_hash_type = "warn"
 large_include_file = "warn"
 let_underscore_must_use = "warn"
 let_underscore_untyped = "warn"
-literal_string_with_formatting_args = "allow"
+literal_string_with_formatting_args = "warn"
 lossy_float_literal = "warn"
 map_with_unused_argument_over_ranges = "warn"
 mem_forget = "warn"
@@ -257,10 +273,12 @@ priority = -1
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"
+ambiguous_negative_literals = "warn"
 explicit_outlives_requirements = "warn"
 macro_use_extern_crate = "warn"
 missing_abi = "warn"
 non_ascii_idents = "warn"
+redundant_imports = "warn"
 redundant_lifetimes = "warn"
 trivial_numeric_casts = "warn"
 unit_bindings = "warn"

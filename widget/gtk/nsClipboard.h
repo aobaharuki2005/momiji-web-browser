@@ -1,12 +1,9 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __nsClipboard_h_
-#define __nsClipboard_h_
+#ifndef _nsClipboard_h_
+#define _nsClipboard_h_
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
@@ -121,7 +118,8 @@ class nsClipboard final : public nsBaseClipboard, public nsIObserver {
   NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable,
                                     ClipboardType aWhichClipboard) override;
   mozilla::Result<nsCOMPtr<nsISupports>, nsresult> GetNativeClipboardData(
-      const nsACString& aFlavor, ClipboardType aWhichClipboard) override;
+      const nsACString& aFlavor, ClipboardType aWhichClipboard,
+      uint64_t aThreshold = 0) override;
   void AsyncGetNativeClipboardData(const nsACString& aFlavor,
                                    ClipboardType aWhichClipboard,
                                    GetNativeDataCallback&& aCallback) override;
@@ -189,4 +187,4 @@ GdkAtom GetSelectionAtom(int32_t aWhichClipboard);
 mozilla::Maybe<nsIClipboard::ClipboardType> GetGeckoClipboardType(
     GtkClipboard* aGtkClipboard);
 
-#endif /* __nsClipboard_h_ */
+#endif /* _nsClipboard_h_ */

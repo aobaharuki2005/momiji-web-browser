@@ -54,7 +54,7 @@ static constexpr const char *kProcessCommandLine = "process.command_line";
 /**
   Specifies whether the context switches for this data point were voluntary or involuntary.
  */
-static constexpr const char *kProcessContextSwitchType = "process.context_switch_type";
+static constexpr const char *kProcessContextSwitchType = "process.context_switch.type";
 
 /**
   Deprecated, use @code cpu.mode @endcode instead.
@@ -92,8 +92,16 @@ static constexpr const char *kProcessExecutableBuildIdGnu = "process.executable.
 static constexpr const char *kProcessExecutableBuildIdGo = "process.executable.build_id.go";
 
 /**
-  Profiling specific build ID for executables. See the OTel specification for Profiles for more
-  information.
+  Deterministic build ID for executables.
+  <p>
+  GNU and Go build IDs may be stripped or unavailable in some environments
+  (e.g., Alpine Linux, Docker images). This attribute provides a deterministic
+  build ID computed by hashing the first and last 4096 bytes of the file
+  along with its length:
+  @verbatim Input   ← Concat(File[:4096], File[-4096:], BigEndianUInt64(Len(File)))
+  Digest  ← SHA256(Input)
+  BuildID ← Digest[:16] @endverbatimThe result is the first 16 bytes (128 bits) of the SHA256
+  digest, represented as a hex string.
  */
 static constexpr const char *kProcessExecutableBuildIdHtlhash =
     "process.executable.build_id.htlhash";
@@ -158,10 +166,14 @@ static constexpr const char *kProcessLinuxCgroup = "process.linux.cgroup";
 static constexpr const char *kProcessOwner = "process.owner";
 
 /**
-  The type of page fault for this data point. Type @code major @endcode is for major/hard page
-  faults, and @code minor @endcode is for minor/soft page faults.
+  Deprecated, use @code system.paging.fault.type @endcode instead.
+
+  @deprecated
+  {"note": "Replaced by @code system.paging.fault.type @endcode.", "reason": "renamed",
+  "renamed_to": "system.paging.fault.type"}
  */
-static constexpr const char *kProcessPagingFaultType = "process.paging.fault_type";
+OPENTELEMETRY_DEPRECATED static constexpr const char *kProcessPagingFaultType =
+    "process.paging.fault_type";
 
 /**
   Parent Process identifier (PPID).
@@ -213,6 +225,13 @@ static constexpr const char *kProcessSavedUserName = "process.saved_user.name";
   The PID of the process's session leader. This is also the session ID (SID) of the process.
  */
 static constexpr const char *kProcessSessionLeaderPid = "process.session_leader.pid";
+
+/**
+  The process state, e.g., <a
+  href="https://man7.org/linux/man-pages/man1/ps.1.html#PROCESS_STATE_CODES">Linux Process State
+  Codes</a>
+ */
+static constexpr const char *kProcessState = "process.state";
 
 /**
   Process title (proctitle)
@@ -273,6 +292,19 @@ static constexpr const char *kMajor = "major";
 static constexpr const char *kMinor = "minor";
 
 }  // namespace ProcessPagingFaultTypeValues
+
+namespace ProcessStateValues
+{
+
+static constexpr const char *kRunning = "running";
+
+static constexpr const char *kSleeping = "sleeping";
+
+static constexpr const char *kStopped = "stopped";
+
+static constexpr const char *kDefunct = "defunct";
+
+}  // namespace ProcessStateValues
 
 }  // namespace process
 }  // namespace semconv

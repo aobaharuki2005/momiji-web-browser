@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,8 +43,6 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
       const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-
-  void NodeInfoChanged(Document* aOldDoc) override;
 
   void BindToBrowsingContext(BrowsingContext* aBrowsingContext);
 
@@ -164,8 +160,8 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
   }
 
   void SetLazyLoading();
-  void StopLazyLoading();
-  void CancelLazyLoading(bool aClearLazyLoadState);
+  enum class TriggerLoad : bool { No, Yes };
+  void StopLazyLoading(TriggerLoad);
 
   const LazyLoadFrameResumptionState& GetLazyLoadFrameResumptionState() const {
     return mLazyLoadState;
@@ -174,18 +170,18 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
  protected:
   virtual ~HTMLIFrameElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aMaybeScriptedPrincipal,
-                            bool aNotify) override;
-  virtual void OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
-                                      const nsAttrValueOrString& aValue,
-                                      bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aMaybeScriptedPrincipal,
+                    bool aNotify) override;
+  void OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
+                              const nsAttrValueOrString& aValue,
+                              bool aNotify) override;
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(UnbindContext&) override;
+  void NodeInfoChanged(Document* aOldDoc) override;
 
  private:
   static void MapAttributesIntoRule(MappedDeclarationsBuilder&);

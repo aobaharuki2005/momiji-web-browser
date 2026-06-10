@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -88,21 +86,19 @@ struct AutoResolving;
 class InternalJobQueue : public JS::JobQueue {
  public:
   explicit InternalJobQueue(JSContext* cx)
-      : queue(cx, SystemAllocPolicy()), draining_(false), interrupted_(false) {}
+      : draining_(false), interrupted_(false) {}
   ~InternalJobQueue() = default;
 
   // JS::JobQueue methods.
-  bool getHostDefinedData(JSContext* cx,
-                          JS::MutableHandle<JSObject*> data) const override;
+  bool getHostDefinedData(
+      JSContext* cx, JS::MutableHandle<JSObject*> incumbentGlobal,
+      JS::MutableHandle<JSObject*> optionalHostDefinedData) const override;
 
   bool getHostDefinedGlobal(JSContext*,
                             JS::MutableHandle<JSObject*>) const override;
 
-  bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
-                         JS::HandleObject job, JS::HandleObject allocationSite,
-                         JS::HandleObject hostDefinedData) override;
   void runJobs(JSContext* cx) override;
-  bool empty() const override;
+
   bool isDrainingStopped() const override { return interrupted_; }
 
   // If we are currently in a call to runJobs(), make that call stop processing
@@ -112,19 +108,11 @@ class InternalJobQueue : public JS::JobQueue {
 
   void uninterrupt() { interrupted_ = false; }
 
-  // Return the front element of the queue, or nullptr if the queue is empty.
-  // This is only used by shell testing functions.
-  JSObject* maybeFront() const;
-
 #ifdef DEBUG
   JSObject* copyJobs(JSContext* cx);
 #endif
 
  private:
-  using Queue = js::TraceableFifo<JSObject*, 0, SystemAllocPolicy>;
-
-  JS::PersistentRooted<Queue> queue;
-
   // True if we are in the midst of draining jobs from this queue. We use this
   // to avoid re-entry (nested calls simply return immediately).
   bool draining_;
@@ -196,6 +184,7 @@ struct MicroTaskQueueSet {
 
   JS::GenericMicroTask popFront();
   JS::GenericMicroTask popDebugFront();
+  JS::GenericMicroTask peekFront();
 
   bool empty() { return microTaskQueue.empty() && debugMicroTaskQueue.empty(); }
 
@@ -296,7 +285,15 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   /* Clear the pending exception (if any) due to OOM. */
   void recoverFromOutOfMemory();
 
-  void reportAllocationOverflow();
+  // Clears a pending OOM or over-recursion exception. Documents that the
+  // preceding operation is only fallible due to resource exhaustion, not
+  // spec-related reasons.
+  void recoverFromResourceExhaustion() {
+    MOZ_ASSERT(isThrowingOutOfMemory() || isThrowingOverRecursed());
+    clearPendingException();
+  }
+
+  void reportAllocOverflow();
 
   // Accessors for immutable runtime data.
   JSAtomState& names() { return *runtime_->commonNames; }
@@ -316,6 +313,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return nativeStackLimit[kind];
   }
   JS::NativeStackLimit stackLimitForJitCode(JS::StackKind kind);
+  bool stackContainsAddress(uintptr_t address, JS::StackKind kind);
   size_t gcSystemPageSize() { return js::gc::SystemPageSize(); }
 
   /*
@@ -985,6 +983,11 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // Such conditions permit optimizations around `await` expressions.
   js::ContextData<bool> canSkipEnqueuingJobs;
 
+  // Depth of nested AsyncFunctionResume / AsyncGeneratorResume calls on the
+  // C++ stack. Maintained by AutoAsyncResumeDepth. See
+  // IsTopMostAsyncFunctionCall for more details.
+  js::ContextData<uint32_t> asyncResumeDepth;
+
   js::ContextData<JS::PromiseRejectionTrackerCallback>
       promiseRejectionTrackerCallback;
   js::ContextData<void*> promiseRejectionTrackerCallbackData;
@@ -1037,6 +1040,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // eval() and Function() calls or not. This flag can be set when
   // evaluating the code for Debugger.Frame.prototype.eval.
   js::ContextData<bool> bypassCSPForDebugger;
+
+  // Set to true if a global lexical was initialized by the debugger using
+  // forceLexicalInitializationByName.
+  js::ContextData<bool> hasDebuggerForcedLexicalInit;
 
   // Debugger having set `exclusiveDebuggerOnEval` property to true
   // want their evaluations and calls to be ignore by all other Debuggers
@@ -1260,7 +1267,7 @@ class MOZ_RAII AutoUnsafeCallWithABI {
 #ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   JSContext* cx_;
   bool nested_;
-  bool checkForPendingException_;
+  bool checkForPendingException_ = false;
 #endif
   JS::AutoCheckCannotGC nogc;
 

@@ -15,8 +15,6 @@
   <string name="content_description_menu">Altre opsion</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">Serca o scrìvi on indiriso</string>
-  <!-- No Open Tabs Message Description -->
-  <string name="no_open_tabs_description">Ƚe schede vèrte ƚe vegnerà mostrà chive.</string>
   <!-- Private Browsing -->
   <string name="private_browsing_common_myths">Miti da sfatare so ƚa navigasion anonima</string>
   <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
@@ -41,10 +39,6 @@
   <string name="browser_menu_refresh">Axorna</string>
   <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
   <string name="browser_menu_stop">Interonpi</string>
-  <!-- Browser menu button that sends a user to help articles -->
-  <string name="browser_menu_help">Ajuto</string>
-  <!-- Browser menu button that sends a to a the what's new article -->
-  <string name="browser_menu_whats_new">Novità</string>
   <!-- Browser menu button that opens the settings menu -->
   <string name="browser_menu_settings">Inpostasion</string>
   <!-- Browser menu button that opens a user's library -->
@@ -66,11 +60,6 @@
     Browser menu text shown in custom tabs to indicate this is a Fenix tab
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="browser_menu_powered_by">CO TECNOLOGIA %1$s</string>
-  <!--
-    Browser menu text shown in custom tabs to indicate this is a Fenix tab
-    %1$s is the name of the app (for example "Firefox").
-  -->
   <string name="browser_menu_powered_by2">Co tecnoƚogia %1$s</string>
   <!-- Browser menu button to put the current page in reader mode -->
   <string name="browser_menu_read">Modalità ƚetura</string>
@@ -86,9 +75,11 @@
   <string name="default_locale_text">Usa ƚa ƚengua de’l dispoxitivo</string>
   <!-- Placeholder text shown in the search bar before a user enters text -->
   <string name="locale_search_hint">Serca ƚengua</string>
-  <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-  <string name="search_shortcuts_engine_settings">Inpostasion motori de reserca</string>
-  <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+  <!--
+    Search Fragment
+
+    Button in the search view that lets a user navigate to the site in their clipboard
+  -->
   <string name="awesomebar_clipboard_title">Còpia el link da i scarabòci</string>
   <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
   <string name="search_suggestions_onboarding_allow_button">Parmeti</string>
@@ -322,8 +313,6 @@
   <string name="edit_bookmark_snackbar_action">MODÌFEGA</string>
   <!-- Bookmark overflow menu edit button -->
   <string name="bookmark_menu_edit_button">Modìfega</string>
-  <!-- Bookmark overflow menu copy button -->
-  <string name="bookmark_menu_copy_button">Còpia</string>
   <!-- Bookmark overflow menu share button -->
   <string name="bookmark_menu_share_button">Condividi</string>
   <!-- Bookmark overflow menu open in new tab button -->
@@ -356,8 +345,6 @@
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Scanseƚà %1$s</string>
-  <!-- Bookmark undo button for deletion snackbar action -->
-  <string name="bookmark_undo_deletion">ANUȽA</string>
   <!--
     Site Permissions
 
@@ -497,8 +484,6 @@
     Text shown in snackbar when user closes a tab
   -->
   <string name="snackbar_tab_closed">Scheda sarà</string>
-  <!-- Text shown in snackbar when user closes all tabs -->
-  <string name="snackbar_tabs_closed">Schede sarà</string>
   <!-- Text shown in snackbar when user closes a private tab -->
   <string name="snackbar_private_tab_closed">Scheda anonima sarà</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
@@ -545,8 +530,6 @@
   <string name="preferences_delete_browsing_data_on_quit">Naxendo fora vegnerà scanseƚà i dati de navigasion</string>
   <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
   <string name="preference_summary_delete_browsing_data_on_quit_2">Scanseƚa otomàticamente i dati de navigasion cò viene seƚesionà “Va fora” nel menu principaƚe</string>
-  <!-- Action item in menu for the Delete browsing data on quit feature -->
-  <string name="delete_browsing_data_on_quit_action">Va fora</string>
   <!-- Dialog message to the user asking to delete browsing data. %s is the name of the app (for example "Firefox"). -->
   <string name="delete_browsing_data_prompt_message_3">%s scanseƚerà i dati de navigasion seƚesionà.</string>
   <!-- Text for the cancel button for the data deletion dialog -->
@@ -761,8 +744,6 @@
     the certificate authority that verified the ticket
   -->
   <string name="certificate_info_verified_by">Verificà da: %1$s</string>
-  <!-- Login overflow menu delete button -->
-  <string name="login_menu_delete_button">Scanseƚa</string>
   <!-- Positive action of a dialog asking to delete -->
   <string name="dialog_delete_positive">Rimovi</string>
   <!-- Translations feature -->

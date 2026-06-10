@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -191,7 +189,8 @@ void MediaDrmJavaCallbacksSupport::OnRejectPromise(
   mDecryptorProxyCallback->RejectPromise(aPromiseId, std::move(rv), reason);
 }
 
-MediaDrmProxySupport::MediaDrmProxySupport(const nsAString& aKeySystem)
+MediaDrmProxySupport::MediaDrmProxySupport(const nsAString& aKeySystem,
+                                           const nsACString& aOriginID)
     : mKeySystem(aKeySystem), mDestroyed(false) {
   mJavaCallbacks = java::MediaDrmProxy::NativeMediaDrmProxyCallbacks::New();
 
@@ -199,6 +198,13 @@ MediaDrmProxySupport::MediaDrmProxySupport(const nsAString& aKeySystem)
 
   MOZ_ASSERT(mBridgeProxy, "mBridgeProxy should not be null");
   mMediaDrmStubId = mBridgeProxy->GetStubId()->ToString();
+
+  if (!aOriginID.IsEmpty()) {
+    mBridgeProxy->SetOriginID(aOriginID);
+    MDRMN_LOG("Have origin ID (%.4s)", PromiseFlatCString(aOriginID).get());
+  } else {
+    MDRMN_LOG("Origin ID is empty");
+  }
 }
 
 MediaDrmProxySupport::~MediaDrmProxySupport() {

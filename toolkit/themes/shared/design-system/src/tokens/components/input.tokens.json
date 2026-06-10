@@ -1,0 +1,75 @@
+{
+  "border": {
+    "color": {
+      "value": "{border.color.interactive.@base}"
+    }
+  },
+  "folder": {
+    "gap": {
+      "value": "{space.medium}"
+    }
+  },
+  "height": {
+    "value": "{size.item.small}"
+  },
+  "swatch": {
+    "size": {
+      "value": "{size.item.medium}"
+    }
+  },
+  "text": {
+    "background": {
+      "color": {
+        "@base": {
+          "value": "Field"
+        },
+        "disabled": {
+          "value": "{button.background.color.disabled}"
+        }
+      }
+    },
+    "border": {
+      "@base": {
+        "value": "{border.width} solid {input.text.border.color.@base}"
+      },
+      "color": {
+        "@base": {
+          "value": "{border.color.@base}"
+        },
+        "disabled": {
+          "value": "{border.color.interactive.disabled}"
+        }
+      },
+      "radius": {
+        "value": "{border.radius.medium}"
+      }
+    },
+    "color": {
+      "@base": {
+        "value": "FieldText"
+      },
+      "disabled": {
+        "value": {
+          "default": "{input.text.color.@base}",
+          "forcedColors": "GrayText"
+        }
+      }
+    },
+    "icon": {
+      "size": {
+        "value": "{icon.size.xsmall}"
+      }
+    },
+    "min-height": {
+      "value": "{button.min-height.@base}"
+    },
+    "opacity": {
+      "disabled": {
+        "value": "{button.opacity.disabled}"
+      }
+    }
+  },
+  "width": {
+    "value": "{size.item.small}"
+  }
+}

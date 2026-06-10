@@ -64,13 +64,17 @@ async function cleanUpSuggestions() {
   }
 }
 
-function makeFormHistoryResults(context, count) {
+function makeFormHistoryResults(
+  context,
+  count,
+  engineName = SUGGESTIONS_ENGINE_NAME
+) {
   let results = [];
   for (let i = 0; i < count; i++) {
     results.push(
       makeFormHistoryResult(context, {
         suggestion: `${SEARCH_STRING} world Form History ${i}`,
-        engineName: SUGGESTIONS_ENGINE_NAME,
+        engineName,
       })
     );
   }
@@ -140,11 +144,11 @@ add_setup(async function () {
   });
 
   // Install the test engine.
-  let oldDefaultEngine = await Services.search.getDefault();
+  let oldDefaultEngine = await SearchService.getDefault();
   registerCleanupFunction(async () => {
-    Services.search.setDefault(
+    SearchService.setDefault(
       oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      SearchService.CHANGE_REASON.UNKNOWN
     );
     Services.prefs.clearUserPref(PRIVATE_SEARCH_PREF);
     Services.prefs.clearUserPref(TRENDING_PREF);
@@ -152,7 +156,7 @@ add_setup(async function () {
     Services.prefs.clearUserPref(TAB_TO_SEARCH_PREF);
     sandbox.restore();
   });
-  Services.search.setDefault(engine, Ci.nsISearchService.CHANGE_REASON_UNKNOWN);
+  SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
   Services.prefs.setBoolPref(PRIVATE_SEARCH_PREF, false);
   Services.prefs.setBoolPref(TRENDING_PREF, false);
   Services.prefs.setBoolPref(QUICKACTIONS_PREF, false);
@@ -222,7 +226,7 @@ add_task(async function disabled_urlbarSuggestions_withRestrictionToken() {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
   let context = createContext(
-    `${UrlbarTokenizer.RESTRICT.SEARCH} ${SEARCH_STRING}`,
+    `${UrlbarShared.RESTRICT_TOKENS.SEARCH} ${SEARCH_STRING}`,
     { isPrivate: false }
   );
   await check_results({
@@ -230,7 +234,7 @@ add_task(async function disabled_urlbarSuggestions_withRestrictionToken() {
     matches: [
       makeSearchResult(context, {
         query: SEARCH_STRING,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarShared.RESTRICT_TOKENS.SEARCH,
         engineName: SUGGESTIONS_ENGINE_NAME,
         heuristic: true,
       }),
@@ -249,7 +253,7 @@ add_task(
     Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
     Services.prefs.setBoolPref(PRIVATE_ENABLED_PREF, false);
     let context = createContext(
-      `${UrlbarTokenizer.RESTRICT.SEARCH} ${SEARCH_STRING}`,
+      `${UrlbarShared.RESTRICT_TOKENS.SEARCH} ${SEARCH_STRING}`,
       { isPrivate: true }
     );
     await check_results({
@@ -257,7 +261,7 @@ add_task(
       matches: [
         makeSearchResult(context, {
           query: SEARCH_STRING,
-          alias: UrlbarTokenizer.RESTRICT.SEARCH,
+          alias: UrlbarShared.RESTRICT_TOKENS.SEARCH,
           engineName: SUGGESTIONS_ENGINE_NAME,
           heuristic: true,
         }),
@@ -273,7 +277,7 @@ add_task(
     Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
     Services.prefs.setBoolPref(PRIVATE_ENABLED_PREF, true);
     let context = createContext(
-      `${UrlbarTokenizer.RESTRICT.SEARCH} ${SEARCH_STRING}`,
+      `${UrlbarShared.RESTRICT_TOKENS.SEARCH} ${SEARCH_STRING}`,
       { isPrivate: true }
     );
     await check_results({
@@ -281,7 +285,7 @@ add_task(
       matches: [
         makeSearchResult(context, {
           query: SEARCH_STRING,
-          alias: UrlbarTokenizer.RESTRICT.SEARCH,
+          alias: UrlbarShared.RESTRICT_TOKENS.SEARCH,
           engineName: SUGGESTIONS_ENGINE_NAME,
           heuristic: true,
         }),
@@ -505,17 +509,15 @@ add_task(async function restrictToken() {
 
   // Now do a restricted search to make sure only suggestions appear.
   context = createContext(
-    `${UrlbarTokenizer.RESTRICT.SEARCH} ${SEARCH_STRING}`,
-    {
-      isPrivate: false,
-    }
+    `${UrlbarShared.RESTRICT_TOKENS.SEARCH} ${SEARCH_STRING}`,
+    { isPrivate: false }
   );
   await check_results({
     context,
     matches: [
       makeSearchResult(context, {
         engineName: SUGGESTIONS_ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarShared.RESTRICT_TOKENS.SEARCH,
         query: SEARCH_STRING,
         heuristic: true,
       }),
@@ -529,7 +531,7 @@ add_task(async function restrictToken() {
 
   // Typing the search restriction char shows the Search Engine entry and local
   // results.
-  context = createContext(UrlbarTokenizer.RESTRICT.SEARCH, {
+  context = createContext(UrlbarShared.RESTRICT_TOKENS.SEARCH, {
     isPrivate: false,
   });
   await check_results({
@@ -545,7 +547,7 @@ add_task(async function restrictToken() {
   });
 
   // Also if followed by multiple spaces.
-  context = createContext(`${UrlbarTokenizer.RESTRICT.SEARCH}  `, {
+  context = createContext(`${UrlbarShared.RESTRICT_TOKENS.SEARCH}  `, {
     isPrivate: false,
   });
   await check_results({
@@ -553,7 +555,7 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: SUGGESTIONS_ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarShared.RESTRICT_TOKENS.SEARCH,
         query: "",
         heuristic: true,
       }),
@@ -563,7 +565,7 @@ add_task(async function restrictToken() {
 
   // If followed by any char we should fetch suggestions.
   // Note this uses "h" to match form history.
-  context = createContext(`${UrlbarTokenizer.RESTRICT.SEARCH}h`, {
+  context = createContext(`${UrlbarShared.RESTRICT_TOKENS.SEARCH}h`, {
     isPrivate: false,
   });
   await check_results({
@@ -583,7 +585,7 @@ add_task(async function restrictToken() {
   });
 
   // Also if followed by a space and single char.
-  context = createContext(`${UrlbarTokenizer.RESTRICT.SEARCH} h`, {
+  context = createContext(`${UrlbarShared.RESTRICT_TOKENS.SEARCH} h`, {
     isPrivate: false,
   });
   await check_results({
@@ -591,7 +593,7 @@ add_task(async function restrictToken() {
     matches: [
       makeSearchResult(context, {
         engineName: SUGGESTIONS_ENGINE_NAME,
-        alias: UrlbarTokenizer.RESTRICT.SEARCH,
+        alias: UrlbarShared.RESTRICT_TOKENS.SEARCH,
         query: "h",
         heuristic: true,
       }),
@@ -605,7 +607,7 @@ add_task(async function restrictToken() {
 
   // Leading search-mode restriction tokens are removed.
   context = createContext(
-    `${UrlbarTokenizer.RESTRICT.BOOKMARK} ${SEARCH_STRING}`,
+    `${UrlbarShared.RESTRICT_TOKENS.BOOKMARK} ${SEARCH_STRING}`,
     { isPrivate: false }
   );
   await check_results({
@@ -615,7 +617,7 @@ add_task(async function restrictToken() {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
         query: SEARCH_STRING,
-        alias: UrlbarTokenizer.RESTRICT.BOOKMARK,
+        alias: UrlbarShared.RESTRICT_TOKENS.BOOKMARK,
       }),
       makeBookmarkResult(context, {
         uri: `http://example.com/${SEARCH_STRING}-bookmark`,
@@ -627,8 +629,8 @@ add_task(async function restrictToken() {
   // Non-search-mode restriction tokens remain in the query and heuristic search
   // result.
   let token;
-  for (let t of Object.values(UrlbarTokenizer.RESTRICT)) {
-    if (!UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(t)) {
+  for (let t of Object.values(UrlbarShared.RESTRICT_TOKENS)) {
+    if (!UrlbarShared.SEARCH_MODE_RESTRICT.has(t)) {
       token = t;
       break;
     }
@@ -1865,7 +1867,10 @@ add_task(async function formHistory() {
   // not a search result.  Now the "foo" and "foobar" form history should be
   // included.  The "foo" remote suggestion should not be included since it
   // dupes the "foo" form history.
-  await PlacesTestUtils.addVisits("http://foo.example.com/");
+  await PlacesTestUtils.addVisits({
+    url: "http://foo.example.com/",
+    transition: PlacesUtils.history.TRANSITION_TYPED,
+  });
   context = createContext("foo", { isPrivate: false });
   await check_results({
     context,
@@ -1900,7 +1905,7 @@ add_task(async function formHistory() {
   // "foobar" and "fooquux" form history should be included; the "food" SERP
   // should be included since it doesn't dupe either form history result; and
   // the "foobar" and "fooBAR " SERPs depend on the result groups, see below.
-  let engine = await Services.search.getDefault();
+  let engine = await SearchService.getDefault();
   let serpURLs = ["foobar", "fooBAR ", "food"].map(
     term => UrlbarUtils.getSearchQueryUrl(engine, term)[0]
   );
@@ -1977,6 +1982,45 @@ add_task(async function formHistory() {
   });
 
   await UrlbarTestUtils.formHistory.remove(formHistoryStrings);
+});
+
+add_task(async function formHistoryRestrictToEngine() {
+  let engineName = "engine123";
+  // The extension will be cleaned up automatically.
+  await SearchTestUtils.installSearchExtension({ name: engineName });
+
+  info("Shouldn't restrict form history to search mode engine on searchbar");
+  let context = createContext(SEARCH_STRING, {
+    isPrivate: false,
+    searchMode: { engineName },
+    sapName: "searchbar",
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName,
+        heuristic: true,
+      }),
+      ...makeFormHistoryResults(context, MAX_RESULTS - 1, engineName),
+    ],
+  });
+
+  info("Should restrict form history to search mode engine on urlbar");
+  context = createContext(SEARCH_STRING, {
+    isPrivate: false,
+    searchMode: { engineName },
+    sapName: "urlbar",
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName,
+        heuristic: true,
+      }),
+    ],
+  });
 
   await cleanUpSuggestions();
   await PlacesUtils.history.clear();
@@ -2097,7 +2141,7 @@ add_task(async function hideHeuristic_formHistory() {
   //   form history
   // * "foo foo" and "foo bar" remote suggestions should be included because
   //   they don't dupe anything
-  let engine = await Services.search.getDefault();
+  let engine = await SearchService.getDefault();
   let serpURLs = ["foo", "food"].map(
     term => UrlbarUtils.getSearchQueryUrl(engine, term)[0]
   );

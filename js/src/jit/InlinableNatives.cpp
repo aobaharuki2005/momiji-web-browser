@@ -1,20 +1,10 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/InlinableNatives.h"
 
 #ifdef JS_HAS_INTL_API
-#  include "builtin/intl/Collator.h"
-#  include "builtin/intl/DateTimeFormat.h"
-#  include "builtin/intl/DisplayNames.h"
-#  include "builtin/intl/DurationFormat.h"
-#  include "builtin/intl/ListFormat.h"
-#  include "builtin/intl/NumberFormat.h"
-#  include "builtin/intl/PluralRules.h"
-#  include "builtin/intl/RelativeTimeFormat.h"
 #  include "builtin/intl/Segmenter.h"
 #endif
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
@@ -44,37 +34,11 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
   switch (native) {
 #ifdef JS_HAS_INTL_API
     // Intl natives.
-    case InlinableNative::IntlGuardToCollator:
-      return &CollatorObject::class_;
-    case InlinableNative::IntlGuardToDateTimeFormat:
-      return &DateTimeFormatObject::class_;
-    case InlinableNative::IntlGuardToDisplayNames:
-      return &DisplayNamesObject::class_;
-    case InlinableNative::IntlGuardToDurationFormat:
-      return &DurationFormatObject::class_;
-    case InlinableNative::IntlGuardToListFormat:
-      return &ListFormatObject::class_;
-    case InlinableNative::IntlGuardToNumberFormat:
-      return &NumberFormatObject::class_;
-    case InlinableNative::IntlGuardToPluralRules:
-      return &PluralRulesObject::class_;
-    case InlinableNative::IntlGuardToRelativeTimeFormat:
-      return &RelativeTimeFormatObject::class_;
-    case InlinableNative::IntlGuardToSegmenter:
-      return &SegmenterObject::class_;
     case InlinableNative::IntlGuardToSegments:
-      return &SegmentsObject::class_;
+      return &intl::SegmentsObject::class_;
     case InlinableNative::IntlGuardToSegmentIterator:
-      return &SegmentIteratorObject::class_;
+      return &intl::SegmentIteratorObject::class_;
 #else
-    case InlinableNative::IntlGuardToCollator:
-    case InlinableNative::IntlGuardToDateTimeFormat:
-    case InlinableNative::IntlGuardToDisplayNames:
-    case InlinableNative::IntlGuardToListFormat:
-    case InlinableNative::IntlGuardToNumberFormat:
-    case InlinableNative::IntlGuardToPluralRules:
-    case InlinableNative::IntlGuardToRelativeTimeFormat:
-    case InlinableNative::IntlGuardToSegmenter:
     case InlinableNative::IntlGuardToSegments:
     case InlinableNative::IntlGuardToSegmentIterator:
       MOZ_CRASH("Intl API disabled");
@@ -179,15 +143,6 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
       // RNG state is per-realm.
       return false;
 
-    case InlinableNative::IntlGuardToCollator:
-    case InlinableNative::IntlGuardToDateTimeFormat:
-    case InlinableNative::IntlGuardToDisplayNames:
-    case InlinableNative::IntlGuardToDurationFormat:
-    case InlinableNative::IntlGuardToListFormat:
-    case InlinableNative::IntlGuardToNumberFormat:
-    case InlinableNative::IntlGuardToPluralRules:
-    case InlinableNative::IntlGuardToRelativeTimeFormat:
-    case InlinableNative::IntlGuardToSegmenter:
     case InlinableNative::IntlGuardToSegments:
     case InlinableNative::IntlGuardToSegmentIterator:
     case InlinableNative::IsRegExpObject:
@@ -305,6 +260,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::DataViewSetBigUint64:
     case InlinableNative::DataViewByteLength:
     case InlinableNative::DataViewByteOffset:
+    case InlinableNative::Date:
     case InlinableNative::DateGetTime:
     case InlinableNative::DateGetFullYear:
     case InlinableNative::DateGetMonth:
@@ -313,6 +269,8 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::DateGetHours:
     case InlinableNative::DateGetMinutes:
     case InlinableNative::DateGetSeconds:
+    case InlinableNative::DateNow:
+    case InlinableNative::DateParse:
     case InlinableNative::FunctionBind:
     case InlinableNative::MapConstructor:
     case InlinableNative::MapGet:

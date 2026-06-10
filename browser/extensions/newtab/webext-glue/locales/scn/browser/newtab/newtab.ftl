@@ -25,7 +25,7 @@ newtab-search-box-handoff-input =
     .title = Riscedi cu { $engine } o metti nu nnirizzu
     .aria-label = Riscedi cu { $engine } o metti nu nnirizzu
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Junci muturi di risciduta
 newtab-topsites-edit-topsites-header = Cancia situ principali

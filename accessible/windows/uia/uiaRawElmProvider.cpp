@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,10 +17,12 @@
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/Compatibility.h"
 #include "mozilla/a11y/RemoteAccessible.h"
+#include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "MsaaAccessible.h"
 #include "MsaaRootAccessible.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsIAccessibleAnnouncementEvent.h"
 #include "nsIAccessiblePivot.h"
 #include "nsTextEquivUtils.h"
 #include "Pivot.h"
@@ -133,8 +133,33 @@ static MsaaAccessible* GetTextPatternProviderFor(Accessible* aOrigin) {
   return MsaaAccessible::GetFrom(GetTextContainer(aOrigin));
 }
 
+static bool IsOption(Accessible* aAcc) {
+  const role accRole = aAcc->Role();
+  return accRole == roles::OPTION || accRole == roles::COMBOBOX_OPTION;
+}
+
+static bool IsSingleSelectOption(Accessible* aAcc) {
+  if (!IsOption(aAcc)) {
+    return false;
+  }
+  Accessible* container =
+      nsAccUtils::GetSelectableContainer(aAcc, aAcc->State());
+  return !container || !(container->State() & states::MULTISELECTABLE);
+}
+
 static bool MustSelectUsingDoAction(Accessible* aAcc) {
-  return IsRadio(aAcc) || aAcc->Role() == roles::PAGETAB;
+  // 1. Gecko doesn't treat radio buttons/radio menu items as selectable, but
+  // UIA does.
+  // 2. Gecko exposes the selectable state for tabs, but it doesn't support
+  // TakeSelection for them.
+  // 3. Gecko exposes the selectable state for all options, but it doesn't
+  // support TakeSelection for some of them; e.g. XULMenuitemAccessible when
+  // used for a combo box. TakeSelection also doesn't work for ARIA listboxes
+  // which use aria-activedescendant. However, we can't support multi select
+  // list boxes using DoAction, so we only use DoAction for options in a single
+  // select list box.
+  return IsRadio(aAcc) || aAcc->Role() == roles::PAGETAB ||
+         IsSingleSelectOption(aAcc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,6 +303,43 @@ void uiaRawElmProvider::RaiseUiaEventForStateChange(Accessible* aAcc,
   // We can't get the old value. Thankfully, clients don't seem to need it.
   _variant_t oldVal;
   ::UiaRaiseAutomationPropertyChangedEvent(uia, property, oldVal, newVal);
+}
+
+/* static */
+void uiaRawElmProvider::RaiseUiaNotificationEvent(
+    Accessible* aAcc, const nsAString& aAnnouncement, uint16_t aPriority) {
+  if (!Compatibility::IsUiaEnabled() || !::UiaClientsAreListening()) {
+    return;
+  }
+  static const StaticDynamicallyLinkedFunctionPtr<
+      decltype(&::UiaRaiseNotificationEvent)>
+      sUiaRaiseNotificationEvent(L"UIAutomationCore.dll",
+                                 "UiaRaiseNotificationEvent");
+  if (!sUiaRaiseNotificationEvent) {
+    // UiaRaiseNotificationEvent is only available on Windows 10 version 1709
+    // and later.
+    return;
+  }
+  // Find the nearest Accessible that is in the UIA control view.
+  uiaRawElmProvider* uia = nullptr;
+  for (Accessible* acc = aAcc; acc; acc = acc->Parent()) {
+    auto* maybeUia = MsaaAccessible::GetFrom(acc);
+    if (!maybeUia) {
+      break;
+    }
+    if (maybeUia->IsControl()) {
+      uia = maybeUia;
+      break;
+    }
+  }
+  if (uia) {
+    sUiaRaiseNotificationEvent(
+        uia, NotificationKind_ActionCompleted,
+        aPriority == nsIAccessibleAnnouncementEvent::ASSERTIVE
+            ? NotificationProcessing_ImportantAll
+            : NotificationProcessing_All,
+        _bstr_t(PromiseFlatString(aAnnouncement).get()), _bstr_t(L""));
+  }
 }
 
 // IUnknown
@@ -427,8 +489,14 @@ uiaRawElmProvider::GetPatternProvider(
       // Per the UIA documentation, we should only expose the Invoke pattern "if
       // the same behavior is not exposed through another control pattern
       // provider".
+      // https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-implementinginvoke#implementation-guidelines-and-conventions
+      // However, it's not possible to support the SelectionItem pattern
+      // properly for ARIA multi select options, so we expose the Invoke pattern
+      // as well. Furthermore, Core AAM says we should do this for all options:
+      // https://w3c.github.io/core-aam/#role-map-option
       if (acc->ActionCount() > 0 && !HasTogglePattern() &&
-          !HasExpandCollapsePattern() && !HasSelectionItemPattern()) {
+          !HasExpandCollapsePattern() &&
+          (!HasSelectionItemPattern() || IsOption(acc))) {
         RefPtr<IInvokeProvider> invoke = this;
         invoke.forget(aPatternProvider);
       }
@@ -490,8 +558,13 @@ uiaRawElmProvider::GetPatternProvider(
       return S_OK;
     case UIA_TextPatternId:
       if (HasTextPattern(acc)) {
-        RefPtr<ITextProvider> text =
-            new UiaText(static_cast<MsaaAccessible*>(this));
+        auto text = MakeRefPtr<UiaText>(static_cast<MsaaAccessible*>(this));
+        text.forget(aPatternProvider);
+      }
+      return S_OK;
+    case UIA_TextPattern2Id:
+      if (HasTextPattern(acc)) {
+        auto text = MakeRefPtr<UiaText>(static_cast<MsaaAccessible*>(this));
         text.forget(aPatternProvider);
       }
       return S_OK;
@@ -601,6 +674,14 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
           ariaProperties += ';';
         }
         ariaProperties.AppendLiteral("hasactions=true");
+      }
+      nsAutoString current;
+      if (acc->GetStringARIAAttr(nsGkAtoms::aria_current, current)) {
+        if (!ariaProperties.IsEmpty()) {
+          ariaProperties += ';';
+        }
+        ariaProperties.AppendLiteral("current=");
+        ariaProperties.Append(current);
       }
       if (!ariaProperties.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
@@ -1326,7 +1407,7 @@ uiaRawElmProvider::get_TextRange(
     return CO_E_OBJNOTCONNECTED;
   }
   TextLeafRange range = TextLeafRange::FromAccessible(acc);
-  RefPtr uiaRange = new UiaTextRange(range);
+  auto uiaRange = MakeRefPtr<UiaTextRange>(range);
   uiaRange.forget(aRetVal);
   return S_OK;
 }
@@ -1415,7 +1496,7 @@ long uiaRawElmProvider::GetControlType() const {
     return uiaControlType;                                                   \
     break;
   switch (acc->Role()) {
-#include "RoleMap.h"
+#include "RoleMap.inc"
   }
 #undef ROLE
   MOZ_CRASH("Unknown role.");

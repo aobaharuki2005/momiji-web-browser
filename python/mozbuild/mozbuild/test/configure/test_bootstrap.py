@@ -14,16 +14,15 @@ from common import BaseConfigureTest
 from mozbuild.util import ReadOnlyNamespace
 
 
-class IndexSearch:
-    def should_replace_task(self, task, *args):
-        return f"fake-task-id-for-{task['index'][0]}"
+def find_task_from_index(index_paths):
+    return f"fake-task-id-for-{index_paths[0]}"
 
 
 class TestBootstrap(BaseConfigureTest):
     @staticmethod
     def import_module(module):
-        if module == "taskgraph.optimize.strategies":
-            return ReadOnlyNamespace(IndexSearch=IndexSearch)
+        if module == "mozbuild.util":
+            return ReadOnlyNamespace(find_task_from_index=find_task_from_index)
 
     # This method asserts the expected result of bootstrapping for the given
     # argument (`arg`) to configure.
@@ -64,16 +63,16 @@ class TestBootstrap(BaseConfigureTest):
             {},
         )
         dep = sandbox._depends[sandbox["vcs_checkout_type"]]
-        getattr(sandbox, "__value_for_depends")[(dep,)] = None
+        sandbox._dependency_overrides[dep] = None
         dep = sandbox._depends[sandbox["original_path"]]
-        getattr(sandbox, "__value_for_depends")[(dep,)] = ["dummy"]
+        sandbox._dependency_overrides[dep] = ["dummy"]
 
         tmp_dir = TemporaryDirectory()
         dep = sandbox._depends[sandbox["toolchains_base_dir"]]
-        getattr(sandbox, "__value_for_depends")[(dep,)] = tmp_dir.name
+        sandbox._dependency_overrides[dep] = tmp_dir.name
 
         dep = sandbox._depends[sandbox["bootstrap_toolchain_tasks"]]
-        getattr(sandbox, "__value_for_depends")[(dep,)] = ReadOnlyNamespace(
+        sandbox._dependency_overrides[dep] = ReadOnlyNamespace(
             prefix="linux64",
             tasks={
                 "toolchain-foo": {

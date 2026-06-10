@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.ext.PackageManagerWrapper
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Partnerships
 import org.mozilla.fenix.components.metrics.MetricController
@@ -67,7 +68,7 @@ class DistributionIdManager(
      *
      * @return the distribution ID if one exists.
      */
-    fun getDistributionId(): String {
+    suspend fun getDistributionId(): String {
         distribution?.let { return it.id }
 
         val provider = distributionProviderChecker.queryProvider()
@@ -92,6 +93,16 @@ class DistributionIdManager(
     }
 
     /**
+     * Gets the distribution type that is used to specify which distribution deal this install
+     * is associated with.
+     *
+     * @return the distribution type.
+     */
+    suspend fun getDistribution(): Distribution {
+        return Distribution.fromId(getDistributionId())
+    }
+
+    /**
      * Checks the campaign UTM parameters from the google play install referrer response
      * and updates the distribution ID if necessary
      *
@@ -103,6 +114,7 @@ class DistributionIdManager(
                 setDistribution(Distribution.VIVO_001)
                 Metrics.distributionId.set(Distribution.VIVO_001.id)
             }
+
             utmParams.campaign.contains(Distribution.XIAOMI_001.id) -> {
                 setDistribution(Distribution.XIAOMI_001)
                 Metrics.distributionId.set(Distribution.XIAOMI_001.id)
@@ -115,17 +127,43 @@ class DistributionIdManager(
      *
      * @return true if the marketing consent screen can be skipped during onboarding
      */
-    fun shouldSkipMarketingConsentScreen(): Boolean {
+    suspend fun shouldSkipMarketingConsentScreen(): Boolean {
+        val adjustStartupStrategy = getDistributionAdjustStartupStrategy()
+
+        return when (adjustStartupStrategy) {
+            DistributionAdjustStartupStrategy.NONE,
+            DistributionAdjustStartupStrategy.SHOW_CONSENT_SCREEN,
+                -> false
+
+            DistributionAdjustStartupStrategy.IMMEDIATE_WITH_COPPA,
+            DistributionAdjustStartupStrategy.IMMEDIATE_WITH_PLAY_STORE_KIDS,
+                -> true
+        }
+    }
+
+    /**
+     * Get the Adjust startup strategy for the current distribution.
+     *
+     * @return the Adjust startup strategy.
+     */
+    suspend fun getDistributionAdjustStartupStrategy(): DistributionAdjustStartupStrategy {
         val id = Distribution.fromId(getDistributionId())
 
         return when (id) {
-            Distribution.DEFAULT -> false
-            Distribution.VIVO_001 -> true
-            Distribution.DT_001 -> true
-            Distribution.DT_002 -> true
-            Distribution.DT_003 -> true
-            Distribution.AURA_001 -> false
-            Distribution.XIAOMI_001 -> false
+            Distribution.DEFAULT -> DistributionAdjustStartupStrategy.NONE
+
+            Distribution.VIVO_001,
+            Distribution.DT_001,
+            Distribution.DT_002,
+            Distribution.DT_003,
+            Distribution.XIAOMI_001,
+                -> DistributionAdjustStartupStrategy.IMMEDIATE_WITH_COPPA
+
+            Distribution.AURA_001 -> if (Config.channel.isNightlyOrDebug) {
+                DistributionAdjustStartupStrategy.IMMEDIATE_WITH_PLAY_STORE_KIDS
+            } else {
+                DistributionAdjustStartupStrategy.SHOW_CONSENT_SCREEN
+            }
         }
     }
 
@@ -134,7 +172,7 @@ class DistributionIdManager(
      *
      * @return true if the distribution is part of a distribution deal
      */
-    fun isPartnershipDistribution(): Boolean {
+    suspend fun isPartnershipDistribution(): Boolean {
         val id = Distribution.fromId(getDistributionId())
 
         return when (id) {
@@ -153,7 +191,7 @@ class DistributionIdManager(
      * current distribution is one that should skip the marketing data sharing
      * consent screen.
      */
-    fun startAdjustIfSkippingConsentScreen() {
+    suspend fun startAdjustIfSkippingConsentScreen() {
         if (shouldSkipMarketingConsentScreen()) {
             distributionSettings.setMarketingTelemetryPreferences()
             metricController.start(MetricServiceType.Marketing)
@@ -161,7 +199,8 @@ class DistributionIdManager(
     }
 
     private fun isDeviceVivo(): Boolean {
-        return Build.MANUFACTURER?.lowercase(Locale.getDefault())?.contains(VIVO_MANUFACTURER) ?: false
+        return Build.MANUFACTURER?.lowercase(Locale.getDefault())?.contains(VIVO_MANUFACTURER)
+            ?: false
     }
 
     private fun isProviderDigitalTurbine(provider: String?): Boolean = provider == DT_PROVIDER
@@ -171,8 +210,7 @@ class DistributionIdManager(
     /**
      * This enum represents distribution IDs that are used in glean metrics.
      */
-    @VisibleForTesting
-    internal enum class Distribution(val id: String) {
+    enum class Distribution(val id: String) {
         DEFAULT(id = "Mozilla"),
         VIVO_001(id = "vivo-001"),
         DT_001(id = "dt-001"),
@@ -183,6 +221,9 @@ class DistributionIdManager(
         ;
 
         companion object {
+            /**
+             * Get the distribution from a distribution ID string.
+             */
             fun fromId(id: String): Distribution {
                 return entries.find { it.id == id } ?: DEFAULT
             }
@@ -195,6 +236,25 @@ class DistributionIdManager(
         browserStoreProvider.updateDistributionId(distribution.id)
         distributionSettings.saveDistributionId(distribution.id)
     }
+}
+
+/**
+ * This enum represents how / when adjust starts up for distributions.
+ */
+enum class DistributionAdjustStartupStrategy {
+    NONE,
+
+    // Show the adjust data collection consent screen during onboarding and start
+    // adjust after the user has consented.
+    SHOW_CONSENT_SCREEN,
+
+    // Start adjust immediately but enabled COPPA mode in adjust. COPPA mode will prevent
+    // adjust from collecting personal identifiers and sharing data with third parties.
+    IMMEDIATE_WITH_COPPA,
+
+    // Start adjust immediately but enable Play Store Kids mode in adjust. This mode will prevent
+    // adjust from collecting personal identifiers.
+    IMMEDIATE_WITH_PLAY_STORE_KIDS,
 }
 
 /**

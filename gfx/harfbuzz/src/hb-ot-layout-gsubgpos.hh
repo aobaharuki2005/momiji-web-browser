@@ -582,11 +582,12 @@ struct skipping_iterator_t
 #endif
   bool next (unsigned *unsafe_to = nullptr)
   {
+    auto *info = c->buffer->info;
     const signed stop = (signed) end - 1;
     while ((signed) idx < stop)
     {
       idx++;
-      switch (match (c->buffer->info[idx]))
+      switch (match (info[idx]))
       {
 	case MATCH:
 	{
@@ -612,11 +613,12 @@ struct skipping_iterator_t
 #endif
   bool prev (unsigned *unsafe_from = nullptr)
   {
+    auto *out_info = c->buffer->out_info;
     const unsigned stop = 0;
     while (idx > stop)
     {
       idx--;
-      switch (match (c->buffer->out_info[idx]))
+      switch (match (out_info[idx]))
       {
 	case MATCH:
 	{
@@ -741,6 +743,10 @@ struct hb_ot_apply_context_t :
 
   hb_vector_t<uint32_t> match_positions;
   uint32_t stack_match_positions[8];
+#ifndef HB_NO_BUFFER_MESSAGE
+  hb_buffer_t::changed_func_t orig_changed_func = nullptr;
+  void *orig_changed_data = nullptr;
+#endif
 
   hb_ot_apply_context_t (unsigned int table_index_,
 			 hb_font_t *font_,
@@ -771,6 +777,30 @@ struct hb_ot_apply_context_t :
   {
     init_iters ();
     match_positions.set_storage (stack_match_positions);
+
+#ifndef HB_NO_BUFFER_MESSAGE
+    if (buffer->messaging ())
+    {
+      assert (buffer->changed_func == nullptr ||
+	      buffer->changed_func == buffer_changed_trampoline);
+      orig_changed_func = buffer->changed_func;
+      orig_changed_data = buffer->changed_data;
+      buffer->changed_func = buffer_changed_trampoline;
+      buffer->changed_data = this;
+    }
+#endif
+  }
+  ~hb_ot_apply_context_t ()
+  {
+#ifndef HB_NO_BUFFER_MESSAGE
+    if (buffer->messaging ())
+    {
+      assert (buffer->changed_func == buffer_changed_trampoline);
+      assert (buffer->changed_data == this);
+      buffer->changed_func = orig_changed_func;
+      buffer->changed_data = orig_changed_data;
+    }
+#endif
   }
 
   void init_iters ()
@@ -786,13 +816,29 @@ struct hb_ot_apply_context_t :
   void set_random (bool random_) { random = random_; }
   void set_recurse_func (recurse_func_t func) { recurse_func = func; }
   void set_lookup_index (unsigned int lookup_index_) { lookup_index = lookup_index_; }
-  void set_lookup_props (unsigned int lookup_props_) { lookup_props = lookup_props_; init_iters (); }
+  void set_lookup_props (unsigned int lookup_props_)
+  {
+    lookup_props = gdef_accel.sanitize_lookup_props (lookup_props_);
+    init_iters ();
+  }
 
   uint32_t random_number ()
   {
     /* http://www.cplusplus.com/reference/random/minstd_rand/ */
     buffer->random_state = buffer->random_state * 48271 % 2147483647;
     return buffer->random_state;
+  }
+
+  static void buffer_changed_trampoline (hb_buffer_t *buffer HB_UNUSED, void *user_data)
+  {
+    ((hb_ot_apply_context_t *) user_data)->buffer_changed ();
+  }
+  void buffer_changed ()
+  {
+    buffer->update_digest ();
+    if (likely (has_glyph_classes))
+      for (unsigned i = 0; i < buffer->len; i++)
+	_set_glyph_class_props (buffer->info[i]);
   }
 
   HB_ALWAYS_INLINE
@@ -831,7 +877,7 @@ struct hb_ot_apply_context_t :
     if (glyph_props & match_props & LookupFlag::IgnoreFlags)
       return false;
 
-    if (unlikely (glyph_props & HB_OT_LAYOUT_GLYPH_PROPS_MARK))
+    if (glyph_props & HB_OT_LAYOUT_GLYPH_PROPS_MARK)
       return match_properties_mark (info, glyph_props, match_props);
 
     return true;
@@ -864,8 +910,7 @@ struct hb_ot_apply_context_t :
       props |= HB_OT_LAYOUT_GLYPH_PROPS_MULTIPLIED;
     if (likely (has_glyph_classes))
     {
-      props &= HB_OT_LAYOUT_GLYPH_PROPS_PRESERVE;
-      _hb_glyph_info_set_glyph_props (&buffer->cur(), props | gdef_accel.get_glyph_props (glyph_index));
+      _set_glyph_class_props (buffer->cur(), props, glyph_index);
     }
     else if (class_guess)
     {
@@ -874,6 +919,19 @@ struct hb_ot_apply_context_t :
     }
     else
       _hb_glyph_info_set_glyph_props (&buffer->cur(), props);
+  }
+  void _set_glyph_class_props (hb_glyph_info_t &info,
+			       unsigned int props,
+			       hb_codepoint_t glyph_index)
+  {
+    props &= HB_OT_LAYOUT_GLYPH_PROPS_PRESERVE;
+    _hb_glyph_info_set_glyph_props (&info, props | gdef_accel.get_glyph_props (glyph_index));
+  }
+  void _set_glyph_class_props (hb_glyph_info_t &info)
+  {
+    _set_glyph_class_props (info,
+			    _hb_glyph_info_get_glyph_props (&info),
+			    info.codepoint);
   }
 
   void replace_glyph (hb_codepoint_t glyph_index)
@@ -1807,22 +1865,24 @@ static inline void apply_lookup (hb_ot_apply_context_t *c,
       if (buffer->have_output)
         c->buffer->sync_so_far ();
       c->buffer->message (c->font,
-			  "recursing to lookup %u at %u",
+			  "start recursing to lookup %u at %u",
 			  (unsigned) lookupRecord[i].lookupListIndex,
 			  buffer->idx);
     }
 
-    if (!c->recurse (lookupRecord[i].lookupListIndex))
-      continue;
+    bool ret = c->recurse (lookupRecord[i].lookupListIndex);
 
     if (HB_BUFFER_MESSAGE_MORE && c->buffer->messaging ())
     {
       if (buffer->have_output)
         c->buffer->sync_so_far ();
       c->buffer->message (c->font,
-			  "recursed to lookup %u",
+			  "end recursing to lookup %u",
 			  (unsigned) lookupRecord[i].lookupListIndex);
     }
+
+    if (!ret)
+      continue;
 
     unsigned int new_len = buffer->backtrack_len () + buffer->lookahead_len ();
     int delta = new_len - orig_len;
@@ -1994,13 +2054,12 @@ static inline bool context_would_apply_lookup (hb_would_apply_context_t *c,
 }
 
 template <typename HBUINT>
-HB_ALWAYS_INLINE
-static bool context_apply_lookup (hb_ot_apply_context_t *c,
-				  unsigned int inputCount, /* Including the first glyph (not matched) */
-				  const HBUINT input[], /* Array of input values--start with second glyph */
-				  unsigned int lookupCount,
-				  const LookupRecord lookupRecord[],
-				  const ContextApplyLookupContext &lookup_context)
+static inline bool context_apply_lookup (hb_ot_apply_context_t *c,
+					 unsigned int inputCount, /* Including the first glyph (not matched) */
+					 const HBUINT input[], /* Array of input values--start with second glyph */
+					 unsigned int lookupCount,
+					 const LookupRecord lookupRecord[],
+					 const ContextApplyLookupContext &lookup_context)
 {
   if (unlikely (inputCount > HB_MAX_CONTEXT_LENGTH)) return false;
 
@@ -2276,7 +2335,7 @@ struct RuleSet
     skippy_iter.reset (c->buffer->idx);
     skippy_iter.set_match_func (match_always, nullptr);
     skippy_iter.set_glyph_data ((HBUINT16 *) nullptr);
-    unsigned unsafe_to = (unsigned) -1, unsafe_to1 = 0, unsafe_to2 = 0;
+    unsigned unsafe_to = (unsigned) -1, unsafe_to1, unsafe_to2 = 0;
     hb_glyph_info_t *first = nullptr, *second = nullptr;
     bool matched = skippy_iter.next ();
     if (likely (matched))
@@ -2289,7 +2348,7 @@ struct RuleSet
       }
 
       first = &c->buffer->info[skippy_iter.idx];
-      unsafe_to = skippy_iter.idx + 1;
+      unsafe_to1 = skippy_iter.idx + 1;
     }
     else
     {
@@ -3136,17 +3195,16 @@ static inline bool chain_context_would_apply_lookup (hb_would_apply_context_t *c
 }
 
 template <typename HBUINT>
-HB_ALWAYS_INLINE
-static bool chain_context_apply_lookup (hb_ot_apply_context_t *c,
-					unsigned int backtrackCount,
-					const HBUINT backtrack[],
-					unsigned int inputCount, /* Including the first glyph (not matched) */
-					const HBUINT input[], /* Array of input values--start with second glyph */
-					unsigned int lookaheadCount,
-					const HBUINT lookahead[],
-					unsigned int lookupCount,
-					const LookupRecord lookupRecord[],
-					const ChainContextApplyLookupContext &lookup_context)
+static inline bool chain_context_apply_lookup (hb_ot_apply_context_t *c,
+					       unsigned int backtrackCount,
+					       const HBUINT backtrack[],
+					       unsigned int inputCount, /* Including the first glyph (not matched) */
+					       const HBUINT input[], /* Array of input values--start with second glyph */
+					       unsigned int lookaheadCount,
+					       const HBUINT lookahead[],
+					       unsigned int lookupCount,
+					       const LookupRecord lookupRecord[],
+					       const ChainContextApplyLookupContext &lookup_context)
 {
   if (unlikely (inputCount > HB_MAX_CONTEXT_LENGTH)) return false;
 
@@ -3473,7 +3531,7 @@ struct ChainRuleSet
     skippy_iter.reset (c->buffer->idx);
     skippy_iter.set_match_func (match_always, nullptr);
     skippy_iter.set_glyph_data ((HBUINT16 *) nullptr);
-    unsigned unsafe_to = (unsigned) -1, unsafe_to1 = 0, unsafe_to2 = 0;
+    unsigned unsafe_to = (unsigned) -1, unsafe_to1, unsafe_to2 = 0;
     hb_glyph_info_t *first = nullptr, *second = nullptr;
     bool matched = skippy_iter.next ();
     if (likely (matched))
@@ -4586,7 +4644,7 @@ struct GSUBGPOSVersion1_2
   public:
   DEFINE_SIZE_MIN (4 + 3 * Types::size);
 
-  unsigned int get_size () const
+  size_t get_size () const
   {
     return min_size +
 	   (version.to_int () >= 0x00010001u ? featureVars.static_size : 0);
@@ -4668,7 +4726,7 @@ struct GSUBGPOSVersion1_2
 
 struct GSUBGPOS
 {
-  unsigned int get_size () const
+  size_t get_size () const
   {
     switch (u.version.major) {
     case 1: hb_barrier (); return u.version1.get_size ();

@@ -5,9 +5,10 @@
 //! Gecko's media feature list and evaluator.
 
 use crate::derives::*;
+use crate::device::Device;
 use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::structs;
-use crate::media_queries::{Device, MediaType};
+use crate::media_queries::MediaType;
 use crate::parser::ParserContext;
 use crate::queries::feature::{AllowsRanges, Evaluator, FeatureFlags, QueryFeatureDescription};
 use crate::queries::values::{Orientation, PrefersColorScheme};
@@ -78,8 +79,8 @@ fn eval_device_orientation(context: &Context, value: Option<Orientation>) -> boo
     Orientation::eval(device_size(context.device()), value)
 }
 
-fn document_picture_in_picture_enabled(_: &ParserContext) -> bool {
-    static_prefs::pref!("dom.documentpip.enabled")
+fn document_picture_in_picture_enabled(context: &ParserContext) -> bool {
+    static_prefs::pref!("dom.documentpip.enabled") || context.chrome_rules_enabled()
 }
 
 /// Values for the display-mode media feature.

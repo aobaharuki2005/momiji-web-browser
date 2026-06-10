@@ -356,8 +356,6 @@ pub struct YamlFrameReader {
     keyframes: Option<Yaml>,
 
     external_image_handler: Option<Box<LocalExternalImageHandler>>,
-
-    next_spatial_key: u64,
 }
 
 impl YamlFrameReader {
@@ -386,7 +384,6 @@ impl YamlFrameReader {
             keyframes: None,
             external_image_handler: Some(Box::new(LocalExternalImageHandler::new())),
             next_external_scroll_id: 1000,      // arbitrary to easily see in logs which are implicit
-            next_spatial_key: 0,
         }
     }
 
@@ -414,8 +411,11 @@ impl YamlFrameReader {
 
     pub fn new_from_args(args: &clap::ArgMatches) -> YamlFrameReader {
         let yaml_file = args.value_of("INPUT").map(PathBuf::from).unwrap();
+        YamlFrameReader::new(&yaml_file)
+    }
 
-        let mut y = YamlFrameReader::new(&yaml_file);
+    pub fn new_from_show_args(args: &clap::ArgMatches) -> YamlFrameReader {
+        let mut y = YamlFrameReader::new_from_args(args);
 
         y.keyframes = args.value_of("keyframes").map(|path| {
             let mut file = File::open(&path).unwrap();
@@ -1210,6 +1210,31 @@ impl YamlFrameReader {
         } else {
             BoxShadowClipMode::Outset
         };
+        let shadow_radius = item["shadow-radius"].as_border_radius().unwrap_or_else(|| {
+            let adjust_radius = |border_radius: f32, spread_amount: f32| {
+                if border_radius > 0.0 {
+                    (border_radius + spread_amount).max(0.0)
+                } else {
+                    0.0
+                }
+            };
+            let adjust_corner = |corner: LayoutSize, spread_amount: f32| {
+                LayoutSize::new(
+                    adjust_radius(corner.width, spread_amount),
+                    adjust_radius(corner.height, spread_amount),
+                )
+            };
+            let spread_amount = match clip_mode {
+                BoxShadowClipMode::Outset => spread_radius,
+                BoxShadowClipMode::Inset => -spread_radius,
+            };
+            BorderRadius {
+                top_left: adjust_corner(border_radius.top_left, spread_amount),
+                top_right: adjust_corner(border_radius.top_right, spread_amount),
+                bottom_right: adjust_corner(border_radius.bottom_right, spread_amount),
+                bottom_left: adjust_corner(border_radius.bottom_left, spread_amount),
+            }
+        });
 
         dl.push_box_shadow(
             info,
@@ -1219,6 +1244,7 @@ impl YamlFrameReader {
             blur_radius,
             spread_radius,
             border_radius,
+            shadow_radius,
             clip_mode,
         );
     }
@@ -1571,6 +1597,7 @@ impl YamlFrameReader {
                 ("backface-visible", PrimitiveFlags::IS_BACKFACE_VISIBLE),
                 ("scrollbar-container", PrimitiveFlags::IS_SCROLLBAR_CONTAINER),
                 ("prefer-compositor-surface", PrimitiveFlags::PREFER_COMPOSITOR_SURFACE),
+                ("checkerboard-background", PrimitiveFlags::CHECKERBOARD_BACKGROUND),
             ] {
                 if let Some(value) = item[key].as_bool() {
                     flags.set(flag, value);
@@ -1617,12 +1644,6 @@ impl YamlFrameReader {
                 self.spatial_id_stack.pop().unwrap();
             }
         }
-    }
-
-    fn next_spatial_key(&mut self) -> SpatialTreeItemKey {
-        let key = SpatialTreeItemKey::new(self.next_spatial_key, 0);
-        self.next_spatial_key += 1;
-        key
     }
 
     fn handle_scroll_frame(
@@ -1687,7 +1708,6 @@ impl YamlFrameReader {
             external_scroll_offset,
             scroll_generation,
             has_scroll_linked_effect,
-            self.next_spatial_key(),
         );
         if let Some(numeric_id) = numeric_id {
             self.add_spatial_id_mapping(numeric_id, spatial_id);
@@ -1724,7 +1744,6 @@ impl YamlFrameReader {
             yaml["vertical-offset-bounds"].as_sticky_offset_bounds(),
             yaml["horizontal-offset-bounds"].as_sticky_offset_bounds(),
             yaml["previously-applied-offset"].as_vector().unwrap_or_else(LayoutVector2D::zero),
-            self.next_spatial_key(),
             None,
         );
 
@@ -1924,7 +1943,6 @@ impl YamlFrameReader {
             transform_style,
             transform.or(perspective).unwrap_or_default().into(),
             reference_frame_kind,
-            self.next_spatial_key(),
         );
 
         let numeric_id = yaml["id"].as_i64();
@@ -1971,7 +1989,6 @@ impl YamlFrameReader {
             scale_from,
             vertical_flip,
             rotation,
-            self.next_spatial_key(),
         );
 
         let numeric_id = yaml["id"].as_i64();
@@ -2011,22 +2028,37 @@ impl YamlFrameReader {
         let default_bounds = || LayoutRect::from_size(wrench.window_size_f32());
         let mut bounds = yaml["bounds"].as_rect().unwrap_or_else(default_bounds);
 
-        let pushed_reference_frame =
-            if !yaml["transform"].is_badvalue() || !yaml["perspective"].is_badvalue() {
-                let reference_frame_id = self.push_reference_frame(dl, default_bounds, yaml);
-                self.spatial_id_stack.push(reference_frame_id);
-                bounds.max -= bounds.min.to_vector();
-                bounds.min = LayoutPoint::zero();
-                true
-            } else {
-                false
-            };
-
-        let clip_chain_id = self.to_clip_chain_id(&yaml["clip-chain"], dl);
-
         let transform_style = yaml["transform-style"]
             .as_transform_style()
             .unwrap_or(TransformStyle::Flat);
+
+        let has_transform = !yaml["transform"].is_badvalue() || !yaml["perspective"].is_badvalue();
+        let pushed_reference_frame = if has_transform || bounds.min != LayoutPoint::zero() {
+            let reference_frame_id = if has_transform {
+                self.push_reference_frame(dl, default_bounds, yaml)
+            } else {
+                let parent_spatial_id = *self.spatial_id_stack.last().unwrap();
+                dl.push_reference_frame(
+                    bounds.min,
+                    parent_spatial_id,
+                    transform_style,
+                    PropertyBinding::Value(LayoutTransform::identity()),
+                    ReferenceFrameKind::Transform {
+                        is_2d_scale_translation: true,
+                        should_snap: false,
+                        paired_with_perspective: false,
+                    },
+                )
+            };
+            self.spatial_id_stack.push(reference_frame_id);
+            bounds.max -= bounds.min.to_vector();
+            bounds.min = LayoutPoint::zero();
+            true
+        } else {
+            false
+        };
+
+        let clip_chain_id = self.to_clip_chain_id(&yaml["clip-chain"], dl);
         let mix_blend_mode = yaml["mix-blend-mode"]
             .as_mix_blend_mode()
             .unwrap_or(MixBlendMode::Normal);
@@ -2078,7 +2110,6 @@ impl YamlFrameReader {
         flags.set(StackingContextFlags::WRAPS_BACKDROP_FILTER, wraps_backdrop_filter);
 
         dl.push_stacking_context(
-            bounds.min,
             *self.spatial_id_stack.last().unwrap(),
             info.flags,
             clip_chain_id,

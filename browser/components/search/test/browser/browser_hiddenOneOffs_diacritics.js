@@ -7,10 +7,6 @@ const searchPopup = document.getElementById("PopupSearchAutoComplete");
 
 const diacritic_engine = "Foo \u2661";
 
-var { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
-
 let searchIcon;
 let engine;
 
@@ -21,14 +17,14 @@ add_setup(async function () {
   });
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
-  let defaultEngine = await Services.search.getDefault();
+  let defaultEngine = await SearchService.getDefault();
   engine = await SearchTestUtils.installOpenSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine_diacritics.xml",
   });
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(
+    await SearchService.setDefault(
       defaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      SearchService.CHANGE_REASON.UNKNOWN
     );
     engine.hideOneOffButton = false;
   });

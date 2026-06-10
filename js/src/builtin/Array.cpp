@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -18,9 +16,9 @@
 #include <cmath>
 
 #include "jsfriendapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 
+#include "builtin/Number.h"
 #include "builtin/SelfHostingDefines.h"
 #include "ds/Sort.h"
 #include "jit/InlinableNatives.h"
@@ -48,6 +46,7 @@
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
+
 #include "builtin/Sorting-inl.h"
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ArrayObject-inl.h"
@@ -1615,7 +1614,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
   }
 
   if (!obj->denseElementsMaybeInIteration() &&
-      !cx->zone()->needsIncrementalBarrier()) {
+      !cx->zone()->needsMarkingBarrier()) {
     obj->reverseDenseElementsNoPreBarrier(length);
     return DenseElementResult::Success;
   }
@@ -2474,7 +2473,8 @@ bool js::array_sort(JSContext* cx, unsigned argc, Value* vp) {
   // If we have a comparator argument, use the JIT trampoline implementation
   // instead. This avoids a performance cliff (especially with large arrays)
   // because C++ => JIT calls are much slower than Trampoline => JIT calls.
-  if (args.hasDefined(0) && jit::IsBaselineInterpreterEnabled()) {
+  if (args.hasDefined(0) && jit::IsBaselineInterpreterEnabled() &&
+      !jit::TooManyActualArguments(args.length())) {
     return CallTrampolineNativeJitCode(cx, jit::TrampolineNative::ArraySort,
                                        args);
   }
@@ -2553,13 +2553,13 @@ ArraySortResult js::ArraySortFromJit(JSContext* cx,
 }
 
 void ArraySortData::trace(JSTracer* trc) {
-  TraceNullableRoot(trc, &comparator_, "comparator_");
+  TraceRoot(trc, &comparator_, "comparator_");
   TraceRoot(trc, &thisv, "thisv");
   TraceRoot(trc, &callArgs[0], "callArgs0");
   TraceRoot(trc, &callArgs[1], "callArgs1");
   vec.trace(trc);
   TraceRoot(trc, &item, "item");
-  TraceNullableRoot(trc, &obj_, "obj");
+  TraceRoot(trc, &obj_, "obj");
 }
 
 bool js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v) {
@@ -2748,7 +2748,7 @@ static DenseElementResult ArrayShiftDenseKernel(JSContext* cx, HandleObject obj,
 
 // ES2017 draft rev 1b0184bc17fc09a8ddcf4aeec9b6d9fcac4eafce
 // 22.1.3.22 Array.prototype.shift ( )
-static bool array_shift(JSContext* cx, unsigned argc, Value* vp) {
+bool js::array_shift(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "shift");
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3541,14 +3541,7 @@ static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Step 13. Let A be ? ArrayCreate(𝔽(newLen)).
-  Rooted<ArrayObject*> arr(cx,
-                           NewDensePartlyAllocatedArray(cx, uint32_t(newLen)));
-  if (!arr) {
-    return false;
-  }
-
-  // Steps 14-19 optimized for dense elements.
+  // Steps 13-19 optimized for dense elements.
   if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len)) {
     MOZ_ASSERT(len <= UINT32_MAX);
     MOZ_ASSERT(actualDeleteCount <= UINT32_MAX,
@@ -3646,6 +3639,13 @@ static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
 
     args.rval().setObject(*arr);
     return true;
+  }
+
+  // Step 13. Let A be ? ArrayCreate(𝔽(newLen)).
+  Rooted<ArrayObject*> arr(cx,
+                           NewDensePartlyAllocatedArray(cx, uint32_t(newLen)));
+  if (!arr) {
+    return false;
   }
 
   // Copy everything before start
@@ -4098,7 +4098,7 @@ static bool ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin,
 }
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.23. */
-static bool array_slice(JSContext* cx, unsigned argc, Value* vp) {
+bool js::array_slice(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "slice");
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -4410,17 +4410,59 @@ static bool SearchElementDense(JSContext* cx, HandleValue val, Iter iterator,
   // Fast path for numbers.
   if (val.isNumber()) {
     double dval = val.toNumber();
-    // For |includes|, two NaN values are considered equal, so we use a
-    // different implementation for NaN.
-    if (Kind == SearchKind::Includes && std::isnan(dval)) {
-      auto cmp = [](JSContext*, const Value& element, bool* equal) {
-        *equal = (element.isDouble() && std::isnan(element.toDouble()));
+    if (std::isnan(dval)) {
+      // For |includes|, two NaN values are considered equal, so we use a
+      // different implementation for NaN.
+      if (Kind == SearchKind::Includes) {
+        auto cmp = [](JSContext*, const Value& element, bool* equal) {
+          *equal = (element.isDouble() && std::isnan(element.toDouble()));
+          return true;
+        };
+        return iterator(cx, cmp, rval);
+      }
+
+      // Otherwise, NaN is never equal to anything and won't be found. We can't
+      // fall through to the bit-wise comparison below because those could
+      // wrongly match.
+      auto cmp = [](JSContext*, const Value&, bool* equal) {
+        *equal = false;
         return true;
       };
       return iterator(cx, cmp, rval);
     }
-    auto cmp = [dval](JSContext*, const Value& element, bool* equal) {
-      *equal = (element.isNumber() && element.toNumber() == dval);
+
+    if (dval == 0.0) {
+      // Both |includes| and |indexOf| treat 0.0 as equal to -0.0, so we have
+      // to search for all three possible representations.
+      auto cmp = [](JSContext*, const Value& element, bool* equal) {
+        *equal = Int32Value(0).asRawBits() == element.asRawBits() ||
+                 DoubleValue(0.0).asRawBits() == element.asRawBits() ||
+                 DoubleValue(-0.0).asRawBits() == element.asRawBits();
+        return true;
+      };
+      return iterator(cx, cmp, rval);
+    }
+
+    int32_t ival;
+    if (mozilla::NumberIsInt32(dval, &ival)) {
+      // If the number fits into an int32_t, we have to search for it both as
+      // an Int32 and as a Double value.
+      uint64_t int32Bits = Int32Value(ival).asRawBits();
+      uint64_t doubleBits = DoubleValue(dval).asRawBits();
+      auto cmp = [int32Bits, doubleBits](JSContext*, const Value& element,
+                                         bool* equal) {
+        *equal = int32Bits == element.asRawBits() ||
+                 doubleBits == element.asRawBits();
+        return true;
+      };
+      return iterator(cx, cmp, rval);
+    }
+
+    // Since the number doesn't fit into an int32_t, any matching element must
+    // be stored as a Double value.
+    uint64_t doubleBits = DoubleValue(dval).asRawBits();
+    auto cmp = [doubleBits](JSContext*, const Value& element, bool* equal) {
+      *equal = doubleBits == element.asRawBits();
       return true;
     };
     return iterator(cx, cmp, rval);
@@ -4466,7 +4508,7 @@ static bool SearchElementDense(JSContext* cx, HandleValue val, Iter iterator,
 
 // ES2026 draft rev a562082b031d89d00ee667181ce8a6158656bd4b
 // 23.1.3.17 Array.prototype.indexOf ( searchElement [ , fromIndex ] )
-bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
+static bool array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "indexOf");
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -4582,7 +4624,7 @@ bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 22.1.3.17 Array.prototype.lastIndexOf ( searchElement [ , fromIndex ] )
-bool js::array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
+static bool array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "lastIndexOf");
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -4696,7 +4738,7 @@ bool js::array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2026 draft rev a562082b031d89d00ee667181ce8a6158656bd4b
 // 23.1.3.16 Array.prototype.includes ( searchElement [ , fromIndex ] )
-bool js::array_includes(JSContext* cx, unsigned argc, Value* vp) {
+static bool array_includes(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "includes");
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -5326,8 +5368,12 @@ static SharedShape* GetArrayShapeWithProto(JSContext* cx, HandleObject proto) {
   // Get a shape with zero fixed slots, because arrays store the ObjectElements
   // header inline.
   Rooted<SharedShape*> shape(
-      cx, SharedShape::getInitialShape(cx, &ArrayObject::class_, cx->realm(),
-                                       TaggedProto(proto), /* nfixed = */ 0));
+      cx, SharedShape::getInitialShape(
+              cx, &ArrayObject::class_, cx->realm(), TaggedProto(proto),
+              /* nfixed = */ 0,
+              ObjectFlags({
+                  ObjectFlag::HasNonWritableOrAccessorPropExclProto,
+              })));
   if (!shape) {
     return nullptr;
   }
@@ -5458,16 +5504,7 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
 }
 
 static const JSClassOps ArrayObjectClassOps = {
-    array_addProperty,  // addProperty
-    nullptr,            // delProperty
-    nullptr,            // enumerate
-    nullptr,            // newEnumerate
-    nullptr,            // resolve
-    nullptr,            // mayResolve
-    nullptr,            // finalize
-    nullptr,            // call
-    nullptr,            // construct
-    nullptr,            // trace
+    .addProperty = array_addProperty,
 };
 
 static const ClassSpec ArrayObjectClassSpec = {

@@ -21,7 +21,7 @@ add_task(async function () {
   await selectNode("#testid", inspector);
 
   info("Focus the new property name field");
-  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditorAt(view, 1);
   let editor = await focusNewRuleViewProperty(ruleEditor);
   const input = editor.input;
 
@@ -153,7 +153,7 @@ add_task(async function addDeclarationInRuleWithNestedRule() {
   await selectNode("h1", inspector);
 
   info("Focus the new property name field in h1 rule");
-  const ruleEditor = getRuleViewRuleEditor(view, 2);
+  const ruleEditor = getRuleViewRuleEditorAt(view, 2);
   let editor = await focusNewRuleViewProperty(ruleEditor);
 
   is(

@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -41,9 +38,7 @@ template <typename W, typename T>
 struct TestStruct {
   W wrapper;
 
-  void trace(JSTracer* trc) {
-    TraceNullableEdge(trc, &wrapper, "TestStruct::wrapper");
-  }
+  void trace(JSTracer* trc) { TraceEdge(trc, &wrapper, "TestStruct::wrapper"); }
 
   TestStruct() {}
   explicit TestStruct(T init) : wrapper(init) {}
@@ -619,7 +614,7 @@ BEGIN_TEST(testGCHeapPreBarriers) {
   while (gc->state() != gc::State::Mark) {
     gc->debugGCSlice(budget);
   }
-  MOZ_ASSERT(cx->zone()->needsIncrementalBarrier());
+  MOZ_ASSERT(cx->zone()->needsMarkingBarrier());
 
   CHECK(TestWrapper<HeapPtr<JSObject*>>(testObjects));
   CHECK(TestWrapper<PreBarriered<JSObject*>>(testObjects));

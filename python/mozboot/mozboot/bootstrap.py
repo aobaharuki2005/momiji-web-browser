@@ -338,6 +338,18 @@ class Bootstrapper:
         # Like 'ensure_browser_packages' or 'ensure_mobile_android_packages'
         getattr(self.instance, "ensure_%s_packages" % application)()
 
+    def check_agentic_tools(self):
+        if self.instance.no_interactive:
+            return
+
+        if not self.instance.cargo_tools_installed():
+            if not self.instance.prompt_yesno(
+                "Will you be using agentic coding tools to work on Firefox?"
+            ):
+                return
+
+        self.instance.ensure_cargo_tools()
+
     def check_code_submission(self, checkout_root: Path):
         if self.instance.no_interactive or which("moz-phab"):
             return
@@ -346,7 +358,19 @@ class Bootstrapper:
             return
 
         mach_binary = checkout_root / "mach"
-        subprocess.check_call((sys.executable, str(mach_binary), "install-moz-phab"))
+        try:
+            subprocess.check_call((
+                sys.executable,
+                str(mach_binary),
+                "install-moz-phab",
+            ))
+        except subprocess.CalledProcessError as e:
+            print(
+                f"WARNING: './mach install-moz-phab' failed with exit code "
+                f"{e.returncode}. You can retry with './mach install-moz-phab "
+                f"--force'.",
+                file=sys.stderr,
+            )
 
     def bootstrap(self, settings):
         state_dir = Path(get_state_dir())
@@ -413,7 +437,7 @@ class Bootstrapper:
         repo = get_repository_object(checkout_root)
         self.instance.srcdir = checkout_root
         self.instance.validate_environment()
-        self._validate_python_environment(checkout_root)
+        self._populate_optional_packages(checkout_root)
 
         if sys.platform.startswith("win"):
             self._check_for_dev_drive(checkout_root)
@@ -431,6 +455,8 @@ class Bootstrapper:
 
         if not self.instance.artifact_mode:
             self.instance.ensure_rust_modern()
+
+        self.check_agentic_tools()
 
         git = to_optional_path(which("git"))
 
@@ -687,23 +713,7 @@ class Bootstrapper:
             # No mozconfig file exists yet
             self._write_default_mozconfig(raw_mozconfig)
 
-    def _validate_python_environment(self, topsrcdir):
-        valid = True
-        pip3 = to_optional_path(which("pip3"))
-        if not pip3:
-            print("ERROR: Could not find pip3.", file=sys.stderr)
-            self.instance.suggest_install_pip3()
-            valid = False
-        if not valid:
-            print(
-                "ERROR: Your Python installation will not be able to run "
-                "`mach bootstrap`. `mach bootstrap` cannot maintain your "
-                "Python environment for you; fix the errors shown here, and "
-                "then re-run `mach bootstrap`.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-
+    def _populate_optional_packages(self, topsrcdir):
         mach_site = MachSiteManager.from_environment(
             topsrcdir,
             lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir)),

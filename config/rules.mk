@@ -1,5 +1,3 @@
-# -*- makefile -*-
-# vim:set ts=8 sw=8 sts=8 noet:
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -829,7 +827,6 @@ endif
 
 ################################################################################
 # The default location for prefs is the gre prefs directory.
-# PREF_DIR is used for L10N_PREF_JS_EXPORTS in various locales/ directories.
 PREF_DIR = defaults/pref
 
 # If DIST_SUBDIR is defined it indicates that app and gre dirs are

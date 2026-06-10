@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -402,7 +401,7 @@ class KeyPairSignTest : public KeyPairTest<TYPE>, public BenchSignRunner {
     SECItem sig = {siBuffer, signature.data(),
                    static_cast<unsigned int>(signature.size())};
 
-    SECStatus rv = PK11_Verify(this->pub_key.get(), &sig, &dat, NULL);
+    SECStatus rv = PK11_Verify(this->pub_key.get(), &sig, &dat, nullptr);
     return rv == SECSuccess;
   }
 };

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -214,6 +212,8 @@ static Maybe<CFStringRef> MapTransferFunction(
       return Some(kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ);
     case gfx::TransferFunction::HLG:
       return Some(kCVImageBufferTransferFunction_ITU_R_2100_HLG);
+    case gfx::TransferFunction::LINEAR:
+      return Some(kCVImageBufferTransferFunction_Linear);
   }
 
   MOZ_ASSERT_UNREACHABLE("Unsupported transfer function");
@@ -962,7 +962,7 @@ AppleVTEncoder::ProcessReconfigure(
   AssertOnTaskQueue();
   MOZ_ASSERT(mSession);
 
-  bool ok = false;
+  bool ok = true;
   for (const auto& confChange : aConfigurationChanges->mChanges) {
     // A reconfiguration on the fly succeeds if all changes can be applied
     // successfuly. In case of failure, the encoder will be drained and

@@ -24,7 +24,6 @@
 #include "pc/peer_connection.h"
 #include "pc/peer_connection_wrapper.h"
 #include "pc/sctp_transport.h"
-#include "pc/sdp_utils.h"
 #include "pc/session_description.h"
 #include "pc/test/enable_fake_media.h"
 #include "pc/test/mock_peer_connection_observers.h"
@@ -35,6 +34,7 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/pc/sctp/fake_sctp_transport.h"
+#include "test/run_loop.h"
 
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
@@ -159,7 +159,7 @@ class PeerConnectionDataChannelBaseTest : public ::testing::Test {
   }
 
   std::unique_ptr<VirtualSocketServer> vss_;
-  AutoSocketServerThread main_;
+  test::RunLoop main_;
   const SdpSemantics sdp_semantics_;
 };
 
@@ -216,8 +216,7 @@ TEST_P(PeerConnectionDataChannelTest, SctpContentAndTransportNameSetCorrectly) {
   ASSERT_EQ(MediaType::DATA, offer_contents[2].media_description()->type());
   auto data_mid = offer_contents[2].mid();
 
-  ASSERT_TRUE(
-      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
+  ASSERT_TRUE(caller->SetLocalDescription(offer->Clone()));
   ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
 
   ASSERT_TRUE(caller->sctp_mid());

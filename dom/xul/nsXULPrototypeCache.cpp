@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -203,11 +201,12 @@ nsresult nsXULPrototypeCache::WritePrototype(
 
 static nsresult PathifyURIForType(nsXULPrototypeCache::CacheType cacheType,
                                   nsIURI* in, nsACString& out) {
+  scache::ResourceType resourceType;
   switch (cacheType) {
     case nsXULPrototypeCache::CacheType::Prototype:
-      return PathifyURI(CACHE_PREFIX("proto"), in, out);
+      return PathifyURI(CACHE_PREFIX("proto"), in, out, &resourceType);
     case nsXULPrototypeCache::CacheType::Script:
-      return PathifyURI(CACHE_PREFIX("script"), in, out);
+      return PathifyURI(CACHE_PREFIX("script"), in, out, &resourceType);
   }
   MOZ_ASSERT_UNREACHABLE("unknown cache type?");
   return NS_ERROR_UNEXPECTED;

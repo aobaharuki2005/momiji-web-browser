@@ -68,19 +68,16 @@ a:hover:active {
 
 h3 {
   font-size: var(--font-size-root);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-heading);
   margin: 0;
 }
 
-.status-label-holder > moz-box-link {
-  margin-top: 0.5ex;
+.status-alert moz-box-link {
+  margin-block-start: var(--space-medium);
 }
 
 .status-image {
   margin-inline-start: var(--space-xsmall);
   max-width: 100px;
-}
-
-.status-image:dir(rtl) {
-  transform: scaleX(-1);
+  object-fit: contain;
 }

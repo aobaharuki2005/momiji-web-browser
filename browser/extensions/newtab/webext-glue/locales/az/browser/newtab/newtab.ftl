@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = Axtar
     .aria-label = Axtar
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Axtarış mühərriyi əlavə et
 newtab-topsites-edit-topsites-header = Qabaqcıl Saytları Dəyişdir

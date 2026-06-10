@@ -29,6 +29,12 @@ ChromeUtils.defineESModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
 });
 
+/* import-globals-from ../../../toolkit/mozapps/extensions/test/xpinstall/helpers_addons_install_dialogs.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/dom/midi/tests/helpers_addons_install_dialogs.js",
+  this
+);
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["midi.prompt.testing", false]],
@@ -134,7 +140,10 @@ add_task(async function testRequestMIDIAccess() {
     "SecurityError: WebMIDI requires a site permission add-on to activate"
   );
 
-  assertSitePermissionInstallTelemetryEvents(["site_warning", "cancelled"]);
+  AddonTestUtils.assertInstallTelemetryEvents(
+    ["site_warning", "cancelled"],
+    "sitepermission"
+  );
 
   info("Deny site permission addon install in second popup");
   onAddonInstallBlockedNotification = waitForNotification(
@@ -188,11 +197,10 @@ add_task(async function testRequestMIDIAccess() {
     "SecurityError: WebMIDI requires a site permission add-on to activate"
   );
 
-  assertSitePermissionInstallTelemetryEvents([
-    "site_warning",
-    "permissions_prompt",
-    "cancelled",
-  ]);
+  AddonTestUtils.assertInstallTelemetryEvents(
+    ["site_warning", "permissions_prompt", "cancelled"],
+    "sitepermission"
+  );
 
   info("Request midi-sysex access again");
   onAddonInstallBlockedNotification = waitForNotification(
@@ -262,11 +270,10 @@ add_task(async function testRequestMIDIAccess() {
     "requestMIDIAccess resolved without user prompt"
   );
 
-  assertSitePermissionInstallTelemetryEvents([
-    "site_warning",
-    "permissions_prompt",
-    "completed",
-  ]);
+  AddonTestUtils.assertInstallTelemetryEvents(
+    ["site_warning", "permissions_prompt", "completed"],
+    "sitepermission"
+  );
 
   info("Request midi access without sysex");
   onAddonInstallBlockedNotification = waitForNotification(
@@ -344,11 +351,10 @@ add_task(async function testRequestMIDIAccess() {
     "and midi value should also have ALLOW permission"
   );
 
-  assertSitePermissionInstallTelemetryEvents([
-    "site_warning",
-    "permissions_prompt",
-    "completed",
-  ]);
+  AddonTestUtils.assertInstallTelemetryEvents(
+    ["site_warning", "permissions_prompt", "completed"],
+    "sitepermission"
+  );
 
   info("Check that we don't prompt user again when they perm denied");
   // remove permission to have a clean state
@@ -420,12 +426,15 @@ add_task(async function testRequestMIDIAccess() {
   );
 
   Assert.deepEqual(
-    [{ suspicious_site: "example.com" }],
+    [{ suspicious_site: "example.com", permission_type: "midi-sysex" }],
     AddonTestUtils.getAMGleanEvents("reportSuspiciousSite"),
     "Expected Glean event recorded."
   );
 
-  assertSitePermissionInstallTelemetryEvents(["site_warning", "cancelled"]);
+  AddonTestUtils.assertInstallTelemetryEvents(
+    ["site_warning", "cancelled"],
+    "sitepermission"
+  );
 });
 
 add_task(async function testIframeRequestMIDIAccess() {
@@ -515,11 +524,10 @@ add_task(async function testIframeRequestMIDIAccess() {
     "requestMIDIAccess resolved without user prompt"
   );
 
-  assertSitePermissionInstallTelemetryEvents([
-    "site_warning",
-    "permissions_prompt",
-    "completed",
-  ]);
+  AddonTestUtils.assertInstallTelemetryEvents(
+    ["site_warning", "permissions_prompt", "completed"],
+    "sitepermission"
+  );
 
   info("Check that request is rejected when done from a cross-origin iframe");
   const crossOriginIframeBrowsingContext = await SpecialPowers.spawn(
@@ -571,7 +579,7 @@ add_task(async function testIframeRequestMIDIAccess() {
       "an error message is sent to the console"
     )
   );
-  assertSitePermissionInstallTelemetryEvents([]);
+  AddonTestUtils.assertInstallTelemetryEvents([], "sitepermission");
 });
 
 add_task(async function testRequestMIDIAccessLocalhost() {
@@ -667,7 +675,7 @@ add_task(async function testRequestMIDIAccessLocalhost() {
   );
   ok(accessGranted, "requestMIDIAccess resolved");
 
-  assertSitePermissionInstallTelemetryEvents([]);
+  AddonTestUtils.assertInstallTelemetryEvents([], "sitepermission");
 });
 
 add_task(async function testDisabledRequestMIDIAccessFile() {
@@ -700,131 +708,5 @@ add_task(function teardown_telemetry_events() {
   AddonTestUtils.getAMTelemetryEvents();
 });
 
-/**
- *  Check that the expected sitepermission install events are recorded.
- *
- * @param {Array<string>} expectedSteps: An array of the expected extra.step values recorded.
- */
-function assertSitePermissionInstallTelemetryEvents(expectedSteps) {
-  let amInstallEvents = AddonTestUtils.getAMTelemetryEvents()
-    .filter(evt => evt.method === "install" && evt.object === "sitepermission")
-    .map(evt => evt.extra.step);
-
-  Assert.deepEqual(amInstallEvents, expectedSteps);
-}
-
-async function waitForInstallDialog(id = "addon-webext-permissions") {
-  let panel = await waitForNotification(id);
-  return panel.childNodes[0];
-}
-
-/**
- * Adds an event listener that will listen for post-install dialog event and automatically
- * close the dialogs.
- */
-function alwaysAcceptAddonPostInstallDialogs() {
-  // Once the addon is installed, a dialog is displayed as a confirmation.
-  // This could interfere with tests running after this one, so we set up a listener
-  // that will always accept post install dialogs so we don't have  to deal with them in
-  // the test.
-  const abortController = new AbortController();
-
-  const { AppMenuNotifications } = ChromeUtils.importESModule(
-    "resource://gre/modules/AppMenuNotifications.sys.mjs"
-  );
-  info("Start listening and accept addon post-install notifications");
-  PanelUI.notificationPanel.addEventListener(
-    "popupshown",
-    async function popupshown() {
-      let notification = AppMenuNotifications.activeNotification;
-      if (!notification || notification.id !== "addon-installed") {
-        return;
-      }
-
-      let popupnotificationID = PanelUI._getPopupId(notification);
-      if (popupnotificationID) {
-        info("Accept post-install dialog");
-        let popupnotification = document.getElementById(popupnotificationID);
-        popupnotification?.button.click();
-      }
-    },
-    {
-      signal: abortController.signal,
-    }
-  );
-
-  registerCleanupFunction(async () => {
-    // Clear the listener at the end of the test file, to prevent it to stay
-    // around when the same browser instance may be running other unrelated
-    // test files.
-    abortController.abort();
-  });
-}
-
-const PROGRESS_NOTIFICATION = "addon-progress";
-async function waitForNotification(notificationId) {
-  info(`Waiting for ${notificationId} notification`);
-
-  let topic = getObserverTopic(notificationId);
-
-  let observerPromise;
-  if (notificationId !== "addon-webext-permissions") {
-    observerPromise = new Promise(resolve => {
-      Services.obs.addObserver(function observer(aSubject, aTopic) {
-        // Ignore the progress notification unless that is the notification we want
-        if (
-          notificationId != PROGRESS_NOTIFICATION &&
-          aTopic == getObserverTopic(PROGRESS_NOTIFICATION)
-        ) {
-          return;
-        }
-        Services.obs.removeObserver(observer, topic);
-        resolve();
-      }, topic);
-    });
-  }
-
-  let panelEventPromise = new Promise(resolve => {
-    window.PopupNotifications.panel.addEventListener(
-      "PanelUpdated",
-      function eventListener(e) {
-        // Skip notifications that are not the one that we are supposed to be looking for
-        if (!e.detail.includes(notificationId)) {
-          return;
-        }
-        window.PopupNotifications.panel.removeEventListener(
-          "PanelUpdated",
-          eventListener
-        );
-        resolve();
-      }
-    );
-  });
-
-  await observerPromise;
-  await panelEventPromise;
-  await waitForTick();
-
-  info(`Saw a ${notificationId} notification`);
-  await SimpleTest.promiseFocus(window.PopupNotifications.window);
-  return window.PopupNotifications.panel;
-}
-
-// This function is similar to the one in
-// toolkit/mozapps/extensions/test/xpinstall/browser_doorhanger_installs.js,
-// please keep both in sync!
-function getObserverTopic(aNotificationId) {
-  let topic = aNotificationId;
-  if (topic == "xpinstall-disabled") {
-    topic = "addon-install-disabled";
-  } else if (topic == "addon-progress") {
-    topic = "addon-install-started";
-  } else if (topic == "addon-installed") {
-    topic = "webextension-install-notify";
-  }
-  return topic;
-}
-
-function waitForTick() {
-  return new Promise(resolve => executeSoon(resolve));
-}
+// See helpers_addons_install_dialogs.js for shared helpers. If needed, update the shared
+// helpers defined there instead of re-introducing local copies.

@@ -5,8 +5,6 @@
 // This module is the stateful server side of test_http2.js and is meant
 // to have node be restarted in between each invocation
 
-/* eslint-env node */
-
 var node_http2_root = "../node-http2";
 if (process.env.NODE_HTTP2_ROOT) {
   node_http2_root = process.env.NODE_HTTP2_ROOT;
@@ -71,6 +69,26 @@ var newTransform = function (frame) {
     }
 
     // Reset to the original version for later uses
+    Serializer.prototype._transform = originalTransform;
+  }
+  originalTransform.apply(this, arguments);
+};
+
+// Injects a raw CONTINUATION frame with stream ID 0 before the first HEADERS
+// frame. Since there is no pending HEADERS or PUSH_PROMISE, mExpectedHeaderID
+// and mExpectedPushPromiseID are both 0, so the pre-dispatch checks are
+// skipped and RecvContinuation is called with mInputFrameID = 0.
+var newTransformContinuationStreamZero = function (frame) {
+  if (frame.type == "HEADERS") {
+    const contFrame = Buffer.alloc(9);
+    contFrame[0] = 0x00; // length high
+    contFrame[1] = 0x00; // length mid
+    contFrame[2] = 0x00; // length low (no payload)
+    contFrame[3] = 0x09; // type = CONTINUATION
+    contFrame[4] = 0x04; // flags = END_HEADERS
+    // stream ID bytes 5-8 remain 0x00 — stream ID = 0 (protocol error)
+    this.push(contFrame);
+
     Serializer.prototype._transform = originalTransform;
   }
   originalTransform.apply(this, arguments);
@@ -204,6 +222,7 @@ var h11required_conn = null;
 var h11required_header = "yes";
 var didRst = false;
 var rstConnection = null;
+var didUnknownRst = false;
 var illegalheader_conn = null;
 
 // eslint-disable-next-line complexity
@@ -417,6 +436,20 @@ function handleRequest(req, res) {
     res.writeHead(200);
     res.end("It's all good.");
     return;
+  } else if (u.pathname === "/unknown_rst_once") {
+    // First H2 request gets RST_STREAM with an unrecognized error code; the
+    // retry succeeds.
+    if (!didUnknownRst && req.httpVersionMajor === 2) {
+      didUnknownRst = true;
+      req.stream.reset(0xfe);
+      return;
+    }
+    // Clear so the test can be re-run with --verify
+    didUnknownRst = false;
+    res.setHeader("Content-Type", "text/html");
+    res.writeHead(200);
+    res.end("It's all good.");
+    return;
   } else if (u.pathname === "/continuedheaders") {
     var pushRequestHeaders = { "x-pushed-request": "true" };
     var pushResponseHeaders = {
@@ -563,6 +596,8 @@ function handleRequest(req, res) {
     // empty DATA frame at the beginning of the stream response, then fall
     // through to the default response behavior.
     Serializer.prototype._transform = newTransform;
+  } else if (u.pathname === "/continuation_stream_zero") {
+    Serializer.prototype._transform = newTransformContinuationStreamZero;
   }
 
   // for use with test_immutable.js
@@ -837,13 +872,21 @@ let httpServer = http.createServer((req, res) => {
 
 function forkH3Server(serverPath, dbPath) {
   const args = [dbPath];
-  let process = spawn(serverPath, args);
-  let id = forkProcessInternal(process);
+  const env = Object.assign({}, process.env, {
+    RUST_BACKTRACE: "full",
+  });
+  let child = spawn(serverPath, args, { env });
+  let id = forkProcessInternal(child);
   // Return a promise that resolves when we receive data from stdout
   return new Promise((resolve, _) => {
-    process.stdout.on("data", data => {
+    child.stdout.on("data", data => {
       console.log(data.toString());
       resolve({ id, output: data.toString().trim() });
+    });
+
+    child.stderr.on("data", chunk => {
+      const s = chunk.toString();
+      console.log(`[child stderr] ${s}`);
     });
   });
 }

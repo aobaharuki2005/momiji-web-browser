@@ -10,10 +10,8 @@ from .helpers import (
     Browser,
     Geckodriver,
     create_custom_profile,
-    get_pref,
     get_profile_folder,
     read_user_preferences,
-    set_pref,
 )
 
 
@@ -274,13 +272,15 @@ async def geckodriver(configuration):
     """Start a geckodriver instance directly."""
     driver = None
 
-    def _geckodriver(config=None, hostname=None, extra_args=None, extra_env=None):
+    def _geckodriver(
+        config=None, hostname=None, extra_args=None, extra_env=None, popen_kwargs=None
+    ):
         nonlocal driver
 
         if config is None:
             config = configuration
 
-        driver = Geckodriver(config, hostname, extra_args, extra_env)
+        driver = Geckodriver(config, hostname, extra_args, extra_env, popen_kwargs)
         driver.start()
 
         return driver
@@ -294,20 +294,3 @@ async def geckodriver(configuration):
 @pytest.fixture
 def profile_folder(firefox_options):
     return get_profile_folder(firefox_options)
-
-
-@pytest.fixture
-def use_pref(session):
-    """Set a specific pref value."""
-    reset_values = {}
-
-    def _use_pref(pref, value):
-        if pref not in reset_values:
-            reset_values[pref] = get_pref(session, pref)
-
-        set_pref(session, pref, value)
-
-    yield _use_pref
-
-    for pref, reset_value in reset_values.items():
-        set_pref(session, pref, reset_value)

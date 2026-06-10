@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,13 +24,13 @@ JSObject* SVGFilterElement::WrapNode(JSContext* aCx,
 
 SVGElement::LengthInfo SVGFilterElement::sLengthInfo[4] = {
     {nsGkAtoms::x, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGContentUtils::X},
+     SVGLength::Axis::X},
     {nsGkAtoms::y, -10, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGContentUtils::Y},
+     SVGLength::Axis::Y},
     {nsGkAtoms::width, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGContentUtils::X},
+     SVGLength::Axis::X},
     {nsGkAtoms::height, 120, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE,
-     SVGContentUtils::Y},
+     SVGLength::Axis::Y},
 };
 
 SVGElement::EnumInfo SVGFilterElement::sEnumInfo[2] = {

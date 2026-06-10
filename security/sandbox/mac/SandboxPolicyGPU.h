@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,6 +18,7 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
   (define crashPort (param "CRASH_PORT"))
   (define macosVersion (string->number (param "MAC_OS_VERSION")))
   (define isRosettaTranslated (param "IS_ROSETTA_TRANSLATED"))
+  (define allowRemoteAppleImageIO (param "ALLOW_REMOTE_APPLE_IMAGEIO"))
 
   (define (moz-deny feature)
     (if (string=? shouldLog "TRUE")
@@ -57,6 +57,7 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (sysctl-name "kern.osproductversion")
     (sysctl-name "kern.version")
     (sysctl-name "kern.hostname")
+    (sysctl-name "kern.hv_vmm_present")
     (sysctl-name "hw.machine")
     (sysctl-name "hw.memsize")
     (sysctl-name "hw.model")
@@ -122,10 +123,13 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (global-name "com.apple.CARenderServer")
     (global-name "com.apple.windowserver.active")
     (global-name "com.apple.MTLCompilerService")
-    (global-name "com.apple.CARenderServer")
     (global-name "com.apple.CoreDisplay.master")
     (global-name "com.apple.CoreDisplay.Notification")
     (global-name "com.apple.cvmsServ"))
+
+  (if (string=? allowRemoteAppleImageIO "TRUE")
+    (allow mach-lookup
+      (global-name "com.apple.ImageIOXPCService")))
 
   ; Allow access to defaults services
   (allow mach-lookup
@@ -186,6 +190,18 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (iokit-property "MetalPluginClassName")
     (iokit-property "gpu-core-count"))
 
+  ; VM compatibility
+  (with-filter (iokit-registry-entry-class "IOPlatformDevice")
+    (allow iokit-get-properties
+      (iokit-property "product-id")
+      (iokit-property "soc-generation")
+      (iokit-property "IORegistryEntryPropertyKeys")
+      (iokit-property "ean-storage-present")))
+  (with-filter (iokit-registry-entry-class "IOService")
+    (allow iokit-get-properties
+      (iokit-property "housing-color")
+      (iokit-property "syscfg-v2-data")))
+
   (allow iokit-set-properties
     (require-all
       (iokit-connection "IODisplay")
@@ -206,7 +222,6 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (iokit-user-client-class "IOSurfaceSendRight")
     (iokit-user-client-class "IOFramebufferSharedUserClient")
     (iokit-user-client-class "AGPMClient")
-    (iokit-user-client-class "AppleGraphicsControlClient")
     (iokit-user-client-class "IOHIDParamUserClient")
     (iokit-user-client-class "RootDomainUserClient")
     (iokit-user-client-class "AppleMGPUPowerControlClient")

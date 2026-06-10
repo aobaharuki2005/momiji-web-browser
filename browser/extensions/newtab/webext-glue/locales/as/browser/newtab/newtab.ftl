@@ -39,7 +39,7 @@ newtab-search-box-input =
     .placeholder = ৱেবত সন্ধান কৰক
     .aria-label = ৱেবত সন্ধান কৰক
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = ছাৰ্চ ইঞ্জিন যোগ কৰক
 newtab-topsites-edit-topsites-header = শীৰ্ষ ছাইট সম্পাদনা কৰক
@@ -201,6 +201,15 @@ newtab-error-fallback-refresh-link = পুনৰ চেষ্টা কৰি�
 ## Customization Menu
 
 newtab-custom-shortcuts-subtitle = আপুনি সাঁচি থোৱা বা দৰ্শন কৰা ছাইটসমূহ
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num }টা শাৰী
+           *[other] { $num }টা শাৰী
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =

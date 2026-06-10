@@ -14,10 +14,13 @@ prefs = [
 ["test_merinoClient_sessions.js"]
 requesttimeoutfactor = 2  # Slow on Windows
 
+["test_merinoClient_weather.js"]
+
 ["test_quicksuggest.js"]
-requesttimeoutfactor = 2  # Slow on Linux
 
 ["test_quicksuggest_addons.js"]
+
+["test_quicksuggest_amp.js"]
 
 ["test_quicksuggest_defaultPrefs.js"]
 requesttimeoutfactor = 2  # Slow on Linux and Windows
@@ -60,6 +63,8 @@ skip-if = [
 
 ["test_quicksuggest_migrate_v6.js"]
 
+["test_quicksuggest_migrate_v7.js"]
+
 ["test_quicksuggest_relevanceRanking.js"]
 
 ["test_quicksuggest_remoteSettingsFilter.js"]
@@ -69,6 +74,8 @@ skip-if = [
 ["test_quicksuggest_sports.js"]
 
 ["test_quicksuggest_topPicks.js"]
+
+["test_quicksuggest_wikipedia.js"]
 
 ["test_quicksuggest_yelp.js"]
 requesttimeoutfactor = 2  # Slow on Linux and Windows

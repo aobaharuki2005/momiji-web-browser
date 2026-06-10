@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -12,6 +10,7 @@
 #include "MediaTrackListener.h"
 #include "MockCubeb.h"
 #include "gtest/gtest.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/gtest/WaitFor.h"
 #include "nsJSEnvironment.h"
 
@@ -102,7 +101,9 @@ class TestDecodedStream : public Test {
             AbstractThread::GetCurrent(), mDummyTrack, mOutputTracks,
             &mCanonicalOutputPrincipal, /* aVolume = */ 1.0,
             /* aPlaybackRate = */ 1.0,
-            /* aPreservesPitch = */ true, mAudioQueue, mVideoQueue)) {
+            /* aPreservesPitch = */ true,
+            /* aShouldConfigAudioOutput = */ false,
+            /* aDevice = */ nullptr, mAudioQueue, mVideoQueue)) {
     MOZ_ASSERT(NS_IsMainThread());
   };
 
@@ -158,6 +159,14 @@ class TestDecodedStream : public Test {
     NS_ProcessPendingEvents(nullptr);
     // Process the shutdown runnable.
     NS_ProcessPendingEvents(nullptr);
+
+    // Ensure the proxy release of AudioCallbackDriver has been processed on the
+    // CubebOperation thread, as it holds a reference to the graph.
+    RefPtr cubebOpsThread = CubebUtils::GetCubebOperationThread();
+    SyncRunnable::DispatchToThread(
+        cubebOpsThread,
+        NS_NewRunnableFunction("TestDecodedStream AudioCallbackDriver release",
+                               [] {}));
 
     // Graph should be shut down.
     ASSERT_TRUE(mGraph->OnGraphThreadOrNotRunning())

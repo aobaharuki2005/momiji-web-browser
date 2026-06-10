@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,6 +12,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/glean/SecurityManagerSslMetrics.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "nsNSSCallbacks.h"
 #include "nsNSSComponent.h"
 #include "nsProxyRelease.h"
@@ -41,8 +41,6 @@ NSSSocketControl::NSSSocketControl(
       mIsFullHandshake(false),
       mNotedTimeUntilReady(false),
       mEchExtensionStatus(EchExtensionStatus::kNotPresent),
-      mSentMlkemShare(false),
-      mHasTls13HandshakeSecrets(false),
       mIsShortWritePending(false),
       mShortWritePendingByte(0),
       mShortWriteOriginalAmount(-1),
@@ -700,43 +698,47 @@ nsresult NSSSocketControl::SetResumptionTokenFromExternalCache(PRFileDesc* fd) {
     return NS_OK;
   }
 
-  nsTArray<uint8_t> token;
   nsAutoCString peerId;
   nsresult rv = GetPeerId(peerId);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  uint64_t tokenId = 0;
-  mozilla::net::SessionCacheInfo info;
-  rv = mozilla::net::SSLTokensCache::Get(peerId, token, info, &tokenId);
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_NOT_AVAILABLE) {
-      // It's ok if we can't find the token.
+  uint32_t maxAttempts =
+      mozilla::StaticPrefs::network_ssl_tokens_cache_records_per_entry();
+  for (uint32_t attempt = 0; attempt < maxAttempts; ++attempt) {
+    nsTArray<uint8_t> token;
+    uint64_t tokenId = 0;
+    mozilla::net::SessionCacheInfo info;
+    rv = mozilla::net::SSLTokensCache::Get(peerId, token, info, &tokenId);
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        // It's ok if we can't find the token.
+        return NS_OK;
+      }
+
+      return rv;
+    }
+
+    SECStatus srv =
+        SSL_SetResumptionToken(fd, token.Elements(), token.Length());
+    if (srv == SECSuccess) {
+      SetSessionCacheInfo(std::move(info));
       return NS_OK;
     }
 
-    return rv;
-  }
-
-  SECStatus srv = SSL_SetResumptionToken(fd, token.Elements(), token.Length());
-  if (srv == SECFailure) {
     PRErrorCode error = PR_GetError();
     mozilla::net::SSLTokensCache::Remove(peerId, tokenId);
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("Setting token failed with NSS error %d [id=%s]", error,
-             PromiseFlatCString(peerId).get()));
-    // We don't consider SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR as a hard error,
-    // since this error means this token is just expired or can't be decoded
-    // correctly.
+            ("Setting token failed with NSS error %d [id=%s, attempt=%u]",
+             error, PromiseFlatCString(peerId).get(), attempt));
+
     if (error == SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR) {
-      return NS_OK;
+      continue;
     }
 
     return NS_ERROR_FAILURE;
   }
-
-  SetSessionCacheInfo(std::move(info));
 
   return NS_OK;
 }

@@ -25,7 +25,7 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  */
 
 /**
- * @typedef {string | boolean | number | nsIFile | void} SettingValue
+ * @typedef {string | boolean | number | nsIFile | null} SettingValue
  */
 
 /**
@@ -46,13 +46,16 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  */
 
 /**
- * Sets the value of a {@link Setting}.
+ * Sets the value of a {@link Setting}. If the SettingConfig has {@link SettingConfig.pref} set
+ * use this callback to transform the control's value to the literal pref value, this
+ * would likely be the inverse of {@link SettingConfig.get}. If {@link SettingConfig.pref} is not set,
+ * this should store the value manually in a fashion that can be retrieved in {@link SettingConfig.get}.
  *
  * @callback SettingSetCallback
  * @param {SettingValue} val - The value/pressed/checked from the input (control) associated with the setting
  * @param {SettingDeps} deps
  * @param {Setting} setting
- * @returns {void}
+ * @returns {SettingValue}
  */
 
 /**
@@ -104,11 +107,29 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  */
 
 /**
+ * @callback SettingOnMessageBarDismissCallback
+ * @param {CustomEvent} event - The dismiss event
+ * @param {SettingDeps} deps
+ * @param {Setting} setting
+ * @returns {void}
+ */
+
+/**
+ * @callback SettingOnUserReorderCallback
+ * @param {CustomEvent} event - The reorder event with detail containing draggedElement, targetElement, position, draggedIndex, targetIndex
+ * @param {SettingDeps} deps
+ * @param {Setting} setting
+ * @returns {void}
+ */
+
+/**
  * @typedef {object} SettingControllingExtensionInfo
  * @property {string} storeId The ExtensionSettingsStore id that controls this setting.
  * @property {string} l10nId A fluent id to show in a controlled by extension message.
  * @property {string} [name] The controlling extension's name.
  * @property {string} [id] The controlling extension's id.
+ * @property {string} [supportPage] A support page to show in the message.
+ * @property {boolean} [allowControl] If the control should be enabled while controlled.
  */
 
 /**
@@ -116,10 +137,10 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  * @property {string} id - The ID for the Setting, this should match the layout id
  * @property {string} [pref] - A {@link Services.prefs} id that will be used as the backend if it is provided
  * @property {string[]} [deps] - An array of setting IDs that this setting depends on, when these settings change this setting will emit a change event to update the UI
- * @property {Pick<SettingControllingExtensionInfo, "storeId" | "l10nId">} [controllingExtensionInfo] Data related to the setting being controlled by an extension.
+ * @property {Pick<SettingControllingExtensionInfo, "storeId" | "l10nId" | "allowControl" | "supportPage">} [controllingExtensionInfo] Data related to the setting being controlled by an extension.
  * @property {SettingVisibleCallback} [visible] - Function to determine if a setting is visible in the UI
  * @property {SettingGetCallback} [get] - Function to get the value of the setting. Optional if {@link SettingConfig#pref} is set.
- * @property {SettingSetCallback} [set] - Function to set the value of the setting. Optional if {@link SettingConfig#pref} is set.
+ * @property {SettingSetCallback} [set] - See {@link SettingSetCallback}
  * @property {SettingGetControlConfigCallback} [getControlConfig] -  Function that allows the setting to modify its layout, this is intended to be used to provide the options, {@link SettingConfig#l10nId} or {@link SettingConfig#l10nArgs} data if necessary, but technically it can change anything (that doesn't mean it will have any effect though).
  * @property {SettingOnUserChangeCallback} [onUserChange] - A function that will be called when the setting
  *    has been modified by the user, it is passed the value/pressed/checked from its input. NOTE: This should be used for
@@ -133,7 +154,12 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  * @property {SettingOnUserClickCallback} [onUserClick] - A function that will be called when a setting has been
  *    clicked, the element name must be included in the CLICK_HANDLERS array
  *    in {@link file://./../../browser/components/preferences/widgets/setting-group/setting-group.mjs}. This should be
- *    used for controls that aren’t regular form controls but instead perform an action when clicked, like a button or link.
+ *    used for controls that aren't regular form controls but instead perform an action when clicked, like a button or link.
+ * @property {SettingOnMessageBarDismissCallback} [onMessageBarDismiss] - A function that will be called when a message bar has been
+ *    dismissed. This should be used for moz-message-bar to override the default behavior.
+ * @property {SettingOnUserReorderCallback} [onUserReorder] - A function that will be called when items in a
+ *    reorderable list have been reordered. This should be used to update the underlying data when the user
+ *    reorders items, such as updating preference values.
  */
 
 const { EventEmitter } = ChromeUtils.importESModule(
@@ -169,7 +195,7 @@ export class Setting extends EventEmitter {
   /**
    * @type {Preference}
    */
-  pref;
+  _pref;
 
   /**
    * Keeps a cache of each dep's Setting so that
@@ -183,6 +209,22 @@ export class Setting extends EventEmitter {
    * @type {SettingConfig | AsyncSettingHandler}
    */
   config;
+
+  get pref() {
+    return this._pref;
+  }
+
+  set pref(newPref) {
+    if (this._pref) {
+      this._pref.off("change", this.onChange);
+    }
+
+    this._pref = newPref;
+
+    if (this._pref) {
+      this._pref.on("change", this.onChange);
+    }
+  }
 
   /**
    * @param {SettingConfig['id']} id
@@ -217,9 +259,6 @@ export class Setting extends EventEmitter {
     this.controllingExtensionInfo = {
       ...this.config.controllingExtensionInfo,
     };
-    if (this.pref) {
-      this.pref.on("change", this.onChange);
-    }
     if (this.config.controllingExtensionInfo?.storeId) {
       this._checkForControllingExtension();
       this.watchExtensionPrefChange();
@@ -326,6 +365,24 @@ export class Setting extends EventEmitter {
   }
 
   /**
+   * @param {CustomEvent} event
+   */
+  messageBarDismiss(event) {
+    if (this.config.onMessageBarDismiss) {
+      this.config.onMessageBarDismiss(event, this.deps, this);
+    }
+  }
+
+  /**
+   * @param {CustomEvent} event
+   */
+  userReorder(event) {
+    if (this.config.onUserReorder) {
+      this.config.onUserReorder(event, this.deps, this);
+    }
+  }
+
+  /**
    * @param {string} val
    */
   userChange(val) {
@@ -395,6 +452,10 @@ export class Setting extends EventEmitter {
     if (typeof this._teardown === "function") {
       this._teardown();
       this._teardown = null;
+    }
+
+    if (this.pref) {
+      this.pref.off("change", this.onChange);
     }
 
     if (this.config.controllingExtensionInfo?.storeId) {

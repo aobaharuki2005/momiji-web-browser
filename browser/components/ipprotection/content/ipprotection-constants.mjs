@@ -10,29 +10,44 @@ export const LINKS = Object.freeze({
         "browser.ipProtection.productVpn.endpoint",
         "https://www.mozilla.org"
       ) +
-      "/products/vpn/?utm_medium=firefox-desktop&utm_source=freevpnpilot&utm_campaign=evergreen&utm_content=vpnpanel"
+      "/products/vpn/?utm_medium=firefox-desktop&utm_source=vpn-panel&utm_campaign=fx-vpn&utm_content=upgrade-button"
     );
   },
 
-  SUPPORT_URL: "https://support.mozilla.org/kb/use-ip-concealment-in-firefox",
-});
+  // Used for the upgrade promo button in the locations subview
+  get LOCATION_PROMO_URL() {
+    return (
+      Services.prefs.getCharPref(
+        "browser.ipProtection.productVpn.endpoint",
+        "https://www.mozilla.org"
+      ) +
+      "/products/vpn/?utm_medium=firefox-desktop&utm_source=vpn-panel&utm_campaign=fx-vpn&utm_content=location-selector-promo"
+    );
+  },
 
-export const ERRORS = Object.freeze({
-  GENERIC: "generic-error",
+  SUPPORT_SLUG: "built-in-vpn",
+
+  get TERMS_OF_SERVICE_URL() {
+    return Services.urlFormatter.formatURL(
+      "https://www.mozilla.org/%LOCALE%/about/legal/terms/firefox/"
+    );
+  },
+
+  get PRIVACY_NOTICE_URL() {
+    return Services.urlFormatter.formatURL(
+      "https://www.mozilla.org/%LOCALE%/privacy/firefox/#notice"
+    );
+  },
 });
 
 export const SIGNIN_DATA = Object.freeze({
   where: "tab",
-  entrypoint: "desktop-fx-vpn",
+  entrypoint: "vpn_integration_panel",
   autoClose: false,
   extraParams: {
-    service: "sync",
-    entrypoint_experiment: "fx-vpn-pilot",
-    entrypoint_variation: "alpha",
-    utm_source: "callout",
-    utm_campaign: "fx-vpn-pilot",
+    service: "vpn",
+    utm_campaign: "fx-vpn",
     utm_medium: "firefox-desktop",
-    utm_term: "fx-vpn-pilot-panel-button",
   },
 });
 
@@ -41,3 +56,17 @@ export const ONBOARDING_PREF_FLAGS = {
   EVER_USED_SITE_EXCEPTIONS: 1 << 1,
   EVER_TURNED_ON_VPN: 1 << 2,
 };
+
+export const BANDWIDTH = Object.freeze({
+  BYTES_IN_GB: Math.pow(2, 30),
+  BYTES_IN_MB: Math.pow(2, 20),
+  get MAX_IN_GB() {
+    return Services.prefs.getIntPref(
+      "browser.ipProtection.bandwidth.maxInGb",
+      50
+    );
+  },
+  FIRST_THRESHOLD: 0.5,
+  SECOND_THRESHOLD: 0.25,
+  THIRD_THRESHOLD: 0.1,
+});

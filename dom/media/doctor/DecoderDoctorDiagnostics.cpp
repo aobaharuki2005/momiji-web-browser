@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -418,12 +416,15 @@ static void ReportToConsole(dom::Document* aDocument,
           : NS_ConvertUTF16toUTF8(aParams[0]).get(),
       aParams.Length() < 2 ? "" : ", ...");
   if (StaticPrefs::media_decoder_doctor_testing()) {
-    (void)nsContentUtils::DispatchTrustedEvent(aDocument, aDocument,
-                                               u"mozreportmediaerror"_ns,
-                                               CanBubble::eNo, Cancelable::eNo);
+    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "mozreportmediaerror", [doc = RefPtr{aDocument}] {
+          (void)nsContentUtils::DispatchTrustedEvent(
+              doc, doc, u"mozreportmediaerror"_ns, CanBubble::eNo,
+              Cancelable::eNo);
+        }));
   }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Media"_ns,
-                                  aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                  aDocument, PropertiesFile::DOM_PROPERTIES,
                                   aConsoleStringId, aParams);
 }
 
@@ -498,11 +499,11 @@ static void ReportAnalysis(dom::Document* aDocument,
   if (!aIsSolved) {
     // Build parameter array needed by console message.
     AutoTArray<nsString, NotificationAndReportStringId::maxReportParams> params;
-    for (int i = 0; i < NotificationAndReportStringId::maxReportParams; ++i) {
-      if (aNotification.mReportParams[i] == ReportParam::None) {
+    for (auto mReportParam : aNotification.mReportParams) {
+      if (mReportParam == ReportParam::None) {
         break;
       }
-      switch (aNotification.mReportParams[i]) {
+      switch (mReportParam) {
         case ReportParam::Formats:
           params.AppendElement(aFormats);
           break;
@@ -682,7 +683,7 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
         "DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - "
         "supported key systems '%s', playable formats '%s'; See if they show "
         "issues have been solved...",
-        this, mDocument, NS_ConvertUTF16toUTF8(supportedKeySystems).Data(),
+        this, mDocument, NS_ConvertUTF16toUTF8(supportedKeySystems).get(),
         NS_ConvertUTF16toUTF8(playableFormats).get());
     const nsAString* workingFormatsArray[] = {&supportedKeySystems,
                                               &playableFormats};
@@ -710,7 +711,7 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
                 "doc=%p]::SynthesizeAnalysis() - %s solved ('%s' now works, it "
                 "was in pref(%s)='%s')",
                 this, mDocument, id->mReportStringId,
-                NS_ConvertUTF16toUTF8(workingFormat).get(), formatsPref.Data(),
+                NS_ConvertUTF16toUTF8(workingFormat).get(), formatsPref.get(),
                 NS_ConvertUTF16toUTF8(formatsWithIssues).get());
             ReportAnalysis(mDocument, *id, true, workingFormat);
             // This particular Notification&ReportId has been solved, no need
@@ -727,7 +728,7 @@ void DecoderDoctorDocumentWatcher::SynthesizeAnalysis() {
         DD_DEBUG(
             "DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - "
             "%s not solved (pref(%s)='%s')",
-            this, mDocument, id->mReportStringId, formatsPref.Data(),
+            this, mDocument, id->mReportStringId, formatsPref.get(),
             NS_ConvertUTF16toUTF8(formatsWithIssues).get());
       }
     }
@@ -872,7 +873,7 @@ void DecoderDoctorDocumentWatcher::AddDiagnostics(
   DD_DEBUG(
       "DecoderDoctorDocumentWatcher[%p, "
       "doc=%p]::AddDiagnostics(DecoderDoctorDiagnostics{%s}, call site '%s')",
-      this, mDocument, aDiagnostics.GetDescription().Data(), aCallSite);
+      this, mDocument, aDiagnostics.GetDescription().get(), aCallSite);
   mDiagnosticsSequence.AppendElement(
       Diagnostics(std::move(aDiagnostics), aCallSite, now));
   EnsureTimerIsStarted();

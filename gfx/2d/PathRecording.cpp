@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,8 +38,8 @@ bool PathOps::StreamToSink(PathSink& aPathSink) const {
     return true;
   }
 
-  const uint8_t* nextByte = mPathData.data();
-  const uint8_t* end = nextByte + mPathData.size();
+  const uint8_t* nextByte = mPathData.begin();
+  const uint8_t* end = mPathData.end();
   while (nextByte < end) {
     const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
     nextByte += sizeof(OpType);
@@ -94,8 +92,8 @@ bool PathOps::CheckedStreamToSink(PathSink& aPathSink) const {
     return true;
   }
 
-  const uint8_t* nextByte = mPathData.data();
-  const uint8_t* end = nextByte + mPathData.size();
+  const uint8_t* nextByte = mPathData.begin();
+  const uint8_t* end = mPathData.end();
   while (true) {
     if (nextByte == end) {
       break;
@@ -148,9 +146,9 @@ bool PathOps::CheckedStreamToSink(PathSink& aPathSink) const {
 
 PathOps PathOps::TransformedCopy(const Matrix& aTransform) const {
   PathOps newPathOps;
-  newPathOps.mPathData.reserve(mPathData.size());
-  const uint8_t* nextByte = mPathData.data();
-  const uint8_t* end = nextByte + mPathData.size();
+  MOZ_ALWAYS_TRUE(newPathOps.mPathData.reserve(mPathData.length()));
+  const uint8_t* nextByte = mPathData.begin();
+  const uint8_t* end = mPathData.end();
   while (nextByte < end) {
     const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
     nextByte += sizeof(OpType);
@@ -201,8 +199,8 @@ PathOps PathOps::TransformedCopy(const Matrix& aTransform) const {
   nextByte += sizeof(_type);
 
 void PathOps::TransformInPlace(const Matrix& aTransform) {
-  uint8_t* nextByte = mPathData.data();
-  uint8_t* end = nextByte + mPathData.size();
+  uint8_t* nextByte = mPathData.begin();
+  uint8_t* end = mPathData.end();
   while (nextByte < end) {
     const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
     nextByte += sizeof(OpType);
@@ -249,8 +247,8 @@ Maybe<Circle> PathOps::AsCircle() const {
     return Nothing();
   }
 
-  const uint8_t* nextByte = mPathData.data();
-  const uint8_t* end = nextByte + mPathData.size();
+  const uint8_t* nextByte = mPathData.begin();
+  const uint8_t* end = mPathData.end();
   const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
   nextByte += sizeof(OpType);
   if (opType == OpType::OP_ARC_CW || opType == OpType::OP_ARC_CCW) {
@@ -284,8 +282,8 @@ Maybe<Line> PathOps::AsLine() const {
 
   Line retval;
 
-  const uint8_t* nextByte = mPathData.data();
-  const uint8_t* end = nextByte + mPathData.size();
+  const uint8_t* nextByte = mPathData.begin();
+  const uint8_t* end = mPathData.end();
   OpType opType = *reinterpret_cast<const OpType*>(nextByte);
   nextByte += sizeof(OpType);
 
@@ -322,8 +320,8 @@ Maybe<Line> PathOps::AsLine() const {
 
 size_t PathOps::NumberOfOps() const {
   size_t size = 0;
-  const uint8_t* nextByte = mPathData.data();
-  const uint8_t* end = nextByte + mPathData.size();
+  const uint8_t* nextByte = mPathData.begin();
+  const uint8_t* end = mPathData.end();
   while (nextByte < end) {
     size++;
     const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
@@ -356,8 +354,8 @@ size_t PathOps::NumberOfOps() const {
 }
 
 bool PathOps::IsEmpty() const {
-  const uint8_t* nextByte = mPathData.data();
-  const uint8_t* end = nextByte + mPathData.size();
+  const uint8_t* nextByte = mPathData.begin();
+  const uint8_t* end = mPathData.end();
   while (nextByte < end) {
     const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
     nextByte += sizeof(OpType);

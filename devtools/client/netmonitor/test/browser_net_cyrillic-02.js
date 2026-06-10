@@ -23,7 +23,7 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await reloadBrowser();
+  await reloadSelectedTab();
   await wait;
 
   const requestItem = document.querySelectorAll(".request-list-item")[0];
@@ -31,7 +31,7 @@ add_task(async function () {
   requestItem.scrollIntoView();
   EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
-  await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
+  await waitForDOM(requestItem, ".requests-list-timings-total");
 
   await verifyRequestItemTarget(
     document,

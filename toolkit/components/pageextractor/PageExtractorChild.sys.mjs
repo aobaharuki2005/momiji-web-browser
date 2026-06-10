@@ -5,7 +5,7 @@
 // @ts-check
 
 /**
- * @import { GetTextOptions } from './PageExtractor.d.ts'
+ * @import { GetTextOptions, CanvasSnapshot, ExtractionResult, PageMetadata, ReaderModeDocument } from './PageExtractor.d.ts'
  * @import { PageExtractorParent } from './PageExtractorParent.sys.mjs'
  */
 
@@ -47,133 +47,266 @@ export class PageExtractorChild extends JSWindowActorChild {
    */
   async receiveMessage({ name, data }) {
     switch (name) {
-      case "PageExtractorParent:GetReaderModeContent":
-        if (this.isAboutReader()) {
-          return this.getAboutReaderContent();
-        }
-        return this.getReaderModeContent(data);
       case "PageExtractorParent:GetText":
-        if (this.isAboutReader()) {
-          return this.getAboutReaderContent();
-        }
+        await this.waitForPageReady();
         return this.getText(data);
       case "PageExtractorParent:WaitForPageReady":
         return this.waitForPageReady();
+      case "PageExtractorParent:GetPageMetadata":
+        if (this.isAboutReader()) {
+          const document = this.browsingContext?.window?.document;
+          const result = await this.getText({ removeBoilerplate: true });
+          const text = result?.text ?? "";
+          const language = document?.querySelector(".container")?.lang ?? "";
+          const wordCount = this.#getWordCount(language, text);
+
+          return {
+            structuredDataTypes: [],
+            wordCount,
+            language,
+            isReaderable: true,
+          };
+        }
+        return this.getPageMetadata();
     }
     return Promise.reject(new Error("Unknown message: " + name));
   }
 
   /**
-   * This function resolves once the page is ready after a requestIdleCallback.
+   * Resolves after DOMContentLoaded, an idle callback, and a double
+   * requestAnimationFrame so layout and paint are committed before
+   * extraction reads page geometry.
    *
    * @returns {Promise<void>}
    */
   async waitForPageReady() {
-    return new Promise(resolve => {
-      const waitForIdle = () => {
-        this.document.ownerGlobal.requestIdleCallback(() => resolve(), {
-          timeout: MAX_REQUEST_IDLE_CALLBACK_DELAY_MS,
-        });
-      };
+    const doc = this.document;
+    const win = doc.documentGlobal;
 
-      if (this.document.readyState == "loading") {
-        this.document.addEventListener("DOMContentLoaded", waitForIdle);
-      } else {
-        lazy.console.log("The page is already interactive");
-        waitForIdle();
-      }
+    if (doc.readyState == "loading") {
+      await new Promise(resolve => {
+        doc.addEventListener("DOMContentLoaded", resolve, { once: true });
+      });
+    } else {
+      lazy.console.log("The page is already interactive");
+    }
+
+    await new Promise(resolve => {
+      win.requestIdleCallback(resolve, {
+        timeout: MAX_REQUEST_IDLE_CALLBACK_DELAY_MS,
+      });
+    });
+    await new Promise(resolve => {
+      win.requestAnimationFrame(() => win.requestAnimationFrame(resolve));
     });
   }
 
   /**
-   * @see PageExtractorParent#getReaderModeContent for docs
+   * @see PageExtractorParent#getPageMetadata for docs
    *
-   * @param {boolean} force
-   * @returns {Promise<string | null>} text from the page
+   * @returns {Promise<PageMetadata>}
    */
-  async getReaderModeContent(force) {
-    const window = this.browsingContext?.window;
-    const document = window?.document;
-
-    if (!force && (!document || !lazy.isProbablyReaderable(document))) {
-      return null;
-    }
+  async getPageMetadata() {
+    const document = this.browsingContext?.window?.document;
 
     if (!document) {
-      return "";
+      return Promise.reject(
+        new Error("No document available for page metadata extraction.")
+      );
     }
 
-    const article = await lazy.ReaderMode.parseDocument(document);
-    if (!article) {
-      return "";
+    const structuredDataTypes = this.#extractStructuredDataTypes(document);
+    const language = this.#detectLanguage(document);
+    const wordCount = this.#getWordCount(language, document.body.innerText);
+    const isReaderable = lazy.isProbablyReaderable(document);
+
+    return { structuredDataTypes, wordCount, language, isReaderable };
+  }
+
+  /**
+   * This will establish a word count of the text argument based on the provided language.
+   *
+   * @param {string} language
+   * @param {string} text
+   * @returns {number}
+   */
+  #getWordCount(language, text) {
+    let wordCount = 0;
+    const segmenter = new Intl.Segmenter(language || undefined, {
+      granularity: "word",
+    });
+    for (const { isWordLike } of segmenter.segment(text)) {
+      if (isWordLike) {
+        wordCount++;
+      }
+    }
+    return wordCount;
+  }
+
+  /**
+   * This extracts various `@type` values within the JSON-LD structured data markup of a page.
+   *
+   * @param {Document} document
+   * @returns {string[]}
+   */
+  #extractStructuredDataTypes(document) {
+    const scripts = document.querySelectorAll(
+      'script[type="application/ld+json" i]'
+    );
+    const types = new Set();
+
+    const asArray = value => {
+      if (Array.isArray(value)) {
+        return value;
+      }
+      return value == null ? [] : [value];
+    };
+
+    for (const script of scripts) {
+      const text = script.textContent?.trim();
+      if (!text) {
+        continue;
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        continue;
+      }
+
+      // JSON-LD can be:
+      // - an object
+      // - an array of objects
+      // - an object with @graph: [...]
+      const topLevelItems = asArray(parsed);
+      const graphItems = topLevelItems.flatMap(x => asArray(x?.["@graph"]));
+      const items = graphItems.length ? graphItems : topLevelItems;
+
+      for (const item of items) {
+        for (const t of asArray(item?.["@type"])) {
+          if (typeof t === "string") {
+            types.add(t);
+          }
+        }
+      }
     }
 
-    let text = (article?.textContent || "")
-      .trim()
-      // Replace duplicate whitespace with either a single newline or space
-      .replace(/(\s*\n\s*)|\s{2,}/g, (_, newline) => (newline ? "\n" : " "));
+    return Array.from(types);
+  }
 
-    if (article.title) {
-      text = article.title + "\n\n" + text;
+  /**
+   * Query the lang tag of the document.
+   *
+   * @param {Document} document
+   * @returns {string}
+   */
+  #detectLanguage(document) {
+    const declared = document?.documentElement?.lang;
+    if (declared) {
+      try {
+        return new Intl.Locale(declared).baseName;
+      } catch {
+        return "";
+      }
     }
-    lazy.console.log("GetReaderModeContent", { force });
-    lazy.console.debug(text);
-
-    return text;
+    return "";
   }
 
   /**
    * @see PageExtractorParent#getText for docs
    *
    * @param {GetTextOptions} options
-   * @returns {string}
+   * @returns {Promise<ExtractionResult | null>}
    */
-  getText(options) {
+  async getText(options = {}) {
     const window = this.browsingContext?.window;
-    const document = window?.document;
+    /** @type {Document} */
+    let document = window?.document;
+    /** @type {HTMLElement} */
+    let rootNode;
 
-    if (!document) {
-      return "";
+    if (this.isAboutReader()) {
+      // If about:reader is loaded, find the proper rootNode so that we just get the
+      // content and not any of the UI. This will get passed to DOMExtractor so that
+      // the rest of the GetTextOptions can be applied.
+
+      lazy.console.log("Extracting content from about:reader");
+      // TODO - Explain what's different between this document and the browsing context.
+      document = this.manager.contentWindow.document;
+
+      if (!document) {
+        lazy.console.log("No content document was available");
+        return null;
+      }
+
+      /** @type {HTMLElement?} */
+      rootNode = document.querySelector(".container");
+      if (!rootNode) {
+        lazy.console.log("No container was found in reader mode.");
+        return null;
+      }
+    } else if (options.removeBoilerplate) {
+      // Boilerplate removal is requested. See if reader mode can be applied, and then
+      // use that for boilerplate removal.
+
+      if (
+        (document && lazy.isProbablyReaderable(document)) ||
+        options._forceRemoveBoilerplate
+      ) {
+        // Run the document through reader mode, and use the DOMParser version of the
+        // content.
+        /** @type {ReaderModeDocument | null} */
+        const readerModeDocument =
+          await lazy.ReaderMode.parseDocument(document);
+        if (readerModeDocument) {
+          lazy.console.log("Document is readerable");
+          const { content } = readerModeDocument;
+          const parser = new DOMParser();
+          document = parser.parseFromString(content, "text/html");
+          rootNode = document.body;
+        } else {
+          lazy.console.log(
+            "Document is not readerable, boilerplate will not be removed"
+          );
+        }
+      } else {
+        lazy.console.log(
+          "Document is not readerable, boilerplate will not be removed"
+        );
+      }
     }
 
-    const text = lazy.extractTextFromDOM(document, options);
+    if (!document || !rootNode) {
+      lazy.console.log("Extracting content without boilerplate removal.");
+      // No document or no root node is here, we should use the default extraction
+      // strategy, of getting content directly from the hpage.
+      document = window?.document;
+      rootNode = document.body;
+    }
+
+    if (!document) {
+      lazy.console.log("No document was found.");
+      return null;
+    }
+
+    // All of the content gets extracted using the DOMExtractor, which knows how
+    // to apply certain settings in GetTextOptions.
+    const { text, links, canvases } = lazy.extractTextFromDOM(
+      document,
+      rootNode,
+      options
+    );
+
+    let canvasSnapshots = [];
+    if (options.includeCanvasSnapshots && canvases.length) {
+      canvasSnapshots = await this.#captureCanvases(canvases, options);
+    }
 
     lazy.console.log("GetText", options);
-    lazy.console.debug(text);
+    lazy.console.debug({ text, links, canvasSnapshots });
 
-    return text;
-  }
-
-  /**
-   * Special case extracting text from Reader Mode. The original article content is not
-   * retained once reader mode is activated. It is rendered out to the page. Rather
-   * than cache an additional copy of the article, just extract the text from the
-   * actual reader mode DOM.
-   *
-   * @returns {string | null}
-   */
-  getAboutReaderContent() {
-    lazy.console.log("Using special text extraction strategy for about:reader");
-    const document = this.manager.contentWindow.document;
-
-    if (!document) {
-      return null;
-    }
-    /** @type {HTMLElement?} */
-    const titleEl = document.querySelector(".reader-title");
-    /** @type {HTMLElement?} */
-    const contentEl = document.querySelector(".moz-reader-content");
-
-    const title = titleEl?.innerText;
-    const content = contentEl?.innerText;
-    if (!title && !content) {
-      return null;
-    }
-
-    if (title) {
-      return `${title}\n\n${content}`.trim();
-    }
-    return content.trim();
+    return { text, links, canvasSnapshots };
   }
 
   /**
@@ -186,5 +319,95 @@ export class PageExtractorChild extends JSWindowActorChild {
     // `window.location.href` and should be a cheaper check here.
     let url = this.manager.contentWindow.document.documentURIObject;
     return url.schemeIs("about") && url.pathQueryRef.startsWith("reader?");
+  }
+
+  /**
+   * Capture canvas elements as WebP blobs. WebP is chosen for its superior
+   * compression-to-quality ratio compared to PNG/JPEG, reducing the data sent
+   * to language models while preserving visual fidelity.
+   *
+   * @param {HTMLCanvasElement[]} canvases
+   * @param {GetTextOptions} options
+   * @returns {Promise<CanvasSnapshot[]>}
+   */
+  async #captureCanvases(canvases, options) {
+    const maxDimension = options.maxCanvasDimension ?? 1024;
+    const quality = options.canvasQuality ?? 0.8;
+
+    const results = await Promise.all(
+      canvases.map(c => this.#captureCanvas(c, maxDimension, quality))
+    );
+    return results.filter(Boolean);
+  }
+
+  /**
+   * Capture a canvas element as a WebP blob. Uses OffscreenCanvas to avoid
+   * blocking the main thread during scaling and blob conversion. ImageBitmap
+   * is used as the source to efficiently transfer pixel data from the
+   * original canvas.
+   *
+   * @param {HTMLCanvasElement} canvas
+   * @param {number} maxDimension
+   * @param {number} quality
+   * @returns {Promise<CanvasSnapshot | null>}
+   */
+  async #captureCanvas(canvas, maxDimension, quality) {
+    const window = canvas.documentGlobal;
+    const { width: originalWidth, height: originalHeight } = canvas;
+
+    try {
+      const bitmap = await window.createImageBitmap(canvas);
+
+      const scale = Math.min(
+        1,
+        maxDimension / Math.max(originalWidth, originalHeight)
+      );
+      const targetWidth = Math.floor(originalWidth * scale);
+      const targetHeight = Math.floor(originalHeight * scale);
+
+      const offscreen = new window.OffscreenCanvas(targetWidth, targetHeight);
+      // Alpha is enabled to preserve transparency in canvases that use it.
+      // willReadFrequently is false because we only draw and convert to blob,
+      // never reading pixels back, so hardware acceleration is preferred.
+      const ctx = offscreen.getContext("2d", {
+        alpha: true,
+        willReadFrequently: false,
+      });
+
+      ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+      bitmap.close();
+
+      let blob;
+      try {
+        blob = await offscreen.convertToBlob({
+          type: "image/webp",
+          quality,
+        });
+      } catch (securityError) {
+        // Tainted canvas fall back to original canvas toBlob which works
+        blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(
+            b => (b ? resolve(b) : reject(new Error("toBlob failed"))),
+            "image/webp",
+            quality
+          );
+        });
+
+        return {
+          blob,
+          width: originalWidth,
+          height: originalHeight,
+        };
+      }
+
+      return {
+        blob,
+        width: targetWidth,
+        height: targetHeight,
+      };
+    } catch (error) {
+      lazy.console.debug?.("Canvas capture failed:", error);
+      return null;
+    }
   }
 }

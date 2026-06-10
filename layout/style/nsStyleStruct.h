@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,8 +7,8 @@
  * internal API for computed style data for an element
  */
 
-#ifndef nsStyleStruct_h___
-#define nsStyleStruct_h___
+#ifndef nsStyleStruct_h_
+#define nsStyleStruct_h_
 
 #include <cstddef>  // offsetof()
 
@@ -23,6 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/WindowButtonType.h"
 #include "nsChangeHint.h"
 #include "nsColor.h"
@@ -630,6 +629,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
 
  public:
   mozilla::StyleBorderRadius mBorderRadius;  // coord, percent
+  mozilla::StyleCornerShapeRect mCornerShape;
   mozilla::StyleImage mBorderImageSource;
   mozilla::StyleBorderImageWidth mBorderImageWidth;
   mozilla::StyleNonNegativeLengthOrNumberRect mBorderImageOutset;
@@ -1014,6 +1014,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   inline mozilla::StyleContentDistribution UsedContentAlignment(
       LogicalAxis aAxis) const;
 
+  bool CanHaveDefaultAnchor() const {
+    return mPositionAnchor.value.IsIdent() || mPositionAnchor.value.IsAuto() ||
+           (mPositionAnchor.value.IsNormal() && !mPositionArea.IsNone());
+  }
+
   Position mObjectPosition;
   StyleRect<mozilla::StyleInset> mOffset;
   StyleSize mWidth;
@@ -1216,6 +1221,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
   mozilla::StyleColor mTextDecorationColor;
   mozilla::StyleTextDecorationLength mTextDecorationThickness;
   mozilla::StyleTextDecorationInset mTextDecorationInset;
+  mozilla::StyleTextBoxTrim mTextBoxTrim;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
@@ -1256,6 +1262,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::LengthPercentage mWordSpacing;
   mozilla::StyleLetterSpacing mLetterSpacing;
   mozilla::StyleTextIndent mTextIndent;
+
+  mozilla::StyleTextBoxEdge mTextBoxEdge;
 
   mozilla::LengthPercentageOrAuto mTextUnderlineOffset;
   mozilla::StyleTextDecorationSkipInk mTextDecorationSkipInk;
@@ -1434,7 +1442,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   }
 
   bool UseLegacyCollapseBehavior() const {
-    return mMozBoxCollapse == mozilla::StyleMozBoxCollapse::Legacy;
+    return mMozBoxCollapse == mozilla::StyleBoxCollapse::Legacy;
   }
 
   /**
@@ -1467,8 +1475,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   mozilla::StyleImageRendering mImageRendering;
   mozilla::StyleWritingModeProperty mWritingMode;
   mozilla::StyleTextOrientation mTextOrientation;
-  mozilla::StyleMozBoxCollapse mMozBoxCollapse;
+  mozilla::StyleBoxCollapse mMozBoxCollapse;
   mozilla::StylePrintColorAdjust mPrintColorAdjust;
+  mozilla::StyleDominantBaseline mDominantBaseline;
 
  private:
   mozilla::StyleImageOrientation mImageOrientation;
@@ -1535,6 +1544,8 @@ struct StyleAnimation {
   float GetIterationCount() const { return mIterationCount._0; }
   StyleAnimationComposition GetComposition() const { return mComposition; }
   const StyleAnimationTimeline& GetTimeline() const { return mTimeline; }
+  const StyleAnimationRangeStart& GetRangeStart() const { return mRangeStart; }
+  const StyleAnimationRangeEnd& GetRangeEnd() const { return mRangeEnd; }
 
   bool operator==(const StyleAnimation& aOther) const;
   bool operator!=(const StyleAnimation&) const = default;
@@ -1551,13 +1562,16 @@ struct StyleAnimation {
   StyleAnimationIterationCount mIterationCount{1.0f};
   StyleAnimationComposition mComposition = StyleAnimationComposition::Replace;
   StyleAnimationTimeline mTimeline = StyleAnimationTimeline::Auto();
+  StyleAnimationRangeStart mRangeStart =
+      StyleAnimationRangeStart::DefaultStart();
+  StyleAnimationRangeEnd mRangeEnd = StyleAnimationRangeEnd::DefaultEnd();
 };
 
 struct StyleScrollTimeline {
   StyleScrollTimeline() = default;
   explicit StyleScrollTimeline(const StyleScrollTimeline& aCopy) = default;
 
-  nsAtom* GetName() const { return mName.AsAtom(); }
+  nsAtom* GetName() const { return mName.value.AsAtom(); }
   StyleScrollAxis GetAxis() const { return mAxis; }
 
   bool operator==(const StyleScrollTimeline&) const = default;
@@ -1572,7 +1586,7 @@ struct StyleViewTimeline {
   StyleViewTimeline() = default;
   explicit StyleViewTimeline(const StyleViewTimeline& aCopy) = default;
 
-  nsAtom* GetName() const { return mName.AsAtom(); }
+  nsAtom* GetName() const { return mName.value.AsAtom(); }
   StyleScrollAxis GetAxis() const { return mAxis; }
   const StyleViewTimelineInset& GetInset() const { return mInset; }
 
@@ -1674,7 +1688,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StylePerspective mChildPerspective;
   mozilla::Position mPerspectiveOrigin;
 
-  mozilla::StyleVerticalAlign mVerticalAlign;
+  mozilla::StyleAlignmentBaseline mAlignmentBaseline;
+  mozilla::StyleBaselineShift mBaselineShift;
   mozilla::StyleBaselineSource mBaselineSource;
 
   mozilla::StyleLineClamp mWebkitLineClamp;
@@ -1695,7 +1710,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   // 'none', 'all', or a list of one or more `<dashed-ident>` identifiers that
   // may identify anchor positioning anchor elements.
-  mozilla::StyleAnchorScope mAnchorScope;
+  mozilla::StyleScopedName mAnchorScope;
 
   mozilla::Maybe<mozilla::WindowButtonType> GetWindowButtonType() const {
     if (MOZ_LIKELY(mDefaultAppearance == mozilla::StyleAppearance::None)) {
@@ -1714,8 +1729,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     }
   }
 
-  bool HasAppearance() const {
-    return EffectiveAppearance() != mozilla::StyleAppearance::None;
+  bool HasNativeAppearance() const {
+    auto appearance = EffectiveAppearance();
+    return appearance != mozilla::StyleAppearance::None &&
+           appearance != mozilla::StyleAppearance::Base &&
+           appearance != mozilla::StyleAppearance::BaseSelect;
   }
 
   mozilla::StyleAppearance EffectiveAppearance() const {
@@ -2020,7 +2038,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
  public:
   mozilla::StyleUserSelect ComputedUserSelect() const { return mUserSelect; }
 
-  mozilla::StyleScrollbarWidth ScrollbarWidth() const;
+  // DO NOT USE THIS FUNCTION DIRECTLY.
+  // nsLayoutUtils::ScrollbarWidthFor() should be used instead.
+  mozilla::StyleScrollbarWidth ComputedScrollbarWidth() const {
+    return mScrollbarWidth;
+  }
 
   const mozilla::StyleTransitionProperty& GetTransitionProperty(
       uint32_t aIndex) const {
@@ -2084,13 +2106,40 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   const mozilla::StyleAnimationTimeline& GetTimeline(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationTimelineCount].GetTimeline();
   }
+  const mozilla::StyleAnimationRangeStart& GetAnimationRangeStart(
+      uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationRangeStartCount].GetRangeStart();
+  }
+  const mozilla::StyleAnimationRangeEnd& GetAnimationRangeEnd(
+      uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationRangeEndCount].GetRangeEnd();
+  }
+
+  nsAtom* GetScrollTimelineName(uint32_t aIndex) const {
+    return mScrollTimelines[aIndex % mScrollTimelineNameCount].GetName();
+  }
+  mozilla::StyleScrollAxis GetScrollTimelineAxis(uint32_t aIndex) const {
+    return mScrollTimelines[aIndex % mScrollTimelineAxisCount].GetAxis();
+  }
+
+  nsAtom* GetViewTimelineName(uint32_t aIndex) const {
+    return mViewTimelines[aIndex % mViewTimelineNameCount].GetName();
+  }
+  mozilla::StyleScrollAxis GetViewTimelineAxis(uint32_t aIndex) const {
+    return mViewTimelines[aIndex % mViewTimelineAxisCount].GetAxis();
+  }
+  const mozilla::StyleViewTimelineInset& GetViewTimelineInset(
+      uint32_t aIndex) const {
+    return mViewTimelines[aIndex % mViewTimelineInsetCount].GetInset();
+  }
 
   mozilla::StyleBoolInteger mMozForceBrokenImageIcon;
   mozilla::StyleBoolInteger mMozSubtreeHiddenOnlyVisually;
   mozilla::StyleImeMode mIMEMode;
   mozilla::StyleWindowDragging mWindowDragging;
   mozilla::StyleWindowShadow mWindowShadow;
-  float mWindowOpacity;
+  mozilla::StyleFieldSizing mFieldSizing;
+
   // The margin of the window region that should be transparent to events.
   mozilla::StyleLength mMozWindowInputRegionMargin;
   mozilla::StyleTransform mMozWindowTransform;
@@ -2103,6 +2152,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint32_t mTransitionDelayCount;
   uint32_t mTransitionPropertyCount;
   uint32_t mTransitionBehaviorCount;
+  float mWindowOpacity;
   nsStyleAutoArray<mozilla::StyleAnimation> mAnimations;
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.
@@ -2116,6 +2166,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint32_t mAnimationIterationCountCount;
   uint32_t mAnimationCompositionCount;
   uint32_t mAnimationTimelineCount;
+  uint32_t mAnimationRangeStartCount;
+  uint32_t mAnimationRangeEndCount;
 
   nsStyleAutoArray<mozilla::StyleScrollTimeline> mScrollTimelines;
   uint32_t mScrollTimelineNameCount;
@@ -2126,12 +2178,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint32_t mViewTimelineAxisCount;
   uint32_t mViewTimelineInsetCount;
 
-  mozilla::StyleFieldSizing mFieldSizing;
-
-  bool HasViewTransitionName() const { return !mViewTransitionName.IsNone(); }
+  bool HasViewTransitionName() const {
+    return mViewTransitionName.value.AsAtom() != nsGkAtoms::none;
+  }
 
   mozilla::StyleViewTransitionName mViewTransitionName;
   mozilla::StyleViewTransitionClass mViewTransitionClass;
+
+  mozilla::StyleScopedName mTimelineScope;
+
+  mozilla::StyleLinkParameters mLinkParameters;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
@@ -2243,7 +2299,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
   mozilla::StyleShapeRendering mShapeRendering;
   mozilla::StyleStrokeLinecap mStrokeLinecap;
   mozilla::StyleStrokeLinejoin mStrokeLinejoin;
-  mozilla::StyleDominantBaseline mDominantBaseline;
   mozilla::StyleTextAnchor mTextAnchor;
 
   /// Returns true if style has been set to expose the computed values of
@@ -2418,4 +2473,4 @@ STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsSize, nsSize_Simple);
 STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, width);
 STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, height);
 
-#endif /* nsStyleStruct_h___ */
+#endif /* nsStyleStruct_h_ */

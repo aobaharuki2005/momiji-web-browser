@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -654,6 +652,9 @@ class InlineFrameIterator {
   InlineFrameIterator(JSContext* cx, const JSJitFrameIter* iter);
   InlineFrameIterator(JSContext* cx, const InlineFrameIterator* iter);
 
+  InlineFrameIterator() = delete;
+  InlineFrameIterator(const InlineFrameIterator& iter) = delete;
+
   bool more() const { return frame_ && framesRead_ < frameCount_; }
 
   // Due to optimizations, we are not always capable of reading the callee of
@@ -837,10 +838,6 @@ class InlineFrameIterator {
     MOZ_ASSERT(frameCount_ != UINT32_MAX);
     return frameCount_;
   }
-
- private:
-  InlineFrameIterator() = delete;
-  InlineFrameIterator(const InlineFrameIterator& iter) = delete;
 };
 
 }  // namespace jit

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -130,9 +128,21 @@ class I420BufferReader : public YUVBufferReaderBase {
         mStrideV(CeilingOfHalf(aWidth)) {}
   virtual ~I420BufferReader() = default;
 
-  const uint8_t* DataU() const { return &mBuffer[YByteSize().value()]; }
-  const uint8_t* DataV() const {
-    return &mBuffer[YByteSize().value() + UByteSize().value()];
+  Result<const uint8_t*, MediaResult> DataU() const {
+    auto offset = YByteSize();
+    if (!offset.isValid()) {
+      return Err(
+          MediaResult(NS_ERROR_INVALID_ARG, "offset for U plane overflow"_ns));
+    }
+    return &mBuffer[offset.value()];
+  }
+  Result<const uint8_t*, MediaResult> DataV() const {
+    auto offset = YByteSize() + UByteSize();
+    if (!offset.isValid()) {
+      return Err(
+          MediaResult(NS_ERROR_INVALID_ARG, "offset for V plane overflow"_ns));
+    }
+    return &mBuffer[offset.value()];
   }
   virtual I420ABufferReader* AsI420ABufferReader() { return nullptr; }
 
@@ -158,9 +168,13 @@ class I420ABufferReader final : public I420BufferReader {
   }
   virtual ~I420ABufferReader() = default;
 
-  const uint8_t* DataA() const {
-    return &mBuffer[YByteSize().value() + UByteSize().value() +
-                    VSize().value()];
+  Result<const uint8_t*, MediaResult> DataA() const {
+    auto offset = YByteSize() + UByteSize() + VSize();
+    if (!offset.isValid()) {
+      return Err(MediaResult(NS_ERROR_INVALID_ARG,
+                             "offset for Alpha plane overflow"_ns));
+    }
+    return &mBuffer[offset.value()];
   }
 
   virtual I420ABufferReader* AsI420ABufferReader() override { return this; }
@@ -176,7 +190,14 @@ class NV12BufferReader final : public YUVBufferReaderBase {
         mStrideUV(aWidth + aWidth % 2) {}
   virtual ~NV12BufferReader() = default;
 
-  const uint8_t* DataUV() const { return &mBuffer[YByteSize().value()]; }
+  Result<const uint8_t*, MediaResult> DataUV() const {
+    auto offset = YByteSize();
+    if (!offset.isValid()) {
+      return Err(
+          MediaResult(NS_ERROR_INVALID_ARG, "offset for UV plane overflow"_ns));
+    }
+    return &mBuffer[offset.value()];
+  }
 
   const int32_t mStrideUV;
 };
@@ -310,16 +331,16 @@ static Result<RefPtr<layers::Image>, MediaResult> CreateYUVImageFromBuffer(
     data.mYStride = reader->mStrideY;
     data.mYSkip = 0;
     // Cb plane.
-    data.mCbChannel = const_cast<uint8_t*>(reader->DataU());
+    data.mCbChannel = const_cast<uint8_t*>(MOZ_TRY(reader->DataU()));
     data.mCbSkip = 0;
     // Cr plane.
-    data.mCrChannel = const_cast<uint8_t*>(reader->DataV());
+    data.mCrChannel = const_cast<uint8_t*>(MOZ_TRY(reader->DataV()));
     data.mCbSkip = 0;
     // A plane.
     if (aFormat.PixelFormat() == VideoPixelFormat::I420A) {
       data.mAlpha.emplace();
       data.mAlpha->mChannel =
-          const_cast<uint8_t*>(reader->AsI420ABufferReader()->DataA());
+          const_cast<uint8_t*>(MOZ_TRY(reader->AsI420ABufferReader()->DataA()));
       data.mAlpha->mSize = data.mPictureRect.Size();
       // No values for mDepth and mPremultiplied.
     }
@@ -367,7 +388,7 @@ static Result<RefPtr<layers::Image>, MediaResult> CreateYUVImageFromBuffer(
     data.mYStride = reader.mStrideY;
     data.mYSkip = 0;
     // Cb plane.
-    data.mCbChannel = const_cast<uint8_t*>(reader.DataUV());
+    data.mCbChannel = const_cast<uint8_t*>(MOZ_TRY(reader.DataUV()));
     data.mCbSkip = 1;
     // Cr plane.
     data.mCrChannel = data.mCbChannel + 1;
@@ -576,13 +597,13 @@ static Result<Ok, nsCString> ValidateVisibility(
   MOZ_ASSERT(aVisibleRect.Height() > 0);
 
   const auto w = CheckedInt<uint32_t>(aVisibleRect.Width()) + aVisibleRect.X();
-  if (w.value() > static_cast<uint32_t>(aPicSize.Width())) {
+  if (!w.isValid() || w.value() > static_cast<uint32_t>(aPicSize.Width())) {
     return Err(
         "Sum of visible rectangle's x and width exceeds the picture's width"_ns);
   }
 
   const auto h = CheckedInt<uint32_t>(aVisibleRect.Height()) + aVisibleRect.Y();
-  if (h.value() > static_cast<uint32_t>(aPicSize.Height())) {
+  if (!h.isValid() || h.value() > static_cast<uint32_t>(aPicSize.Height())) {
     return Err(
         "Sum of visible rectangle's y and height exceeds the picture's height"_ns);
   }
@@ -1047,7 +1068,8 @@ static Result<RefPtr<VideoFrame>, MediaResult> CreateVideoFrameFromBuffer(
         // the data is 2 x 2 RGBA buffer (2 x 2 x 4 bytes), it pass the
         // above check. In this case, we can crop it to a 1 x 1-codedSize
         // image (Bug 1782128).
-        if (aData.Length() < format.ByteCount(codedSize)) {
+        size_t byteCount = MOZ_TRY(format.ByteCount(codedSize));
+        if (aData.Length() < byteCount) {
           return Err(MediaResult(NS_ERROR_INVALID_ARG, "data is too small"_ns));
         }
 
@@ -1091,7 +1113,7 @@ static already_AddRefed<VideoFrame> CreateVideoFrameFromBuffer(
 }
 
 // https://w3c.github.io/webcodecs/#videoframe-initialize-visible-rect-and-display-size
-static void InitializeVisibleRectAndDisplaySize(
+static Result<Ok, nsCString> InitializeVisibleRectAndDisplaySize(
     Maybe<gfx::IntRect>& aVisibleRect, Maybe<gfx::IntSize>& aDisplaySize,
     gfx::IntRect aDefaultVisibleRect, gfx::IntSize aDefaultDisplaySize) {
   if (!aVisibleRect) {
@@ -1102,11 +1124,17 @@ static void InitializeVisibleRectAndDisplaySize(
                     aDefaultVisibleRect.Width();
     double hScale = static_cast<double>(aDefaultDisplaySize.Height()) /
                     aDefaultVisibleRect.Height();
-    double w = wScale * aVisibleRect->Width();
-    double h = hScale * aVisibleRect->Height();
-    aDisplaySize.emplace(gfx::IntSize(static_cast<uint32_t>(round(w)),
-                                      static_cast<uint32_t>(round(h))));
+    double wd = round(wScale * aVisibleRect->Width());
+    double hd = round(hScale * aVisibleRect->Height());
+    constexpr double kMax =
+        static_cast<double>(std::numeric_limits<int32_t>::max());
+    if (wd <= 0 || hd <= 0 || wd > kMax || hd > kMax) {
+      return Err("Computed display size is invalid"_ns);
+    }
+    aDisplaySize.emplace(
+        gfx::IntSize(static_cast<int32_t>(wd), static_cast<int32_t>(hd)));
   }
+  return Ok();
 }
 
 // https://w3c.github.io/webcodecs/#videoframe-initialize-frame-with-resource-and-size
@@ -1139,9 +1167,9 @@ InitializeFrameWithResourceAndSize(nsIGlobalObject* aGlobal,
     // to do in this case?
   }
 
-  InitializeVisibleRectAndDisplaySize(visibleRect, displaySize,
-                                      gfx::IntRect({0, 0}, image->GetSize()),
-                                      image->GetSize());
+  MOZ_TRY(InitializeVisibleRectAndDisplaySize(
+      visibleRect, displaySize, gfx::IntRect({0, 0}, image->GetSize()),
+      image->GetSize()));
 
   Maybe<uint64_t> duration = OptionalToMaybe(aInit.mDuration);
 
@@ -1180,8 +1208,8 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
   Maybe<gfx::IntRect> visibleRect = init.first;
   Maybe<gfx::IntSize> displaySize = init.second;
 
-  InitializeVisibleRectAndDisplaySize(visibleRect, displaySize,
-                                      aData.mVisibleRect, aData.mDisplaySize);
+  MOZ_TRY(InitializeVisibleRectAndDisplaySize(
+      visibleRect, displaySize, aData.mVisibleRect, aData.mDisplaySize));
 
   Maybe<uint64_t> duration = OptionalToMaybe(aInit.mDuration);
 
@@ -2669,7 +2697,8 @@ bool VideoFrame::Format::IsValidSize(const gfx::IntSize& aSize) const {
   return false;
 }
 
-size_t VideoFrame::Format::ByteCount(const gfx::IntSize& aSize) const {
+Result<size_t, MediaResult> VideoFrame::Format::ByteCount(
+    const gfx::IntSize& aSize) const {
   MOZ_ASSERT(IsValidSize(aSize));
 
   CheckedInt<size_t> bytes;
@@ -2685,6 +2714,11 @@ size_t VideoFrame::Format::ByteCount(const gfx::IntSize& aSize) const {
     planeBytes *= SampleBytes(p);
 
     bytes += planeBytes;
+  }
+
+  if (!bytes.isValid()) {
+    return Err(MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                           "VideoFrame buffer size overflow"_ns));
   }
 
   return bytes.value();
@@ -2789,11 +2823,11 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
     return false;
   }
 
-  auto copyPlane = [&](const uint8_t* aPlaneData) {
+  auto copyPlane = [&](const uint8_t* aPlaneData, int32_t aSourceStride) {
     MOZ_ASSERT(aPlaneData);
 
     CheckedInt<size_t> offset(aRect.Y());
-    offset *= Stride(aPlane);
+    offset *= aSourceStride;
     offset += aRect.X() * mFormat->SampleBytes(aPlane);
     if (!offset.isValid()) {
       return false;
@@ -2808,37 +2842,38 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
     aPlaneData += offset.value();
     for (int32_t row = 0; row < aRect.Height(); ++row) {
       PodCopy(aPlaneDest.data(), aPlaneData, elementsBytes.value());
-      aPlaneData += Stride(aPlane);
+      aPlaneData += aSourceStride;
       // Spec asks to move `aDestinationStride` bytes instead of
-      // `Stride(aPlane)` forward.
+      // `aSourceStride` forward.
       aPlaneDest = aPlaneDest.From(aDestinationStride);
     }
     return true;
   };
 
   if (mImage->GetFormat() == ImageFormat::PLANAR_YCBCR) {
+    const auto* data = mImage->AsPlanarYCbCrImage()->GetData();
     switch (aPlane) {
       case Format::Plane::Y:
-        return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mYChannel);
+        return copyPlane(data->mYChannel, data->mYStride);
       case Format::Plane::U:
-        return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mCbChannel);
+        return copyPlane(data->mCbChannel, data->mCbCrStride);
       case Format::Plane::V:
-        return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mCrChannel);
+        return copyPlane(data->mCrChannel, data->mCbCrStride);
       case Format::Plane::A:
         MOZ_ASSERT(mFormat->PixelFormat() == VideoPixelFormat::I420A);
-        MOZ_ASSERT(mImage->AsPlanarYCbCrImage()->GetData()->mAlpha);
-        return copyPlane(
-            mImage->AsPlanarYCbCrImage()->GetData()->mAlpha->mChannel);
+        MOZ_ASSERT(data->mAlpha);
+        return copyPlane(data->mAlpha->mChannel, data->mYStride);
     }
     MOZ_ASSERT_UNREACHABLE("invalid plane");
   }
 
   if (mImage->GetFormat() == ImageFormat::NV_IMAGE) {
+    const auto* data = mImage->AsNVImage()->GetData();
     switch (aPlane) {
       case Format::Plane::Y:
-        return copyPlane(mImage->AsNVImage()->GetData()->mYChannel);
+        return copyPlane(data->mYChannel, data->mYStride);
       case Format::Plane::UV:
-        return copyPlane(mImage->AsNVImage()->GetData()->mCbChannel);
+        return copyPlane(data->mCbChannel, data->mCbCrStride);
       case Format::Plane::V:
       case Format::Plane::A:
         MOZ_ASSERT_UNREACHABLE("invalid plane");
@@ -2912,7 +2947,7 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
     return false;
   }
 
-  return copyPlane(tempMap.GetData());
+  return copyPlane(tempMap.GetData(), tempMap.GetStride());
 }
 
 #undef LOGW

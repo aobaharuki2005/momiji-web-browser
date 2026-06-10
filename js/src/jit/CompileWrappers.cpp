@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -142,10 +140,10 @@ const void* CompileRuntime::addressOfIonBailAfterCounter() {
 }
 #endif
 
-const uint32_t* CompileZone::addressOfNeedsIncrementalBarrier() {
+const uint32_t* CompileZone::addressOfNeedsMarkingBarrier() {
   // Cast away relaxed atomic wrapper for JIT access to barrier state.
   const mozilla::Atomic<uint32_t, mozilla::Relaxed>* ptr =
-      zone()->addressOfNeedsIncrementalBarrier();
+      zone()->addressOfNeedsMarkingBarrier();
   return reinterpret_cast<const uint32_t*>(ptr);
 }
 
@@ -169,6 +167,8 @@ bool CompileZone::allocNurseryBigInts() {
   return zone()->allocNurseryBigInts();
 }
 
+void* CompileZone::addressOfZone() { return zone(); }
+
 void* CompileZone::addressOfNurseryPosition() {
   return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
 }
@@ -191,6 +191,8 @@ bool CompileZone::canNurseryAllocateBigInts() {
 gc::AllocSite* CompileZone::catchAllAllocSite(JS::TraceKind traceKind,
                                               gc::CatchAllAllocSite siteKind) {
   if (siteKind == gc::CatchAllAllocSite::Optimized) {
+    // This is assumed when counting allocations.
+    MOZ_ASSERT(traceKind == JS::TraceKind::Object);
     return zone()->optimizedAllocSite();
   }
   return zone()->unknownAllocSite(traceKind);

@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -22,7 +21,22 @@ struct D3D11Checks {
     P010,
     P016,
   };
+  enum class VideoProcessorOption {
+    NV12_STUDIO_709,
+    NV12_FULL_709,
+    P010_STUDIO_709,
+    P010_FULL_709,
+    P010_STUDIO_2020,
+    P010_FULL_2020,
+    P010_STUDIO_2100_HLG,
+    P010_FULL_2100_HLG,
+    P010_STUDIO_2100_PQ,
+    P010_STUDIO_2100_HLG_SCRGB,
+    P010_FULL_2100_HLG_SCRGB,
+    P010_STUDIO_2100_PQ_SCRGB,
+  };
   using VideoFormatOptionSet = EnumSet<VideoFormatOption>;
+  using VideoProcessorOptionSet = EnumSet<VideoProcessorOption>;
 
   static bool DoesRenderTargetViewNeedRecreating(ID3D11Device* aDevice);
   static bool DoesDeviceWork();
@@ -32,6 +46,7 @@ struct D3D11Checks {
   static bool GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out);
   static bool DoesRemotePresentWork(IDXGIAdapter* adapter);
   static VideoFormatOptionSet FormatOptions(ID3D11Device* device);
+  static VideoProcessorOptionSet ProcessorOptions(ID3D11Device* device);
 };
 
 }  // namespace gfx
@@ -39,9 +54,14 @@ struct D3D11Checks {
 // Used for IPDL serialization.
 // The 'value' have to be the biggest enum from D3D11Checks::Option.
 template <>
-struct MaxEnumValue<::mozilla::gfx::D3D11Checks::VideoFormatOption> {
+struct MaxEnumValue<gfx::D3D11Checks::VideoFormatOption> {
   static constexpr unsigned int value =
       static_cast<unsigned int>(gfx::D3D11Checks::VideoFormatOption::P016);
+};
+template <>
+struct MaxEnumValue<gfx::D3D11Checks::VideoProcessorOption> {
+  static constexpr unsigned int value = static_cast<unsigned int>(
+      gfx::D3D11Checks::VideoProcessorOption::P010_STUDIO_2100_PQ_SCRGB);
 };
 
 }  // namespace mozilla

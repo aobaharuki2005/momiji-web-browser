@@ -5,26 +5,31 @@
 use anyhow::{bail, Result};
 use crash_helper_common::{
     messages::{self},
-    AncillaryData, BreakpadString, IPCClientChannel, IPCConnector, IntoRawAncillaryData,
-    ProcessHandle, RawAncillaryData, INVALID_ANCILLARY_DATA,
+    ApplicationInfo, BreakpadString, GeckoChildId, IPCClientChannel, IPCConnector, ProcessHandle,
+    RawIPCConnector,
 };
 #[cfg(any(target_os = "android", target_os = "linux"))]
 use minidump_writer::minidump_writer::{AuxvType, DirectAuxvDumpInfo};
 #[cfg(target_os = "android")]
 use std::os::fd::RawFd;
+#[cfg(target_os = "windows")]
+use std::os::windows::io::{BorrowedHandle, OwnedHandle, RawHandle};
 use std::{
     ffi::{c_char, CString, OsString},
     hint::spin_loop,
-    process,
+    path::PathBuf,
     ptr::null_mut,
     sync::{
         atomic::{AtomicBool, Ordering},
         OnceLock,
     },
-    thread::{self, JoinHandle},
+    thread::JoinHandle,
 };
 #[cfg(target_os = "windows")]
-use windows_sys::Win32::System::Diagnostics::Debug::{CONTEXT, EXCEPTION_RECORD};
+use windows_sys::Win32::{
+    Foundation::HANDLE,
+    System::Diagnostics::Debug::{CONTEXT, EXCEPTION_RECORD},
+};
 
 extern crate num_traits;
 
@@ -35,6 +40,8 @@ mod platform;
 pub struct CrashHelperClient {
     connector: IPCConnector,
     spawner_thread: Option<JoinHandle<Result<ProcessHandle>>>,
+    #[allow(unused)]
+    pid: Pid,
 }
 
 impl CrashHelperClient {
@@ -44,7 +51,7 @@ impl CrashHelperClient {
         Ok(())
     }
 
-    fn register_child_process(&mut self) -> Result<AncillaryData> {
+    fn register_child_process(&mut self, id: GeckoChildId) -> Result<IPCConnector> {
         let ipc_channel = IPCClientChannel::new()?;
         let (server_endpoint, client_endpoint) = ipc_channel.deconstruct();
 
@@ -60,28 +67,43 @@ impl CrashHelperClient {
             self.connector.set_process(process_handle);
         }
 
-        let message = messages::RegisterChildProcess::new(server_endpoint.into_ancillary());
+        let message = messages::RegisterChildProcess::new(id, server_endpoint.into_ancillary());
         self.connector.send_message(message)?;
 
-        Ok(client_endpoint.into_ancillary())
+        Ok(client_endpoint)
+    }
+
+    #[cfg(target_os = "windows")]
+    fn child_process_proxy_rendezvous(
+        &mut self,
+        id: GeckoChildId,
+        pid: Pid,
+        handle: OwnedHandle,
+    ) -> bool {
+        let message = messages::ProcessRendezVous::new(/*dumpable */ true, pid, id, [handle]);
+        self.connector.send_message(message).is_ok()
     }
 
     #[cfg(any(target_os = "android", target_os = "linux"))]
-    fn register_auxv_info(&mut self, pid: Pid, auxv_info: DirectAuxvDumpInfo) -> Result<()> {
-        let message = messages::RegisterAuxvInfo::new(pid, auxv_info);
+    fn register_auxv_info(
+        &mut self,
+        id: GeckoChildId,
+        auxv_info: DirectAuxvDumpInfo,
+    ) -> Result<()> {
+        let message = messages::RegisterAuxvInfo::new(id, auxv_info);
         self.connector.send_message(message)?;
         Ok(())
     }
 
     #[cfg(any(target_os = "android", target_os = "linux"))]
-    fn unregister_auxv_info(&mut self, pid: Pid) -> Result<()> {
-        let message = messages::UnregisterAuxvInfo::new(pid);
+    fn unregister_auxv_info(&mut self, id: GeckoChildId) -> Result<()> {
+        let message = messages::UnregisterAuxvInfo::new(id);
         self.connector.send_message(message)?;
         Ok(())
     }
 
-    fn transfer_crash_report(&mut self, pid: Pid) -> Result<CrashReport> {
-        let message = messages::TransferMinidump::new(pid);
+    fn transfer_crash_report(&mut self, id: GeckoChildId) -> Result<CrashReport> {
+        let message = messages::TransferMinidump::new(id);
         self.connector.send_message(message)?;
 
         let reply = self
@@ -91,7 +113,7 @@ impl CrashHelperClient {
         if reply.path.is_empty() {
             // TODO: We should return Result<Option<CrashReport>> instead of
             // this. Semantics would be better once we interact with Rust
-            bail!("Minidump for pid {pid:} was not found");
+            bail!("Minidump for id {id:} was not found");
         }
 
         Ok(CrashReport {
@@ -149,7 +171,9 @@ pub unsafe extern "C" fn crash_helper_launch(
 #[cfg(target_os = "android")]
 #[no_mangle]
 pub unsafe extern "C" fn crash_helper_connect(client_socket: RawFd) -> *mut CrashHelperClient {
-    if let Ok(crash_helper) = CrashHelperClient::new(client_socket) {
+    if let Ok(crash_helper) = CrashHelperClient::new(RawIPCConnector {
+        socket: client_socket,
+    }) {
         let crash_helper_box = Box::new(crash_helper);
 
         // The object will be owned by the C++ code from now on, until it is
@@ -172,6 +196,20 @@ pub unsafe extern "C" fn crash_helper_shutdown(client: *mut CrashHelperClient) {
     // The CrashHelperClient object will be automatically destroyed when the
     // contents of this box are automatically dropped at the end of the function
     let _crash_helper_box = Box::from_raw(client);
+}
+
+/// Return the PID of the crash helper.
+///
+/// # Safety
+///
+/// The `client` parameter must be a valid pointer to the crash helper client
+/// object returned by the [`crash_helper_launch()`] or
+/// [`crash_helper_connect()`] functions.
+#[no_mangle]
+pub unsafe extern "C" fn crash_helper_pid(client: *mut CrashHelperClient) -> Pid {
+    let client = client.as_mut().unwrap();
+
+    client.pid
 }
 
 #[repr(C)]
@@ -200,28 +238,36 @@ pub unsafe extern "C" fn set_crash_report_path(
 /// Creates a new IPC channel to connect a soon-to-be-created child process
 /// with the crash helper client. The server-side endpoint of this channel
 /// will be sent to the crash helper, and the client-side endpoint will be
-/// returned.
+/// stored in the structure pointed by the `connector` argument.
 ///
-/// This function will return an invalid file handle if creation failed.
+/// This function will return false if we failed to create the IPC channel.
 ///
 /// # Safety
 ///
 /// The `client` parameter must be a valid pointer to the crash helper client
 /// object returned by the [`crash_helper_launch()`] or
-/// [`crash_helper_connect()`] functions.
+/// [`crash_helper_connect()`] functions. The `connector` pointer must be a
+/// valid pointer to a `RawIPCConnector` structure.
 #[no_mangle]
 pub unsafe extern "C" fn register_child_ipc_channel(
     client: *mut CrashHelperClient,
-) -> RawAncillaryData {
+    id: GeckoChildId,
+    connector: *mut RawIPCConnector,
+) -> bool {
     let client = client.as_mut().unwrap();
-    if let Ok(client_endpoint) = client.register_child_process() {
-        client_endpoint.into_raw()
+    if let Ok(client_endpoint) = client.register_child_process(id) {
+        let raw_connector = client_endpoint.into_raw_connector();
+        unsafe {
+            connector.write(raw_connector);
+        }
+
+        true
     } else {
-        INVALID_ANCILLARY_DATA
+        false
     }
 }
 
-/// Request the crash report generated for the process associated with `pid`.
+/// Request the crash report generated for the process identified by `id`.
 /// If the crash report is found an object holding a pointer to the minidump
 /// and a potential error message will be returned. Otherwise the function will
 /// return `null`.
@@ -234,10 +280,10 @@ pub unsafe extern "C" fn register_child_ipc_channel(
 #[no_mangle]
 pub unsafe extern "C" fn transfer_crash_report(
     client: *mut CrashHelperClient,
-    pid: Pid,
+    id: GeckoChildId,
 ) -> *mut CrashReport {
     let client = client.as_mut().unwrap();
-    if let Ok(crash_report) = client.transfer_crash_report(pid) {
+    if let Ok(crash_report) = client.transfer_crash_report(id) {
         // The object will be owned by the C++ code from now on, until it is
         // passed back in `release_crash_report`.
         Box::into_raw(Box::new(crash_report))
@@ -275,15 +321,15 @@ pub unsafe extern "C" fn release_crash_report(crash_report: *mut CrashReport) {
 #[cfg(target_os = "windows")]
 pub unsafe fn report_external_exception(
     main_process_pid: Pid,
-    pid: Pid,
-    thread: Pid, // TODO: This should be a different type, but it's the same on Windows
+    process: OwnedHandle,
+    thread: OwnedHandle,
     exception_record_ptr: *mut EXCEPTION_RECORD,
     context_ptr: *mut CONTEXT,
 ) {
     let exception_records = collect_exception_records(exception_record_ptr);
     let context = unsafe { context_ptr.read() };
     let message =
-        messages::WindowsErrorReportingMinidump::new(pid, thread, exception_records, context);
+        messages::WindowsErrorReportingMinidump::new(process, thread, exception_records, context);
 
     // In the code below we connect to the crash helper, send our message and
     // wait for a reply before returning, but we ignore errors because we
@@ -314,7 +360,34 @@ fn collect_exception_records(
     }
 }
 
-/// Send the auxiliary vector information for the process identified by `pid`
+/// Sends the rendez-vous message of a child process from the main process
+/// instead of from the child itself. This is used on Windows where the main
+/// process has access to the child handle and can duplicate handles into the
+/// crash helper, but the child cannot.
+///
+/// # Safety
+///
+/// The `client` parameter must be a valid pointer to the crash helper client
+/// object returned by the [`crash_helper_launch()`] or
+/// [`crash_helper_connect()`] functions. The `handle` parameter must contain
+/// a valid process handle.
+#[cfg(target_os = "windows")]
+#[no_mangle]
+pub unsafe extern "C" fn child_process_proxy_rendezvous(
+    client: *mut CrashHelperClient,
+    id: GeckoChildId,
+    pid: Pid,
+    handle: HANDLE,
+) -> bool {
+    let client = client.as_mut().unwrap();
+
+    let Ok(handle) = BorrowedHandle::borrow_raw(handle as RawHandle).try_clone_to_owned() else {
+        return false;
+    };
+    client.child_process_proxy_rendezvous(id, pid, handle)
+}
+
+/// Send the auxiliary vector information for the process identified by `id`
 /// to the crash helper.
 ///
 /// # Safety
@@ -327,7 +400,7 @@ fn collect_exception_records(
 #[no_mangle]
 pub unsafe extern "C" fn register_child_auxv_info(
     client: *mut CrashHelperClient,
-    pid: Pid,
+    id: GeckoChildId,
     auxv_info_ptr: *const rust_minidump_writer_linux::DirectAuxvDumpInfo,
 ) -> bool {
     let client = client.as_mut().unwrap();
@@ -338,11 +411,11 @@ pub unsafe extern "C" fn register_child_auxv_info(
         entry_address: (*auxv_info_ptr).entry_address as AuxvType,
     };
 
-    client.register_auxv_info(pid, auxv_info).is_ok()
+    client.register_auxv_info(id, auxv_info).is_ok()
 }
 
 /// Deregister previously sent auxiliary vector information for the process
-/// identified by `pid`.
+/// identified by `id`.
 ///
 /// # Safety
 ///
@@ -353,10 +426,31 @@ pub unsafe extern "C" fn register_child_auxv_info(
 #[no_mangle]
 pub unsafe extern "C" fn unregister_child_auxv_info(
     client: *mut CrashHelperClient,
-    pid: Pid,
+    id: GeckoChildId,
 ) -> bool {
     let client = client.as_mut().unwrap();
-    client.unregister_auxv_info(pid).is_ok()
+    client.unregister_auxv_info(id).is_ok()
+}
+
+/// Return the installation time of the folder/file specified in `path` or the
+/// current running executable if `path` is null. Note that this will not be an
+/// exact value, but rather a somewhat unique value for each installation and
+/// for each different user of said installation. We use it to approximate user
+/// counts without resorting to identifiable information, as such it is not
+/// meant to provide an accurate result. A return value of 0 indicates an error.
+///
+/// # Safety
+///
+/// The `path` argument must point to a nul-terminated C string or be null.
+#[no_mangle]
+pub unsafe extern "C" fn get_install_time(path: *const BreakpadChar) -> u64 {
+    let path = if path.is_null() {
+        None
+    } else {
+        let path = <OsString as BreakpadString>::from_ptr(path);
+        Some(PathBuf::from(path))
+    };
+    ApplicationInfo::get_install_time(path).unwrap_or(0)
 }
 
 /******************************************************************************
@@ -369,7 +463,7 @@ pub unsafe extern "C" fn unregister_child_auxv_info(
 // signal/exception-safe. We will access this endpoint only from within the
 // exception handler with bare syscalls so we can leave the `IPCConnector`
 // object behind.
-static CHILD_IPC_ENDPOINT: OnceLock<Box<RawAncillaryData>> = OnceLock::new();
+static CHILD_IPC_ENDPOINT: OnceLock<Box<RawIPCConnector>> = OnceLock::new();
 static RENDEZVOUS_FAILED: AtomicBool = AtomicBool::new(false);
 
 /// Let a client rendez-vous with the crash helper process. This step ensures
@@ -382,37 +476,30 @@ static RENDEZVOUS_FAILED: AtomicBool = AtomicBool::new(false);
 /// a valid pipe handle (on Windows) or a valid file descriptor (on all other
 /// platforms).
 #[no_mangle]
-pub unsafe extern "C" fn crash_helper_rendezvous(client_endpoint: RawAncillaryData) {
-    let Ok(connector) = IPCConnector::from_raw_ancillary(client_endpoint) else {
+pub unsafe extern "C" fn crash_helper_rendezvous(
+    raw_connector: RawIPCConnector,
+    id: GeckoChildId,
+    crash_helper_pid: Option<&Pid>,
+) {
+    let Ok(connector) = IPCConnector::from_raw_connector(raw_connector) else {
         RENDEZVOUS_FAILED.store(true, Ordering::Relaxed);
         return;
     };
 
-    let join_handle = thread::spawn(move || {
-        if let Ok(message) = connector.recv_reply::<messages::ChildProcessRendezVous>() {
-            let res = CrashHelperClient::prepare_for_minidump(message.crash_helper_pid);
-            let message = messages::ChildProcessRendezVousReply::new(res, process::id() as Pid);
-            if let Ok(_) = connector.send_message(message) {
-                assert!(
-                    CHILD_IPC_ENDPOINT
-                        .set(Box::new(connector.into_raw_ancillary()))
-                        .is_ok(),
-                    "The crash_helper_rendezvous() function must only be called once"
-                );
-                return;
-            }
+    let rendezvous = CrashHelperClient::prepare_for_minidump(crash_helper_pid.copied(), id);
+    if let Some(rendezvous) = rendezvous {
+        if connector.send_message(rendezvous).is_err() {
+            RENDEZVOUS_FAILED.store(true, Ordering::Relaxed);
+            return;
         }
-
-        RENDEZVOUS_FAILED.store(true, Ordering::Relaxed);
-    });
-
-    // If we couldn't spawn a thread the join handle will be already marked as
-    // finished, check for this and flag the rendez-vous as failed. Don't wait
-    // for the thread though, other failures will be dealt with within the
-    // thread itself.
-    if join_handle.is_finished() && join_handle.join().is_err() {
-        RENDEZVOUS_FAILED.store(true, Ordering::Relaxed);
     }
+
+    assert!(
+        CHILD_IPC_ENDPOINT
+            .set(Box::new(connector.into_raw_connector()))
+            .is_ok(),
+        "The crash_helper_rendezvous() function must only be called once"
+    );
 }
 
 /// Ensure that the rendez-vous with the crash helper has happened. This method

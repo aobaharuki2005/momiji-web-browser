@@ -2,36 +2,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{LineStyle, LineOrientation, ClipMode, ColorF, FilterOpGraphPictureBufferId};
+use api::{LineStyle, LineOrientation, ColorF, FilterOpGraphPictureBufferId};
 use api::{MAX_RENDER_TASK_SIZE, SVGFE_GRAPH_MAX};
 use api::units::*;
 use std::time::Duration;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
-use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
+use crate::render_task_graph::SubTaskRange;
+use crate::clip::ClipNodeRange;
 use crate::command_buffer::{CommandBufferIndex, QuadFlags};
 use crate::pattern::{PatternKind, PatternShaderInput};
 use crate::profiler::{add_text_marker};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::frame_builder::FrameBuilderConfig;
-use crate::gpu_types::{BorderInstance, UvRectKind, TransformPaletteId, BlurEdgeMode};
+use crate::gpu_types::{BorderInstance, UvRectKind, BlurEdgeMode, ClipSpace};
 use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
 use crate::svg_filter::{FilterGraphNode, FilterGraphOp, FilterGraphPictureReference, SVGFE_CONVOLVE_VALUES_LIMIT};
 use crate::picture::ResolvedSurfaceTexture;
 use crate::tile_cache::MAX_SURFACE_SIZE;
+use crate::transform::GpuTransformId;
 use crate::prim_store::ClipData;
-use crate::prim_store::gradient::{
-    FastLinearGradientTask, RadialGradientTask,
-    ConicGradientTask, LinearGradientTask,
-};
-use crate::resource_cache::{ResourceCache, ImageRequest};
+use crate::resource_cache::ImageRequest;
 use std::{usize, f32, i32, u32};
 use crate::renderer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
 use crate::render_backend::DataStores;
 use crate::render_target::{ResolveOp, RenderTargetKind};
 use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
-use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
-use crate::segment::EdgeAaSegmentMask;
-use crate::surface::SurfaceBuilder;
+use crate::render_task_cache::RenderTaskCacheEntryHandle;
+use crate::segment::EdgeMask;
 use smallvec::SmallVec;
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
@@ -46,11 +43,17 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskAddress(pub i32);
+
+impl std::fmt::Debug for RenderTaskAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "#{}", self.0)
+    }
+}
 
 impl Into<RenderTaskAddress> for RenderTaskId {
     fn into(self) -> RenderTaskAddress {
@@ -198,12 +201,10 @@ pub struct EmptyTask {
 pub struct PrimTask {
     pub pattern: PatternKind,
     pub pattern_input: PatternShaderInput,
-    pub device_pixel_scale: DevicePixelScale,
     pub content_origin: DevicePoint,
     pub prim_address_f: GpuBufferAddress,
-    pub raster_spatial_node_index: SpatialNodeIndex,
-    pub transform_id: TransformPaletteId,
-    pub edge_flags: EdgeAaSegmentMask,
+    pub transform_id: GpuTransformId,
+    pub edge_flags: EdgeMask,
     pub quad_flags: QuadFlags,
     pub prim_needs_scissor_rect: bool,
     pub texture_input: RenderTaskId,
@@ -364,10 +365,6 @@ pub enum RenderTaskKind {
     Blit(BlitTask),
     Border(BorderTask),
     LineDecoration(LineDecorationTask),
-    FastLinearGradient(FastLinearGradientTask),
-    LinearGradient(LinearGradientTask),
-    RadialGradient(RadialGradientTask),
-    ConicGradient(ConicGradientTask),
     SVGFENode(SVGFEFilterTask),
     TileComposite(TileCompositeTask),
     Prim(PrimTask),
@@ -415,10 +412,6 @@ impl RenderTaskKind {
             RenderTaskKind::Blit(..) => "Blit",
             RenderTaskKind::Border(..) => "Border",
             RenderTaskKind::LineDecoration(..) => "LineDecoration",
-            RenderTaskKind::FastLinearGradient(..) => "FastLinearGradient",
-            RenderTaskKind::LinearGradient(..) => "LinearGradient",
-            RenderTaskKind::RadialGradient(..) => "RadialGradient",
-            RenderTaskKind::ConicGradient(..) => "ConicGradient",
             RenderTaskKind::SVGFENode(..) => "SVGFENode",
             RenderTaskKind::TileComposite(..) => "TileComposite",
             RenderTaskKind::Prim(..) => "Prim",
@@ -434,10 +427,6 @@ impl RenderTaskKind {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Border(..) |
-            RenderTaskKind::FastLinearGradient(..) |
-            RenderTaskKind::LinearGradient(..) |
-            RenderTaskKind::RadialGradient(..) |
-            RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::TileComposite(..) |
@@ -522,12 +511,10 @@ impl RenderTaskKind {
     pub fn new_prim(
         pattern: PatternKind,
         pattern_input: PatternShaderInput,
-        raster_spatial_node_index: SpatialNodeIndex,
-        device_pixel_scale: DevicePixelScale,
         content_origin: DevicePoint,
         prim_address_f: GpuBufferAddress,
-        transform_id: TransformPaletteId,
-        edge_flags: EdgeAaSegmentMask,
+        transform_id: GpuTransformId,
+        edge_flags: EdgeMask,
         quad_flags: QuadFlags,
         prim_needs_scissor_rect: bool,
         texture_input: RenderTaskId,
@@ -535,8 +522,6 @@ impl RenderTaskKind {
         RenderTaskKind::Prim(PrimTask {
             pattern,
             pattern_input,
-            raster_spatial_node_index,
-            device_pixel_scale,
             content_origin,
             prim_address_f,
             transform_id,
@@ -597,31 +582,13 @@ impl RenderTaskKind {
         outer_rect: DeviceIntRect,
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
-        clip_store: &mut ClipStore,
-        gpu_buffer_builder: &mut GpuBufferBuilderF,
-        resource_cache: &mut ResourceCache,
         rg_builder: &mut RenderTaskGraphBuilder,
-        clip_data_store: &mut ClipDataStore,
         device_pixel_scale: DevicePixelScale,
         fb_config: &FrameBuilderConfig,
-        surface_builder: &mut SurfaceBuilder,
     ) -> RenderTaskId {
-        // Step through the clip sources that make up this mask. If we find
-        // any box-shadow clip sources, request that image from the render
-        // task cache. This allows the blurred box-shadow rect to be cached
-        // in the texture cache across frames.
-        // TODO(gw): Consider moving this logic outside this function, especially
-        //           as we add more clip sources that depend on render tasks.
-        // TODO(gw): If this ever shows up in a profile, we could pre-calculate
-        //           whether a ClipSources contains any box-shadows and skip
-        //           this iteration for the majority of cases.
         let task_size = outer_rect.size();
 
-        // If we have a potentially tiled clip mask, clear the mask area first. Otherwise,
-        // the first (primary) clip mask will overwrite all the clip mask pixels with
-        // blending disabled to set to the initial value.
-
-        let clip_task_id = rg_builder.add().init(
+        rg_builder.add().init(
             RenderTask::new_dynamic(
                 task_size,
                 RenderTaskKind::CacheMask(CacheMaskTask {
@@ -632,70 +599,7 @@ impl RenderTaskKind {
                     clear_to_one: fb_config.gpu_supports_fast_clears,
                 }),
             )
-        );
-
-        for i in 0 .. clip_node_range.count {
-            let clip_instance = clip_store.get_instance_from_range(&clip_node_range, i);
-            let clip_node = &mut clip_data_store[clip_instance.handle];
-            match clip_node.item.kind {
-                ClipItemKind::BoxShadow { ref mut source } => {
-                    let (cache_size, cache_key) = source.cache_key
-                        .as_ref()
-                        .expect("bug: no cache key set")
-                        .clone();
-                    let blur_radius_dp = cache_key.blur_radius_dp as f32;
-                    let device_pixel_scale = DevicePixelScale::new(cache_key.device_pixel_scale.to_f32_px());
-
-                    // Request a cacheable render task with a blurred, minimal
-                    // sized box-shadow rect.
-                    source.render_task = Some(resource_cache.request_render_task(
-                        Some(RenderTaskCacheKey {
-                            size: cache_size,
-                            kind: RenderTaskCacheKeyKind::BoxShadow(cache_key),
-                        }),
-                        false,
-                        RenderTaskParent::RenderTask(clip_task_id),
-                        gpu_buffer_builder,
-                        rg_builder,
-                        surface_builder,
-                        &mut |rg_builder, _| {
-                            let clip_data = ClipData::rounded_rect(
-                                source.minimal_shadow_rect.size(),
-                                &source.shadow_radius,
-                                ClipMode::Clip,
-                            );
-
-                            // Draw the rounded rect.
-                            let mask_task_id = rg_builder.add().init(RenderTask::new_dynamic(
-                                cache_size,
-                                RenderTaskKind::new_rounded_rect_mask(
-                                    source.minimal_shadow_rect.min,
-                                    clip_data,
-                                    device_pixel_scale,
-                                    fb_config,
-                                ),
-                            ));
-
-                            // Blur it
-                            RenderTask::new_blur(
-                                DeviceSize::new(blur_radius_dp, blur_radius_dp),
-                                mask_task_id,
-                                rg_builder,
-                                RenderTargetKind::Alpha,
-                                None,
-                                cache_size,
-                                BlurEdgeMode::Duplicate,
-                            )
-                        }
-                    ));
-                }
-                ClipItemKind::Rectangle { .. } |
-                ClipItemKind::RoundedRectangle { .. } |
-                ClipItemKind::Image { .. } => {}
-            }
-        }
-
-        clip_task_id
+        )
     }
 
     // Write (up to) 8 floats of data specific to the type
@@ -726,7 +630,7 @@ impl RenderTaskKind {
             RenderTaskKind::Prim(ref task) => {
                 [
                     // NOTE: This must match the render task data format for Picture tasks currently
-                    task.device_pixel_scale.0,
+                    DevicePixelScale::identity().0,
                     task.content_origin.x,
                     task.content_origin.y,
                     0.0,
@@ -774,10 +678,6 @@ impl RenderTaskKind {
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
-            RenderTaskKind::FastLinearGradient(..) |
-            RenderTaskKind::LinearGradient(..) |
-            RenderTaskKind::RadialGradient(..) |
-            RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::TileComposite(..) |
             RenderTaskKind::Blit(..) => {
                 [0.0; 4]
@@ -943,27 +843,11 @@ pub type TaskDependencies = SmallVec<[RenderTaskId;2]>;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct MaskSubPass {
-    pub clip_node_range: ClipNodeRange,
-    pub prim_spatial_node_index: SpatialNodeIndex,
-    pub prim_address_f: GpuBufferAddress,
-}
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum SubPass {
-    Masks {
-        masks: MaskSubPass,
-    },
-}
-
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTask {
     pub location: RenderTaskLocation,
     pub children: TaskDependencies,
     pub kind: RenderTaskKind,
-    pub sub_pass: Option<SubPass>,
+    pub sub_tasks: SubTaskRange,
 
     // TODO(gw): These fields and perhaps others can become private once the
     //           frame_graph / render_task source files are unified / cleaned up.
@@ -995,7 +879,7 @@ impl RenderTask {
             uv_rect_handle: GpuBufferAddress::INVALID,
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
-            sub_pass: None,
+            sub_tasks: SubTaskRange::empty(),
         }
     }
 
@@ -1040,7 +924,7 @@ impl RenderTask {
             uv_rect_handle: GpuBufferAddress::INVALID,
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
-            sub_pass: None,
+            sub_tasks: SubTaskRange::empty(),
         }
     }
 
@@ -1059,7 +943,7 @@ impl RenderTask {
             uv_rect_handle: GpuBufferAddress::INVALID,
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
-            sub_pass: None,
+            sub_tasks: SubTaskRange::empty(),
         }
     }
 
@@ -1235,12 +1119,12 @@ impl RenderTask {
         task_id
     }
 
-    pub fn add_sub_pass(
+    pub fn set_sub_tasks(
         &mut self,
-        sub_pass: SubPass,
+        sub_tasks: SubTaskRange,
     ) {
-        assert!(self.sub_pass.is_none(), "multiple sub-passes are not supported for now");
-        self.sub_pass = Some(sub_pass);
+        assert!(self.sub_tasks.is_empty());
+        self.sub_tasks = sub_tasks;
     }
 
     /// Creates render tasks from PictureCompositeMode::SVGFEGraph.
@@ -2365,4 +2249,59 @@ impl RenderTask {
     pub fn mark_cached(&mut self, handle: RenderTaskCacheEntryHandle) {
         self.cache_handle = Some(handle);
     }
+}
+
+/// A rendering operation applied on top of a render task.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum SubTask {
+    RectangleClip(RectangleClipSubTask),
+    ImageClip(ImageClipSubTask),
+}
+
+/// A (rounded) rectangle clip applied to a render task using the multiply
+/// blend mode on top of the content being clipped.
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct RectangleClipSubTask {
+    /// Quad primitive address for this clip.
+    pub quad_address: GpuBufferAddress,
+    /// Location of the (rounded) rectangle parameters.
+    pub clip_address: GpuBufferAddress,
+    /// The coordinate space of the clip.
+    /// - If primitive space, then the clip's quad primitive is positioned using
+    ///   the transform of the primitive being clipped. clip_transform_id is used
+    ///   by the shader to map from that space to the clip's local space.
+    ///   This is used when the clip and raster space are indifferent coordinate
+    ///   systems.
+    /// - If raster space, then the clip's quad primitive is positioned directly
+    ///   using rectangles in raster space (no transforms). The clip parameters
+    ///   are still potentially in a different space so clip_transform_id is used
+    ///   to map from raster to clip space (this transform is assumed to be a
+    ///   scale-offset).
+    pub clip_space: ClipSpace,
+    /// Transform applied to the quad primitive of the clip.
+    pub quad_transform_id: GpuTransformId,
+    /// Transform from the quad primitive's space to the clip's local space.
+    pub clip_transform_id: GpuTransformId,
+    pub quad_flags: QuadFlags,
+    pub needs_scissor_rect: bool,
+    pub rounded_rect_fast_path: bool,
+}
+
+/// An clip applied to a render task using the multiply blend mode on top of
+/// the content being clipped.
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ImageClipSubTask {
+    /// Quad primitive address for this clip.
+    pub quad_address: GpuBufferAddress,
+    /// Transform from the clip's local space to raster space (to position the
+    /// clip's quad primitive).
+    pub quad_transform_id: GpuTransformId,
+    pub src_task: RenderTaskId,
+    pub quad_flags: QuadFlags,
+    pub needs_scissor_rect: bool,
 }

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -222,7 +220,7 @@ void ChannelPosix::SetOtherPid(base::ProcessId other_pid) {
 bool ChannelPosix::ProcessIncomingMessages() {
   chan_cap_.NoteOnTarget();
 
-  struct msghdr msg = {0};
+  struct msghdr msg = {nullptr};
   struct iovec iov;
 
   msg.msg_iov = &iov;
@@ -242,7 +240,11 @@ bool ChannelPosix::ProcessIncomingMessages() {
     // Read from pipe.
     // recvmsg() returns 0 if the connection has closed or EAGAIN if no data
     // is waiting on the pipe.
-    ssize_t bytes_read = HANDLE_EINTR(recvmsg(pipe_, &msg, MSG_DONTWAIT));
+    int recvFlags = MSG_DONTWAIT;
+#ifdef MSG_CMSG_CLOEXEC
+    recvFlags |= MSG_CMSG_CLOEXEC;
+#endif
+    ssize_t bytes_read = HANDLE_EINTR(recvmsg(pipe_, &msg, recvFlags));
 
     if (bytes_read < 0) {
       if (errno == EAGAIN) {
@@ -262,7 +264,7 @@ bool ChannelPosix::ProcessIncomingMessages() {
     DCHECK(bytes_read);
 
     // a pointer to an array of |num_wire_fds| file descriptors from the read
-    const int* wire_fds = NULL;
+    const int* wire_fds = nullptr;
     unsigned num_wire_fds = 0;
 
     // walk the list of control messages and, if we find an array of file
@@ -411,7 +413,7 @@ bool ChannelPosix::ProcessIncomingMessages() {
 
       if (m.header()->num_handles) {
         // the message has file descriptors
-        const char* error = NULL;
+        const char* error = nullptr;
         if (m.header()->num_handles > num_fds - fds_i) {
           // the message has been completely received, but we didn't get
           // enough file descriptors.
@@ -454,7 +456,11 @@ bool ChannelPosix::ProcessIncomingMessages() {
         nsTArray<mozilla::UniqueFileHandle> handles(m.header()->num_handles);
         for (unsigned end_i = fds_i + m.header()->num_handles; fds_i < end_i;
              ++fds_i) {
-          handles.AppendElement(mozilla::UniqueFileHandle(fds[fds_i]));
+          mozilla::UniqueFileHandle fh(fds[fds_i]);
+#ifndef MSG_CMSG_CLOEXEC
+          mozilla::SetCloseOnExec(fh);
+#endif
+          handles.AppendElement(std::move(fh));
         }
         m.SetAttachedFileHandles(std::move(handles));
       }
@@ -525,7 +531,7 @@ bool ChannelPosix::ProcessOutgoingMessages() {
   while (!output_queue_.IsEmpty()) {
     Message* msg = output_queue_.FirstElement().get();
 
-    struct msghdr msgh = {0};
+    struct msghdr msgh = {nullptr};
 
     char cmsgBuf[kControlBufferSize];
 
@@ -1139,33 +1145,50 @@ bool ChannelPosix::TransferMachPorts(Message& msg) {
 // static
 bool ChannelPosix::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
   int fds[2];
-  if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0) {
+  int type = SOCK_STREAM;
+#ifdef SOCK_CLOEXEC
+  type |= SOCK_CLOEXEC;
+#endif
+#ifdef SOCK_NONBLOCK
+  type |= SOCK_NONBLOCK;
+#endif
+
+  if (socketpair(AF_UNIX, type, 0, fds) < 0) {
     mozilla::ipc::AnnotateCrashReportWithErrno(
         CrashReporter::Annotation::IpcCreatePipeSocketPairErrno, errno);
     return false;
   }
 
   auto configureFd = [](int fd) -> bool {
+#ifndef SOCK_NONBLOCK
     // Mark the endpoints as non-blocking
-    if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+    int flFlags = fcntl(fd, F_GETFL);
+    if (flFlags == -1) {
       mozilla::ipc::AnnotateCrashReportWithErrno(
           CrashReporter::Annotation::IpcCreatePipeFcntlErrno, errno);
       return false;
     }
+    if (fcntl(fd, F_SETFL, flFlags | O_NONBLOCK) == -1) {
+      mozilla::ipc::AnnotateCrashReportWithErrno(
+          CrashReporter::Annotation::IpcCreatePipeFcntlErrno, errno);
+      return false;
+    }
+#endif
 
+#ifndef SOCK_CLOEXEC
     // Mark the pipes as FD_CLOEXEC
-    int flags = fcntl(fd, F_GETFD);
-    if (flags == -1) {
+    int fdFlags = fcntl(fd, F_GETFD);
+    if (fdFlags == -1) {
       mozilla::ipc::AnnotateCrashReportWithErrno(
           CrashReporter::Annotation::IpcCreatePipeCloExecErrno, errno);
       return false;
     }
-    flags |= FD_CLOEXEC;
-    if (fcntl(fd, F_SETFD, flags) == -1) {
+    if (fcntl(fd, F_SETFD, fdFlags | FD_CLOEXEC) == -1) {
       mozilla::ipc::AnnotateCrashReportWithErrno(
           CrashReporter::Annotation::IpcCreatePipeCloExecErrno, errno);
       return false;
     }
+#endif
     return true;
   };
 

@@ -112,16 +112,15 @@ pub enum QueryError {
 
 impl WebGpuError for QueryError {
     fn webgpu_error_type(&self) -> ErrorType {
-        let e: &dyn WebGpuError = match self {
-            Self::EncoderState(e) => e,
-            Self::Use(e) => e,
-            Self::Resolve(e) => e,
-            Self::InvalidResource(e) => e,
-            Self::Device(e) => e,
-            Self::MissingFeature(e) => e,
-            Self::DestroyedResource(e) => e,
-        };
-        e.webgpu_error_type()
+        match self {
+            Self::EncoderState(e) => e.webgpu_error_type(),
+            Self::Use(e) => e.webgpu_error_type(),
+            Self::Resolve(e) => e.webgpu_error_type(),
+            Self::InvalidResource(e) => e.webgpu_error_type(),
+            Self::Device(e) => e.webgpu_error_type(),
+            Self::MissingFeature(e) => e.webgpu_error_type(),
+            Self::DestroyedResource(e) => e.webgpu_error_type(),
+        }
     }
 }
 
@@ -427,7 +426,7 @@ pub(super) fn resolve_query_set(
     dst_buffer: Arc<Buffer>,
     destination_offset: BufferAddress,
 ) -> Result<(), QueryError> {
-    if destination_offset % wgt::QUERY_RESOLVE_BUFFER_ALIGNMENT != 0 {
+    if !destination_offset.is_multiple_of(wgt::QUERY_RESOLVE_BUFFER_ALIGNMENT) {
         return Err(QueryError::Resolve(ResolveError::BufferOffsetAlignment));
     }
 

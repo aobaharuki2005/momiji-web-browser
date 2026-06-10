@@ -8,12 +8,30 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   IPPProxyManager:
-    "moz-src:///browser/components/ipprotection/IPPProxyManager.sys.mjs",
+    "moz-src:///toolkit/components/ipprotection/IPPProxyManager.sys.mjs",
   IPProtectionService:
-    "moz-src:///browser/components/ipprotection/IPProtectionService.sys.mjs",
+    "moz-src:///toolkit/components/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
-    "moz-src:///browser/components/ipprotection/IPProtectionService.sys.mjs",
+    "moz-src:///toolkit/components/ipprotection/IPProtectionService.sys.mjs",
 });
+
+async function resetCustomization() {
+  let customizationReadyPromise = BrowserTestUtils.waitForEvent(
+    window.gNavToolbox,
+    "customizationready"
+  );
+  gCustomizeMode.enter();
+  await customizationReadyPromise;
+
+  await gCustomizeMode.reset();
+
+  let afterCustomizationPromise = BrowserTestUtils.waitForEvent(
+    window.gNavToolbox,
+    "aftercustomization"
+  );
+  gCustomizeMode.exit();
+  await afterCustomizationPromise;
+}
 
 /**
  * Tests that toolbar widget is added and removed based on
@@ -29,19 +47,21 @@ add_task(async function toolbar_added_and_removed() {
     IPProtectionWidget.WIDGET_ID
   ).position;
   // By default, the button for revamped sidebar is placed at the beginning of the navbar.
-  let expectedPosition = Services.prefs.getBoolPref("sidebar.revamp") ? 8 : 7;
+  let expectedPosition = Services.prefs.getBoolPref("sidebar.revamp") ? 9 : 8;
   Assert.equal(
     position,
     expectedPosition,
     "IP Protection widget added in the correct position"
   );
   // Disable the feature
-  await cleanupExperiment();
+  Services.prefs.clearUserPref("browser.ipProtection.enabled");
   widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.equal(widget, null, "IP Protection widget is removed");
 
   // Reenable the feature
-  await setupExperiment();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ipProtection.enabled", true]],
+  });
   widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(widget),
@@ -73,8 +93,7 @@ add_task(async function toolbar_icon_status() {
   );
   let content = panelView.querySelector(IPProtectionPanel.CONTENT_TAGNAME);
   setupService({
-    isSignedIn: true,
-    isEnrolledAndEntitled: true,
+    isReady: true,
   });
   IPProtectionService.updateState();
   await putServerInRemoteSettings();
@@ -84,8 +103,8 @@ add_task(async function toolbar_icon_status() {
   Assert.ok(content, "Panel content should be present");
 
   let statusCard = content.statusCardEl;
-  let toggle = statusCard.connectionToggleEl;
-  Assert.ok(toggle, "Status card connection toggle should be present");
+  let turnOnButton = statusCard.actionButtonEl;
+  Assert.ok(turnOnButton, "Status card turn on button should be present");
 
   let vpnOnPromise = BrowserTestUtils.waitForEvent(
     lazy.IPPProxyManager,
@@ -93,12 +112,20 @@ add_task(async function toolbar_icon_status() {
     false,
     () => !!IPPProxyManager.activatedAt
   );
-  // Toggle the VPN on
-  toggle.click();
+  // Turn the VPN on
+  turnOnButton.click();
   await vpnOnPromise;
   Assert.ok(
     button.classList.contains("ipprotection-on"),
     "Toolbar icon should now show connected status"
+  );
+  // Regression guard for bug 2034698: the on/off icons must come from a
+  // single shared sprite so swapping states doesn't trigger a fresh image
+  // decode (which used to cause a one-frame blank toolbar button).
+  let onImage = getComputedStyle(button).listStyleImage;
+  Assert.ok(
+    onImage.includes("ipprotection-states.svg#on"),
+    `On state should reference the sprite fragment, got: ${onImage}`
   );
   let vpnOffPromise = BrowserTestUtils.waitForEvent(
     lazy.IPPProxyManager,
@@ -106,12 +133,18 @@ add_task(async function toolbar_icon_status() {
     false,
     () => lazy.IPProtectionService.state === lazy.IPProtectionStates.READY
   );
-  // Toggle the VPN off
-  toggle.click();
+  // Turn the VPN off
+  let turnOffButton = statusCard.actionButtonEl;
+  turnOffButton.click();
   await vpnOffPromise;
   Assert.ok(
     !button.classList.contains("ipprotection-on"),
     "Toolbar icon should now show disconnected status"
+  );
+  let offImage = getComputedStyle(button).listStyleImage;
+  Assert.ok(
+    offImage.includes("ipprotection-states.svg#off"),
+    `Off state should reference the sprite fragment, got: ${offImage}`
   );
 
   cleanupService();
@@ -123,12 +156,50 @@ add_task(async function toolbar_icon_status() {
 });
 
 /**
+ * Tests that the panel opens when the toolbar button is activated via the
+ * Enter or Space keys. Bug 2027922 — on macOS, native XUL toolbarbutton key
+ * handling does not fire `command` for Enter, so we rely on the explicit
+ * keypress handler in navigator-toolbox.js.
+ */
+add_task(async function toolbar_keyboard_activation() {
+  for (let key of ["KEY_Enter", " "]) {
+    let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
+    Assert.ok(
+      BrowserTestUtils.isVisible(button),
+      "IP Protection widget should be visible"
+    );
+
+    button.setAttribute("tabindex", "-1");
+    button.focus();
+
+    let panelShownPromise = waitForPanelEvent(document, "popupshown");
+    let panelInitPromise = BrowserTestUtils.waitForEvent(
+      document,
+      "IPProtection:Init"
+    );
+    EventUtils.synthesizeKey(key, {}, window);
+    await Promise.all([panelShownPromise, panelInitPromise]);
+
+    Assert.equal(
+      button.getAttribute("open"),
+      "true",
+      `Panel should be open after pressing ${key}`
+    );
+
+    let panelHiddenPromise = waitForPanelEvent(document, "popuphidden");
+    EventUtils.synthesizeKey("KEY_Escape");
+    await panelHiddenPromise;
+
+    button.removeAttribute("tabindex");
+  }
+});
+
+/**
  * Tests that the toolbar icon in a new window has the previous status.
  */
 add_task(async function toolbar_icon_status_new_window() {
   setupService({
-    isSignedIn: true,
-    isEnrolledAndEntitled: true,
+    isReady: true,
   });
   IPProtectionService.updateState();
 
@@ -140,9 +211,10 @@ add_task(async function toolbar_icon_status_new_window() {
     false,
     () => !!IPPProxyManager.activatedAt
   );
-  // Toggle the VPN on
+  // Turn the VPN on
   let statusCard = content.statusCardEl;
-  statusCard.connectionToggleEl.click();
+  let turnOnButton = statusCard.actionButtonEl;
+  turnOnButton.click();
   await vpnOnPromise;
 
   let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
@@ -207,8 +279,7 @@ add_task(async function customize_toolbar_remove_widget() {
  */
 add_task(async function toolbar_placement_customized() {
   setupService({
-    isSignedIn: true,
-    isEnrolledAndEntitled: true,
+    isReady: true,
   });
 
   let start = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
@@ -232,7 +303,8 @@ add_task(async function toolbar_placement_customized() {
   );
 
   // Disable the feature
-  await cleanupExperiment();
+  Services.prefs.clearUserPref("browser.ipProtection.enabled");
+
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.equal(widget, null, "IP Protection widget is removed");
 
@@ -244,7 +316,9 @@ add_task(async function toolbar_placement_customized() {
   );
 
   // Reenable the feature
-  await setupExperiment();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ipProtection.enabled", true]],
+  });
 
   await waitForStateChange;
 
@@ -265,12 +339,44 @@ add_task(async function toolbar_placement_customized() {
 });
 
 /**
+ * Tests that the toolbar button badge reflects the openedPanelWithLocation pref.
+ */
+add_task(async function toolbar_badge_opened_with_location() {
+  const OPENED_WITH_LOCATION_PREF =
+    "browser.ipProtection.openedPanelWithLocation";
+  let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [[OPENED_WITH_LOCATION_PREF, false]],
+  });
+  Assert.ok(
+    button.hasAttribute("badged"),
+    "Toolbar button should be badged when user has not yet opened the panel with location"
+  );
+
+  await SpecialPowers.pushPrefEnv({ set: [[OPENED_WITH_LOCATION_PREF, true]] });
+  Assert.ok(
+    !button.hasAttribute("badged"),
+    "Toolbar button badge should be removed once the user has opened the panel with location"
+  );
+
+  // Each popPrefEnv unwraps one layer from the stack, restoring the
+  // pref to the value it had before that push
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
  * Tests that toolbar widget can be removed and will not be re-added.
  */
 add_task(async function toolbar_removed() {
   setupService({
-    isSignedIn: true,
-    isEnrolled: true,
+    isReady: true,
+  });
+
+  // Ensure that the added pref is still set, as it is unset at the end of each test.
+  await SpecialPowers.pushPrefEnv({
+    set: [[IPProtectionWidget.ADDED_PREF, true]],
   });
 
   let start = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
@@ -287,7 +393,7 @@ add_task(async function toolbar_removed() {
   Assert.equal(end, null, "IP Protection widget is removed");
 
   // Disable the feature
-  await cleanupExperiment();
+  Services.prefs.clearUserPref("browser.ipProtection.enabled");
 
   const waitForStateChange = BrowserTestUtils.waitForEvent(
     lazy.IPProtectionService,
@@ -297,7 +403,9 @@ add_task(async function toolbar_removed() {
   );
 
   // Reenable the feature
-  await setupExperiment();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ipProtection.enabled", true]],
+  });
 
   await waitForStateChange;
 
@@ -310,5 +418,51 @@ add_task(async function toolbar_removed() {
     IPProtectionWidget.WIDGET_ID,
     start.area,
     start.position
+  );
+});
+
+/**
+ * Tests that toolbar widget can be moved and will reset
+ * back to the initial area on customize mode reset.
+ */
+add_task(async function toolbar_placement_reset() {
+  setupService({
+    isReady: true,
+  });
+
+  let start = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
+  Assert.equal(
+    start.area,
+    CustomizableUI.AREA_NAVBAR,
+    "IP Protection widget is initially added to the nav bar"
+  );
+
+  // Move widget to overflow
+  CustomizableUI.addWidgetToArea(
+    IPProtectionWidget.WIDGET_ID,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
+
+  let end = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
+  Assert.equal(
+    end.area,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    "IP Protection widget moved to the overflow area"
+  );
+
+  await resetCustomization();
+
+  let restored = CustomizableUI.getPlacementOfWidget(
+    IPProtectionWidget.WIDGET_ID
+  );
+  Assert.equal(
+    restored.area,
+    start.area,
+    "IP Protection widget is reset to the initial area after customize mode reset"
+  );
+  Assert.equal(
+    restored.position,
+    start.position,
+    "IP Protection widget is reset to the initial position after customize mode reset"
   );
 });

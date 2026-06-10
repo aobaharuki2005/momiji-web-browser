@@ -141,8 +141,8 @@ add_task(async function test_profile_feature_jstracing() {
       const shapes = contentThread.tracedObjectShapes;
 
       // First lookup for all our expected symbols in the string table
-      const functionRunStringIndex = contentThread.stringTable.indexOf(
-        `run (${url}:7:17)`
+      const functionRunStringIndex = contentThread.stringTable.findIndex(s =>
+        s.startsWith(`run (${url}:7:17)`)
       );
       Assert.greater(
         functionRunStringIndex,

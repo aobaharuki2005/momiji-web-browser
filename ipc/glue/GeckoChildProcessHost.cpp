@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -157,16 +155,15 @@ class BaseProcessLauncher {
                       geckoargs::ChildProcessArgs&& aExtraOpts)
       : mProcessType(aHost->mProcessType),
         mLaunchOptions(std::move(aHost->mLaunchOptions)),
-        mChildArgs(std::move(aExtraOpts))
+        mChildArgs(std::move(aExtraOpts)),
 #ifdef XP_WIN
-        ,
-        mGroupId(aHost->mGroupId)
+        mGroupId(aHost->mGroupId),
 #endif
+        mUtilitySandbox(aHost->mUtilitySandbox)
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
         ,
         mAllowedFilesRead(aHost->mAllowedFilesRead),
         mSandboxLevel(aHost->mSandboxLevel),
-        mSandbox(aHost->mSandbox),
         mIsFileContent(aHost->mIsFileContent),
         mEnableSandboxLogging(aHost->mEnableSandboxLogging)
 #endif
@@ -176,6 +173,7 @@ class BaseProcessLauncher {
 #endif
   {
     aHost->mInitialChannelId.ToProvidedString(mInitialChannelIdString);
+    mChildID = aHost->mChildID;
     SprintfLiteral(mChildIDString, "%d", aHost->mChildID);
 
     // Compute the serial event target we'll use for launching.
@@ -213,7 +211,8 @@ class BaseProcessLauncher {
 
   void MapChildLogging();
 
-  static BinPathType GetPathToBinary(FilePath&, GeckoProcessType);
+  static BinPathType GetPathToBinary(FilePath&, GeckoProcessType,
+                                     SandboxingKind sandboxKind);
 
   void GetChildLogName(const char* origLogName, nsACString& buffer);
 
@@ -231,10 +230,10 @@ class BaseProcessLauncher {
 #ifdef XP_WIN
   nsString mGroupId;
 #endif
+  SandboxingKind mUtilitySandbox;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   std::vector<std::wstring> mAllowedFilesRead;
   int32_t mSandboxLevel;
-  SandboxingKind mSandbox;
   bool mIsFileContent;
   bool mEnableSandboxLogging;
 #endif
@@ -245,6 +244,7 @@ class BaseProcessLauncher {
 #endif
   LaunchResults mResults = LaunchResults();
   char mInitialChannelIdString[NSID_LENGTH];
+  GeckoChildID mChildID;
   char mChildIDString[32];
 
   // Set during launch.
@@ -511,7 +511,8 @@ void GeckoChildProcessHost::Destroy() {
 
 // static
 mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
-    FilePath& exePath, GeckoProcessType processType) {
+    FilePath& exePath, GeckoProcessType processType,
+    SandboxingKind utilitySandbox) {
   exePath = {};
   BinPathType pathType = XRE_GetChildProcBinPathType(processType);
 
@@ -544,6 +545,12 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
     // Use the GPU helper executable
     bundleName = MOZ_GPU_PROCESS_BUNDLENAME;
     executableLeafName = MOZ_GPU_PROCESS_NAME_BRANDED;
+#  if defined(NIGHTLY_BUILD) && !defined(MOZ_NO_SMART_CARDS)
+  } else if (processType == GeckoProcessType_Utility &&
+             utilitySandbox == PKCS11_MODULE) {
+    bundleName = MOZ_PKCS11_PROCESS_BUNDLENAME;
+    executableLeafName = MOZ_PKCS11_PROCESS_NAME_BRANDED;
+#  endif  // NIGHTLY_BUILD && !MOZ_NO_SMART_CARDS
   } else {
     // the default child process executable
     bundleName = MOZ_CHILD_PROCESS_BUNDLENAME;
@@ -626,7 +633,7 @@ void GeckoChildProcessHost::SetEnv(const char* aKey, const char* aValue) {
 bool GeckoChildProcessHost::PrepareLaunch(
     geckoargs::ChildProcessArgs& aExtraOpts) {
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  if (!SandboxLaunch::Configure(mProcessType, mSandbox, aExtraOpts,
+  if (!SandboxLaunch::Configure(mProcessType, mUtilitySandbox, aExtraOpts,
                                 mLaunchOptions.get())) {
     return false;
   }
@@ -654,7 +661,7 @@ bool GeckoChildProcessHost::PrepareLaunch(
       for (const nsAString& readPath : readPaths.Split(',')) {
         nsString trimmedPath(readPath);
         trimmedPath.Trim(" ", true, true);
-        std::wstring resolvedPath(trimmedPath.Data());
+        std::wstring resolvedPath(trimmedPath.getW());
         // Check if path ends with '\' as this indicates we want to give read
         // access to a directory and so it needs a wildcard.
         if (resolvedPath.back() == L'\\') {
@@ -734,7 +741,7 @@ bool GeckoChildProcessHost::AsyncLaunch(
 #endif
 
   RefPtr<BaseProcessLauncher> launcher =
-      new ProcessLauncher(this, std::move(aExtraOpts));
+      MakeRefPtr<ProcessLauncher>(this, std::move(aExtraOpts));
   TimeStamp startTimeStamp = TimeStamp::Now();
 #ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
   launcher->SetLaunchArchitecture(mLaunchArch);
@@ -843,14 +850,16 @@ bool GeckoChildProcessHost::AsyncLaunch(
                 glean::dom_parentprocess::process_launch_errors
                     .Get(telemetryKey)
                     .Add(1);
-                {
-                  MonitorAutoLock lock(mMonitor);
-                  mProcessState = PROCESS_ERROR;
-                  lock.Notify();
-                }
+                OnProcessLaunchError(aError);
                 return ProcessHandlePromise::CreateAndReject(aError, __func__);
               });
   return true;
+}
+
+void GeckoChildProcessHost::OnProcessLaunchError(const LaunchError aError) {
+  MonitorAutoLock lock(mMonitor);
+  mProcessState = PROCESS_ERROR;
+  lock.Notify();
 }
 
 bool GeckoChildProcessHost::WaitUntilConnected(int32_t aTimeoutMs) {
@@ -1119,22 +1128,7 @@ Result<Ok, LaunchError> BaseProcessLauncher::DoSetup() {
 
   if (!CrashReporter::IsDummy() && CrashReporter::GetEnabled() &&
       mProcessType != GeckoProcessType_ForkServer) {
-#if defined(MOZ_WIDGET_COCOA) || defined(XP_WIN)
-    geckoargs::sCrashReporter.Put(CrashReporter::GetChildNotificationPipe(),
-                                  mChildArgs);
-#elif defined(XP_UNIX) && !defined(XP_IOS)
-    UniqueFileHandle childCrashFd = CrashReporter::GetChildNotificationPipe();
-    if (!childCrashFd) {
-      return Err(LaunchError("DuplicateFileHandle failed"));
-    }
-    geckoargs::sCrashReporter.Put(std::move(childCrashFd), mChildArgs);
-#endif  // XP_UNIX && !XP_IOS
-
-    UniqueFileHandle crashHelperClientFd =
-        CrashReporter::RegisterChildIPCChannel();
-    if (crashHelperClientFd) {
-      geckoargs::sCrashHelper.Put(std::move(crashHelperClientFd), mChildArgs);
-    } else {
+    if (!CrashReporter::RegisterChildIPCChannel(mChildArgs, mChildID)) {
       NS_WARNING("Could not create an IPC channel to the crash helper");
     }
   }
@@ -1246,7 +1240,8 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   }
 
   FilePath exePath;
-  BinPathType pathType = GetPathToBinary(exePath, mProcessType);
+  BinPathType pathType =
+      GetPathToBinary(exePath, mProcessType, mUtilitySandbox);
 
   // Make sure the executable path is present at the start of our argument list.
   // If we're using BinPathType::Self, also add the `-contentproc` argument.
@@ -1540,10 +1535,12 @@ RefPtr<ProcessLaunchPromise> MacProcessLauncher::DoLaunch() {
         // Wait for the child process to send us its 'task_t' data, then
         // send it the mach send/receive rights which are being passed on
         // the commandline.
-        return MachHandleProcessCheckIn(std::move(self->mParentRecvPort),
-                                        base::GetProcId(aResults.mHandle),
-                                        mozilla::TimeDuration::FromSeconds(10),
-                                        std::move(self->mChildArgs.mSendRights))
+        return MachHandleProcessCheckIn(
+                   std::move(self->mParentRecvPort),
+                   base::GetProcId(aResults.mHandle),
+                   mozilla::TimeDuration::FromSeconds(10),
+                   std::move(self->mChildArgs.mSendRights),
+                   std::move(self->mChildArgs.mReceiveRights))
             ->Then(
                 XRE_GetAsyncIOEventTarget(), __func__,
                 [self, results = std::move(aResults)](task_t aTask) mutable {
@@ -1570,7 +1567,8 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
   }
 
   FilePath exePath;
-  BinPathType pathType = GetPathToBinary(exePath, mProcessType);
+  BinPathType pathType =
+      GetPathToBinary(exePath, mProcessType, mUtilitySandbox);
 
   mCmdLine.emplace(exePath.ToWStringHack());
 
@@ -1664,9 +1662,9 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
       }
       break;
     case GeckoProcessType_Utility:
-      if (IsUtilitySandboxEnabled(mSandbox)) {
+      if (IsUtilitySandboxEnabled(mUtilitySandbox)) {
         if (!mResults.mSandboxBroker->SetSecurityLevelForUtilityProcess(
-                mSandbox)) {
+                mUtilitySandbox)) {
           return Err(LaunchError("SetSecurityLevelForUtilityProcess"));
         }
         mUseSandbox = true;
@@ -1734,10 +1732,18 @@ RefPtr<ProcessLaunchPromise> WindowsProcessLauncher::DoLaunch() {
         mLaunchOptions->env_map, mProcessType, mEnableSandboxLogging,
         cachedNtdllThunk, &mResults.mHandle);
     if (err.isOk()) {
-      EnvironmentLog("MOZ_PROCESS_LOG")
-          .print("==> process %d launched child process %d (%S)\n",
-                 base::GetCurrentProcId(), base::GetProcId(mResults.mHandle),
-                 mCmdLine->command_line_string().c_str());
+      base::ProcessId childPid = base::GetProcId(mResults.mHandle);
+      EnvironmentLog logger = EnvironmentLog("MOZ_PROCESS_LOG");
+      logger.print("==> process %d launched child process %d (%S)\n",
+                   base::GetCurrentProcId(), childPid,
+                   mCmdLine->command_line_string().c_str());
+      if (!CrashReporter::ChildProcessProxyRendezvous(mChildID, childPid,
+                                                      mResults.mHandle)) {
+        logger.print(
+            "==> process %d could not rendez-vous with the crash helper\n",
+            childPid);
+      }
+
       return ProcessLaunchPromise::CreateAndResolve(std::move(mResults),
                                                     __func__);
     }
@@ -1751,6 +1757,17 @@ RefPtr<ProcessLaunchPromise> WindowsProcessLauncher::DoLaunch() {
     return ProcessLaunchPromise::CreateAndReject(launchErr.unwrapErr(),
                                                  __func__);
   }
+
+  base::ProcessId childPid = base::GetProcId(mResults.mHandle);
+  if (!CrashReporter::ChildProcessProxyRendezvous(mChildID, childPid,
+                                                  mResults.mHandle)) {
+    NS_WARNING(
+        nsPrintfCString(
+            "Could not rendez-vous with crash helper on behalf of process %d",
+            mChildID)
+            .get());
+  }
+
   return ProcessLaunchPromise::CreateAndResolve(std::move(mResults), __func__);
 }
 #endif  // XP_WIN

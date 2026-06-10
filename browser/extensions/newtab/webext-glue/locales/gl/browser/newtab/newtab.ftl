@@ -8,9 +8,13 @@
 newtab-page-title = Nova lapela
 newtab-settings-button =
     .title = Personalice a páxina de nova lapela
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Personalizar esta páxina
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Personalizar
+newtab-customize-panel-label =
+    .label = Personalizar
 newtab-personalize-settings-icon-label =
     .title = Personalizar a nova pestana
     .aria-label = Configuración
@@ -49,7 +53,7 @@ newtab-search-box-input =
     .placeholder = Buscar na web
     .aria-label = Buscar na web
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Engadir buscador
 newtab-topsites-add-shortcut-header = Novo atallo
@@ -303,9 +307,21 @@ newtab-error-fallback-refresh-link = Actualice a páxina para tentalo de novo.
 
 newtab-custom-shortcuts-title = Atallos
 newtab-custom-shortcuts-subtitle = Sitios gardados ou visitados
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Atallos
     .description = Sitios gardados ou visitados
+newtab-custom-shortcuts-nova =
+    .label = Atallos
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } fila
+           *[other] { $num } filas
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -316,9 +332,12 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Atallos patrocinados
 newtab-custom-pocket-title = Recomendado por { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Contido excepcional patrocinado por { -pocket-brand-name }, parte da familia { -brand-product-name }
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Historias recomendadas
     .description = Contido excepcional seleccionado pola familia de { -brand-product-name }
+newtab-recommended-stories-toggle =
+    .label = Historias recomendadas
 newtab-custom-stories-personalized-toggle =
     .label = Historias
 newtab-custom-pocket-sponsored = Historias patrocinadas
@@ -328,18 +347,16 @@ newtab-custom-recent-subtitle = Unha selección de sitios e contido recentes
 newtab-custom-weather-toggle =
     .label = Tempo
     .description = Predición de hoxe dunha ollada
-newtab-custom-trending-search-toggle =
-    .label = Tendencias de busca
-    .description = Temas populares e buscados con frecuencia
 newtab-custom-widget-weather-toggle =
     .label = Tempo
-newtab-custom-widget-trending-search-toggle =
-    .label = Tendencias de busca
 newtab-custom-widget-lists-toggle =
     .label = Listas
 newtab-custom-widget-timer-toggle =
     .label = Temporizador
 newtab-custom-widget-section-title = Widgets
+newtab-custom-widget-section-toggle =
+    .label = Widgets
+newtab-widget-manage-title = Widgets
 newtab-custom-close-button = Pechar
 newtab-custom-settings = Xestionar máis axustes
 
@@ -347,8 +364,11 @@ newtab-custom-settings = Xestionar máis axustes
 
 newtab-wallpaper-title = Fondos de pantalla
 newtab-wallpaper-reset = Restablecer os valores predeterminados
+#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Subir unha imaxe
 newtab-wallpaper-custom-color = Escolle unha cor
+newtab-wallpaper-toggle-title =
+    .label = Fondos de pantalla
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = A imaxe superou o límite de tamaño do ficheiro de { $file_size }MB. Proba a subir un ficheiro máis pequeno.
@@ -370,6 +390,7 @@ newtab-wallpaper-light-fox-anniversary = Un raposo nun campo herboso cunha paisa
 
 ## Solid Colors
 
+#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Cores sólidas
 newtab-wallpaper-blue = Azul
 newtab-wallpaper-light-blue = Azul claro
@@ -474,6 +495,11 @@ newtab-weather-menu-hide-weather = Ocultar o tempo na nova pestana
 newtab-weather-menu-learn-more = Máis información
 # This message is shown if user is working offline
 newtab-weather-error-not-available = Os datos meteorolóxicos non están dispoñibles neste momento.
+# Variables:
+#   $provider (string) - Service provider for weather data
+newtab-weather-see-forecast-description =
+    .title = Ver a previsión en { $provider }
+    .aria-description = { $provider } ∙ Patrocinado
 
 ## Topic Labels
 
@@ -578,7 +604,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = Os teus favoritos na punta dos teus dedos
 newtab-shortcuts-highlight-subtitle = Engade un atallo para manter os teus sitios favoritos a un clic de distancia.
 
-## Strings for reporting ads and content
+## Strings for reporting issues with ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Por que informas isto?
@@ -601,17 +627,6 @@ newtab-report-submit = Enviar
 newtab-toast-thanks-for-reporting =
     .message = Grazas por informar sobre isto.
 
-## Strings for trending searches
-
-newtab-trending-searches-show-trending =
-    .title = Mostrar buscas en tendencia
-newtab-trending-searches-hide-trending =
-    .title = Ocultar buscas en tendencia
-newtab-trending-searches-learn-more = Máis información
-newtab-trending-searches-dismiss = Ocultar buscas en tendencia
-# "Trending searches refers to popular searches from search engines
-newtab-trending-searches-title = Tendencias de busca
-
 ## Strings for task / to-do list productivity widget
 
 # A simple label next to the default list name letting users know this is a new / beta feature
@@ -621,23 +636,26 @@ newtab-widget-lists-label-beta =
     .label = Beta
 newtab-widget-task-list-menu-copy = Copiar
 newtab-widget-lists-menu-edit = Editar o nome da lista
+newtab-widget-lists-menu-edit2 =
+    .aria-label = Editar o nome da lista
 newtab-widget-lists-menu-create = Crea unha nova lista
 newtab-widget-lists-menu-delete = Eliminar esta lista
 newtab-widget-lists-menu-copy = Copiar a lista no portapapeis
-newtab-widget-lists-menu-hide = Ocultar todas as listas
 newtab-widget-lists-menu-learn-more = Máis información
+newtab-widget-lists-button-add-item = Engadir un elemento
+newtab-widget-lists-input-add-an-item2 =
+    .placeholder = Engadir un elemento
+    .aria-label = Engadir un elemento
 newtab-widget-lists-input-add-an-item =
     .placeholder = Engadir un elemento
 
-## Strings for timer productivity widget
-## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+## Strings introduced by the Nova redesign of the Timer widget
 
 newtab-widget-timer-label-play =
     .label = Reproducir
 newtab-widget-timer-label-pause =
     .label = Pausar
 newtab-widget-timer-menu-notifications-on = Activar as notificacións
-newtab-widget-timer-menu-hide = Ocultar o temporizador
 newtab-widget-timer-menu-learn-more = Máis información
 newtab-widget-message-title = Mantente concentrado con listas e un temporizador incorporado
 newtab-promo-card-title = Apoiar a { -brand-product-name }

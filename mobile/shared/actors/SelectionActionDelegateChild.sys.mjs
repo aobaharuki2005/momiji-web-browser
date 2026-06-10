@@ -195,12 +195,15 @@ export class SelectionActionDelegateChild extends GeckoViewActorChild {
   }
 
   _getDefaultMagnifierPoint(aEvent) {
-    const rect = lazy.LayoutUtils.rectToScreenRect(aEvent.target.ownerGlobal, {
-      left: aEvent.clientX,
-      top: aEvent.clientY - this._accessiblecaretHeight,
-      width: 0,
-      height: 0,
-    });
+    const rect = lazy.LayoutUtils.rectToScreenRect(
+      aEvent.target.documentGlobal || aEvent.target,
+      {
+        left: aEvent.clientX,
+        top: aEvent.clientY - this._accessiblecaretHeight,
+        width: 0,
+        height: 0,
+      }
+    );
     return { x: rect.left, y: rect.top };
   }
 
@@ -217,15 +220,12 @@ export class SelectionActionDelegateChild extends GeckoViewActorChild {
     ) {
       // <input> element. Use vertical center position of input element.
       const bounds = focus.getBoundingClientRect();
-      const rect = lazy.LayoutUtils.rectToScreenRect(
-        aEvent.target.ownerGlobal,
-        {
-          left: aEvent.clientX,
-          top: bounds.top,
-          width: 0,
-          height: bounds.height,
-        }
-      );
+      const rect = lazy.LayoutUtils.rectToScreenRect(win, {
+        left: aEvent.clientX,
+        top: bounds.top,
+        width: 0,
+        height: bounds.height,
+      });
       return { x: rect.left, y: rect.top + rect.height / 2 };
     }
 
@@ -258,10 +258,7 @@ export class SelectionActionDelegateChild extends GeckoViewActorChild {
       return { left: aEvent.clientX, top: y, width: 0, height: 0 };
     })();
 
-    const rect = lazy.LayoutUtils.rectToScreenRect(
-      aEvent.target.ownerGlobal,
-      bounds
-    );
+    const rect = lazy.LayoutUtils.rectToScreenRect(win, bounds);
     return { x: rect.left, y: rect.top };
   }
 
@@ -340,7 +337,7 @@ export class SelectionActionDelegateChild extends GeckoViewActorChild {
           return null;
         }
         const rect = lazy.LayoutUtils.rectToScreenRect(
-          aEvent.target.ownerGlobal,
+          aEvent.target.documentGlobal || aEvent.target,
           boundingRect
         );
         return {

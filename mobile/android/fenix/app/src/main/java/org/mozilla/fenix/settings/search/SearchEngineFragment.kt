@@ -13,24 +13,31 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreference
+import androidx.preference.SwitchPreferenceCompat
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.selectedOrDefaultPrivateSearchEngine
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
+import org.mozilla.fenix.ext.openToBrowser
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.requirePreference
+import org.mozilla.fenix.utils.canShowAddSearchWidgetPrompt
+import org.mozilla.fenix.utils.maybeShowAddSearchWidgetPrompt
 import org.mozilla.gecko.search.SearchWidgetProvider
 
-class SearchEngineFragment : PreferenceFragmentCompat() {
+/**
+ * Settings screen allowing users to configure the browser search functionality.
+ */
+class SearchEngineFragment : PreferenceFragmentCompat(), SystemInsetsPaddedFragment {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(
@@ -38,14 +45,21 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             rootKey,
         )
 
-        requirePreference<SwitchPreference>(R.string.pref_key_show_sponsored_suggestions).apply {
+        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_sponsored_suggestions).apply {
             isVisible = context.settings().enableFxSuggest
         }
-        requirePreference<SwitchPreference>(R.string.pref_key_show_nonsponsored_suggestions).apply {
+        requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_nonsponsored_suggestions).apply {
             isVisible = context.settings().enableFxSuggest
+        }
+        requirePreference<CheckBoxPreference>(R.string.pref_key_search_optimization_cards).apply {
+            isVisible = context.settings().enableFxSuggest &&
+                    context.settings().isSearchOptimizationEnabled
         }
         requirePreference<Preference>(R.string.pref_key_learn_about_fx_suggest).apply {
             isVisible = context.settings().enableFxSuggest
+        }
+        requirePreference<Preference>(R.string.pref_key_search_widget_installed_2).apply {
+            isVisible = canShowAddSearchWidgetPrompt(AppWidgetManager.getInstance(requireContext()))
         }
 
         view?.hideKeyboard()
@@ -58,7 +72,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preferences_search))
 
         val showVoiceSearchPreference =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_voice_search).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_voice_search).apply {
                 isChecked = context.settings().shouldShowVoiceSearch
             }
 
@@ -66,8 +80,13 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         updateDefaultSearchEnginePreference()
 
         val searchSuggestionsPreference =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_search_suggestions).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_search_suggestions).apply {
                 isChecked = context.settings().shouldShowSearchSuggestions
+            }
+
+        val searchWidgetPreference =
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_search_widget_installed_2).apply {
+                isChecked = context.settings().searchWidgetInstalled
             }
 
         val trendingSearchSuggestionsPreference =
@@ -78,12 +97,12 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             }
 
         val recentSearchSuggestionsPreference =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_recent_search_suggestions).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_recent_search_suggestions).apply {
                 isChecked = context.settings().shouldShowRecentSearchSuggestions
             }
 
         val autocompleteURLsPreference =
-            requirePreference<SwitchPreference>(R.string.pref_key_enable_autocomplete_urls).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_enable_autocomplete_urls).apply {
                 isChecked = context.settings().shouldAutocompleteInAwesomebar
             }
 
@@ -94,27 +113,27 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             }
 
         val showHistorySuggestions =
-            requirePreference<SwitchPreference>(R.string.pref_key_search_browsing_history).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_search_browsing_history).apply {
                 isChecked = context.settings().shouldShowHistorySuggestions
             }
 
         val showBookmarkSuggestions =
-            requirePreference<SwitchPreference>(R.string.pref_key_search_bookmarks).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_search_bookmarks).apply {
                 isChecked = context.settings().shouldShowBookmarkSuggestions
             }
 
         val showSyncedTabsSuggestions =
-            requirePreference<SwitchPreference>(R.string.pref_key_search_synced_tabs).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_search_synced_tabs).apply {
                 isChecked = context.settings().shouldShowSyncedTabsSuggestions
             }
 
         val showClipboardSuggestions =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_clipboard_suggestions).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_clipboard_suggestions).apply {
                 isChecked = context.settings().shouldShowClipboardSuggestions
             }
 
         val showSponsoredSuggestionsPreference =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_sponsored_suggestions).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_sponsored_suggestions).apply {
                 isChecked = context.settings().showSponsoredSuggestions
                 summary = getString(
                     R.string.preferences_show_sponsored_suggestions_summary,
@@ -123,14 +142,25 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             }
 
         val showNonSponsoredSuggestionsPreference =
-            requirePreference<SwitchPreference>(R.string.pref_key_show_nonsponsored_suggestions).apply {
+            requirePreference<SwitchPreferenceCompat>(R.string.pref_key_show_nonsponsored_suggestions).apply {
                 isChecked = context.settings().showNonSponsoredSuggestions
                 title = getString(
                     R.string.preferences_show_nonsponsored_suggestions,
                     getString(R.string.app_name),
                 )
             }
+        val showSuggestionCardsPreference =
+            requirePreference<CheckBoxPreference>(R.string.pref_key_search_optimization_cards).apply {
+                isChecked = context.settings().shouldShowSearchOptimizationCards
+            }
 
+        searchWidgetPreference.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                // We cannot remove a widget added to device's homescreen so this cannot be toggled by users.
+                // The toggle status is set separately from our widget AppWidgetProvider.
+                return false
+            }
+        }
         searchSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
         showHistorySuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
         showBookmarkSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
@@ -150,6 +180,11 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
         showSponsoredSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
         showNonSponsoredSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showSuggestionCardsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showNonSponsoredSuggestionsPreference.setOnPreferenceClickListener {
+            showSuggestionCardsPreference.isEnabled = showNonSponsoredSuggestionsPreference.isChecked
+            true
+        }
     }
 
     /**
@@ -159,7 +194,17 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
     @VisibleForTesting
     internal fun updateDefaultSearchEnginePreference() {
         with(requirePreference<Preference>(R.string.pref_key_default_search_engine)) {
-            summary = getSelectedSearchEngine(requireContext())?.name
+            val searchState = requireContext().components.core.store.state.search
+            val normalEngine = searchState.selectedOrDefaultSearchEngine
+            val privateEngine = searchState.selectedOrDefaultPrivateSearchEngine
+            summary = if (searchState.userSelectedPrivateSearchEngineId != null &&
+                normalEngine != privateEngine
+            ) {
+                val privateLabel = getString(R.string.preferences_category_select_private_search_engine)
+                "${normalEngine?.name} / ${privateEngine?.name} ($privateLabel)"
+            } else {
+                normalEngine?.name
+            }
         }
     }
 
@@ -193,10 +238,10 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
      * When the preference value changes, it updates the corresponding setting in SharedPreferences
      * and triggers an update for all search widgets.
      *
-     * @param showVoiceSearchPreference The [SwitchPreference] for the "Show voice search" setting.
+     * @param showVoiceSearchPreference The [SwitchPreferenceCompat] for the "Show voice search" setting.
      */
     @VisibleForTesting
-    internal fun initialiseVoiceSearchPreference(showVoiceSearchPreference: SwitchPreference) {
+    internal fun initialiseVoiceSearchPreference(showVoiceSearchPreference: SwitchPreferenceCompat) {
         showVoiceSearchPreference.onPreferenceChangeListener =
             object : Preference.OnPreferenceChangeListener {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
@@ -218,6 +263,9 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             getPreferenceKey(R.string.pref_key_manage_search_shortcuts) -> {
                 openSearchShortcutsSettings()
             }
+            getPreferenceKey(R.string.pref_key_search_widget_installed_2) -> {
+                maybeShowAddSearchWidgetPrompt(requireActivity())
+            }
             getPreferenceKey(R.string.pref_key_learn_about_fx_suggest) -> {
                 openLearnMoreLink()
             }
@@ -235,12 +283,12 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
      */
     @VisibleForTesting
     internal fun openLearnMoreLink() {
-        (activity as HomeActivity).openToBrowserAndLoad(
+        findNavController().openToBrowser()
+        requireComponents.useCases.fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
                 SupportUtils.SumoTopic.FX_SUGGEST,
             ),
             newTab = true,
-            from = BrowserDirection.FromSearchEngineFragment,
         )
     }
 

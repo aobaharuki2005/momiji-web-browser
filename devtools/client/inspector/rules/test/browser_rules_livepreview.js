@@ -41,7 +41,7 @@ add_task(async function () {
 });
 
 async function testLivePreviewData(data, ruleView, selector) {
-  const rule = getRuleViewRuleEditor(ruleView, 1).rule;
+  const rule = getRuleViewRuleEditorAt(ruleView, 1).rule;
   const propEditor = rule.textProps[0].editor;
 
   info("Focusing the property value inplace-editor");

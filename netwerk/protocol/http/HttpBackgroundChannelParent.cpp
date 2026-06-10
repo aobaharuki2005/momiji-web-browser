@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -227,7 +224,7 @@ bool HttpBackgroundChannelParent::OnTransportAndData(
        aOnDataAvailableStart](const nsDependentCSubstring& aData,
                               uint64_t aOffset, uint32_t aCount) {
         return self->SendOnTransportAndData(aChannelStatus, aTransportStatus,
-                                            aOffset, aCount, aData, false,
+                                            aOffset, aData, false,
                                             aOnDataAvailableStart);
       };
 
@@ -470,6 +467,7 @@ bool HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo(
 }
 
 nsISerialEventTarget* HttpBackgroundChannelParent::GetBackgroundTarget() {
+  MutexAutoLock lock(mBgThreadMutex);
   MOZ_ASSERT(mBackgroundThread);
   return mBackgroundThread.get();
 }

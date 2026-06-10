@@ -281,7 +281,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     UniqueChars error;
     UniqueCharsVector warnings;
     SharedModule module =
-        CompileBuffer(*compileArgs, BytecodeBufferOrSource(bytecodeSource),
+        CompileModule(*compileArgs, BytecodeBufferOrSource(bytecodeSource),
                       &error, &warnings);
     if (!module) {
       // We should always have a valid module if we are using wasm-smith. Check

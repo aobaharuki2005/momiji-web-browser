@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_ACCESSIBLE_WRAP_H__
-#define __NS_ACCESSIBLE_WRAP_H__
+#ifndef NS_ACCESSIBLE_WRAP_H_
+#define NS_ACCESSIBLE_WRAP_H_
 
 #include "nsCOMPtr.h"
 #include "LocalAccessible.h"
@@ -88,4 +86,4 @@ class AccessibleWrap : public LocalAccessible {
 }  // namespace a11y
 }  // namespace mozilla
 
-#endif /* __NS_ACCESSIBLE_WRAP_H__ */
+#endif /* NS_ACCESSIBLE_WRAP_H_ */

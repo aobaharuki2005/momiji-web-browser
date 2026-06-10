@@ -12,6 +12,13 @@ let { TelemetryTestUtils } = ChromeUtils.importESModule(
 
 let { MockFilePicker } = SpecialPowers;
 
+add_setup(async function () {
+  registerCleanupFunction(async function () {
+    SpecialPowers.clearUserPref("signon.rustMirror.migrationNeeded");
+    SpecialPowers.clearUserPref("signon.rustMirror.poisoned");
+  });
+});
+
 /**
  * A helper class to deal with Login CSV import UI.
  */
@@ -48,7 +55,7 @@ class CsvImportHelper {
    * @returns {Promise} A promise that is resolved when the picker selects the file.
    */
   static async clickImportFromCsvMenu(browser, linesInFile) {
-    MockFilePicker.init(window.browsingContext);
+    MockFilePicker.init();
     MockFilePicker.returnValue = MockFilePicker.returnOK;
     let csvFile = await LoginTestUtils.file.setupCsvFileWithLines(linesInFile);
 
@@ -249,8 +256,8 @@ class CsvImportHelper {
 const random = Math.round(Math.random() * 100000001);
 
 add_setup(async function () {
-  registerCleanupFunction(() => {
-    Services.logins.removeAllUserFacingLogins();
+  registerCleanupFunction(async () => {
+    await Services.logins.removeAllUserFacingLoginsAsync();
   });
 });
 

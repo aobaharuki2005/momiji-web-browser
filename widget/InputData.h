@@ -1,10 +1,9 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef InputData_h__
-#define InputData_h__
+#ifndef InputData_h_
+#define InputData_h_
 
 #include "nsDebug.h"
 #include "nsPoint.h"
@@ -13,6 +12,7 @@
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/DefineEnum.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 #include "mozilla/gfx/MatrixFwd.h"
@@ -91,6 +91,13 @@ class InputData {
   // should be dispatched to.
   layers::LayersId mLayersId;
 
+  /**
+   * An optional identifier for the callback associated with this input event.
+   * This ID is used to reference a specific callback for a synthesized event,
+   * if one is present. If no callback is associated, this value will be empty.
+   */
+  Maybe<uint64_t> mCallbackId;
+
   Modifiers modifiers;
 
   INPUTDATA_AS_CHILD_TYPE(MultiTouchInput, MULTITOUCH_INPUT)
@@ -106,6 +113,8 @@ class InputData {
 
  protected:
   InputData(InputType aInputType, TimeStamp aTimeStamp, Modifiers aModifiers);
+  InputData(InputType aInputType, TimeStamp aTimeStamp,
+            const Maybe<uint64_t>& aCallback, Modifiers aModifiers);
 };
 
 /**
@@ -295,7 +304,7 @@ class MouseInput : public InputData {
   MouseInput(MouseType aType, ButtonType aButtonType, uint16_t aInputSource,
              int16_t aButtons, const ScreenPoint& aPoint, TimeStamp aTimeStamp,
              Modifiers aModifiers);
-  explicit MouseInput(const WidgetMouseEventBase& aMouseEvent);
+  explicit MouseInput(const WidgetMouseEvent& aMouseEvent);
 
   bool IsLeftButton() const;
 
@@ -308,6 +317,7 @@ class MouseInput : public InputData {
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   MouseType mType;
   ButtonType mButtonType;
+  uint32_t mClickCount = 0;
   uint16_t mInputSource;
   int16_t mButtons;
   ScreenPoint mOrigin;
@@ -609,9 +619,9 @@ class PinchGestureInput : public InputData {
   // don't need a mLineOrPageDeltaX. This field is used to dispatch legacy mouse
   // events which are only dispatched when the corresponding field on
   // WidgetWheelEvent is non-zero.
-  int32_t mLineOrPageDeltaY;
+  int32_t mLineOrPageDeltaY = 0;
 
-  bool mHandledByAPZ;
+  bool mHandledByAPZ = false;
 };
 
 /**
@@ -787,11 +797,12 @@ class ScrollWheelInput : public InputData {
 
   bool mMayHaveMomentum;
   bool mIsMomentum;
-  bool mAllowToOverrideSystemScrollSpeed;
+  bool mAllowToOverrideSystemScrollSpeed = false;
 
   // Sometimes a wheel event input's wheel delta should be adjusted. This member
   // specifies how to adjust the wheel delta.
-  WheelDeltaAdjustmentStrategy mWheelDeltaAdjustmentStrategy;
+  WheelDeltaAdjustmentStrategy mWheelDeltaAdjustmentStrategy =
+      WheelDeltaAdjustmentStrategy::eNone;
 
   APZWheelAction mAPZAction;
 };
@@ -853,4 +864,4 @@ MultiTouchInput UpdateSynthesizedTouchState(
 
 }  // namespace mozilla
 
-#endif  // InputData_h__
+#endif  // InputData_h_

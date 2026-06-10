@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -182,6 +180,8 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
     aChannel->GetConnectEnd(&mConnectEnd);
     aChannel->GetRequestStart(&mRequestStart);
     aChannel->GetResponseStart(&mResponseStart);
+    aChannel->GetFirstInterimResponseStart(&mFirstInterimResponseStart);
+    aChannel->GetFinalResponseHeadersStart(&mFinalResponseHeadersStart);
     aChannel->GetCacheReadStart(&mCacheReadStart);
     aChannel->GetResponseEnd(&mResponseEnd);
     aChannel->GetCacheReadEnd(&mCacheReadEnd);
@@ -741,6 +741,7 @@ DOMHighResTimeStamp PerformanceTimingData::ResponseStartHighRes(
   if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
+
   if (mResponseStart.IsNull() ||
       (!mCacheReadStart.IsNull() && mCacheReadStart < mResponseStart)) {
     mResponseStart = mCacheReadStart;
@@ -755,6 +756,34 @@ DOMHighResTimeStamp PerformanceTimingData::ResponseStartHighRes(
 
 DOMTimeMilliSec PerformanceTiming::ResponseStart() {
   return static_cast<int64_t>(mTimingData->ResponseStartHighRes(mPerformance));
+}
+
+DOMHighResTimeStamp PerformanceTimingData::FirstInterimResponseStartHighRes(
+    Performance* aPerformance) {
+  MOZ_ASSERT(aPerformance);
+
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
+    return mZeroTime;
+  }
+  if (mFirstInterimResponseStart.IsNull()) {
+    return 0;
+  }
+  return TimeStampToReducedDOMHighResOrFetchStart(aPerformance,
+                                                  mFirstInterimResponseStart);
+}
+
+DOMHighResTimeStamp PerformanceTimingData::FinalResponseHeadersStartHighRes(
+    Performance* aPerformance) {
+  MOZ_ASSERT(aPerformance);
+
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
+    return mZeroTime;
+  }
+  if (mFinalResponseHeadersStart.IsNull()) {
+    return 0;
+  }
+  return TimeStampToReducedDOMHighResOrFetchStart(aPerformance,
+                                                  mFinalResponseHeadersStart);
 }
 
 DOMHighResTimeStamp PerformanceTimingData::ResponseEndHighRes(

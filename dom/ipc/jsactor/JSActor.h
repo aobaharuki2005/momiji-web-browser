@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -67,15 +65,15 @@ class JSActor : public nsISupports, public nsWrapperCache {
   // |ReceiveMessage| method on the other side asynchronously.
   virtual void SendRawMessage(const JSActorMessageMeta& aMetadata,
                               JSIPCValue&& aData,
-                              UniquePtr<ipc::StructuredCloneData> aStack,
+                              ipc::StructuredCloneData* aStack,
                               ErrorResult& aRv) = 0;
 
   // Helper method to send an in-process raw message.
   using OtherSideCallback = std::function<already_AddRefed<JSActorManager>()>;
-  static void SendRawMessageInProcess(
-      const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
-      UniquePtr<ipc::StructuredCloneData> aStack,
-      OtherSideCallback&& aGetOtherSide);
+  static void SendRawMessageInProcess(const JSActorMessageMeta& aMeta,
+                                      JSIPCValue&& aData,
+                                      ipc::StructuredCloneData* aStack,
+                                      OtherSideCallback&& aGetOtherSide);
 
   virtual ~JSActor() = default;
 

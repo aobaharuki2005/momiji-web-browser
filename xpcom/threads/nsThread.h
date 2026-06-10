@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsThread_h__
-#define nsThread_h__
+#ifndef nsThread_h_
+#define nsThread_h_
 
 #include "MainThreadUtils.h"
 #include "mozilla/AlreadyAddRefed.h"
@@ -292,7 +290,7 @@ class nsThread : public nsIThreadInternal,
   const bool mIsMainThread;
   bool mUseHangMonitor;
   const bool mIsUiThread;
-  mozilla::Atomic<bool, mozilla::Relaxed>* mIsAPoolThreadFreePtr;
+  mozilla::Atomic<bool, mozilla::Relaxed>* mIsAPoolThreadFreePtr = nullptr;
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
@@ -353,4 +351,4 @@ class nsThreadShutdownContext final : public nsIThreadShutdown {
 extern int sCanaryOutputFD;
 #endif
 
-#endif  // nsThread_h__
+#endif  // nsThread_h_

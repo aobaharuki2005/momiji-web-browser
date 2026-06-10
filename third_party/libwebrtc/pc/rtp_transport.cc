@@ -10,13 +10,21 @@
 
 #include "pc/rtp_transport.h"
 
-#include <cerrno>
+#include <algorithm>
+#include <bitset>
+#include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "api/array_view.h"
+#include "absl/algorithm/container.h"
+#include "absl/strings/string_view.h"
+#include "api/rtc_error.h"
+#include "api/rtp_parameters.h"
+#include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/transport/ecn_marking.h"
@@ -24,6 +32,7 @@
 #include "call/rtp_demuxer.h"
 #include "media/base/rtp_utils.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "pc/session_description.h"
@@ -39,6 +48,41 @@
 #include "rtc_base/trace_event.h"
 
 namespace webrtc {
+namespace {
+
+void RemoveExtensionMapForMid(
+    absl::string_view mid,
+    std::vector<std::pair<std::string, RtpHeaderExtensions>>& extensions) {
+  auto it = std::find_if(extensions.begin(), extensions.end(),
+                         [mid](const auto& kv) { return kv.first == mid; });
+  if (it != extensions.end()) {
+    extensions.erase(it);
+  }
+}
+
+RTCError VerifyExtensionIds(const RtpHeaderExtensions& extensions) {
+  using ExtensionsUsed = std::bitset<1 + RtpExtension::kMaxId>;
+  ExtensionsUsed id_used;
+  for (const auto& extension : extensions) {
+    if (extension.id == 0) {
+      continue;
+    }
+    if (extension.id < RtpExtension::kMinId ||
+        extension.id > RtpExtension::kMaxId) {
+      return RTCError::InvalidParameter()
+             << "Bad extension ID: " << extension.ToString();
+    }
+    ExtensionsUsed::reference entry = id_used[extension.id];
+    if (entry) {
+      return RTCError::InvalidParameter()
+             << "Duplicate extension ID: " << extension.ToString();
+    }
+    entry = true;
+  }
+  return RTCError::OK();
+}
+
+}  // namespace
 
 void RtpTransport::SetRtcpMuxEnabled(bool enable) {
   rtcp_mux_enabled_ = enable;
@@ -60,17 +104,18 @@ int RtpTransport::SetRtcpOption(Socket::Option opt, int value) {
   return -1;
 }
 
-void RtpTransport::SetRtpPacketTransport(
-    PacketTransportInternal* new_packet_transport) {
-  if (new_packet_transport == rtp_packet_transport_) {
+void RtpTransport::ChangePacketTransport(
+    PacketTransportInternal* new_packet_transport,
+    PacketTransportInternal*& transport_to_change) {
+  if (new_packet_transport == transport_to_change) {
     return;
   }
-  if (rtp_packet_transport_) {
-    rtp_packet_transport_->UnsubscribeReadyToSend(this);
-    rtp_packet_transport_->DeregisterReceivedPacketCallback(this);
-    rtp_packet_transport_->UnsubscribeNetworkRouteChanged(this);
-    rtp_packet_transport_->UnsubscribeWritableState(this);
-    rtp_packet_transport_->SignalSentPacket.disconnect(this);
+  if (transport_to_change) {
+    transport_to_change->UnsubscribeReadyToSend(this);
+    transport_to_change->DeregisterReceivedPacketCallback(this);
+    transport_to_change->UnsubscribeNetworkRouteChanged(this);
+    transport_to_change->UnsubscribeWritableState(this);
+    transport_to_change->UnsubscribeSentPacket(this);
     // Reset the network route of the old transport.
     SendNetworkRouteChanged(std::optional<NetworkRoute>());
   }
@@ -92,58 +137,55 @@ void RtpTransport::SetRtpPacketTransport(
         this, [this](PacketTransportInternal* transport) {
           OnWritableState(transport);
         });
-    new_packet_transport->SignalSentPacket.connect(this,
-                                                   &RtpTransport::OnSentPacket);
+    new_packet_transport->SubscribeSentPacket(
+        this, [this, flag = safety_.flag()](PacketTransportInternal* transport,
+                                            const SentPacketInfo& info) {
+          if (flag->alive()) {
+            OnSentPacket(transport, info);
+          }
+        });
     // Set the network route for the new transport.
     SendNetworkRouteChanged(new_packet_transport->network_route());
   }
 
-  rtp_packet_transport_ = new_packet_transport;
-  SetReadyToSend(false,
+  transport_to_change = new_packet_transport;
+}
+
+void RtpTransport::SetRtcpPacketTransportOwned(
+    std::unique_ptr<PacketTransportInternal> new_packet_transport) {
+  SetRtcpPacketTransport(new_packet_transport.get());
+  owned_rtcp_packet_transport_ = std::move(new_packet_transport);
+}
+
+void RtpTransport::SetRtpPacketTransportOwned(
+    std::unique_ptr<PacketTransportInternal> new_packet_transport) {
+  SetRtpPacketTransport(new_packet_transport.get());
+  owned_rtp_packet_transport_ = std::move(new_packet_transport);
+}
+
+void RtpTransport::SetRtpPacketTransport(
+    PacketTransportInternal* new_packet_transport) {
+  std::unique_ptr<PacketTransportInternal> delete_on_exit;
+  if (new_packet_transport != owned_rtp_packet_transport_.get()) {
+    delete_on_exit = std::move(owned_rtp_packet_transport_);
+  }
+  ChangePacketTransport(new_packet_transport, rtp_packet_transport_);
+  // Assumes the transport is ready to send if it is writable.
+  SetReadyToSend(/* rtcp= */ false,
                  rtp_packet_transport_ && rtp_packet_transport_->writable());
 }
 
 void RtpTransport::SetRtcpPacketTransport(
     PacketTransportInternal* new_packet_transport) {
-  if (new_packet_transport == rtcp_packet_transport_) {
-    return;
+  std::unique_ptr<PacketTransportInternal> delete_on_exit;
+  if (new_packet_transport != owned_rtcp_packet_transport_.get()) {
+    // rtcp_packet_transport_ might still point to owned_rtcp_packet_transport_,
+    // so move the owned object to delete_on_exit while we change the transport.
+    delete_on_exit = std::move(owned_rtcp_packet_transport_);
   }
-  if (rtcp_packet_transport_) {
-    rtcp_packet_transport_->UnsubscribeReadyToSend(this);
-    rtcp_packet_transport_->DeregisterReceivedPacketCallback(this);
-    rtcp_packet_transport_->UnsubscribeNetworkRouteChanged(this);
-    rtcp_packet_transport_->UnsubscribeWritableState(this);
-    rtcp_packet_transport_->SignalSentPacket.disconnect(this);
-    // Reset the network route of the old transport.
-    SendNetworkRouteChanged(std::optional<NetworkRoute>());
-  }
-  if (new_packet_transport) {
-    new_packet_transport->SubscribeReadyToSend(
-        this, [this](PacketTransportInternal* transport) {
-          OnReadyToSend(transport);
-        });
-    new_packet_transport->RegisterReceivedPacketCallback(
-        this, [&](PacketTransportInternal* transport,
-                  const ReceivedIpPacket& packet) {
-          OnReadPacket(transport, packet);
-        });
-    new_packet_transport->SubscribeNetworkRouteChanged(
-        this, [this](std::optional<NetworkRoute> network_route) {
-          OnNetworkRouteChanged(network_route);
-        });
-    new_packet_transport->SubscribeWritableState(
-        this, [this](PacketTransportInternal* transport) {
-          OnWritableState(transport);
-        });
-    new_packet_transport->SignalSentPacket.connect(this,
-                                                   &RtpTransport::OnSentPacket);
-    // Set the network route for the new transport.
-    SendNetworkRouteChanged(new_packet_transport->network_route());
-  }
-  rtcp_packet_transport_ = new_packet_transport;
-
+  ChangePacketTransport(new_packet_transport, rtcp_packet_transport_);
   // Assumes the transport is ready to send if it is writable.
-  SetReadyToSend(true,
+  SetReadyToSend(/* rtcp= */ true,
                  rtcp_packet_transport_ && rtcp_packet_transport_->writable());
 }
 
@@ -163,7 +205,13 @@ bool RtpTransport::SendRtpPacket(CopyOnWriteBuffer* packet,
 bool RtpTransport::SendRtcpPacket(CopyOnWriteBuffer* packet,
                                   const AsyncSocketPacketOptions& options,
                                   int flags) {
-  return SendPacket(true, packet, options, flags);
+  if (received_rtp_with_ecn_) {
+    AsyncSocketPacketOptions options_with_send_as_ect1 = options;
+    options_with_send_as_ect1.ect_1 = true;
+    return SendPacket(true, packet, options_with_send_as_ect1, flags);
+  } else {
+    return SendPacket(true, packet, options, flags);
+  }
 }
 
 bool RtpTransport::SendPacket(bool rtcp,
@@ -181,14 +229,118 @@ bool RtpTransport::SendPacket(bool rtcp,
   return true;
 }
 
-void RtpTransport::UpdateRtpHeaderExtensionMap(
-    const RtpHeaderExtensions& header_extensions) {
-  header_extension_map_ = RtpHeaderExtensionMap(header_extensions);
+RTCError RtpTransport::VerifyRtpHeaderExtensionMap(
+    const RtpHeaderExtensions& extensions) const {
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+
+  RTCError error = VerifyExtensionIds(extensions);
+  if (!error.ok()) {
+    return error;
+  }
+
+  for (const auto& new_extension : extensions) {
+    if (new_extension.id == 0) {
+      continue;
+    }
+    // TODO: bugs.webrtc.org/503013383 - Introduce checking against IDs that are
+    // currently not present in the SDP, but have been used in previous
+    // negotiation rounds. Reusing extensions with a different ID is a protocol
+    // violation, but we cannot check this until we check against the same
+    // protocol violation on the sender side.
+    for (const auto& [mid, active_extensions] : header_extensions_by_mid_) {
+      auto it = absl::c_find_if(
+          active_extensions,
+          [&](const RtpExtension& ext) { return ext.id == new_extension.id; });
+      if (it != active_extensions.end() && it->uri != new_extension.uri) {
+        return RTCError::InvalidParameter()
+               << "RTP extension ID reassignment not supported (collision on "
+                  "active MID "
+               << mid << ", id=" << new_extension.id << ", old_uri=\""
+               << it->uri << "\", new_uri=\"" << new_extension.uri << "\").";
+      }
+    }
+  }
+
+  return RTCError::OK();
+}
+
+RTCError RtpTransport::RegisterRtpHeaderExtensionMap(
+    absl::string_view mid,
+    const RtpHeaderExtensions& extensions) {
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+
+  RTCError error = VerifyRtpHeaderExtensionMap(extensions);
+  if (!error.ok()) {
+    return error;
+  }
+
+  auto existing_extensions =
+      absl::c_find_if(header_extensions_by_mid_,
+                      [mid](const auto& kv) { return kv.first == mid; });
+  if (existing_extensions != header_extensions_by_mid_.end() &&
+      existing_extensions->second == extensions) {
+    return RTCError::OK();
+  }
+
+  RemoveExtensionMapForMid(mid, header_extensions_by_mid_);
+  header_extensions_by_mid_.emplace_back(std::string(mid), extensions);
+
+  RebuildMergedMap();
+  return RTCError::OK();
+}
+
+void RtpTransport::UnregisterRtpHeaderExtensionMap(absl::string_view mid) {
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RemoveExtensionMapForMid(mid, header_extensions_by_mid_);
+
+  RebuildMergedMap();
+}
+
+void RtpTransport::RebuildMergedMap() {
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  RtpHeaderExtensionMap merged_map;
+
+  // RFC 8843 (BUNDLE) Section 7.1.3 requires that the same local identifier
+  // MUST be used for a given RTP header extension across all m-sections in a
+  // BUNDLE group.
+  //
+  // However, during negotiation, we may encounter transient states with
+  // conflicting IDs. This can occur with buggy endpoints or during "forked"
+  // signaling (e.g., an Offer followed by a PR-Answer from one endpoint,
+  // then a final Answer from a different endpoint). While most browsers
+  // send identical extension sets, different endpoints ringing simultaneously
+  // could theoretically provide differing maps.
+  //
+  // To handle this gracefully, we merge the maps. Because
+  // `header_extensions_by_mid_` preserves registration order, we iterate in
+  // reverse (newest first). This ensures tie-breaking is deterministic:
+  // more recently registered or updated MIDs (like those in a final Answer)
+  // take precedence over older or provisional ones.
+
+  for (auto rit = header_extensions_by_mid_.rbegin();
+       rit != header_extensions_by_mid_.rend(); ++rit) {
+    for (const auto& extension : rit->second) {
+      if (extension.id == RtpHeaderExtensionMap::kInvalidId) {
+        continue;
+      }
+      // Only register if the ID is not already in use.
+      RTPExtensionType type = merged_map.GetType(extension.id);
+      if (type == kRtpExtensionNone) {
+        merged_map.RegisterByUri(extension.id, extension.uri);
+      }
+    }
+  }
+  header_extension_map_ = std::move(merged_map);
+}
+
+void RtpTransport::SetActivePayloadTypeDemuxing(bool enabled) {
+  rtp_demuxer_.set_use_payload_type_demuxing(enabled);
 }
 
 bool RtpTransport::RegisterRtpDemuxerSink(const RtpDemuxerCriteria& criteria,
                                           RtpPacketSinkInterface* sink) {
   rtp_demuxer_.RemoveSink(sink);
+
   if (!rtp_demuxer_.AddSink(criteria, sink)) {
     RTC_LOG(LS_ERROR) << "Failed to register the sink for RTP demuxer.";
     return false;
@@ -214,6 +366,7 @@ void RtpTransport::DemuxPacket(CopyOnWriteBuffer packet,
   RtpPacketReceived parsed_packet(&header_extension_map_);
   parsed_packet.set_arrival_time(arrival_time);
   parsed_packet.set_ecn(ecn);
+  received_rtp_with_ecn_ = (ecn == EcnMarking::kEct1 || ecn == EcnMarking::kCe);
 
   if (!parsed_packet.Parse(std::move(packet))) {
     RTC_LOG(LS_ERROR)
@@ -254,14 +407,7 @@ void RtpTransport::OnSentPacket(PacketTransportInternal* packet_transport,
                                 const SentPacketInfo& sent_packet) {
   RTC_DCHECK(packet_transport == rtp_packet_transport_ ||
              packet_transport == rtcp_packet_transport_);
-  if (processing_sent_packet_) {
-    TaskQueueBase::Current()->PostTask(SafeTask(
-        safety_.flag(), [this, sent_packet] { SendSentPacket(sent_packet); }));
-    return;
-  }
-  processing_sent_packet_ = true;
   SendSentPacket(sent_packet);
-  processing_sent_packet_ = false;
 }
 
 void RtpTransport::OnRtpPacketReceived(
@@ -275,12 +421,8 @@ void RtpTransport::OnRtpPacketReceived(
 
 void RtpTransport::OnRtcpPacketReceived(
     const ReceivedIpPacket& received_packet) {
-  CopyOnWriteBuffer payload(received_packet.payload());
-  // TODO(bugs.webrtc.org/15368): Propagate timestamp and maybe received packet
-  // further.
-  SendRtcpPacketReceived(&payload, received_packet.arrival_time()
-                                       ? received_packet.arrival_time()->us()
-                                       : -1);
+  SendRtcpPacketReceived(CopyOnWriteBuffer(received_packet.payload()),
+                         received_packet.arrival_time(), received_packet.ecn());
 }
 
 void RtpTransport::OnReadPacket(PacketTransportInternal* transport,

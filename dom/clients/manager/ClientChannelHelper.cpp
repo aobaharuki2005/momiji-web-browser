@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,6 +7,7 @@
 #include "ClientManager.h"
 #include "ClientSource.h"
 #include "MainThreadUtils.h"
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/dom/ClientsBinding.h"
@@ -133,6 +132,13 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
     // If it's a cross-origin redirect then we discard the old reserved client
     // and create a new one.
     else {
+      // The partition-key, and in particular the foreign bit, can change on a
+      // cross-origin redirect so it is essential to update the anti-tracking
+      // info for the channel.  This will happen in nsHttpChannel::AsyncOpen but
+      // that happens strictly after now, whereas we are sampling the principal
+      // now.
+      AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(aNewChannel);
+
       nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
       rv = StoragePrincipalHelper::GetPrincipal(
           aNewChannel,

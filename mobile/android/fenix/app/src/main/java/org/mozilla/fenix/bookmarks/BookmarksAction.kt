@@ -20,7 +20,6 @@ internal data class InitEditLoaded(
     val bookmark: BookmarkItem.Bookmark,
     val folder: BookmarkItem.Folder,
 ) : BookmarksAction
-internal data object ViewDisposed : BookmarksAction
 
 /**
  * Bookmarks have been loaded from the storage layer.
@@ -41,18 +40,21 @@ internal sealed class BookmarksListMenuAction : BookmarksAction {
     internal data object SelectAll : BookmarksListMenuAction()
 
     internal sealed class Bookmark : BookmarksListMenuAction() {
+        data class SelectClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
         data class EditClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
-        data class CopyClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
         data class ShareClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
         data class OpenInNormalTabClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
         data class OpenInPrivateTabClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
         data class DeleteClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
+        data class MoveClicked(val bookmark: BookmarkItem.Bookmark) : Bookmark()
     }
     internal sealed class Folder : BookmarksListMenuAction() {
+        data class SelectClicked(val folder: BookmarkItem.Folder) : Folder()
         data class EditClicked(val folder: BookmarkItem.Folder) : Folder()
         data class OpenAllInNormalTabClicked(val folder: BookmarkItem.Folder) : Folder()
         data class OpenAllInPrivateTabClicked(val folder: BookmarkItem.Folder) : Folder()
         data class DeleteClicked(val folder: BookmarkItem.Folder) : Folder()
+        data class MoveClicked(val folder: BookmarkItem.Folder) : Folder()
     }
     internal sealed class MultiSelect : BookmarksListMenuAction() {
         data object EditClicked : MultiSelect()
@@ -153,7 +155,17 @@ internal sealed class DeletionDialogAction : BookmarksAction {
 }
 
 internal sealed class SnackbarAction : BookmarksAction {
-    data object Undo : SnackbarAction()
     data object Dismissed : SnackbarAction()
     data object SelectFolderFailed : SnackbarAction()
+    data object ImportFailed : SnackbarAction()
+}
+
+internal data object RootOverflowMenuClicked : BookmarksAction
+internal data object RootOverflowMenuDismissed : BookmarksAction
+internal sealed class ImportAction : BookmarksAction {
+    internal data object ImportFailed : ImportAction()
+    internal data class ImportSucceeded(val count: Int) : ImportAction()
+    internal sealed class ImportFileClicked : ImportAction() {
+        internal data object FromMenu : ImportFileClicked()
+    }
 }

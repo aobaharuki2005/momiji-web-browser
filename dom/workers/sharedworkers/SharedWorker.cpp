@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -83,6 +81,12 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window);
+
+  if (!window->IsCurrentInnerWindow()) {
+    aRv.ThrowInvalidStateError(
+        "Cannot create worker for a going to be discarded document");
+    return nullptr;
+  }
 
   // Our current idiom is that storage-related APIs specialize for the system
   // principal themselves, which is consistent with StorageAllowedForwindow not
@@ -246,13 +250,6 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   MOZ_ASSERT(loadInfo.mCookieJarSettings);
   net::CookieJarSettings::Cast(loadInfo.mCookieJarSettings)->Serialize(cjsData);
 
-  auto remoteType = RemoteWorkerManager::GetRemoteType(
-      loadInfo.mPrincipal, WorkerKind::WorkerKindShared);
-  if (NS_WARN_IF(remoteType.isErr())) {
-    aRv.Throw(remoteType.unwrapErr());
-    return nullptr;
-  }
-
   Maybe<RFPTargetSet> overriddenFingerprintingSettingsArg;
   if (loadInfo.mOverriddenFingerprintingSettings.isSome()) {
     overriddenFingerprintingSettingsArg.emplace(
@@ -269,7 +266,8 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       loadInfo.mIsOn3PCBExceptionList,
       OriginTrials::FromWindow(nsGlobalWindowInner::Cast(window)),
       void_t() /* OptionalServiceWorkerData */, agentClusterId,
-      remoteType.unwrap());
+      DEFAULT_REMOTE_TYPE /* ignored */, loadInfo.mLanguageOverrideLocale,
+      loadInfo.mLanguageOverride.Clone());
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier.release());
@@ -382,6 +380,15 @@ void SharedWorker::Suspend() {
 void SharedWorker::Resume() {
   if (mActor) {
     mActor->SendResume();
+  }
+}
+
+void SharedWorker::UpdateLanguageOverride(
+    const nsACString& aLanguageOverride, const nsTArray<nsString>& aLanguages) {
+  AssertIsOnMainThread();
+
+  if (mActor) {
+    mActor->SendSetLocaleOverride(aLanguageOverride, aLanguages);
   }
 }
 

@@ -261,7 +261,7 @@ class GeckoWebExtension(
                 tabDetails: GeckoNativeWebExtension.CreateTabDetails,
             ): GeckoResult<GeckoSession>? {
                 val geckoEngineSession = GeckoEngineSession(
-                    runtime,
+                    runtime = runtime,
                     defaultSettings = defaultSettings,
                     openGeckoSession = false,
                 )
@@ -276,17 +276,7 @@ class GeckoWebExtension(
             }
 
             override fun onOpenOptionsPage(ext: GeckoNativeWebExtension) {
-                ext.metaData.optionsPageUrl?.let { optionsPageUrl ->
-                    tabHandler.onNewTab(
-                        this@GeckoWebExtension,
-                        GeckoEngineSession(
-                            runtime,
-                            defaultSettings = defaultSettings,
-                        ),
-                        false,
-                        optionsPageUrl,
-                    )
-                }
+                tabHandler.onOpenOptionsPage(this@GeckoWebExtension)
             }
         }
 

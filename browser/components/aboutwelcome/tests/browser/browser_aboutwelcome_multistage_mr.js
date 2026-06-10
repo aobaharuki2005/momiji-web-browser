@@ -7,8 +7,8 @@ const { AboutWelcomeParent } = ChromeUtils.importESModule(
 const { AboutWelcomeTelemetry } = ChromeUtils.importESModule(
   "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs"
 );
-const { AWScreenUtils } = ChromeUtils.importESModule(
-  "resource:///modules/aboutwelcome/AWScreenUtils.sys.mjs"
+const { ASRouterScreenUtils } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouterScreenUtils.sys.mjs"
 );
 const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/InternalTestingProfileMigrator.sys.mjs"
@@ -16,7 +16,7 @@ const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
 
 async function clickVisibleButton(browser, selector) {
   // eslint-disable-next-line no-shadow
-  await ContentTask.spawn(browser, { selector }, async ({ selector }) => {
+  await SpecialPowers.spawn(browser, [{ selector }], async ({ selector }) => {
     function getVisibleElement() {
       for (const el of content.document.querySelectorAll(selector)) {
         if (el.offsetParent !== null) {
@@ -59,7 +59,6 @@ add_task(function () {
  */
 add_task(async function test_aboutwelcome_mr_template_telemetry() {
   const sandbox = sinon.createSandbox();
-
   let { browser, cleanup } = await openMRAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   // Stub AboutWelcomeParent's Content Message Handler
@@ -92,7 +91,7 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
 add_task(async function test_aboutwelcome_easy_setup_screen_impression() {
   const sandbox = sinon.createSandbox();
   sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .stub(ASRouterScreenUtils, "evaluateScreenTargeting")
     .resolves(false)
     .withArgs(
       "doesAppNeedPin && (unhandledCampaignAction != 'SET_DEFAULT_BROWSER') && (unhandledCampaignAction != 'PIN_FIREFOX_TO_TASKBAR') && (unhandledCampaignAction != 'PIN_AND_DEFAULT') && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser"
@@ -157,7 +156,7 @@ add_task(async function test_aboutwelcome_gratitude() {
         position: "split",
         split_narrow_bkg_position: "-228px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/br-gratitude-fox-rock.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -193,6 +192,7 @@ add_task(async function test_aboutwelcome_gratitude() {
   await clickVisibleButton(browser, ".action-buttons button.primary");
 
   // make sure the button navigates to newtab
+  await BrowserTestUtils.browserLoaded(browser, false, "about:home");
   await test_screen_content(
     browser,
     "home",
@@ -376,7 +376,7 @@ add_task(async function test_aboutwelcome_embedded_migration() {
         await ContentTaskUtils.waitForEvent(selector, "focus");
       }
 
-      EventUtils.synthesizeMouseAtCenter(selector, {}, wizard.ownerGlobal);
+      EventUtils.synthesizeMouseAtCenter(selector, {}, wizard.documentGlobal);
       await shown;
 
       let panelRect = panelList.getBoundingClientRect();
@@ -664,7 +664,7 @@ add_task(async function test_aboutwelcome_multiselect() {
   ];
 
   const sandbox = sinon.createSandbox();
-  sandbox.stub(AWScreenUtils, "addScreenImpression").resolves();
+  sandbox.stub(ASRouterScreenUtils, "addScreenImpression").resolves();
 
   await setAboutWelcomeMultiStage(JSON.stringify(TEST_SCREENS));
   let { cleanup, browser } = await openMRAboutWelcome();
@@ -835,7 +835,7 @@ add_task(async function test_aboutwelcome_gratitude() {
         position: "split",
         split_narrow_bkg_position: "-228px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/fox-doodle-waving-laptop.svg') center center / 80% no-repeat var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/br-fxa-fox-mirror.svg') var(--mr-secondary-position) no-repeat light-dark(rgba(252, 245, 240, 1), rgba(33, 3, 64, 1))",
         progress_bar: true,
         logo: {},
         title: {
@@ -882,6 +882,8 @@ add_task(async function test_aboutwelcome_gratitude() {
 
   // make sure the secondary button navigates to newtab
   await clickVisibleButton(browser, ".action-buttons button.secondary");
+
+  await BrowserTestUtils.browserLoaded(browser, false, "about:home");
   await test_screen_content(
     browser,
     "home",
@@ -899,10 +901,10 @@ add_task(async function test_aboutwelcome_gratitude() {
 add_task(async function test_aboutwelcome_backup_found() {
   const sandbox = sinon.createSandbox();
   sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .stub(ASRouterScreenUtils, "evaluateScreenTargeting")
     .resolves(false)
     .withArgs(
-      "backupRestoreEnabled && (backupsInfo.found || backupsInfo.multipleBackupsFound)"
+      "backupRestoreEnabled && !hasSelectableProfiles && (backupsInfo.found && !backupsInfo.multipleBackupsFound)"
     )
     .resolves(true)
     .withArgs("isDeviceMigration")
@@ -919,7 +921,44 @@ add_task(async function test_aboutwelcome_backup_found() {
       "[data-l10n-id='restore-from-backup-subtitle']",
     ],
     // Unexpected selectors
-    ["main.AW_BACKUP_RESTORE_EMBEDDED_NO_BACKUP_FOUND"]
+    [
+      "main.AW_BACKUP_RESTORE_EMBEDDED_MULTIPLE_BACKUPS_FOUND",
+      "main.AW_BACKUP_RESTORE_EMBEDDED_NO_BACKUP_FOUND",
+    ]
+  );
+
+  await cleanup();
+  sandbox.restore();
+});
+
+add_task(async function test_aboutwelcome_multiple_backups_found() {
+  const sandbox = sinon.createSandbox();
+  sandbox
+    .stub(ASRouterScreenUtils, "evaluateScreenTargeting")
+    .resolves(false)
+    .withArgs(
+      "backupRestoreEnabled && !hasSelectableProfiles && backupsInfo.multipleBackupsFound"
+    )
+    .resolves(true)
+    .withArgs("isDeviceMigration")
+    .resolves(false);
+
+  let { browser, cleanup } = await openMRAboutWelcome();
+
+  await test_screen_content(
+    browser,
+    "Should render multiple backups found screen as first screen when backupRestoreEnabled is true and multiple backups are found",
+    [
+      "main.AW_BACKUP_RESTORE_EMBEDDED_MULTIPLE_BACKUPS_FOUND",
+      "[data-l10n-id='restore-from-backup-title']",
+      "[data-l10n-id='restore-from-backup-subtitle']",
+      "[data-l10n-id='multiple-backups-info-tile']",
+    ],
+    // Unexpected selectors
+    [
+      "main.AW_BACKUP_RESTORE_EMBEDDED_BACKUP_FOUND",
+      "main.AW_BACKUP_RESTORE_EMBEDDED_NO_BACKUP_FOUND",
+    ]
   );
 
   await cleanup();
@@ -930,7 +969,7 @@ add_task(async function test_aboutwelcome_no_backups() {
   const sandbox = sinon.createSandbox();
 
   sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .stub(ASRouterScreenUtils, "evaluateScreenTargeting")
     .resolves(false)
     .withArgs(
       "backupRestoreEnabled && (backupsInfo.found || backupsInfo.multipleBackupsFound)"
@@ -986,7 +1025,7 @@ add_task(async function test_aboutwelcome_secondary_top_signin_only() {
   const sandbox = sinon.createSandbox();
 
   sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .stub(ASRouterScreenUtils, "evaluateScreenTargeting")
     .resolves(false)
     // Mock Easy Setup for secondary button top testing
     .withArgs(
@@ -1035,7 +1074,7 @@ add_task(async function test_aboutwelcome_secondary_top_backup_restore_only() {
   const sandbox = sinon.createSandbox();
 
   sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .stub(ASRouterScreenUtils, "evaluateScreenTargeting")
     .resolves(false)
     // Mock Easy Setup for secondary button top testing
     .withArgs(
@@ -1084,7 +1123,7 @@ add_task(async function test_aboutwelcome_both_secondary_top_buttons() {
   const sandbox = sinon.createSandbox();
 
   sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .stub(ASRouterScreenUtils, "evaluateScreenTargeting")
     // Mock Easy Setup for secondary button top testing
     .withArgs(
       "doesAppNeedPin && (unhandledCampaignAction != 'SET_DEFAULT_BROWSER') && (unhandledCampaignAction != 'PIN_FIREFOX_TO_TASKBAR') && (unhandledCampaignAction != 'PIN_AND_DEFAULT') && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser"

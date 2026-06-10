@@ -62,6 +62,26 @@
     &:hover {
       text-decoration: none;
     }
+
+    &:focus-visible {
+      outline: var(--focus-outline);
+    }
+  }
+
+  // @nova-cleanup(remove-conditional): Remove .nova-enabled wrapper, make default
+  .nova-enabled .content & {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, calc(4 * var(--col-width) + 3 * var(--space-medium)));
+    justify-content: center;
+    padding-block-end: var(--space-xxlarge);
+    gap: var(--space-medium);
+
+    .ds-navigation-privacy {
+      grid-column: 1 / -1;
+      justify-self: end;
+      color: var(--link-color);
+    }
   }
 
   &.ds-navigation-new-topics {
@@ -70,7 +90,7 @@
 
     .ds-navigation-header {
       font-size: var(--font-size-small);
-      font-weight: var(--heading-font-weight);
+      font-weight: var(--font-weight-heading);
       display: inline-block;
       margin-block-end: var(--space-small);
     }

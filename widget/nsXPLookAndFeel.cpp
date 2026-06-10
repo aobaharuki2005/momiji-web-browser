@@ -1,4 +1,3 @@
-/* -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -80,8 +79,8 @@ static EnumeratedArray<FloatID, RelaxedAtomicUint32, size_t(FloatID::End)>
 constexpr int32_t kNoInt = INT32_MIN;
 static EnumeratedArray<IntID, RelaxedAtomicInt32, size_t(IntID::End)> sIntStore;
 StaticRWLock sFontStoreLock;
-MOZ_RUNINIT static EnumeratedArray<FontID, widget::LookAndFeelFont,
-                                   size_t(FontID::End)>
+constinit static EnumeratedArray<FontID, widget::LookAndFeelFont,
+                                 size_t(FontID::End)>
     sFontStore MOZ_GUARDED_BY(sFontStoreLock);
 
 // To make one of these prefs toggleable from a reftest add a user
@@ -800,8 +799,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(0xb1, 0xb1, 0xb1);
       break;
     case ColorID::MozCellhighlight:
-    case ColorID::Selecteditem:
-      color = NS_RGBA(249, 249, 250, 26);
+    case ColorID::Selecteditem:  // --color-accent-primary-selected
+      color = NS_RGB(0, 221, 255);
       break;
     case ColorID::MozSidebar:
     case ColorID::Field:
@@ -811,6 +810,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozColheader:
     case ColorID::Threedface:
     case ColorID::MozCombobox:
+    case ColorID::MozCellhighlighttext:
+    case ColorID::Selecteditemtext:  // --text-color-accent-primary-selected
       color = NS_RGB(43, 42, 51);
       break;
     case ColorID::Threeddarkshadow:  // Same as Threedlightshadow but with the
@@ -831,15 +832,13 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Highlight:
       color = NS_RGBA(0, 221, 255, 78);
       break;
-    case ColorID::MozCellhighlighttext:
-    case ColorID::Selecteditemtext:
     case ColorID::Highlighttext:
       color = NS_SAME_AS_FOREGROUND_COLOR;
       break;
     case ColorID::Linktext:
       // If you change this color, you probably also want to change the default
       // value of browser.anchor_color.dark.
-      color = NS_RGB(0x8c, 0x8c, 0xff);
+      color = NS_RGB(0x00, 0xca, 0xdb);
       break;
     case ColorID::Activetext:
     case ColorID::SpellCheckerUnderline:
@@ -1072,9 +1071,10 @@ widget::LookAndFeelFont nsXPLookAndFeel::StyleToLookAndFeelFont(
 #ifdef DEBUG
   {
     // Assert that all the remaining font style properties have their
-    // default values.
+    // default values, except `systemFont` which should be true.
     gfxFontStyle candidate = aStyle;
     gfxFontStyle defaults{};
+    defaults.systemFont = true;
     candidate.size = defaults.size;
     candidate.weight = defaults.weight;
     candidate.style = defaults.style;

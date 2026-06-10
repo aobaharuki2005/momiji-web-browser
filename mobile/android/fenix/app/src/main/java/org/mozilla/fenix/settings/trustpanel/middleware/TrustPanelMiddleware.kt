@@ -75,16 +75,25 @@ class TrustPanelMiddleware(
             -> togglePermission(currentState, action.permission, store)
             is TrustPanelAction.UpdateAutoplayValue,
             -> updateAutoplayValue(currentState, action.autoplayValue, store)
-
+            is TrustPanelAction.RequestQWAC -> requestQwac(currentState, store)
             else -> Unit
         }
 
         next(action)
     }
 
+    private fun requestQwac(
+        currentState: TrustPanelState,
+        store: Store<TrustPanelState, TrustPanelAction>,
+    ) = scope.launch(Dispatchers.Main) {
+        currentState.sessionState?.engineState?.engineSession?.qwacStatus { cert ->
+            store.dispatch(TrustPanelAction.UpdateQWAC(cert))
+        }
+    }
+
     private fun toggleTrackingProtection(
         currentState: TrustPanelState,
-    ) = scope.launch(Dispatchers.Main) {
+    ) = scope.launch {
         currentState.sessionState?.let { session ->
             if (currentState.isTrackingProtectionEnabled) {
                 trackingProtectionUseCases.addException(session.id)

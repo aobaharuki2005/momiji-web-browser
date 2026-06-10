@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -69,7 +67,6 @@ class SharedMap;
 }
 
 class ConsoleListener;
-class ClonedMessageData;
 class BrowserChild;
 class TabContext;
 enum class CallerType : uint32_t;
@@ -78,7 +75,6 @@ class ContentChild final : public PContentChild,
                            public nsIDOMProcessChild,
                            public mozilla::ipc::IShmemAllocator,
                            public ProcessActor {
-  using ClonedMessageData = mozilla::dom::ClonedMessageData;
   using FileDescriptor = mozilla::ipc::FileDescriptor;
 
   friend class PContentChild;
@@ -115,8 +111,8 @@ class ContentChild final : public PContentChild,
   void Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
             const char* aParentBuildID, bool aIsForBrowser);
 
-  void InitXPCOM(XPCOMInitData&& aXPCOMInit,
-                 const mozilla::dom::ipc::StructuredCloneData& aInitialData,
+  void InitXPCOM(XPCOMInitData& aXPCOMInit,
+                 NotNull<StructuredCloneData*> aInitialData,
                  bool aIsReadyForBackgroundProcessing);
 
   void InitSharedUASheets(
@@ -297,7 +293,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvLoadProcessScript(const nsString& aURL);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
-                                           const ClonedMessageData& aData);
+                                           NotNull<StructuredCloneData*> aData);
 
   mozilla::ipc::IPCResult RecvRegisterStringBundles(
       nsTArray<StringBundleDescriptor>&& stringBundles);
@@ -342,7 +338,21 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvRemoveAllPermissions();
 
-  mozilla::ipc::IPCResult RecvFlushMemory(const nsString& reason);
+  mozilla::ipc::IPCResult RecvSetBrowserPermission(const nsCString& aOrigin,
+                                                   const nsCString& aType,
+                                                   const uint32_t& aAction,
+                                                   const uint64_t& aBrowserId,
+                                                   const bool& aIsRemoval);
+
+  mozilla::ipc::IPCResult RecvClearBrowserPermissions(
+      const uint64_t& aBrowserId, const uint32_t& aActionFilter);
+
+ private:
+  void NotifyMemoryPressure(const char* aTopic, const char16_t* aReason);
+
+ public:
+  mozilla::ipc::IPCResult RecvMemoryPressure(const nsString& reason);
+  mozilla::ipc::IPCResult RecvMemoryPressureStop();
 
   mozilla::ipc::IPCResult RecvActivateA11y(uint64_t aCacheDomains);
   mozilla::ipc::IPCResult RecvShutdownA11y();
@@ -412,23 +422,6 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvShutdown();
 
-  mozilla::ipc::IPCResult RecvPush(const nsCString& aScope,
-                                   nsIPrincipal* aPrincipal,
-                                   const nsString& aMessageId);
-
-  mozilla::ipc::IPCResult RecvPushWithData(const nsCString& aScope,
-                                           nsIPrincipal* aPrincipal,
-                                           const nsString& aMessageId,
-                                           nsTArray<uint8_t>&& aData);
-
-  mozilla::ipc::IPCResult RecvPushError(const nsCString& aScope,
-                                        nsIPrincipal* aPrincipal,
-                                        const nsString& aMessage,
-                                        const uint32_t& aFlags);
-
-  mozilla::ipc::IPCResult RecvNotifyPushSubscriptionModifiedObservers(
-      const nsCString& aScope, nsIPrincipal* aPrincipal);
-
   mozilla::ipc::IPCResult RecvRefreshScreens(
       nsTArray<ScreenDetails>&& aScreens);
 
@@ -466,7 +459,8 @@ class ContentChild final : public PContentChild,
   PContentPermissionRequestChild* AllocPContentPermissionRequestChild(
       Span<const PermissionRequest> aRequests, nsIPrincipal* aPrincipal,
       nsIPrincipal* aTopLevelPrincipal, const bool& aIsHandlingUserInput,
-      const bool& aMaybeUnsafePermissionDelegate, const TabId& aTabId);
+      const bool& aMaybeUnsafePermissionDelegate, const TabId& aTabId,
+      const bool& aIgnoreAllowSitePermission);
   bool DeallocPContentPermissionRequestChild(
       PContentPermissionRequestChild* actor);
 
@@ -482,7 +476,7 @@ class ContentChild final : public PContentChild,
       const nsID& aUUID, const GetFilesResponseResult& aResult);
 
   mozilla::ipc::IPCResult RecvBlobURLRegistration(
-      const nsCString& aURI, const IPCBlob& aBlob, nsIPrincipal* aPrincipal,
+      const nsCString& aURI, nsIPrincipal* aPrincipal,
       const nsCString& aPartitionKey);
 
   mozilla::ipc::IPCResult RecvBlobURLUnregistration(
@@ -495,6 +489,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvDecodeImage(NotNull<nsIURI*> aURI,
                                           const ImageIntSize& aSize,
+                                          const ColorScheme& aColoScheme,
                                           DecodeImageResolver&& aResolver);
 
 #if defined(XP_WIN)
@@ -504,8 +499,7 @@ class ContentChild final : public PContentChild,
 #endif  // defined(XP_WIN)
 
   mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
-      XPCOMInitData&& aXPCOMInit,
-      const UniquePtr<StructuredCloneData>& aInitialData,
+      XPCOMInitData&& aXPCOMInit, NotNull<StructuredCloneData*> aInitialData,
       FullLookAndFeel&& aLookAndFeelData, SystemFontList&& aFontList,
       Maybe<mozilla::ipc::ReadOnlySharedMemoryHandle>&& aSharedUASheetHandle,
       const uintptr_t& aSharedUASheetAddress,
@@ -708,7 +702,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvWindowPostMessage(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      const ClonedOrErrorMessageData& aMessage, const PostMessageData& aData);
+      StructuredCloneData* aMessage, const PostMessageData& aData);
 
   mozilla::ipc::IPCResult RecvCommitBrowsingContextTransaction(
       const MaybeDiscarded<BrowsingContext>& aContext,
@@ -736,8 +730,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvLoadURI(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      nsDocShellLoadState* aLoadState, bool aSetNavigating,
-      LoadURIResolver&& aResolve);
+      nsDocShellLoadState* aLoadState, bool aSetNavigating);
 
   mozilla::ipc::IPCResult RecvInternalLoad(nsDocShellLoadState* aLoadState);
 
@@ -766,18 +759,29 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<BrowsingContext>& aContext,
       const uint32_t aStopFlags);
 
-  mozilla::ipc::IPCResult RecvRawMessage(
-      const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
-      const UniquePtr<ClonedMessageData>& aStack);
+  mozilla::ipc::IPCResult RecvDeactivateDocuments(
+      const MaybeDiscarded<BrowsingContext>& aContext);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  mozilla::ipc::IPCResult RecvReactivateDocuments(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const Maybe<SessionHistoryInfo>& aReactivatedEntry,
+      const nsTArray<SessionHistoryInfo>& aNewSHEs,
+      const Maybe<PreviousSessionHistoryInfo>& aPreviousEntryForActivation);
+
+  mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
+                                         JSIPCValue&& aData,
+                                         StructuredCloneData* aStack);
 
   already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,
                                         const nsACString& aName,
                                         ErrorResult& aRv) override;
   mozilla::ipc::IProtocol* AsNativeActor() override { return this; }
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvHistoryCommitIndexAndLength(
       const MaybeDiscarded<BrowsingContext>& aContext, const uint32_t& aIndex,
-      const uint32_t& aLength, const nsID& aChangeID);
+      const uint32_t& aLength, const nsID& aChangeID,
+      nsTArray<NavigationEntriesTruncation>&& aTruncations);
 
   mozilla::ipc::IPCResult RecvConsumeHistoryActivation(
       const MaybeDiscarded<BrowsingContext>& aTop);
@@ -791,13 +795,14 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvDispatchBeforeUnloadToSubtree(
       const MaybeDiscarded<BrowsingContext>& aStartingAt,
-      const mozilla::Maybe<SessionHistoryInfo>& aInfo,
+      const mozilla::Maybe<mozilla::NotNull<RefPtr<nsDocShellLoadState>>>&
+          aLoadState,
       DispatchBeforeUnloadToSubtreeResolver&& aResolver);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvDispatchNavigateToTraversable(
       const MaybeDiscarded<BrowsingContext>& aTraversable,
-      const mozilla::Maybe<SessionHistoryInfo>& aInfo,
+      const mozilla::NotNull<RefPtr<nsDocShellLoadState>>& aLoadState,
       DispatchNavigateToTraversableResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvInitNextGenLocalStorageEnabled(
@@ -806,7 +811,8 @@ class ContentChild final : public PContentChild,
  public:
   static void DispatchBeforeUnloadToSubtree(
       BrowsingContext* aStartingAt,
-      const mozilla::Maybe<SessionHistoryInfo>& aInfo,
+      const mozilla::Maybe<mozilla::NotNull<RefPtr<nsDocShellLoadState>>>&
+          aLoadState,
       const DispatchBeforeUnloadToSubtreeResolver& aResolver);
 
   hal::ProcessPriority GetProcessPriority() const { return mProcessPriority; }
@@ -826,6 +832,9 @@ class ContentChild final : public PContentChild,
  private:
   void AddProfileToProcessName(const nsACString& aProfile);
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvSystemPermissionChanged(PermissionName aName,
+                                                      PermissionState aState);
 
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
       RemoteMediaIn aLocation, const media::MediaCodecsSupported& aSupported);

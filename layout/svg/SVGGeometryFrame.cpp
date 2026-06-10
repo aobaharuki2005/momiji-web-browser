@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -205,13 +203,13 @@ void SVGGeometryFrame::PaintSVG(gfxContext& aContext,
 
 nsIFrame* SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   FillRule fillRule;
-  uint16_t hitTestFlags;
+  SVGHitTestFlags hitTestFlags;
   if (HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD)) {
-    hitTestFlags = SVG_HIT_TEST_FILL;
+    hitTestFlags = SVGHitTestFlag::Fill;
     fillRule = SVGUtils::ToFillRule(StyleSVG()->mClipRule);
   } else {
     hitTestFlags = SVGUtils::GetGeometryHitTestFlags(this);
-    if (!hitTestFlags) {
+    if (hitTestFlags.isEmpty()) {
       return nullptr;
     }
     fillRule = SVGUtils::ToFillRule(StyleSVG()->mFillRule);
@@ -231,10 +229,10 @@ nsIFrame* SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint) {
     return nullptr;  // no path, so we don't paint anything that can be hit
   }
 
-  if (hitTestFlags & SVG_HIT_TEST_FILL) {
+  if (hitTestFlags.contains(SVGHitTestFlag::Fill)) {
     isHit = path->ContainsPoint(ToPoint(aPoint), {});
   }
-  if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
+  if (!isHit && hitTestFlags.contains(SVGHitTestFlag::Stroke)) {
     Point point = ToPoint(aPoint);
     SVGContentUtils::AutoStrokeOptions stroke;
     SVGContentUtils::GetStrokeOptions(&stroke, content, Style(), nullptr);
@@ -268,8 +266,9 @@ void SVGGeometryFrame::ReflowSVG() {
     return;
   }
 
-  uint32_t flags = SVGUtils::eBBoxIncludeFillGeometry |
-                   SVGUtils::eBBoxIncludeStroke | SVGUtils::eBBoxIncludeMarkers;
+  SVGBBoxFlags flags = {SVGBBoxFlag::IncludeFillGeometry,
+                        SVGBBoxFlag::IncludeStroke,
+                        SVGBBoxFlag::IncludeMarkers};
 
   // Our "visual" overflow rect needs to be valid for building display lists
   // for hit testing, which means that for certain values of 'pointer-events'
@@ -277,12 +276,12 @@ void SVGGeometryFrame::ReflowSVG() {
   // stroke don't actually render (e.g. when stroke="none" or
   // stroke-opacity="0"). GetGeometryHitTestFlags() accounts for
   // 'pointer-events'.
-  uint16_t hitTestFlags = SVGUtils::GetGeometryHitTestFlags(this);
-  if (hitTestFlags & SVG_HIT_TEST_FILL) {
-    flags |= SVGUtils::eBBoxIncludeFillGeometry;
+  SVGHitTestFlags hitTestFlags = SVGUtils::GetGeometryHitTestFlags(this);
+  if (hitTestFlags.contains(SVGHitTestFlag::Fill)) {
+    flags += SVGBBoxFlag::IncludeFillGeometry;
   }
-  if (hitTestFlags & SVG_HIT_TEST_STROKE) {
-    flags |= SVGUtils::eBBoxIncludeStrokeGeometry;
+  if (hitTestFlags.contains(SVGHitTestFlag::Stroke)) {
+    flags += SVGBBoxFlag::IncludeStrokeGeometry;
   }
 
   SVGBBox extent = GetBBoxContribution({}, flags).ToThebesRect();
@@ -353,7 +352,7 @@ void SVGGeometryFrame::NotifySVGChanged(ChangeFlags aFlags) {
 }
 
 SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                                              uint32_t aFlags) {
+                                              SVGBBoxFlags aFlags) {
   SVGBBox bbox;
 
   if (aToBBoxUserspace.IsSingular()) {
@@ -361,7 +360,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
     return bbox;
   }
 
-  if ((aFlags & SVGUtils::eForGetClientRects) &&
+  if (aFlags.contains(SVGBBoxFlag::ForGetClientRects) &&
       aToBBoxUserspace.PreservesAxisAlignedRectangles()) {
     if (!mRect.IsEmpty()) {
       Rect rect = NSRectToRect(mRect, AppUnitsPerCSSPixel());
@@ -372,13 +371,11 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
 
   SVGGeometryElement* element = static_cast<SVGGeometryElement*>(GetContent());
 
-  const bool getFill = (aFlags & SVGUtils::eBBoxIncludeFillGeometry) ||
-                       ((aFlags & SVGUtils::eBBoxIncludeFill) &&
-                        !StyleSVG()->mFill.kind.IsNone());
+  const bool getFill = aFlags.contains(SVGBBoxFlag::IncludeFillGeometry);
 
   const bool getStroke =
-      ((aFlags & SVGUtils::eBBoxIncludeStrokeGeometry) ||
-       ((aFlags & SVGUtils::eBBoxIncludeStroke) &&
+      (aFlags.contains(SVGBBoxFlag::IncludeStrokeGeometry) ||
+       (aFlags.contains(SVGBBoxFlag::IncludeStroke) &&
         SVGUtils::HasStroke(this))) &&
       // If this frame has non-scaling-stroke and we would like to compute its
       // stroke, it may cause a potential cyclical dependency if the caller is
@@ -396,7 +393,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
       //    frame may be in the subtree of a SVGContainerFrame, which may not
       //    set non-scaling-stroke.
       !(StyleSVGReset()->HasNonScalingStroke() &&
-        (aFlags & SVGUtils::eAvoidCycleIfNonScalingStroke));
+        aFlags.contains(SVGBBoxFlag::AvoidCycleIfNonScalingStroke));
 
   SVGContentUtils::AutoStrokeOptions strokeOptions;
   if (getStroke) {
@@ -516,8 +513,8 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   }
 
   // Account for markers:
-  if ((aFlags & SVGUtils::eBBoxIncludeMarkers) && element->IsMarkable()) {
-    SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
+  if (aFlags.contains(SVGBBoxFlag::IncludeMarkers) && element->IsMarkable()) {
+    SVGMarkerFrames markerFrames;
     if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
       nsTArray<SVGMark> marks;
       element->GetMarkPoints(&marks);
@@ -535,6 +532,10 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
         }
       }
     }
+  }
+
+  if (aFlags.contains(SVGBBoxFlag::DisregardCSSZoom)) {
+    bbox.Scale(1 / Style()->EffectiveZoom().ToFloat());
   }
 
   return bbox;
@@ -796,7 +797,7 @@ void SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
   if (!element->IsMarkable()) {
     return;
   }
-  SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
+  SVGMarkerFrames markerFrames;
   if (!SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
     return;
   }

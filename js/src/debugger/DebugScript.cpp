@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -49,16 +47,8 @@ const JSClass DebugScriptObject::class_ = {
 };
 
 const JSClassOps DebugScriptObject::classOps_ = {
-    nullptr,                      // addProperty
-    nullptr,                      // delProperty
-    nullptr,                      // enumerate
-    nullptr,                      // newEnumerate
-    nullptr,                      // resolve
-    nullptr,                      // mayResolve
-    DebugScriptObject::finalize,  // finalize
-    nullptr,                      // call
-    nullptr,                      // construct
-    DebugScriptObject::trace,     // trace
+    .finalize = DebugScriptObject::finalize,
+    .trace = DebugScriptObject::trace,
 };
 
 /* static */
@@ -99,6 +89,7 @@ void DebugScriptObject::finalize(JS::GCContext* gcx, JSObject* obj) {
 
 /* static */
 DebugScript* DebugScript::get(JSScript* script) {
+  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(script));
   MOZ_ASSERT(script->hasDebugScript());
   DebugScriptMap* map = script->zone()->debugScriptMap;
   MOZ_ASSERT(map);
@@ -109,6 +100,7 @@ DebugScript* DebugScript::get(JSScript* script) {
 
 /* static */
 DebugScript* DebugScript::getUnbarriered(JSScript* script) {
+  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(script));
   MOZ_ASSERT(script->hasDebugScript());
   DebugScriptMap* map = script->zone()->debugScriptMap;
   MOZ_ASSERT(map);
@@ -173,11 +165,18 @@ DebugScript* DebugScript::getOrCreate(JSContext* cx, HandleScript script) {
     }
   }
 
+  // Pop the OptimizeGetIteratorBytecodeFuse for the script's realm.
+  auto& realmFuses = script->realm()->realmFuses;
+  realmFuses.optimizeGetIteratorBytecodeFuse.popFuse(cx, realmFuses);
+
   return object->debugScript();
 }
 
 /* static */
 bool DebugScript::hasBreakpointSite(JSScript* script, jsbytecode* pc) {
+  if (IsAboutToBeFinalizedUnbarriered(script)) {
+    return false;
+  }
   if (!script->hasDebugScript()) {
     return false;
   }
@@ -225,6 +224,10 @@ JSBreakpointSite* DebugScript::getOrCreateBreakpointSite(JSContext* cx,
 /* static */
 void DebugScript::destroyBreakpointSite(JS::GCContext* gcx, JSScript* script,
                                         jsbytecode* pc) {
+  if (IsAboutToBeFinalizedUnbarriered(script)) {
+    return;
+  }
+
   // Avoid barriers during sweeping. |debug| does not escape.
   DebugScript* debug = getUnbarriered(script);
 
@@ -305,6 +308,10 @@ bool DebugScript::incrementStepperCount(JSContext* cx, HandleScript script) {
 
 /* static */
 void DebugScript::decrementStepperCount(JS::GCContext* gcx, JSScript* script) {
+  if (IsAboutToBeFinalizedUnbarriered(script)) {
+    return;
+  }
+
   // Avoid barriers during sweeping. |debug| does not escape.
   DebugScript* debug = getUnbarriered(script);
   MOZ_ASSERT(debug);
@@ -351,6 +358,10 @@ bool DebugScript::incrementGeneratorObserverCount(JSContext* cx,
 /* static */
 void DebugScript::decrementGeneratorObserverCount(JS::GCContext* gcx,
                                                   JSScript* script) {
+  if (IsAboutToBeFinalizedUnbarriered(script)) {
+    return;
+  }
+
   // Avoid barriers during sweeping. |debug| does not escape.
   DebugScript* debug = getUnbarriered(script);
   MOZ_ASSERT(debug);
@@ -402,6 +413,8 @@ void DebugScript::delete_(JS::GCContext* gcx, DebugScriptObject* owner) {
   gcx->free_(owner, this, allocSize(codeLength), MemoryUse::ScriptDebugScript);
 }
 
+DebugScriptMap::DebugScriptMap(JSContext* cx) : WeakMap(cx->zone()) {}
+
 #ifdef JSGC_HASH_TABLE_CHECKS
 /* static */
 void DebugAPI::checkDebugScriptAfterMovingGC(DebugScript* ds) {
@@ -416,6 +429,10 @@ void DebugAPI::checkDebugScriptAfterMovingGC(DebugScript* ds) {
 
 /* static */
 bool DebugAPI::stepModeEnabledSlow(JSScript* script) {
+  if (IsAboutToBeFinalizedUnbarriered(script)) {
+    return false;
+  }
+
   return DebugScript::getUnbarriered(script)->stepperCount > 0;
 }
 

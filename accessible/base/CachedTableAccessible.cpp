@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +6,7 @@
 
 #include "AccIterator.h"
 #include "HTMLTableAccessible.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -82,10 +81,14 @@ void CachedTableAccessible::Invalidate(Accessible* aAcc) {
     return;
   }
 
-  if (Accessible* table = nsAccUtils::TableFor(aAcc)) {
+  Accessible* table = nsAccUtils::TableFor(aAcc);
+  while (table && table->IsTable()) {
     // Destroy the instance (if any). We'll create a new one the next time it
-    // is requested.
+    // is requested. Climb up the heirarcy to invalidate parent tables as well.
     sCachedTables->Remove(table);
+    // The table may be a direct child of another table, invalidate that one as
+    // well.
+    table = table->Parent();
   }
 }
 
@@ -288,7 +291,7 @@ TableAccessible* CachedTableCellAccessible::Table() const {
 
 uint32_t CachedTableCellAccessible::ColExtent() const {
   if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
-    if (RequestDomainsIfInactive(CacheDomain::Table)) {
+    if (remoteAcc->Document()->RequestDomainsIfInactive(CacheDomain::Table)) {
       return 1;
     }
     if (remoteAcc->mCachedFields) {
@@ -314,7 +317,7 @@ uint32_t CachedTableCellAccessible::ColExtent() const {
 
 uint32_t CachedTableCellAccessible::RowExtent() const {
   if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
-    if (RequestDomainsIfInactive(CacheDomain::Table)) {
+    if (remoteAcc->Document()->RequestDomainsIfInactive(CacheDomain::Table)) {
       return 1;
     }
     if (remoteAcc->mCachedFields) {
@@ -340,7 +343,7 @@ uint32_t CachedTableCellAccessible::RowExtent() const {
 
 UniquePtr<AccIterable> CachedTableCellAccessible::GetExplicitHeadersIterator() {
   if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
-    if (RequestDomainsIfInactive(CacheDomain::Table)) {
+    if (remoteAcc->Document()->RequestDomainsIfInactive(CacheDomain::Table)) {
       return nullptr;
     }
     if (remoteAcc->mCachedFields) {
@@ -362,8 +365,10 @@ void CachedTableCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aCells) {
   if (!table) {
     return;
   }
-  if (mAcc->IsRemote() && RequestDomainsIfInactive(CacheDomain::Table)) {
-    return;
+  if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
+    if (remoteAcc->Document()->RequestDomainsIfInactive(CacheDomain::Table)) {
+      return;
+    }
   }
   if (auto iter = GetExplicitHeadersIterator()) {
     while (Accessible* header = iter->Next()) {

@@ -8,11 +8,6 @@
 // AppConstants, and overrides importESModule to be a no-op (which
 // can't be done for a static import statement).
 
-// eslint-disable-next-line mozilla/use-static-import
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 import {
   actionCreators as ac,
   actionTypes as at,
@@ -46,6 +41,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   Screenshots: "resource://newtab/lib/Screenshots.sys.mjs",
 });
 
@@ -54,20 +50,6 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
     "resource://messaging-system/lib/Logger.sys.mjs"
   );
   return new Logger("TopSitesFeed");
-});
-
-ChromeUtils.defineLazyGetter(lazy, "pageFrecencyThreshold", () => {
-  // @backward-compat { version 147 }
-  // Frecency was changed in 147 Nightly.
-  if (Services.vc.compare(AppConstants.MOZ_APP_VERSION, "147.0a1") >= 0) {
-    // 30 days ago, 5 visits. The threshold avoids one non-typed visit from
-    // immediately being included in recent history to mimic the original
-    // threshold which aimed to prevent first-run visits from being included in
-    // Top Sites.
-    return lazy.PlacesUtils.history.pageFrecencyThreshold(30, 5, false);
-  }
-  // The old threshold used for classic frecency: Slightly over one visit.
-  return 101;
 });
 
 const DEFAULT_SITES_PREF = "default.sites";
@@ -83,6 +65,7 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
 
 const CACHE_KEY = "contile";
 const ROWS_PREF = "topSitesRows";
+const PREF_MAX_SITES_PER_ROW = "topSitesMaxSitesPerRow";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 // The default total number of sponsored top sites to fetch from Contile
 // and Pocket.
@@ -163,6 +146,15 @@ ChromeUtils.defineLazyGetter(lazy, "userAgent", () => {
   ).userAgent;
 });
 
+function getTopSitesCount(prefValues) {
+  return (
+    prefValues[ROWS_PREF] *
+    (prefValues.trainhopConfig?.topSites?.maxSitesPerRow ??
+      prefValues[PREF_MAX_SITES_PER_ROW] ??
+      TOP_SITES_MAX_SITES_PER_ROW)
+  );
+}
+
 // Smart shortcuts
 import { RankShortcutsProvider } from "resource://newtab/lib/SmartShortcutsRanker/RankShortcuts.mjs";
 import { FrecencyBoostProvider } from "resource://newtab/lib/FrecencyBoostProvider/FrecencyBoostProvider.mjs";
@@ -171,15 +163,18 @@ const PREF_SYSTEM_SHORTCUTS_PERSONALIZATION =
   "discoverystream.shortcuts.personalization.enabled";
 
 function smartshortcutsEnabled(values) {
-  const systemPref = values[PREF_SYSTEM_SHORTCUTS_PERSONALIZATION];
+  // if nimbus pref is valid we use it, otherwise fall back to local pref
   const experimentVariable = values.trainhopConfig?.smartShortcuts?.enabled;
-  return systemPref || experimentVariable;
+  if (typeof experimentVariable === "boolean") {
+    return experimentVariable;
+  }
+  return !!values[PREF_SYSTEM_SHORTCUTS_PERSONALIZATION];
 }
 const OVERSAMPLE_MULTIPLIER = 2;
 
 function getShortHostnameForCurrentSearch() {
   return lazy.NewTabUtils.shortHostname(
-    Services.search.defaultEngine.searchUrlDomain
+    lazy.SearchService.defaultEngine.searchUrlDomain
   );
 }
 
@@ -421,9 +416,14 @@ export class ContileIntegration {
    *   An array of the tile objects
    */
   _filterBlockedSponsors(tiles) {
-    const blocklist = JSON.parse(
-      Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
-    );
+    let blocklist;
+    try {
+      blocklist = JSON.parse(
+        Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
+      );
+    } catch (e) {
+      blocklist = [];
+    }
     return tiles.filter(
       tile => !blocklist.includes(lazy.NewTabUtils.shortURL(tile))
     );
@@ -693,11 +693,14 @@ export class ContileIntegration {
           const controller = new AbortController();
           const { signal } = controller;
 
+          const adsBackendConfig = state.Prefs.values?.adsBackendConfig || {};
+
           const options = {
             method: "POST",
             headers,
             body: JSON.stringify({
               context_id: await lazy.ContextId.request(),
+              flags: adsBackendConfig,
               placements: placementsArray.map((placement, index) => ({
                 placement,
                 count: countsArray[index],
@@ -881,6 +884,8 @@ export class TopSitesFeed {
     this._telemetryUtility = new TopSitesTelemetry();
     this._contile = new ContileIntegration(this);
     this._tippyTopProvider = new TippyTopProvider();
+    this._refreshGeneration = 0;
+    this._latestRefreshPromise = Promise.resolve();
     ChromeUtils.defineLazyGetter(
       this,
       "_currentSearchHostname",
@@ -1088,9 +1093,14 @@ export class TopSitesFeed {
     this._useRemoteSetting = true;
     let remoteSettingData = await this._getRemoteConfig();
 
-    const sponsoredBlocklist = JSON.parse(
-      Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
-    );
+    let sponsoredBlocklist;
+    try {
+      sponsoredBlocklist = JSON.parse(
+        Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
+      );
+    } catch (e) {
+      sponsoredBlocklist = [];
+    }
 
     for (let siteData of remoteSettingData) {
       let hostname = lazy.NewTabUtils.shortURL(siteData);
@@ -1320,9 +1330,9 @@ export class TopSitesFeed {
         return false;
       }
 
-      const numberOfSlots =
-        this.store.getState().Prefs.values[ROWS_PREF] *
-        TOP_SITES_MAX_SITES_PER_ROW;
+      const numberOfSlots = getTopSitesCount(
+        this.store.getState().Prefs.values
+      );
 
       // The plainPinnedSites array is populated with pinned sites at their
       // respective indices, and null everywhere else, but is not always the
@@ -1467,10 +1477,10 @@ export class TopSitesFeed {
       if (discoveryStreamSpocPositions?.length) {
         function reformatImageURL(url, width, height) {
           // Change the image URL to request a size tailored for the parent container width
-          // Also: force JPEG, quality 60, no upscaling, no EXIF data
+          // Also: force WebP, quality 75, no upscaling, no EXIF data
           // Uses Thumbor: https://thumbor.readthedocs.io/en/latest/usage.html
           // For now we wrap this in single quotes because this is being used in a url() css rule, and otherwise would cause a parsing error.
-          return `'https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(
+          return `'https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(webp):quality(75):no_upscale():strip_exif()/${encodeURIComponent(
             url
           )}'`;
         }
@@ -1516,7 +1526,7 @@ export class TopSitesFeed {
   }
 
   // eslint-disable-next-line max-statements
-  async getLinksWithDefaults(isStartup = false) {
+  async getLinksWithDefaults(isStartup = false, refreshId = null) {
     const prefValues = this.store.getState().Prefs.values;
     // switch on top_sites thompson sampling experiment
     const overSampleMultiplier =
@@ -1525,14 +1535,13 @@ export class TopSitesFeed {
     const numFetch =
       (smartshortcutsEnabled(this.store.getState().Prefs.values)
         ? overSampleMultiplier
-        : 1) *
-      (prefValues[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW);
-    const numItems = prefValues[ROWS_PREF] * TOP_SITES_MAX_SITES_PER_ROW;
+        : 1) * getTopSitesCount(prefValues);
+    const numItems = getTopSitesCount(prefValues);
     const searchShortcutsExperiment = prefValues[SEARCH_SHORTCUTS_EXPERIMENT];
     // We must wait for search services to initialize in order to access default
     // search engine properties without triggering a synchronous initialization
     try {
-      await Services.search.init();
+      await lazy.SearchService.init();
     } catch {
       // We continue anyway because we want the user to see their sponsored,
       // saved, or visited shortcut tiles even if search engines are not
@@ -1544,7 +1553,15 @@ export class TopSitesFeed {
     const cache = await this.frecentCache.request({
       // We need to overquery due to the top 5 alexa search + default search possibly being removed
       numItems: numFetch + SEARCH_FILTERS.length + 1,
-      topsiteFrecency: lazy.pageFrecencyThreshold,
+      // 30 days ago, 5 visits. The threshold avoids one non-typed visit from
+      // immediately being included in recent history to mimic the original
+      // threshold which aimed to prevent first-run visits from being included in
+      // Top Sites.
+      topsiteFrecency: lazy.PlacesUtils.history.pageFrecencyThreshold(
+        30,
+        5,
+        false
+      ),
     });
     for (let link of cache) {
       const hostname = lazy.NewTabUtils.shortURL(link);
@@ -1776,9 +1793,10 @@ export class TopSitesFeed {
       }
     }
 
-    this._linksWithDefaults = withPinned;
-
-    this._telemetryUtility.finalizeNewtabPingFields(dedupedSponsored);
+    if (refreshId === null || refreshId === this._refreshGeneration) {
+      this._linksWithDefaults = withPinned;
+      this._telemetryUtility.finalizeNewtabPingFields(dedupedSponsored);
+    }
     return withPinned;
   }
 
@@ -1810,13 +1828,16 @@ export class TopSitesFeed {
   _mergeSponsoredLinks(sponsoredLinks) {
     const { positions: allocatedPositions, ready: sovReady } =
       this.store.getState().TopSites.sov || {};
+
+    // AMP links might have empty slots, remove them as SOV doesn't need those.
+    if (sponsoredLinks[SPONSORED_TILE_PARTNER_AMP]) {
+      sponsoredLinks[SPONSORED_TILE_PARTNER_AMP] =
+        sponsoredLinks[SPONSORED_TILE_PARTNER_AMP].filter(Boolean);
+    }
+
     if (!this._contile.sov || !sovReady) {
       return Object.values(sponsoredLinks).flat();
     }
-
-    // AMP links might have empty slots, remove them as SOV doesn't need those.
-    sponsoredLinks[SPONSORED_TILE_PARTNER_AMP] =
-      sponsoredLinks[SPONSORED_TILE_PARTNER_AMP].filter(Boolean);
 
     let sponsored = [];
 
@@ -1902,28 +1923,41 @@ export class TopSitesFeed {
     }
     this._startedUp = true;
 
-    if (!this._tippyTopProvider.initialized) {
-      await this._tippyTopProvider.init();
-    }
+    const refreshId = ++this._refreshGeneration;
+    const refreshPromise = (async () => {
+      if (!this._tippyTopProvider.initialized) {
+        await this._tippyTopProvider.init();
+      }
 
-    const links = await this.getLinksWithDefaults({
-      isStartup: options.isStartup,
-    });
-    const newAction = { type: at.TOP_SITES_UPDATED, data: { links } };
+      const links = await this.getLinksWithDefaults(
+        {
+          isStartup: options.isStartup,
+        },
+        refreshId
+      );
+      if (refreshId !== this._refreshGeneration) {
+        return;
+      }
 
-    if (options.isStartup) {
-      newAction.meta = {
-        isStartup: true,
-      };
-    }
+      const newAction = { type: at.TOP_SITES_UPDATED, data: { links } };
 
-    if (options.broadcast) {
-      // Broadcast an update to all open content pages
-      this.store.dispatch(ac.BroadcastToContent(newAction));
-    } else {
-      // Don't broadcast only update the state and update the preloaded tab.
-      this.store.dispatch(ac.AlsoToPreloaded(newAction));
-    }
+      if (options.isStartup) {
+        newAction.meta = {
+          isStartup: true,
+        };
+      }
+
+      if (options.broadcast) {
+        // Broadcast an update to all open content pages
+        this.store.dispatch(ac.BroadcastToContent(newAction));
+      } else {
+        // Don't broadcast only update the state and update the preloaded tab.
+        this.store.dispatch(ac.AlsoToPreloaded(newAction));
+      }
+    })();
+
+    this._latestRefreshPromise = refreshPromise.catch(() => {});
+    await refreshPromise;
   }
 
   // Allocate ad positions to partners based on SOV via stable randomization.
@@ -1974,7 +2008,7 @@ export class TopSitesFeed {
 
     // Populate the state with available search shortcuts
     let searchShortcuts = [];
-    for (const engine of await Services.search.getAppProvidedEngines()) {
+    for (const engine of await lazy.SearchService.getAppProvidedEngines()) {
       const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s =>
         engine.aliases.includes(s.keyword)
       );
@@ -2232,13 +2266,15 @@ export class TopSitesFeed {
    */
   _insertPin(site, originalIndex, draggedFromIndex) {
     let index = this._adjustPinIndexForSponsoredLinks(site, originalIndex);
+    let adjustedDraggedFromIndex = this._adjustPinIndexForSponsoredLinks(
+      site,
+      draggedFromIndex
+    );
 
     // Don't insert any pins past the end of the visible top sites. Otherwise,
     // we can end up with a bunch of pinned sites that can never be unpinned again
     // from the UI.
-    const topSitesCount =
-      this.store.getState().Prefs.values[ROWS_PREF] *
-      TOP_SITES_MAX_SITES_PER_ROW;
+    const topSitesCount = getTopSitesCount(this.store.getState().Prefs.values);
     if (index >= topSitesCount) {
       return;
     }
@@ -2247,11 +2283,11 @@ export class TopSitesFeed {
     if (!pinned[index]) {
       this._pinSiteAt(site, index);
     } else {
-      pinned[draggedFromIndex] = null;
+      pinned[adjustedDraggedFromIndex] = null;
       // Find the hole to shift the pinned site(s) towards. We shift towards the
       // hole left by the site being dragged.
       let holeIndex = index;
-      const indexStep = index > draggedFromIndex ? -1 : 1;
+      const indexStep = index > adjustedDraggedFromIndex ? -1 : 1;
       while (pinned[holeIndex]) {
         holeIndex += indexStep;
       }
@@ -2290,8 +2326,7 @@ export class TopSitesFeed {
       index,
       action.data.draggedFromIndex !== undefined
         ? action.data.draggedFromIndex
-        : this.store.getState().Prefs.values[ROWS_PREF] *
-            TOP_SITES_MAX_SITES_PER_ROW
+        : getTopSitesCount(this.store.getState().Prefs.values)
     );
 
     await this._clearLinkCustomScreenshot(action.data.site);
@@ -2305,9 +2340,7 @@ export class TopSitesFeed {
     });
 
     // Pin the addedShortcuts.
-    const numberOfSlots =
-      this.store.getState().Prefs.values[ROWS_PREF] *
-      TOP_SITES_MAX_SITES_PER_ROW;
+    const numberOfSlots = getTopSitesCount(this.store.getState().Prefs.values);
     addedShortcuts.forEach(shortcut => {
       // Find first hole in pinnedLinks.
       let index = lazy.NewTabUtils.pinnedLinks.links.findIndex(link => !link);

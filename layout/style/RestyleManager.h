@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,6 +5,7 @@
 #ifndef mozilla_RestyleManager_h
 #define mozilla_RestyleManager_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/OverflowChangedTracker.h"
 #include "mozilla/ServoElementSnapshot.h"
@@ -356,6 +355,12 @@ class RestyleManager {
                         const nsAttrValue* aOldValue);
 
   /**
+   * Recascade aElement and its pseudo-elements if they depend on
+   * aAttribute through attr().
+   */
+  void MaybeRecascadeForAttrFunction(Element* aElement, nsAtom* aAttribute);
+
+  /**
    * Restyle an element's previous and/or next siblings.
    */
   void RestyleSiblingsForNthOf(dom::Element* aChild,
@@ -413,6 +418,13 @@ class RestyleManager {
   // such as changes made through the Web Animations API or cascading result
   // changes by modifying classes, etc.
   void IncrementAnimationGeneration() { ++mAnimationGeneration; }
+
+  // Called when a highlight pseudo-element (::selection, ::highlight,
+  // ::target-text) style is invalidated. These pseudos need explicit repaint
+  // triggering since their styles are resolved lazily during painting.
+  void NoteHighlightPseudoStyleInvalidated() {
+    mNeedsPseudoElementSelectionsRepaint = true;
+  }
 
   // Apply change hints for animations on the compositor.
   //
@@ -581,6 +593,16 @@ class RestyleManager {
   // CSS animations.  We propagate TraversalRestyleBehavior::ForCSSRuleChanges
   // to traversal function if this flag is set.
   bool mRestyleForCSSRuleChanges = false;
+
+  // Set to true when a highlight pseudo-element (::selection, ::highlight,
+  // ::target-text) style is invalidated during the restyle. These pseudos have
+  // their styles resolved lazily during painting rather than during the restyle
+  // traversal, so we need to explicitly trigger a repaint at the end of the
+  // restyle.
+  // Uses Atomic because style invalidation can happen on worker threads during
+  // parallel style computation.
+  Atomic<bool, MemoryOrdering::Relaxed> mNeedsPseudoElementSelectionsRepaint{
+      false};
 
   // A hashtable with the elements that have changed state or attributes, in
   // order to calculate restyle hints during the traversal.

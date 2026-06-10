@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=4 et :
- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -397,8 +394,7 @@ template <class Reporter>
 static void TryRegisterStrongMemoryReporter() {
   static Atomic<bool> registered;
   if (registered.compareExchange(false, true)) {
-    RefPtr<Reporter> reporter = new Reporter();
-    if (NS_FAILED(RegisterStrongMemoryReporter(reporter))) {
+    if (NS_FAILED(RegisterStrongMemoryReporter(MakeAndAddRef<Reporter>()))) {
       registered = false;
     }
   }
@@ -630,7 +626,7 @@ bool MessageChannel::Open(ScopedPort aPort, Side aSide,
     MOZ_ASSERT(mSide == UnknownSide);
 
     mMessageChannelId = aMessageChannelId;
-    mWorkerThread = eventTarget;
+    mWorkerThread = std::move(eventTarget);
     mShutdownTask = shutdownTask;
     mLink = MakeUnique<PortLink>(this, std::move(aPort));
     mChannelState = ChannelConnected;
@@ -950,10 +946,18 @@ class IPCFlowMarker : public BaseMarkerType<IPCFlowMarker> {
 
   using MS = MarkerSchema;
   static constexpr MS::PayloadField PayloadFields[] = {
-      {"name", MS::InputType::CString, "Details", MS::Format::String,
-       MS::PayloadFlags::Searchable},
-      {"flow", MS::InputType::Uint64, "Flow", MS::Format::Flow,
-       MS::PayloadFlags::Searchable}};
+      {
+          "name",
+          MS::InputType::CString,
+          "Details",
+          MS::Format::String,
+      },
+      {
+          "flow",
+          MS::InputType::Uint64,
+          "Flow",
+          MS::Format::Flow,
+      }};
 
   static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
                                                MS::Location::MarkerTable};
@@ -1105,7 +1109,7 @@ void MessageChannel::OnMessageReceivedFromLink(UniquePtr<Message> aMsg) {
   // blocked. This is okay, since we always check for pending events before
   // blocking again.
 
-  RefPtr<MessageTask> task = new MessageTask(this, std::move(aMsg));
+  RefPtr task = MakeRefPtr<MessageTask>(this, std::move(aMsg));
   mPending.insertBack(task);
 
   if (!alwaysDeferred) {
@@ -2064,6 +2068,97 @@ void MessageChannel::OnNotifyMaybeChannelError() {
   NotifyMaybeChannelError(lock);
 }
 
+class MessageChannel::ErrorNotifyBatcher::BatchTask
+    : public CancelableRunnable {
+ public:
+  explicit BatchTask(nsIEventTarget* aEventTarget)
+      : CancelableRunnable("MessageChannel::ErrorNotifyBatcher"),
+        mEventTarget(aEventTarget) {}
+
+  NS_IMETHOD Run() override {
+    // NOTE: This is running all error notify tasks within a single runnable. If
+    // this ends up causing latency issues, we can change this logic to
+    // re-dispatch between tasks.
+    AUTO_PROFILER_LABEL("MessageChannel::ErrorNotifyBatchTask", IPC);
+    for (auto& task : mTasks) {
+      task->Run();
+    }
+    mTasks.Clear();
+    return NS_OK;
+  }
+
+  nsresult Cancel() override {
+    for (auto& task : mTasks) {
+      task->Cancel();
+    }
+    mTasks.Clear();
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIEventTarget> mEventTarget;
+  AutoTArray<RefPtr<CancelableRunnable>, 1> mTasks;
+};
+
+MessageChannel::ErrorNotifyBatcher*
+    MessageChannel::ErrorNotifyBatcher::sCurrent = nullptr;
+
+MessageChannel::ErrorNotifyBatcher::ErrorNotifyBatcher() {
+  AssertIOThread();
+  if (sCurrent == nullptr) {
+    sCurrent = this;
+  }
+}
+
+MessageChannel::ErrorNotifyBatcher::~ErrorNotifyBatcher() {
+  AssertIOThread();
+  if (sCurrent == this) {
+    sCurrent = nullptr;
+  }
+
+  for (auto& task : mToNotify) {
+    nsCOMPtr<nsIEventTarget> target = task->mEventTarget.forget();
+    target->Dispatch(task.forget());
+  }
+}
+
+/* static */
+void MessageChannel::ErrorNotifyBatcher::BatchDispatch(
+    nsIEventTarget* aTarget, already_AddRefed<CancelableRunnable> aRunnable) {
+  RefPtr<CancelableRunnable> runnable(std::move(aRunnable));
+  if (!ErrorNotifyBatcher::TryBatchDispatch(aTarget, runnable)) {
+    aTarget->Dispatch(runnable.forget());
+  }
+}
+
+/* static */
+bool MessageChannel::ErrorNotifyBatcher::TryBatchDispatch(
+    nsIEventTarget* aTarget, RefPtr<CancelableRunnable>& aRunnable) {
+  MessageLoop* curLoop = MessageLoop::current();
+  if (!curLoop || curLoop->type() != MessageLoop::TYPE_IO) {
+    return false;
+  }
+
+  AssertIOThread();
+  if (!ErrorNotifyBatcher::sCurrent) {
+    return false;
+  }
+
+  RefPtr<BatchTask> batchTask;
+  for (auto& task : ErrorNotifyBatcher::sCurrent->mToNotify) {
+    if (task->mEventTarget == aTarget) {
+      batchTask = task;
+      break;
+    }
+  }
+  if (!batchTask) {
+    batchTask = new BatchTask(aTarget);
+    ErrorNotifyBatcher::sCurrent->mToNotify.AppendElement(batchTask);
+  }
+
+  batchTask->mTasks.AppendElement(aRunnable.forget());
+  return true;
+}
+
 void MessageChannel::PostErrorNotifyTask() {
   mMonitor->AssertCurrentThreadOwns();
 
@@ -2075,7 +2170,12 @@ void MessageChannel::PostErrorNotifyTask() {
   mChannelErrorTask = NewNonOwningCancelableRunnableMethod(
       "ipc::MessageChannel::OnNotifyMaybeChannelError", this,
       &MessageChannel::OnNotifyMaybeChannelError);
-  mWorkerThread->Dispatch(do_AddRef(mChannelErrorTask));
+
+  // Check if we have a notify batcher which we want to use. This will only ever
+  // be the case on the IPC I/O thread. If we do, we'll queue up the task to be
+  // notified by it instead of directly dispatching.
+  ErrorNotifyBatcher::BatchDispatch(mWorkerThread,
+                                    do_AddRef(mChannelErrorTask));
 }
 
 // Special async message.
@@ -2298,7 +2398,7 @@ void MessageChannel::RepostAllMessages() {
   MessageQueue queue = std::move(mPending);
   while (RefPtr<MessageTask> task = queue.popFirst()) {
     task->AssertMonitorHeld(*mMonitor);
-    RefPtr<MessageTask> newTask = new MessageTask(this, std::move(task->Msg()));
+    RefPtr newTask = MakeRefPtr<MessageTask>(this, std::move(task->Msg()));
     newTask->AssertMonitorHeld(*mMonitor);
     mPending.insertBack(newTask);
     newTask->Post();

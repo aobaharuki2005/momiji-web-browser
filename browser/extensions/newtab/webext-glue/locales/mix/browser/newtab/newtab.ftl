@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = Nduku
     .aria-label = Nduku
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Chika'a ñaa nduku
 newtab-topsites-edit-topsites-header = Sama sitio popular

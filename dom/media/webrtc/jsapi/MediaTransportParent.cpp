@@ -20,6 +20,9 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
     mCandidateListener = mHandler->GetCandidateGathered().Connect(
         GetCurrentSerialEventTarget(), this,
         &MediaTransportParent::Impl::OnCandidate);
+    mCandidateErrorListener = mHandler->GetCandidateError().Connect(
+        GetCurrentSerialEventTarget(), this,
+        &MediaTransportParent::Impl::OnCandidateError);
     mAlpnNegotiatedListener = mHandler->GetAlpnNegotiated().Connect(
         GetCurrentSerialEventTarget(), this,
         &MediaTransportParent::Impl::OnAlpnNegotiated);
@@ -51,6 +54,7 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
   virtual ~Impl() {
     MOZ_ASSERT(mTarget->IsOnCurrentThread());
     mCandidateListener.DisconnectIfExists();
+    mCandidateErrorListener.DisconnectIfExists();
     mAlpnNegotiatedListener.DisconnectIfExists();
     mGatheringStateChangeListener.DisconnectIfExists();
     mConnectionStateChangeListener.DisconnectIfExists();
@@ -67,20 +71,24 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
     NS_ENSURE_TRUE_VOID(mParent->SendOnCandidate(aTransportId, aCandidateInfo));
   }
 
+  void OnCandidateError(const IceCandidateErrorInfo& aErrorInfo) {
+    NS_ENSURE_TRUE_VOID(mParent->SendOnCandidateError(aErrorInfo));
+  }
+
   void OnAlpnNegotiated(const std::string& aAlpn, bool aPrivacyRequested) {
     NS_ENSURE_TRUE_VOID(mParent->SendOnAlpnNegotiated(aAlpn));
   }
 
   void OnGatheringStateChange(const std::string& aTransportId,
                               dom::RTCIceGathererState aState) {
-    NS_ENSURE_TRUE_VOID(mParent->SendOnGatheringStateChange(
-        aTransportId, static_cast<int>(aState)));
+    NS_ENSURE_TRUE_VOID(
+        mParent->SendOnGatheringStateChange(aTransportId, aState));
   }
 
   void OnConnectionStateChange(const std::string& aTransportId,
                                dom::RTCIceTransportState aState) {
-    NS_ENSURE_TRUE_VOID(mParent->SendOnConnectionStateChange(
-        aTransportId, static_cast<int>(aState)));
+    NS_ENSURE_TRUE_VOID(
+        mParent->SendOnConnectionStateChange(aTransportId, aState));
   }
 
   void OnPacketReceived(const std::string& aTransportId,
@@ -108,6 +116,7 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
  private:
   MediaTransportParent* mParent;
   MediaEventListener mCandidateListener;
+  MediaEventListener mCandidateErrorListener;
   MediaEventListener mAlpnNegotiatedListener;
   MediaEventListener mGatheringStateChangeListener;
   MediaEventListener mConnectionStateChangeListener;
@@ -121,7 +130,7 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
 
 MediaTransportParent::MediaTransportParent() : mImpl(new Impl(this)) {}
 
-MediaTransportParent::~MediaTransportParent() {}
+MediaTransportParent::~MediaTransportParent() = default;
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvGetIceLog(
     const nsCString& pattern, GetIceLogResolver&& aResolve) {
@@ -207,12 +216,12 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvActivateTransport(
     const string& transportId, const string& localUfrag, const string& localPwd,
     const int& componentCount, const string& remoteUfrag,
     const string& remotePwd, nsTArray<uint8_t>&& keyDer,
-    nsTArray<uint8_t>&& certDer, const int& authType, const bool& dtlsClient,
-    const DtlsDigestList& digests, const bool& privacyRequested) {
+    nsTArray<uint8_t>&& certDer, const SSLKEAType& authType,
+    const bool& dtlsClient, const DtlsDigestList& digests,
+    const bool& privacyRequested) {
   mImpl->mHandler->ActivateTransport(
       transportId, localUfrag, localPwd, componentCount, remoteUfrag, remotePwd,
-      keyDer, certDer, static_cast<SSLKEAType>(authType), dtlsClient, digests,
-      privacyRequested);
+      keyDer, certDer, authType, dtlsClient, digests, privacyRequested);
   return ipc::IPCResult::Ok();
 }
 

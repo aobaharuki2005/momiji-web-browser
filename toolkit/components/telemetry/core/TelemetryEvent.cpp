@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -73,14 +71,10 @@ struct EventMarker {
   using MS = mozilla::MarkerSchema;
   static MS MarkerTypeDisplay() {
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyLabelFormat("cat", "Category", MS::Format::UniqueString,
-                             MS::PayloadFlags::Searchable);
-    schema.AddKeyLabelFormat("met", "Method", MS::Format::UniqueString,
-                             MS::PayloadFlags::Searchable);
-    schema.AddKeyLabelFormat("obj", "Object", MS::Format::UniqueString,
-                             MS::PayloadFlags::Searchable);
-    schema.AddKeyLabelFormat("val", "Value", MS::Format::String,
-                             MS::PayloadFlags::Searchable);
+    schema.AddKeyLabelFormat("cat", "Category", MS::Format::UniqueString);
+    schema.AddKeyLabelFormat("met", "Method", MS::Format::UniqueString);
+    schema.AddKeyLabelFormat("obj", "Object", MS::Format::UniqueString);
+    schema.AddKeyLabelFormat("val", "Value", MS::Format::String);
     schema.SetTooltipLabel(
         "{marker.data.cat}.{marker.data.met}#{marker.data.obj} "
         "{marker.data.val}");
@@ -328,7 +322,7 @@ bool gTelemetryEventCanRecordExtended;
 MOZ_RUNINIT nsTHashMap<nsCStringHashKey, EventKey> gEventNameIDMap(kEventCount);
 
 // The CategoryName set.
-MOZ_RUNINIT nsTHashSet<nsCString> gCategoryNames;
+constinit nsTHashSet<nsCString> gCategoryNames;
 
 // The main event storage. Events are inserted here, keyed by process id and
 // in recording order.
@@ -337,7 +331,7 @@ typedef nsTArray<EventRecord> EventRecordArray;
 typedef nsClassHashtable<ProcessIDHashKey, EventRecordArray>
     EventRecordsMapType;
 
-MOZ_RUNINIT EventRecordsMapType gEventRecords;
+constinit EventRecordsMapType gEventRecords;
 
 // The details on dynamic events that are recorded from addons are registered
 // here.
@@ -473,10 +467,6 @@ RecordEventResult RecordEvent(const StaticMutexAutoLock& lock,
   if (!CanRecordEvent(lock, eventKey, processType)) {
     return RecordEventResult::CannotRecord;
   }
-
-  // Count the number of times this event has been recorded.
-  TelemetryScalar::SummarizeEvent(UniqueEventName(category, method, object),
-                                  processType);
 
   EventRecordArray* eventRecords = GetEventRecordsForProcess(lock, processType);
   eventRecords->AppendElement(EventRecord(timestamp, eventKey, value, extra));

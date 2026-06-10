@@ -542,21 +542,24 @@ class RecursiveMakeBackend(MakeBackend):
                 tier = "pre-compile"
             else:
                 tier = "misc"
-            relobjdir = mozpath.relpath(obj.objdir, self.environment.topobjdir)
             if tier == "pre-compile":
-                self._pre_compile.add(relobjdir)
+                self._pre_compile.add(obj.relobjdir)
             else:
-                self._no_skip[tier].add(relobjdir)
+                self._no_skip[tier].add(obj.relobjdir)
             backend_file.write_once("include $(topsrcdir)/config/AB_rCD.mk\n")
             reldir = mozpath.relpath(obj.objdir, backend_file.objdir)
             if not reldir:
                 for out in obj.outputs:
-                    out = mozpath.join(relobjdir, out)
-                    assert out not in self._target_per_file
-                    self._target_per_file[out] = (relobjdir, tier)
-                for input in obj.inputs:
-                    if isinstance(input, ObjDirPath):
-                        self._post_process_dependencies.append((relobjdir, tier, input))
+                    target = mozpath.join(obj.objdir, out)
+                    assert target not in self._target_per_file
+                    self._target_per_file[target] = (obj.relobjdir, tier)
+                for dep in chain(obj.inputs, obj.extra_deps):
+                    if isinstance(dep, ObjDirPath):
+                        self._post_process_dependencies.append((
+                            obj.relobjdir,
+                            tier,
+                            dep,
+                        ))
             # For generated files that we handle in the top-level backend file,
             # we want to have a `directory/tier` target depending on the file.
             # For the others, we want a `tier` target.
@@ -803,7 +806,8 @@ class RecursiveMakeBackend(MakeBackend):
                 # builds.
                 for prior_target, target in pairwise(
                     sorted(
-                        [t for t in rust_roots], key=lambda t: t != self._gkrust_target
+                        [t for t in reversed(rust_roots)],
+                        key=lambda t: t != self._gkrust_target,
                     )
                 ):
                     r = root_deps_mk.create_rule([target])
@@ -881,6 +885,93 @@ class RecursiveMakeBackend(MakeBackend):
         for category, graphs in sorted(non_default_graphs.items()):
             category_dirs = [mozpath.dirname(target) for target in graphs.keys()]
             root_mk.add_statement("%s_dirs := %s" % (category, " ".join(category_dirs)))
+
+        # Root install-manifest rules.
+        is_hybrid = "FasterMake+RecursiveMake" in self.environment.substs.get(
+            "BUILD_BACKENDS", []
+        )
+        install_manifests = [
+            "dist/branding",
+            "dist/include",
+            "dist/public",
+            "dist/private",
+            "dist/xpi-stage",
+            "_tests",
+        ]
+        # Skip the dist/bin install manifest when using the hybrid
+        # FasterMake/RecursiveMake backend. This is a hack until bug 1241744 moves
+        # xpidl handling to FasterMake in that case, mechanically making the dist/bin
+        # install manifest non-existent (non-existent manifests being skipped)
+        if not is_hybrid:
+            install_manifests.append("dist/bin")
+
+        install_targets = [f"install-{m}" for m in install_manifests]
+        phony_targets = [
+            "install-manifests",
+            "install-manifests-binaries",
+            *install_targets,
+        ]
+        root_deps_mk.add_statement(".PHONY: " + " ".join(phony_targets))
+
+        agg = root_deps_mk.create_rule(["install-manifests"])
+        agg.add_dependencies(install_targets)
+        if is_hybrid:
+            agg.add_dependencies(["faster"])
+
+        binaries = root_deps_mk.create_rule(["install-manifests-binaries"])
+        binaries.add_dependencies(["install-dist/include"])
+        if is_hybrid:
+            binaries.add_dependencies(["faster"])
+
+        root_deps_mk.add_statement(".PHONY: install-tests install-test-files")
+        install_tests = root_deps_mk.create_rule(["install-tests"])
+        install_tests.add_dependencies(["install-test-files"])
+        test_files = root_deps_mk.create_rule(["install-test-files"])
+        test_files.add_commands([
+            "$(call py_action,process_install_manifest test/files,"
+            "$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )"
+            "--track install__test_files.track _tests "
+            "_build_manifests/install/_test_files)"
+        ])
+
+        if is_hybrid:
+            root_deps_mk.add_statement(".PHONY: faster")
+            faster = root_deps_mk.create_rule(["faster"])
+            faster.add_commands(["$(MAKE) -C faster FASTER_RECURSIVE_MAKE=1"])
+
+        for manifest in install_manifests:
+            target = f"install-{manifest}"
+            underscored = manifest.replace("/", "_")
+            rule = root_deps_mk.create_rule([target])
+            rule.add_dependencies(["$(install_manifest_depends)"])
+            commands = []
+            if is_hybrid:
+                # If we're using the hybrid FasterMake/RecursiveMake backend, we want
+                # to ensure the FasterMake end doesn't have install manifests for the
+                # same directory, because that would blow up
+                commands.append(
+                    f"$(if $(wildcard _build_manifests/install/{underscored}),"
+                    f"$(if $(wildcard faster/install_{underscored}*),"
+                    f"$(error FasterMake and RecursiveMake ends of the "
+                    f"hybrid build system want to handle {manifest})))"
+                )
+            commands.append(
+                f"$(foreach manifest,"
+                f"$(wildcard _build_manifests/install/{underscored}),"
+                f"$(call py_action,process_install_manifest {manifest},"
+                f"$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )"
+                f"--track install_{underscored}.track "
+                f"{manifest} $(manifest)))"
+            )
+            rule.add_commands(commands)
+
+        # Wrapper rules for the faster backend's underscored targets.
+        for manifest in install_manifests:
+            if not manifest.startswith("dist/"):
+                continue
+            underscored = manifest.replace("/", "_")
+            rule = root_deps_mk.create_rule([f"install-{underscored}"])
+            rule.add_dependencies([f"install-{manifest}"])
 
         root_mk.add_statement("include root-deps.mk")
 
@@ -1217,6 +1308,14 @@ class RecursiveMakeBackend(MakeBackend):
         backend_file.write_once("CARGO_TARGET_DIR := %s\n" % target_dir)
         backend_file.write("%s += $(DEPTH)/%s\n" % (target_variable, obj.location))
         backend_file.write("%s += %s\n" % (target_cargo_variable, obj.name))
+        if obj.features:
+            backend_file.write(f"{obj.FEATURES_VAR} := {','.join(obj.features)}\n")
+        if obj.output_category:
+            program_target = f"$(DEPTH)/{obj.location}"
+            self._process_non_default_target(obj, program_target, backend_file)
+            backend_file.write_once(
+                f"{obj.OUTPUT_CATEGORY_VAR} := {obj.output_category}\n"
+            )
 
     def _process_rust_program(self, obj, backend_file):
         self._process_rust_program_base(
@@ -1239,7 +1338,7 @@ class RecursiveMakeBackend(MakeBackend):
         self._process_non_default_target(obj, "force-cargo-test-run", backend_file)
         backend_file.write_once("CARGO_FILE := $(srcdir)/Cargo.toml\n")
         backend_file.write_once("RUST_TESTS := %s\n" % " ".join(obj.names))
-        backend_file.write_once("RUST_TEST_FEATURES := %s\n" % " ".join(obj.features))
+        backend_file.write_once(f"RUST_TEST_FEATURES := {','.join(obj.features)}\n")
 
     def _process_legacy_run_tests(self, obj, backend_file):
         self._no_skip["check"].add(backend_file.relobjdir)
@@ -1360,7 +1459,7 @@ class RecursiveMakeBackend(MakeBackend):
             if isinstance(obj.manifest, ReftestManifest):
                 # Mark included files as part of the build backend so changes
                 # result in re-config.
-                self.backend_input_files |= obj.manifest.manifests
+                self.backend_input_files |= obj.manifest.manifests.keys()
         except ImportError:
             # Ignore errors caused by the reftest module not being present.
             # This can happen when building SpiderMonkey standalone, for example.
@@ -1438,7 +1537,7 @@ class RecursiveMakeBackend(MakeBackend):
         backend_file.write("CARGO_TARGET_DIR := %s\n" % target_dir)
         if libdef.features:
             backend_file.write(
-                "%s := %s\n" % (libdef.FEATURES_VAR, " ".join(libdef.features))
+                f"{libdef.FEATURES_VAR} := {','.join(libdef.features)}\n"
             )
         if libdef.output_category:
             self._process_non_default_target(libdef, rust_lib, backend_file)
@@ -1455,10 +1554,7 @@ class RecursiveMakeBackend(MakeBackend):
             target_name = obj.KIND
         if target_name == "wasm":
             target_name = "target"
-        return "%s/%s" % (
-            mozpath.relpath(obj.objdir, self.environment.topobjdir),
-            target_name,
-        )
+        return f"{obj.relobjdir}/{target_name}"
 
     def _process_linked_libraries(self, obj, backend_file):
         objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
@@ -1511,6 +1607,11 @@ class RecursiveMakeBackend(MakeBackend):
         if getattr(obj, "symbols_file", None):
             backend_file.write_once("%s: %s\n" % (obj_target, obj.symbols_file))
 
+        for dep in getattr(obj, "extra_link_deps", ()):
+            backend_file.write_once(
+                f"{obj_target}: {self._pretty_path(dep, backend_file)}\n"
+            )
+
         for lib in shared_libs:
             assert obj.KIND not in {"host", "wasm"}
             backend_file.write_once(
@@ -1553,8 +1654,7 @@ class RecursiveMakeBackend(MakeBackend):
                         self._compile_graph[build_target].add(
                             self._build_target_for_obj(lib)
                         )
-                relobjdir = mozpath.relpath(obj.objdir, self.environment.topobjdir)
-                objects_target = mozpath.join(relobjdir, "%s-objects" % obj.KIND)
+                objects_target = mozpath.join(obj.relobjdir, f"{obj.KIND}-objects")
                 if objects_target in self._compile_graph:
                     self._compile_graph[build_target].add(objects_target)
 
@@ -1924,9 +2024,6 @@ class RecursiveMakeBackend(MakeBackend):
             % " ".join(sorted(webidls.all_non_static_basenames()))
         )
         mk.add_statement(
-            "globalgen_sources := %s" % " ".join(sorted(global_define_files))
-        )
-        mk.add_statement(
             "test_sources := %s"
             % " ".join(sorted("%sBinding.cpp" % s for s in webidls.all_test_stems()))
         )
@@ -1964,6 +2061,11 @@ class RecursiveMakeBackend(MakeBackend):
         webidls_mk = mozpath.join(bindings_dir, "webidlsrcs.mk")
         with self._write_file(webidls_mk) as fh:
             mk.dump(fh, removal_guard=False)
+
+        backend_file = self._get_backend_file_for(webidls)
+        for f in sorted(global_define_files):
+            backend_file.write(f"CPPSRCS += {f}\n")
+        backend_file.write("CPPSRCS += $(unified_binding_cpp_files)\n")
 
         # Add the test directory to the compile graph.
         if self.environment.substs.get("ENABLE_TESTS"):

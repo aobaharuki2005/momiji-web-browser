@@ -374,137 +374,48 @@ add_task(async function test_pip_actor_not_chat_sidebar() {
   });
 });
 
-add_task(
-  async function test_chatbot_microphone_access_if_persistent_perm_already_granted_in_tab() {
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["media.navigator.streams.fake", true],
-        ["browser.ml.chat.provider", "https://example.org"],
+/**
+ * Check that the sidebar is focused when opened
+ */
+add_task(async function test_sidebar_browser_focus() {
+  const sidebar = document.getElementById("sidebar");
+  await SidebarController.show("viewGenaiChatSidebar");
+  Assert.equal(document.activeElement, sidebar, "Sidebar is focused");
+  await SidebarController.hide();
+});
+
+/**
+ * Check that WebExtension content scripts can be injected into the chatbot browser
+ */
+add_task(async function test_webext_content_script_in_chat_sidebar() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ml.chat.provider", TEST_CHAT_PROVIDER_URL]],
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["<all_urls>"],
+          js: ["content.js"],
+        },
       ],
-    });
+    },
+    files: {
+      "content.js": `browser.test.sendMessage("injected", document.URL);`,
+    },
+  });
 
-    await BrowserTestUtils.withNewTab("https://example.org", async browser => {
-      const { principal, rawId } = await SpecialPowers.spawn(
-        browser,
-        [],
-        async () => {
-          const stream = await content.navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          const track = stream.getAudioTracks()[0];
-          const id = track.getSettings().deviceId || "default";
-          stream.getTracks().forEach(t => t.stop());
-          return {
-            principal: content.document.nodePrincipal,
-            rawId: id,
-          };
-        }
-      );
+  await extension.startup();
+  await SidebarController.show("viewGenaiChatSidebar");
 
-      Assert.ok(rawId, "Got microphone rawId from the tab");
+  const url = await extension.awaitMessage("injected");
+  Assert.equal(
+    url,
+    TEST_CHAT_PROVIDER_URL,
+    "WebExtension content script injected into chatbot browser"
+  );
 
-      const key = "microphone";
-      SitePermissions.setForPrincipal(
-        principal,
-        key,
-        SitePermissions.ALLOW,
-        SitePermissions.SCOPE_PERSISTENT,
-        browser
-      );
-
-      await SidebarController.show("viewGenaiChatSidebar");
-
-      const { document } = SidebarController.browser.contentWindow;
-      const chatbotBrowserContainer =
-        document.getElementById("browser-container");
-      const chatbotBrowser = chatbotBrowserContainer.querySelector("browser");
-
-      await BrowserTestUtils.browserLoaded(chatbotBrowser, false, url => {
-        return new URL(url).origin === "https://example.org";
-      });
-
-      const chatbotPrincipal = await SpecialPowers.spawn(
-        chatbotBrowser,
-        [],
-        async () => content.document.nodePrincipal
-      );
-
-      let shown = false;
-      let onShown = () => {
-        shown = true;
-      };
-      PopupNotifications.panel.addEventListener("popupshown", onShown);
-
-      await SpecialPowers.spawn(chatbotBrowser, [rawId], async id => {
-        const { WebRTCChild } = SpecialPowers.ChromeUtils.importESModule(
-          "resource:///actors/WebRTCChild.sys.mjs"
-        );
-
-        const mic = [
-          {
-            type: "audioinput",
-            rawName: "fake mic",
-            rawId: id,
-            id,
-            QueryInterface: ChromeUtils.generateQI([Ci.nsIMediaDevice]),
-            mediaSource: "microphone",
-          },
-        ];
-
-        const req = {
-          type: "getUserMedia",
-          windowID: content.windowGlobalChild.outerWindowId,
-          isSecure: true,
-          isHandlingUserInput: true,
-
-          audioInputDevices: mic,
-          videoInputDevices: [],
-          audioOutputDevices: [],
-
-          deviceIndex: 0,
-          devices: mic,
-
-          getConstraints: () => ({ audio: true }),
-          getAudioInputOptions: () => ({ deviceId: id }),
-          getVideoInputOptions: () => ({}),
-          getAudioOutputOptions: () => ({}),
-        };
-
-        WebRTCChild.observe(req, "getUserMedia:request");
-      });
-
-      const sidebarMicPerm = SitePermissions.getForPrincipal(
-        chatbotPrincipal,
-        key,
-        chatbotBrowser
-      );
-
-      is(
-        sidebarMicPerm.state,
-        SitePermissions.ALLOW,
-        "Sidebar chatbot has granted mic allow"
-      );
-      is(
-        sidebarMicPerm.scope,
-        SitePermissions.SCOPE_PERSISTENT,
-        "sidebar chatbot mic access is persistent"
-      );
-      Assert.ok(
-        !shown,
-        "PopupNotification didn't fire because the mic access has been granted"
-      );
-
-      PopupNotifications.panel.removeEventListener("popupshown", onShown);
-      SitePermissions.removeFromPrincipal(principal, key, browser);
-      SitePermissions.removeFromPrincipal(
-        chatbotPrincipal,
-        key,
-        chatbotBrowser
-      );
-    });
-
-    await SidebarController.hide();
-    await SpecialPowers.popPrefEnv();
-    Services.fog.testResetFOG();
-  }
-);
+  await SidebarController.hide();
+  await extension.unload();
+});

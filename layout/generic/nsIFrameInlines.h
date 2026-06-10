@@ -1,15 +1,12 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIFrameInlines_h___
-#define nsIFrameInlines_h___
+#ifndef nsIFrameInlines_h_
+#define nsIFrameInlines_h_
 
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/dom/ElementInlines.h"
-#include "nsCSSAnonBoxes.h"
 #include "nsContainerFrame.h"
 #include "nsFrameManager.h"
 #include "nsIContentInlines.h"
@@ -54,7 +51,7 @@ bool nsIFrame::IsMasonry(mozilla::WritingMode aWM,
 bool nsIFrame::IsTableCaption() const {
   return StyleDisplay()->mDisplay == mozilla::StyleDisplay::TableCaption &&
          GetParent()->Style()->GetPseudoType() ==
-             mozilla::PseudoStyleType::tableWrapper;
+             mozilla::PseudoStyleType::MozTableWrapper;
 }
 
 bool nsIFrame::IsFloating() const {
@@ -120,7 +117,7 @@ bool nsIFrame::IsColumnSpanInMulticolSubtree() const {
           // A frame other than inline and block won't have
           // NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR. We instead test its parent.
           (GetParent() && GetParent()->Style()->GetPseudoType() ==
-                              mozilla::PseudoStyleType::columnSpanWrapper));
+                              mozilla::PseudoStyleType::MozColumnSpanWrapper));
 }
 
 mozilla::StyleDisplay nsIFrame::GetDisplay() const {

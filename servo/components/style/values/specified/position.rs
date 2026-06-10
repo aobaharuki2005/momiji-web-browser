@@ -15,17 +15,18 @@ use crate::str::HTML_SPACE_CHARACTERS;
 use crate::values::computed::LengthPercentage as ComputedLengthPercentage;
 use crate::values::computed::{Context, Percentage, ToComputedValue};
 use crate::values::generics::length::GenericAnchorSizeFunction;
-use crate::values::generics::position::Position as GenericPosition;
 use crate::values::generics::position::PositionComponent as GenericPositionComponent;
 use crate::values::generics::position::PositionOrAuto as GenericPositionOrAuto;
 use crate::values::generics::position::ZIndex as GenericZIndex;
 use crate::values::generics::position::{AspectRatio as GenericAspectRatio, GenericAnchorSide};
-use crate::values::generics::position::{GenericAnchorFunction, GenericInset};
+use crate::values::generics::position::{GenericAnchorFunction, GenericInset, TreeScoped};
+use crate::values::generics::position::{IsTreeScoped, Position as GenericPosition};
 use crate::values::specified;
 use crate::values::specified::align::AlignFlags;
+use crate::values::specified::percentage::NoCalcPercentage;
 use crate::values::specified::{AllowQuirks, Integer, LengthPercentage, NonNegativeNumber};
-use crate::values::DashedIdent;
-use crate::{Atom, Zero};
+use crate::values::{AtomIdent, DashedIdent};
+use crate::Atom;
 use cssparser::{match_ignore_ascii_case, Parser};
 use num_traits::FromPrimitive;
 use selectors::parser::SelectorParseErrorKind;
@@ -51,7 +52,8 @@ pub type HorizontalPosition = PositionComponent<HorizontalPositionKeyword>;
 pub type VerticalPosition = PositionComponent<VerticalPositionKeyword>;
 
 /// The specified value of a component of a CSS `<position>`.
-#[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem, ToTyped)]
+#[typed(todo_derive_fields)]
 pub enum PositionComponent<S> {
     /// `center`
     Center,
@@ -287,9 +289,11 @@ impl<S> GenericPositionComponent for PositionComponent<S> {
     fn is_center(&self) -> bool {
         match *self {
             PositionComponent::Center => true,
-            PositionComponent::Length(LengthPercentage::Percentage(ref per)) => per.0 == 0.5,
+            PositionComponent::Length(LengthPercentage::Percentage(ref per)) => per.get() == 0.5,
             // 50% from any side is still the center.
-            PositionComponent::Side(_, Some(LengthPercentage::Percentage(ref per))) => per.0 == 0.5,
+            PositionComponent::Side(_, Some(LengthPercentage::Percentage(ref per))) => {
+                per.get() == 0.5
+            },
             _ => false,
         }
     }
@@ -298,7 +302,7 @@ impl<S> GenericPositionComponent for PositionComponent<S> {
 impl<S> PositionComponent<S> {
     /// `0%`
     pub fn zero() -> Self {
-        PositionComponent::Length(LengthPercentage::Percentage(Percentage::zero()))
+        PositionComponent::Length(LengthPercentage::Percentage(NoCalcPercentage::zero()))
     }
 
     /// Returns the count of this component.
@@ -349,8 +353,8 @@ impl<S: Side> PositionComponent<S> {
 }
 
 /// https://drafts.csswg.org/css-anchor-position-1/#propdef-anchor-name
-#[repr(transparent)]
 #[derive(
+    Animate,
     Clone,
     Debug,
     MallocSizeOf,
@@ -363,25 +367,23 @@ impl<S: Side> PositionComponent<S> {
     ToTyped,
 )]
 #[css(comma)]
-pub struct AnchorName(
+#[repr(transparent)]
+#[typed(todo_derive_fields)]
+pub struct AnchorNameIdent(
     #[css(iterable, if_empty = "none")]
     #[ignore_malloc_size_of = "Arc"]
+    #[animation(constant)]
     pub crate::ArcSlice<DashedIdent>,
 );
 
-impl AnchorName {
+impl AnchorNameIdent {
     /// Return the `none` value.
     pub fn none() -> Self {
         Self(Default::default())
     }
-
-    /// Returns whether this is the `none` value.
-    pub fn is_none(&self) -> bool {
-        self.0.is_empty()
-    }
 }
 
-impl Parse for AnchorName {
+impl Parse for AnchorNameIdent {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
@@ -398,11 +400,27 @@ impl Parse for AnchorName {
         while input.try_parse(|input| input.expect_comma()).is_ok() {
             idents.push(DashedIdent::parse(context, input)?);
         }
-        Ok(AnchorName(ArcSlice::from_iter(idents.drain(..))))
+        Ok(AnchorNameIdent(ArcSlice::from_iter(idents.drain(..))))
     }
 }
 
-/// https://drafts.csswg.org/css-anchor-position-1/#propdef-scope
+impl IsTreeScoped for AnchorNameIdent {
+    fn is_tree_scoped(&self) -> bool {
+        !self.0.is_empty()
+    }
+}
+
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-anchor-name
+pub type AnchorName = TreeScoped<AnchorNameIdent>;
+
+impl AnchorName {
+    /// Return the `none` value.
+    pub fn none() -> Self {
+        Self::with_default_level(AnchorNameIdent::none())
+    }
+}
+
+/// List of scoped names, or none.
 #[derive(
     Clone,
     Debug,
@@ -415,34 +433,39 @@ impl Parse for AnchorName {
     ToShmem,
     ToTyped,
 )]
-#[repr(u8)]
-pub enum AnchorScope {
-    /// `none`
-    None,
-    /// `all`
-    All,
-    /// `<dashed-ident>#`
-    #[css(comma)]
-    Idents(
-        #[css(iterable)]
-        #[ignore_malloc_size_of = "Arc"]
-        crate::ArcSlice<DashedIdent>,
-    ),
-}
+#[repr(transparent)]
+#[css(comma)]
+#[typed(todo_derive_fields)]
+pub struct ScopedNameList(
+    /// `none | all | <dashed-ident>#`
+    #[css(iterable, if_empty = "none")]
+    #[ignore_malloc_size_of = "Arc"]
+    crate::ArcSlice<AtomIdent>,
+);
 
-impl AnchorScope {
+impl ScopedNameList {
     /// Return the `none` value.
     pub fn none() -> Self {
-        Self::None
+        Self(crate::ArcSlice::default())
     }
 
-    /// Returns whether this is the `none` value.
+    /// Whether we're the `none` value.
     pub fn is_none(&self) -> bool {
-        *self == Self::None
+        self.0.is_empty()
+    }
+
+    /// Return the `all` value.
+    pub fn all() -> Self {
+        static ALL: std::sync::LazyLock<ScopedNameList> = std::sync::LazyLock::new(|| {
+            ScopedNameList(crate::ArcSlice::from_iter_leaked(std::iter::once(
+                AtomIdent::new(atom!("all")),
+            )))
+        });
+        ALL.clone()
     }
 }
 
-impl Parse for AnchorScope {
+impl Parse for ScopedNameList {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
@@ -450,19 +473,41 @@ impl Parse for AnchorScope {
         let location = input.current_source_location();
         let first = input.expect_ident()?;
         if first.eq_ignore_ascii_case("none") {
-            return Ok(Self::None);
+            return Ok(Self::none());
         }
         if first.eq_ignore_ascii_case("all") {
-            return Ok(Self::All);
+            return Ok(Self::all());
         }
         // Authors using more than a handful of anchored elements is likely
         // uncommon, so we only pre-allocate for 8 on the stack here.
-        let mut idents: SmallVec<[DashedIdent; 8]> =
-            smallvec![DashedIdent::from_ident(location, first,)?];
+        let mut idents = SmallVec::<[AtomIdent; 8]>::new();
+        idents.push(AtomIdent::new(DashedIdent::from_ident(location, first)?.0));
         while input.try_parse(|input| input.expect_comma()).is_ok() {
-            idents.push(DashedIdent::parse(context, input)?);
+            idents.push(AtomIdent::new(DashedIdent::parse(context, input)?.0));
         }
-        Ok(AnchorScope::Idents(ArcSlice::from_iter(idents.drain(..))))
+        Ok(Self(ArcSlice::from_iter(idents.drain(..))))
+    }
+}
+
+impl IsTreeScoped for ScopedNameList {
+    fn is_tree_scoped(&self) -> bool {
+        !self.is_none()
+    }
+}
+
+/// A scoped name type, such as:
+/// * https://drafts.csswg.org/css-anchor-position-1/#propdef-scope
+pub type ScopedName = TreeScoped<ScopedNameList>;
+
+impl ScopedName {
+    /// Return the `none` value.
+    pub fn none() -> Self {
+        Self::with_default_level(ScopedNameList::none())
+    }
+
+    /// Returns true if no scoped name is specified.
+    pub fn is_none(&self) -> bool {
+        self.value.is_none()
     }
 }
 
@@ -481,13 +526,35 @@ impl Parse for AnchorScope {
     ToTyped,
 )]
 #[repr(u8)]
-pub enum PositionAnchor {
+#[typed(todo_derive_fields)]
+pub enum PositionAnchorKeyword {
+    /// `normal`
+    Normal,
     /// `none`
     None,
     /// `auto`
     Auto,
     /// `<dashed-ident>`
     Ident(DashedIdent),
+}
+
+impl IsTreeScoped for PositionAnchorKeyword {
+    fn is_tree_scoped(&self) -> bool {
+        match *self {
+            Self::Normal | Self::None | Self::Auto => false,
+            Self::Ident(_) => true,
+        }
+    }
+}
+
+/// https://drafts.csswg.org/css-anchor-position-1/#propdef-position-anchor
+pub type PositionAnchor = TreeScoped<PositionAnchorKeyword>;
+
+impl PositionAnchor {
+    /// Return the `normal` value.
+    pub fn normal() -> Self {
+        Self::with_default_level(PositionAnchorKeyword::Normal)
+    }
 }
 
 #[derive(
@@ -674,14 +741,21 @@ pub enum PositionTryFallbacksItem {
 )]
 #[css(comma)]
 #[repr(C)]
+#[typed(todo_derive_fields)]
 /// https://drafts.csswg.org/css-anchor-position-1/#position-try-fallbacks
-pub struct PositionTryFallbacks(
+pub struct PositionTryFallbacksList(
     #[css(iterable, if_empty = "none")]
     #[ignore_malloc_size_of = "Arc"]
     pub crate::ArcSlice<PositionTryFallbacksItem>,
 );
 
-impl PositionTryFallbacks {
+impl IsTreeScoped for PositionTryFallbacksList {
+    fn is_tree_scoped(&self) -> bool {
+        !self.is_none()
+    }
+}
+
+impl PositionTryFallbacksList {
     #[inline]
     /// Return the `none` value.
     pub fn none() -> Self {
@@ -694,7 +768,7 @@ impl PositionTryFallbacks {
     }
 }
 
-impl Parse for PositionTryFallbacks {
+impl Parse for PositionTryFallbacksList {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
@@ -710,6 +784,16 @@ impl Parse for PositionTryFallbacks {
             items.push(PositionTryFallbacksItem::parse(context, input)?);
         }
         Ok(Self(ArcSlice::from_iter(items.drain(..))))
+    }
+}
+
+/// https://drafts.csswg.org/css-anchor-position-1/#position-try-fallbacks
+pub type PositionTryFallbacks = TreeScoped<PositionTryFallbacksList>;
+
+impl PositionTryFallbacks {
+    /// Returns the default value, `none`.
+    pub fn none() -> Self {
+        Self::with_default_level(PositionTryFallbacksList::none())
     }
 }
 
@@ -1232,6 +1316,7 @@ impl PositionAreaKeyword {
     ToTyped,
 )]
 #[repr(C)]
+#[typed(todo_derive_fields)]
 /// https://drafts.csswg.org/css-anchor-position-1/#propdef-position-area
 pub struct PositionArea {
     /// First keyword, if any.
@@ -1385,14 +1470,15 @@ impl PositionArea {
         // but as a physical type, they will be interpreted as the x- and y-axis
         // respectively, so if the writing mode is horizontal we need to swap the
         // values (block -> y, inline -> x).
-        if self.first.axis() == PositionAreaAxis::None &&
-            self.second.axis() == PositionAreaAxis::None &&
-            !cb_wm.is_vertical() {
-          std::mem::swap(&mut self.first, &mut self.second);
+        if self.first.axis() == PositionAreaAxis::None
+            && self.second.axis() == PositionAreaAxis::None
+            && !cb_wm.is_vertical()
+        {
+            std::mem::swap(&mut self.first, &mut self.second);
         } else {
-          self.first = self.first.to_physical(cb_wm, self_wm, LogicalAxis::Block);
-          self.second = self.second.to_physical(cb_wm, self_wm, LogicalAxis::Inline);
-          self.canonicalize_order();
+            self.first = self.first.to_physical(cb_wm, self_wm, LogicalAxis::Block);
+            self.second = self.second.to_physical(cb_wm, self_wm, LogicalAxis::Inline);
+            self.canonicalize_order();
         }
         self
     }
@@ -1616,6 +1702,7 @@ pub enum MasonryItemOrder {
     ToTyped,
 )]
 #[repr(C)]
+#[typed(todo_derive_fields)]
 /// Controls how the Masonry layout algorithm works
 /// specifying exactly how auto-placed items get flowed in the masonry axis.
 pub struct MasonryAutoFlow {
@@ -1982,6 +2069,7 @@ fn is_name_code_point(c: char) -> bool {
     ToShmem,
     ToTyped,
 )]
+#[typed(todo_derive_fields)]
 pub enum GridTemplateAreas {
     /// The `none` value.
     None,
@@ -2066,7 +2154,7 @@ impl Inset {
         match input.try_parse(|i| i.expect_ident_matching("auto")) {
             Ok(_) => return Ok(Self::Auto),
             Err(e) if !static_prefs::pref!("layout.css.anchor-positioning.enabled") => {
-                return Err(e.into())
+                return Err(e.into());
             },
             Err(_) => (),
         };
@@ -2144,7 +2232,9 @@ impl Parse for AnchorFunction {
                 })
                 .ok();
             Ok(Self {
-                target_element: target_element.unwrap_or_else(DashedIdent::empty),
+                target_element: TreeScoped::with_default_level(
+                    target_element.unwrap_or_else(DashedIdent::empty),
+                ),
                 side,
                 fallback: fallback.into(),
             })

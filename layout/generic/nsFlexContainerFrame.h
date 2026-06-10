@@ -1,13 +1,11 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* rendering object for CSS "display: flex" and "display: -webkit-box" */
 
-#ifndef nsFlexContainerFrame_h___
-#define nsFlexContainerFrame_h___
+#ifndef nsFlexContainerFrame_h_
+#define nsFlexContainerFrame_h_
 
 #include <tuple>
 
@@ -697,4 +695,4 @@ class nsFlexContainerFrame final : public nsContainerFrame,
   nscoord mLastBaseline = NS_INTRINSIC_ISIZE_UNKNOWN;
 };
 
-#endif /* nsFlexContainerFrame_h___ */
+#endif /* nsFlexContainerFrame_h_ */

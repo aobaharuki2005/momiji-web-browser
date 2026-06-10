@@ -179,6 +179,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             }
         }
     }
+
+    pub fn as_2d_scale_offset(&self) -> Option<ScaleOffset> {
+        self.kind.as_2d_scale_offset()
+    }
 }
 
 
@@ -259,7 +263,7 @@ impl SpaceSnapper {
         debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
         match self.snapping_transform {
             Some(ref scale_offset) => {
-                let snapped_device_vector : DevicePoint = scale_offset.map_point(point).snap();
+                let snapped_device_vector: DevicePoint = scale_offset.map_point(point).snap();
                 scale_offset.unmap_point(&snapped_device_vector)
             }
             None => *point,

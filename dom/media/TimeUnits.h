@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -233,10 +231,15 @@ class TimeUnit final {
     double approx = static_cast<double>(mTicks.value()) *
                     static_cast<double>(aTargetBase) /
                     static_cast<double>(mBase);
+    if (approx < static_cast<double>(INT64_MIN) ||
+        approx > static_cast<double>(INT64_MAX)) {
+      aOutError = 1.0;
+      return TimeUnit::Invalid();
+    }
+    double rounded = RoundingPolicy::policy(approx);
     double integer;
     aOutError = modf(approx, &integer);
-    return TimeUnit(AssertedCast<int64_t>(RoundingPolicy::policy(approx)),
-                    aTargetBase);
+    return TimeUnit(mozilla::AssertedCast<int64_t>(rounded), aTargetBase);
   }
 
   bool IsValid() const;

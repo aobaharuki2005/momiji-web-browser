@@ -14,8 +14,8 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 
-#include "api/array_view.h"
 #include "api/audio/audio_frame.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
 #include "api/audio_codecs/audio_format.h"
@@ -40,7 +40,6 @@
 namespace webrtc {
 namespace {
 
-using ::testing::Invoke;
 using ::testing::NiceMock;
 using ::testing::Unused;
 
@@ -52,7 +51,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpStack(const Environment& env,
   rtp_config.rtcp_report_interval_ms = 5000;
   rtp_config.outgoing_transport = transport;
   rtp_config.local_media_ssrc = remote_ssrc;
-  auto rtp_rtcp = std::make_unique<ModuleRtpRtcpImpl2>(env, rtp_config);
+  auto rtp_rtcp = ModuleRtpRtcpImpl2::CreateSendModule(env, rtp_config);
   rtp_rtcp->SetSendingMediaStatus(false);
   rtp_rtcp->SetRTCPStatus(RtcpMode::kCompound);
   return rtp_rtcp;
@@ -132,7 +131,7 @@ TEST_F(AudioEgressTest, ProcessAudioWithMute) {
   Event event;
   int rtp_count = 0;
   RtpPacketReceived rtp;
-  auto rtp_sent = [&](ArrayView<const uint8_t> packet, Unused) {
+  auto rtp_sent = [&](std::span<const uint8_t> packet, Unused) {
     rtp.Parse(packet);
     if (++rtp_count == kExpected) {
       event.Set();
@@ -140,7 +139,7 @@ TEST_F(AudioEgressTest, ProcessAudioWithMute) {
     return true;
   };
 
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(rtp_sent));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(rtp_sent);
 
   egress_->SetMute(true);
 
@@ -170,7 +169,7 @@ TEST_F(AudioEgressTest, ProcessAudioWithSineWave) {
   Event event;
   int rtp_count = 0;
   RtpPacketReceived rtp;
-  auto rtp_sent = [&](ArrayView<const uint8_t> packet, Unused) {
+  auto rtp_sent = [&](std::span<const uint8_t> packet, Unused) {
     rtp.Parse(packet);
     if (++rtp_count == kExpected) {
       event.Set();
@@ -178,7 +177,7 @@ TEST_F(AudioEgressTest, ProcessAudioWithSineWave) {
     return true;
   };
 
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(rtp_sent));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(rtp_sent);
 
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
@@ -205,14 +204,14 @@ TEST_F(AudioEgressTest, SkipAudioEncodingAfterStopSend) {
   constexpr int kExpected = 10;
   Event event;
   int rtp_count = 0;
-  auto rtp_sent = [&](ArrayView<const uint8_t> /* packet */, Unused) {
+  auto rtp_sent = [&](std::span<const uint8_t> /* packet */, Unused) {
     if (++rtp_count == kExpected) {
       event.Set();
     }
     return true;
   };
 
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(rtp_sent));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(rtp_sent);
 
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
@@ -279,7 +278,7 @@ TEST_F(AudioEgressTest, SendDTMF) {
   // It's possible that we may have actual audio RTP packets along with
   // DTMF packtets.  We are only interested in the exact number of DTMF
   // packets rtp stack is emitting.
-  auto rtp_sent = [&](ArrayView<const uint8_t> packet, Unused) {
+  auto rtp_sent = [&](std::span<const uint8_t> packet, Unused) {
     RtpPacketReceived rtp;
     rtp.Parse(packet);
     if (is_dtmf(rtp) && ++dtmf_count == kExpected) {
@@ -288,7 +287,7 @@ TEST_F(AudioEgressTest, SendDTMF) {
     return true;
   };
 
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(rtp_sent));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(rtp_sent);
 
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
@@ -306,14 +305,14 @@ TEST_F(AudioEgressTest, TestAudioInputLevelAndEnergyDuration) {
   constexpr int kExpected = 6;
   Event event;
   int rtp_count = 0;
-  auto rtp_sent = [&](ArrayView<const uint8_t> /* packet */, Unused) {
+  auto rtp_sent = [&](std::span<const uint8_t> /* packet */, Unused) {
     if (++rtp_count == kExpected) {
       event.Set();
     }
     return true;
   };
 
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(rtp_sent));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(rtp_sent);
 
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {

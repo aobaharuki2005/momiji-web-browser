@@ -5,15 +5,11 @@ const { GenAI } = ChromeUtils.importESModule(
   "resource:///modules/GenAI.sys.mjs"
 );
 
-registerCleanupFunction(() => {
+// Schedule reset to the initial sidebar state after the test.
+SidebarTestUtils.restoreStateAtCleanup(window);
+
+registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("sidebar.old-sidebar.has-used");
-  // Ensure sidebar is hidden after each test:
-  if (!document.getElementById("sidebar-box").hidden) {
-    info(
-      `Sidebar ${SidebarController.currentID} was left open, closing it in cleanup function`
-    );
-    SidebarController.hide({ dismissPanel: true });
-  }
 });
 
 /**
@@ -37,9 +33,9 @@ add_task(async function test_default_telemetry() {
     "Default menu shown for test"
   );
   Assert.equal(
-    Glean.genaiChatbot.page.testGetValue() ?? false,
-    false,
-    "Default no page feature for test"
+    Glean.genaiChatbot.page.testGetValue() ?? true,
+    true,
+    "Default page feature for test"
   );
   Assert.equal(
     Glean.genaiChatbot.provider.testGetValue() ?? "none",

@@ -16,9 +16,9 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <span>
 #include <vector>
 
-#include "api/array_view.h"
 #include "api/field_trials_view.h"
 #include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
@@ -95,7 +95,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
 
   explicit RTPSenderVideo(const Config& config);
 
-  virtual ~RTPSenderVideo();
+  ~RTPSenderVideo() override;
 
   // `capture_time` and `clock::CurrentTime` should be using the same epoch.
   // `expected_retransmission_time.IsFinite()` -> retransmission allowed.
@@ -103,17 +103,17 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   // video encoder, excluding any additional overhead.
   // Calls to this method are assumed to be externally serialized.
   bool SendVideo(int payload_type,
-                 std::optional<VideoCodecType> codec_type,
+                 VideoCodecType codec_type,
                  uint32_t rtp_timestamp,
                  Timestamp capture_time,
-                 ArrayView<const uint8_t> payload,
+                 std::span<const uint8_t> payload,
                  size_t encoder_output_size,
                  RTPVideoHeader video_header,
                  TimeDelta expected_retransmission_time,
                  std::vector<uint32_t> csrcs) override;
 
   bool SendEncodedImage(int payload_type,
-                        std::optional<VideoCodecType> codec_type,
+                        VideoCodecType codec_type,
                         uint32_t rtp_timestamp,
                         const EncodedImage& encoded_image,
                         RTPVideoHeader video_header,

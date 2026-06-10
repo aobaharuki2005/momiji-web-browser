@@ -4,7 +4,6 @@
 
 #include <time.h>
 #include <unistd.h>
-#include <cstring>
 
 #include "SandboxInfo.h"
 
@@ -12,6 +11,7 @@
 #include "SandboxProfiler.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/PodOperations.h"
 

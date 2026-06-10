@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test that for the specific CKEditor 4 iframe, we get an async initial about:blank load</title>
+  <title>Test that for the specific editor iframes, we get an async initial about:blank load</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script>
@@ -13,13 +13,15 @@ async function base_test(options = {}) {
     src = "",
     name = "CKEDITOR",
     version = "4.15.0",
-    asyncLoad = true
+    asyncLoad = true,
   } = options;
 
   window[name] = { version };
 
   const iframe = document.createElement("iframe");
-  iframe.src = src;
+  if (src !== null) {
+    iframe.src = src;
+  }
   iframe.classList.add(cls);
   let loadCnt = 0;
   iframe.addEventListener("load", () => ++loadCnt );
@@ -46,6 +48,30 @@ add_task(async function test_ckeditor() {
 
 add_task(async function test_jeditor() {
   await base_test({ name: "JEDITOR" });
+});
+
+add_task(async function test_missing_build_step() {
+  await base_test({ version: "%VERSION%" });
+});
+
+add_task(async function test_gwt() {
+  await base_test({ name: "__gwt_stylesLoaded", cls: "gwt-RichTextArea", src: null });
+});
+
+add_task(async function test_gwt_global_missing() {
+  await base_test({ name: "NOT___gwt_stylesLoaded", cls: "gwt-RichTextArea", src: null, asyncLoad: false });
+});
+
+add_task(async function test_gwt_src_present() {
+  await base_test({ name: "__gwt_stylesLoaded", cls: "gwt-RichTextArea", src: "", asyncLoad: false });
+});
+
+add_task(async function test_polarion() {
+  await base_test({ name: "__gwt_stylesLoaded", cls: "polarion-rte-RichTextArea", src: null });
+});
+
+add_task(async function test_ze() {
+  await base_test({ name: "ZE_Init", cls: "ze_area", src: null });
 });
 
   </script>

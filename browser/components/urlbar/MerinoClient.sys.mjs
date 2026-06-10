@@ -5,6 +5,8 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = XPCOMUtils.declareLazy({
+  GeolocationUtils:
+    "moz-src:///browser/components/urlbar/private/GeolocationUtils.sys.mjs",
   ObliviousHTTP: "resource://gre/modules/ObliviousHTTP.sys.mjs",
   SkippableTimer: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
@@ -165,6 +167,8 @@ export class MerinoClient {
    * @param {{[key: string]: string}} options.otherParams
    *   If specified, the otherParams will be added as a query params. Currently
    *   used for accuweather's location autocomplete endpoint
+   * @param {string} [options.endpointUrl]
+   *   If specified, overrides the default `merinoEndpointURL` pref value.
    * @returns {Promise<MerinoClientSuggestion[]>}
    *   The Merino suggestions or null if there's an error or unexpected
    *   response.
@@ -174,12 +178,14 @@ export class MerinoClient {
     providers = null,
     timeoutMs = lazy.UrlbarPrefs.get("merinoTimeoutMs"),
     otherParams = {},
+    endpointUrl = lazy.UrlbarPrefs.get("merinoEndpointURL"),
   }) {
     this.#lazy.logger.debug("Fetch start", { query });
 
-    // Get the endpoint URL. It's empty by default when running tests so they
-    // don't hit the network.
-    let endpointString = lazy.UrlbarPrefs.get("merinoEndpointURL");
+    // If endpointUrl is explicitly provided, use it as-is
+    // otherwise fall back to the general Merino endpoint pref
+    let endpointString =
+      endpointUrl || lazy.UrlbarPrefs.get("merinoEndpointURL");
     if (!endpointString) {
       return [];
     }
@@ -406,6 +412,239 @@ export class MerinoClient {
     }
 
     return suggestions;
+  }
+
+  /**
+   * Auto complete the weather location name. This is intended to be used only
+   * in conjunction with `fetchWeatherReport()` and causes Merino to call the location
+   * autocomplete endpoint of a third-party weather API.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {string} options.source
+   *   The source that is requesting this fetch.
+   * @param {string=} options.query
+   *   The string that will be autocompleted.
+   * @param {number=} options.timeoutMs
+   *   Timeout in milliseconds. This method will return once the timeout
+   *   elapses, a response is received, or an error occurs, whichever happens
+   *   first.
+   * @returns {Promise<MerinoClientSuggestion>}
+   *   The Merino suggestions or null if there's an error or unexpected
+   *   response.
+   */
+  async autoCompleteWeatherLocation({ source, query, timeoutMs = undefined }) {
+    let response = await this.fetch({
+      providers: ["accuweather"],
+      query: query || "",
+      otherParams: {
+        request_type: "location",
+        source,
+      },
+      timeoutMs,
+    });
+    return response?.[0] ?? null;
+  }
+
+  /**
+   * Fetch weather report information (current conditions + daily forecast) for
+   * a given location. There are three separate options for specifying the
+   * location, choose only one:
+   *
+   * (1) Pass `locationName`
+   * (2) Pass `city`, `region`, and `country`
+   * (3) Don't pass any of the above, in which case geolocation will be used
+   *
+   * If the `locationName` is specified, it will be chosen over the other.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {string} options.source
+   *   The source that is requesting this fetch.
+   * @param {string=} options.locationName
+   *   The location name that should come from autoCompleteWeatherLocation().
+   * @param {string=} options.country
+   *   The country that should be a country code.
+   * @param {string=} options.region
+   *   The region that should be a comma-separated string of administrative
+   *   region codes.
+   * @param {string=} options.city
+   *   The city that should be a city name.
+   * @param {number=} options.timeoutMs
+   *   Timeout in milliseconds. This method will return once the timeout
+   *   elapses, a response is received, or an error occurs, whichever happens
+   *   first.
+   * @returns {Promise<MerinoClientSuggestion>}
+   *   The Merino suggestions or null if there's an error or unexpected
+   *   response.
+   */
+  async fetchWeatherReport({
+    source,
+    city = undefined,
+    country = undefined,
+    region = undefined,
+    locationName = undefined,
+    timeoutMs = undefined,
+  }) {
+    if (locationName) {
+      city = undefined;
+      country = undefined;
+      region = undefined;
+    }
+
+    let otherParams = {
+      request_type: "weather",
+      source,
+    };
+
+    if (!locationName) {
+      let geoParams = await this.#resolveGeoParams(city, country, region);
+      if (!geoParams) {
+        return null;
+      }
+      Object.assign(otherParams, geoParams);
+    }
+
+    let response = await this.fetch({
+      providers: ["accuweather"],
+      query: locationName ?? "",
+      otherParams,
+      timeoutMs,
+      endpointUrl: lazy.UrlbarPrefs.get("merino.weather.reportEndpointURL"),
+    });
+    return response?.[0] ?? null;
+  }
+
+  /**
+   * Fetch hourly weather forecasts for a given location. There are three
+   * separate options for specifying the location, choose only one:
+   *
+   * (1) Pass `locationName`
+   * (2) Pass `city`, `region`, and `country`
+   * (3) Don't pass any of the above, in which case geolocation will be used
+   *
+   * If the `locationName` is specified, it will be chosen over the others.
+   *
+   * Unlike fetchWeatherReport() which returns a single Merino suggestion
+   * object, fetchHourlyForecasts() returns an array of
+   * hourly forecast slots, so the structure is set to be different. Each
+   * slot has: date_time, epoch_date_time, icon_id, temperature ({ c, f }),
+   * and url.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {string} options.source
+   *   The source that is requesting this fetch.
+   * @param {string=} options.locationName
+   *   The location name that should come from autoCompleteWeatherLocation().
+   * @param {string=} options.country
+   *   The country that should be a country code.
+   * @param {string=} options.region
+   *   The region that should be a comma-separated string of administrative
+   *   region codes.
+   * @param {string=} options.city
+   *   The city that should be a city name.
+   * @returns {Promise<Array<{date_time: string, epoch_date_time: number, icon_id: number, temperature: {c: number, f: number}, url: string}>|null>}
+   *   Array of hourly forecast slots, or null if the endpoint is not
+   *   configured or an error occurs.
+   */
+  async fetchHourlyForecasts({
+    source,
+    locationName = undefined,
+    city = undefined,
+    region = undefined,
+    country = undefined,
+  }) {
+    const hourlyEndpointURL = lazy.UrlbarPrefs.get(
+      "merino.weather.hourlyEndpointURL"
+    );
+
+    if (!hourlyEndpointURL) {
+      return null;
+    }
+
+    let url = URL.parse(hourlyEndpointURL);
+    if (!url) {
+      this.#lazy.logger.error(
+        "Invalid hourly forecast endpoint URL",
+        hourlyEndpointURL
+      );
+      return null;
+    }
+
+    if (locationName) {
+      url.searchParams.set("q", locationName);
+    }
+
+    // Unlike the suggest endpoint used by fetchWeatherReport(), the hourly
+    // endpoint doesn't resolve AccuWeather location keys from q alone.
+    // Always include city/region/country so the endpoint can identify the
+    // location, falling back to geolocation when they aren't provided.
+    let geoParams = await this.#resolveGeoParams(city, country, region);
+    if (!geoParams) {
+      return null;
+    }
+    for (let [key, value] of Object.entries(geoParams)) {
+      url.searchParams.set(key, value);
+    }
+
+    if (source) {
+      url.searchParams.set("source", source);
+    }
+
+    try {
+      const response = await fetch(url);
+      /**
+       * @type {Array<{
+       *   date_time: string,
+       *   epoch_date_time: number,
+       *   icon_id: number,
+       *   temperature: {c: number, f: number},
+       *   url: string
+       * }>}
+       */
+      const data = /** @type {any} */ (await response.json());
+
+      this.#lazy.logger.debug("fetchHourlyForecasts response", data);
+      return data;
+    } catch (e) {
+      this.#lazy.logger.error("Hourly forecast fetch error", e);
+      return null;
+    }
+  }
+
+  /**
+   * Resolves geo params from the provided values, falling back to geolocation
+   * if none are provided.
+   *
+   * @param {string} city
+   * @param {string} country
+   * @param {string} region
+   * @returns {Promise<{city?: string, country?: string, region?: string}|null>}
+   *   An object with the resolved geo params, or null if geolocation failed.
+   */
+  async #resolveGeoParams(city, country, region) {
+    if (!city && !country && !region) {
+      let geolocation = await lazy.GeolocationUtils.geolocation();
+      if (!geolocation) {
+        return null;
+      }
+      country = geolocation.country_code;
+      region =
+        geolocation.region_code || geolocation.region || geolocation.city;
+      city = geolocation.city || geolocation.region;
+    }
+    let params = {};
+    if (country) {
+      params.country = country;
+    }
+    if (region) {
+      params.region = region;
+    }
+    if (city) {
+      params.city = city;
+    }
+    return params;
   }
 
   /**

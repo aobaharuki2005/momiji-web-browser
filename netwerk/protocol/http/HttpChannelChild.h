@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -241,7 +238,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   void ProcessOnTransportAndData(const nsresult& aChannelStatus,
                                  const nsresult& aTransportStatus,
                                  const uint64_t& aOffset,
-                                 const uint32_t& aCount,
                                  const nsACString& aData,
                                  const TimeStamp& aOnDataAvailableStartTime);
   void ProcessOnStopRequest(const nsresult& aChannelStatus,
@@ -353,7 +349,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   Atomic<bool> mDeletingChannelSent{false};
 
   Atomic<bool, SequentiallyConsistent> mIsFromCache{false};
-  Atomic<bool, SequentiallyConsistent> mIsRacing{false};
   // Set if we get the result and cache |mNeedToReportBytesRead|
   Atomic<bool, SequentiallyConsistent> mCacheNeedToReportBytesReadInitialized{
       false};
@@ -421,8 +416,8 @@ class HttpChannelChild final : public PHttpChannelChild,
   uint8_t mRecvOnStartRequestSentCalled : 1;
 
   // True if this channel is for a document and suspended by waiting for
-  // permission or cookie. That is, RecvOnStartRequestSent is received.
-  uint8_t mSuspendedByWaitingForPermissionCookie : 1;
+  // cookies. That is, RecvOnStartRequestSent is received.
+  uint8_t mSuspendedByWaitingForCookies : 1;
 
   // HttpChannelChild::Release has some special logic that makes sure
   // OnStart/OnStop are always called when releasing the channel.
@@ -448,8 +443,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                       const nsHttpHeaderArray& aRequestHeaders,
                       const HttpChannelOnStartRequestArgs& aArgs);
   void OnTransportAndData(const nsresult& channelStatus, const nsresult& status,
-                          const uint64_t& offset, const uint32_t& count,
-                          const nsACString& data);
+                          const uint64_t& offset, const nsACString& data);
   void OnStopRequest(const nsresult& channelStatus,
                      const ResourceTimingStructArgs& timing,
                      const nsHttpHeaderArray& aResponseTrailers);

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -280,7 +278,7 @@ uint64_t ServiceWorkerInfo::GetNextID() const {
   return ++gServiceWorkerInfoCurrentID;
 }
 
-void ServiceWorkerInfo::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
+void ServiceWorkerInfo::PostMessage(ipc::StructuredCloneData* aData,
                                     const PostMessageSource& aSource) {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (NS_WARN_IF(!swm)) {
@@ -304,7 +302,7 @@ void ServiceWorkerInfo::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
       return;
   }
 
-  mServiceWorkerPrivate->SendMessageEvent(std::move(aData), lifetime, aSource);
+  mServiceWorkerPrivate->SendMessageEvent(aData, lifetime, aSource);
 }
 
 Maybe<ClientInfo> ServiceWorkerInfo::GetClientInfo() {

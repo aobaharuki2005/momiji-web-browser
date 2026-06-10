@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,6 +18,7 @@
 #include "nsIIOService.h"
 #include "nsILoadInfo.h"
 #include "nsIProtocolProxyService.h"
+#include "nsISocketTransport.h"
 #include "nsISocketTransportService.h"
 #include "nsIURIMutator.h"
 #include "nsProxyRelease.h"
@@ -253,7 +252,8 @@ NS_IMETHODIMP WebrtcTCPSocket::OnProxyAvailable(nsICancelable* aRequest,
       return rv;
     }
 
-    if (mProxyType == "http" || mProxyType == "https") {
+    if (mProxyType == "http" || mProxyType == "https" ||
+        mProxyType == "masque") {
       rv = OpenWithHttpProxy();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         CloseWithReason(rv);
@@ -334,7 +334,7 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
   }
 
   if (NS_WARN_IF(PR_SUCCESS !=
-                 PR_StringToNetAddr(mLocalAddress.BeginReading(), &prAddr))) {
+                 PR_StringToNetAddr(mLocalAddress.get(), &prAddr))) {
     CloseWithReason(NS_ERROR_FAILURE);
     return;
   }

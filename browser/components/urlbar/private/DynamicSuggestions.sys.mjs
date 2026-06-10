@@ -9,7 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
 });
 
@@ -105,14 +105,6 @@ export class DynamicSuggestions extends SuggestProvider {
 
     payload.isManageable = true;
     payload.helpUrl = lazy.QuickSuggest.HELP_URL;
-
-    if (!payload.title && payload.url) {
-      try {
-        // If there's no title, show the domain as the title. Not all valid URLs
-        // have a domain.
-        payload.title = new URL(payload.url).URI.displayHostPort;
-      } catch (e) {}
-    }
 
     let resultProperties = { ...result };
     delete resultProperties.payload;

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,9 +23,9 @@
 #include "nsServiceManagerUtils.h"
 #include "nsMimeTypes.h"
 #include "nsStringStream.h"
-#include "nsGkAtoms.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsIChannelEventSink.h"
+#include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -105,7 +103,7 @@ static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
   }
   NS_ConvertUTF8toUTF16 specUTF16(spec);
   rv = nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eSECURITY_PROPERTIES, aProperty, params, blockedMessage);
+      PropertiesFile::SECURITY_PROPERTIES, aProperty, params, blockedMessage);
 
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to log blocked cross-site request (no formalizedStr");
@@ -1242,7 +1240,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mHttpChannel = http;
+  mHttpChannel = std::move(http);
 
   return NS_OK;
 }

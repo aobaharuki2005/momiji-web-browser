@@ -8,9 +8,13 @@
 newtab-page-title = Новая картка
 newtab-settings-button =
     .title = Наладзіць вашу старонку новай карткі
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Уладкаваць гэту старонку
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Уладкаваць
+newtab-customize-panel-label =
+    .label = Уладкаваць
 newtab-personalize-settings-icon-label =
     .title = Персаналізаваць новую картку
     .aria-label = Налады
@@ -23,6 +27,9 @@ newtab-personalize-dialog-label =
     .aria-label = Персаналізаваць
 newtab-logo-and-wordmark =
     .aria-label = { -brand-full-name }
+newtab-card-dismiss-button =
+    .title = Адхіліць
+    .aria-label = Адхіліць
 
 ## Search box component.
 
@@ -49,7 +56,7 @@ newtab-search-box-input =
     .placeholder = Пошук у інтэрнэце
     .aria-label = Шукайце ў Інтэрнэце
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Дадаць пашукавік
 newtab-topsites-add-shortcut-header = Новы цэтлік
@@ -69,6 +76,11 @@ newtab-topsites-url-validation = Патрабуецца сапраўдны URL
 newtab-topsites-image-url-label = Уласны URL выявы
 newtab-topsites-use-image-link = Выкарыстоўваць уласную выяву…
 newtab-topsites-image-validation = Не ўдалося атрымаць выяву. Паспрабуйце іншы URL.
+
+## Clear text button for the URL and image URL input fields in the Top Sites form.
+
+newtab-topsites-clear-input =
+    .aria-label = Ачысціць тэкст
 
 ## Top Sites - General form dialog buttons. These are verbs/actions.
 
@@ -136,6 +148,9 @@ newtab-menu-report = Паведаміць
 # Context menu option to personalize New Tab recommended stories by blocking a section of stories,
 # e.g. "Sports". "Block" is a verb here.
 newtab-menu-section-block = Блакаваць
+# "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
+# e.g. Following the travel section of stories.
+newtab-menu-section-unfollow-topic = Адпісацца
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Адпісацца ад тэмы
@@ -303,9 +318,24 @@ newtab-error-fallback-refresh-link = Абнавіць старонку, каб �
 
 newtab-custom-shortcuts-title = Цэтлікі
 newtab-custom-shortcuts-subtitle = Сайты, якія вы захоўваеце або наведваеце
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Цэтлікі
     .description = Сайты, якія вы захоўваеце або наведваеце
+newtab-custom-shortcuts-nova =
+    .label = Цэтлікі
+newtab-custom-row-description =
+    .description = Колькасць радкоў
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } радок
+            [few] { $num } радкі
+           *[many] { $num } радкоў
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -317,9 +347,12 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Спонсарскія цэтлікі
 newtab-custom-pocket-title = Рэкамендавана { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Выключнае змесціва, куратарам якога з'яўляецца { -pocket-brand-name }, частка сям'і { -brand-product-name }
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Рэкамендаваныя гісторыі
     .description = Выключнае змесціва, курыраванае сямействам { -brand-product-name }
+newtab-recommended-stories-toggle =
+    .label = Рэкамендаваныя гісторыі
 newtab-custom-stories-personalized-toggle =
     .label = Гісторыі
 newtab-custom-stories-personalized-checkbox-label = Персаналізаваныя гісторыі на аснове вашай актыўнасці
@@ -330,18 +363,22 @@ newtab-custom-recent-subtitle = Падборка нядаўніх сайтаў �
 newtab-custom-weather-toggle =
     .label = Надвор'е
     .description = Кароткі прагноз на сёння
-newtab-custom-trending-search-toggle =
-    .label = Папулярныя пошукавыя запыты
-    .description = Папулярныя і часта запытаныя тэмы
 newtab-custom-widget-weather-toggle =
     .label = Надвор'е
-newtab-custom-widget-trending-search-toggle =
-    .label = Папулярныя пошукавыя запыты
 newtab-custom-widget-lists-toggle =
     .label = Спісы
 newtab-custom-widget-timer-toggle =
     .label = Таймер
+newtab-custom-widget-sports-toggle =
+    .label = Кубак свету
+newtab-custom-widget-clock-toggle =
+    .label = Гадзіннік
 newtab-custom-widget-section-title = Віджэты
+newtab-custom-widget-section-toggle =
+    .label = Віджэты
+newtab-widget-manage-title = Віджэты
+newtab-widget-manage-widget-button =
+    .label = Кіраванне віджэтамі
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Закрыць
@@ -353,8 +390,12 @@ newtab-custom-settings = Кіраваць дадатковымі наладам�
 
 newtab-wallpaper-title = Шпалеры
 newtab-wallpaper-reset = Скінуць да прадвызначаных
+#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Зацягнуць выяву
+newtab-wallpaper-add-an-image = Дадаць выяву
 newtab-wallpaper-custom-color = Выберыце колер
+newtab-wallpaper-toggle-title =
+    .label = Шпалеры
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Памер выявы перавышае абмежаванне ў { $file_size } МБ. Калі ласка, паспрабуйце загрузіць файл меншага памеру.
@@ -377,7 +418,9 @@ newtab-wallpaper-light-fox-anniversary = Ліса ў травяністым по
 
 ## Solid Colors
 
+#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Аднатонныя колеры
+newtab-wallpaper-colors = Колеры
 newtab-wallpaper-blue = Сіні
 newtab-wallpaper-light-blue = Блакітны
 newtab-wallpaper-light-purple = Светла-фіялетавы
@@ -468,7 +511,12 @@ newtab-weather-menu-change-location = Змяніць месцазнаходжа�
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Шукаць месцазнаходжанне
     .aria-label = Шукаць месцазнаходжанне
+# "Current" refers to the user's physical/geographic location detected via geolocation.
+newtab-weather-change-location-search-use-current =
+    .label = Ужыць дзейнае месцазнаходжанне
 newtab-weather-menu-weather-display = Паказ надвор'я
+newtab-weather-todays-forecast = Прагноз на сёння
+newtab-weather-see-full-forecast = Паглядзець поўны прагноз
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
 # - Detailed: Include simple information plus a short text summary: e.g. "Mostly cloudy"
@@ -491,8 +539,23 @@ newtab-weather-opt-in-not-now =
     .label = Не зараз
 newtab-weather-opt-in-yes =
     .label = Так
+newtab-weather-opt-in-headline = Атрымайце мясцовы прагноз надвор'я
+newtab-weather-opt-in-use-location =
+    .label = Ужыць месцазнаходжанне
+newtab-weather-opt-in-choose-location = Абраць месцазнаходжанне
 # We'll be showing static (fake) weather data if the user has not opted in to using their location
 newtab-weather-static-city = Нью-Ёрк
+# "Highest" here refers to the highest temperature of the day
+newtab-weather-high =
+    .aria-label = Найвышэйшая
+# "Lowest" here refers to the lowest temperature of the day
+newtab-weather-low =
+    .aria-label = Найніжэйшая
+# Variables:
+#   $provider (string) - Service provider for weather data
+newtab-weather-see-forecast-description =
+    .title = Паглядзець прагноз у { $provider }
+    .aria-description = { $provider } ∙ Спонсар
 
 ## Topic Labels
 
@@ -539,8 +602,16 @@ newtab-topic-selection-button-pick-interests = Выберыце свае зац�
 ## e.g. Following the travel section of stories.
 
 newtab-section-follow-button = Падпісацца
+# Variables:
+#   $topic (string) - Topic that the user can follow
+newtab-section-follow-button-label =
+    .aria-label = Сачыць за { $topic }
 newtab-section-following-button = Падпісаны
 newtab-section-unfollow-button = Адпісацца
+# Variables:
+#   $topic (string) - Topic that the user is following and can unfollow
+newtab-section-unfollow-button-label =
+    .aria-label = Падпіска: Адпісацца ад { $topic }
 # A modal may appear next to the Follow button, directing users to try out the feature
 newtab-section-follow-highlight-title = Наладзьце сваю стужку навін
 newtab-section-follow-highlight-subtitle = Падпішыцеся на свае зацікаўленасці, каб бачыць больш таго, што вам падабаецца.
@@ -552,6 +623,22 @@ newtab-section-follow-highlight-subtitle = Падпішыцеся на свае 
 newtab-section-block-button = Блакаваць
 newtab-section-blocked-button = Заблакаваны
 newtab-section-unblock-button = Разблакаваць
+# Variables:
+#   $topic (string) - Name of topic that user is following
+newtab-section-follow-topic =
+    .aria-label = Сачыць за { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is unfollowing
+newtab-section-unfollow-topic =
+    .aria-label = Адпісацца ад { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is blocking
+newtab-section-block-topic =
+    .aria-label = Заблакаваць { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is unblocking
+newtab-section-unblock-topic =
+    .aria-label = Разблакаваць { $topic }
 
 ## Confirmation modal for blocking a section
 
@@ -561,6 +648,7 @@ newtab-section-confirm-block-topic-p2 = Заблакаваныя тэмы бол
 # Variables:
 #   $topic (string) - Name of topic that user is blocking
 newtab-section-block-topic-button = Заблакаваць { $topic }
+newtab-section-block-cancel-button = Скасаваць
 
 ## Strings for custom wallpaper highlight
 
@@ -582,6 +670,12 @@ newtab-new-user-custom-wallpaper-title = Выберыце шпалеры, каб
 newtab-new-user-custom-wallpaper-subtitle = Зрабіце кожную новую картку як дома з дапамогай карыстальніцкіх шпалер і колераў.
 newtab-new-user-custom-wallpaper-cta = Паспрабаваць зараз
 
+## Strings for Nova wallpaper feature highlight
+
+newtab-wallpaper-feature-highlight-title = Новыя шпалеры толькі што з'явіліся
+newtab-wallpaper-feature-highlight-subtitle = Выберыце вашы любімыя і зрабіце кожную новую картку сваёй, як дома.
+newtab-wallpaper-feature-highlight-cta = Абраць шпалеры
+
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Сцягнуць { -brand-product-name } для мабільных прылад
@@ -597,7 +691,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = Вашы любімыя рэчы ў вас пад рукой
 newtab-shortcuts-highlight-subtitle = Дадайце цэтлік, каб вашы любімыя сайты былі на адлегласці дотыку.
 
-## Strings for reporting ads and content
+## Strings for reporting issues with ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Чаму вы паведамляеце пра гэта?
@@ -615,21 +709,27 @@ newtab-report-content-inappropriate-offensive =
     .label = Недарэчнае або абразлівае
 newtab-report-content-spam-misleading =
     .label = Спам або зман
+newtab-report-content-requires-payment-subscription =
+    .label = Патрэбна аплата або падпіска
+newtab-report-content-requires-payment-subscription-learn-more = Даведацца больш
 newtab-report-cancel = Скасаваць
 newtab-report-submit = Даслаць
 newtab-toast-thanks-for-reporting =
     .message = Дзякуй, што паведамілі пра гэта.
-
-## Strings for trending searches
-
-newtab-trending-searches-show-trending =
-    .title = Паказаць папулярныя пошукавыя запыты
-newtab-trending-searches-hide-trending =
-    .title = Схаваць папулярныя пошукавыя запыты
-newtab-trending-searches-learn-more = Падрабязней
-newtab-trending-searches-dismiss = Схаваць папулярныя пошукавыя запыты
-# "Trending searches refers to popular searches from search engines
-newtab-trending-searches-title = Папулярныя пошукавыя запыты
+newtab-toast-widgets-hidden =
+    .message = Выберыце значок алоўка, каб ізноў дадаць віджэты ў любы час.
+# Variables:
+#   $topic (string) - Topic that the user has followed
+newtab-section-toast-follow =
+    .message = Цяпер вы падпісаны на { $topic }.
+# Variables:
+#   $topic (string) - Topic that the user has unfollowed
+newtab-section-toast-unfollow =
+    .message = Вы больш не падпісаныя на { $topic }.
+# Variables:
+#   $topic (string) - Topic that the user has blocked
+newtab-section-toast-block =
+    .message = Вы больш не будзеце бачыць артыкулы па тэме { $topic }.
 
 ## Strings for task / to-do list productivity widget
 
@@ -644,13 +744,20 @@ newtab-widget-lists-label-beta =
 # Variables:
 #   $number (number) - Amount of list items marked complete
 newtab-widget-lists-completed-list = Завершана ({ $number })
+newtab-widget-lists-celebration-headline = Добрая праца
+newtab-widget-lists-celebration-subhead = Усё чыста
 newtab-widget-task-list-menu-copy = Капіяваць
 newtab-widget-lists-menu-edit = Змяніць назву спісу
+newtab-widget-lists-menu-edit2 =
+    .aria-label = Змяніць назву спісу
 newtab-widget-lists-menu-create = Стварыць новы спіс
 newtab-widget-lists-menu-delete = Выдаліць гэты спіс
 newtab-widget-lists-menu-copy = Скапіяваць спіс у буфер абмену
-newtab-widget-lists-menu-hide = Схаваць усе спісы
 newtab-widget-lists-menu-learn-more = Падрабязней
+newtab-widget-lists-button-add-item = Дадаць элемент
+newtab-widget-lists-input-add-an-item2 =
+    .placeholder = Дадаць элемент
+    .aria-label = Дадаць элемент
 newtab-widget-lists-input-add-an-item =
     .placeholder = Дадаць элемент
 newtab-widget-lists-input-error = Калі ласка, улучыце тэкст, каб дадаць элемент.
@@ -659,17 +766,44 @@ newtab-widget-lists-input-menu-move-up = Рухаць угору
 newtab-widget-lists-input-menu-move-down = Рухаць уніз
 newtab-widget-lists-input-menu-delete = Выдаліць
 newtab-widget-lists-input-menu-edit = Змяніць
+newtab-widget-lists-input-menu-edit2 =
+    .aria-label = Змяніць элемент
 # the + symbol emphasises the functionality of adding a new list
 newtab-widget-lists-dropdown-create =
     .label = + Стварыць новы спіс
 newtab-widget-lists-name-label-default =
     .label = Спіс задач
+newtab-widget-lists-name-label-checklist =
+    .label = Кантрольны спіс
 newtab-widget-lists-name-placeholder-default =
     .placeholder = Спіс задач
+newtab-widget-lists-name-placeholder-checklist2 =
+    .placeholder = Кантрольны спіс
+    .aria-label = Змяніць назву спіса
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new2 =
+    .placeholder = Новы спіс
+    .aria-label = Змяніць назву спісу
+newtab-widget-lists-name-placeholder-checklist =
+    .placeholder = Кантрольны спіс
 # The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Новы спіс
 newtab-widget-section-title = Віджэты
+newtab-widget-menu-hide = Схаваць віджэт
+newtab-widget-menu-change-size = Змяніць памер
+# Parent label for a submenu in the widget menu that reorders the widget
+# among its siblings. "Left" and "Right" appear as items inside this submenu.
+newtab-widget-menu-move = Перанесці
+# Submenu item under "Move"; moves the widget one position to the left.
+# RTL locales should translate this as "Right".
+newtab-widget-menu-move-left = Улева
+# Submenu item under "Move"; moves the widget one position to the right.
+# RTL locales should translate this as "Left".
+newtab-widget-menu-move-right = Управа
+newtab-widget-size-small = Малы
+newtab-widget-size-medium = Сярэдні
+newtab-widget-size-large = Вялікі
 # Tooltip for hide all widgets button
 newtab-widget-section-hide-all-button =
     .title = Схаваць віджэты
@@ -680,9 +814,19 @@ newtab-widget-section-maximize =
 newtab-widget-section-minimize =
     .title = Згарнуць віджэты
     .aria-label = Згарнуць усе віджэты ў кампактны памер
+newtab-widget-section-menu-button =
+    .title = Меню віджэтаў
+    .aria-label = Адкрыць меню віджэтаў
+newtab-widget-add-widgets-button =
+    .aria-label = Дадаць віджэт
+    .title = Дадаць віджэт
+newtab-widget-section-menu-manage = Кіраванне віджэтамі
+newtab-widget-section-menu-hide-all = Схаваць віджэты
+newtab-widget-section-menu-learn-more = Падрабязней
+newtab-widget-section-feedback = Раскажыце нам, што вы думаеце
+newtab-widget-lists-name-default = Кантрольны спіс
 
-## Strings for timer productivity widget
-## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+## Strings introduced by the Nova redesign of the Timer widget
 
 newtab-widget-timer-notification-title = Таймер
 newtab-widget-timer-notification-focus = Час для канцэнтрацыі скончыўся. Выдатная праца. Патрэбен перапынак?
@@ -700,14 +844,227 @@ newtab-widget-timer-reset =
     .title = Скінуць
 newtab-widget-timer-menu-notifications = Выключыць апавяшчэнні
 newtab-widget-timer-menu-notifications-on = Уключыць апавяшчэнні
-newtab-widget-timer-menu-hide = Схаваць таймер
 newtab-widget-timer-menu-learn-more = Падрабязней
+# The title displays above a set of top news headlines.
+newtab-daily-briefing-card-title = Галоўныя загалоўкі
+newtab-daily-briefing-card-menu-dismiss = Адхіліць
+# Variables:
+#   $minutes (number) - Time since the feed has been refreshed
+newtab-daily-briefing-card-timestamp = Абноўлена { $minutes } хв. таму
 newtab-widget-message-title = Заставайцеся сканцэнтраванымі з дапамогай спісаў і ўбудаванага таймера
 # to-dos stands for "things to do".
 newtab-widget-message-copy = Паспявайце ўсё з дапамогай хуткіх напамінаў, спісаў задач, заняткаў па канцэнтрацыі ўвагі ды перапынкаў на размінку.
+# "Make Firefox yours" refers to about:newtab. The call to action here ("Try it now")
+# is to customize the new tab page with a background image or color from
+# the built-in wallpaper collection or uploading your own image.
+newtab-promo-card-title-addons = Зрабіце { -brand-product-name } сваім
+newtab-promo-card-body-addons = Выберыце шпалеры з нашай калекцыі або стварыце свае ўласныя.
+newtab-promo-card-cta-addons = Паспрабаваць зараз
 newtab-promo-card-title = Падтрымаць { -brand-product-name }
 newtab-promo-card-body = Нашы спонсары падтрымліваюць нашу місію па стварэнні лепшага Інтэрнэту
 newtab-promo-card-cta = Падрабязней
 newtab-promo-card-dismiss-button =
     .title = Адхіліць
     .aria-label = Адхіліць
+
+## Strings introduced by the Nova redesign of the Timer widget
+
+# Variables:
+#   $minutes (number) - The currently selected timer duration in minutes
+newtab-widget-timer-start-aria =
+    .aria-label =
+        { $minutes ->
+            [one] Пачаць таймер на { $minutes } хвіліну
+            [few] Пачаць таймер на { $minutes } хвіліны
+           *[many] Пачаць таймер на { $minutes } хвілін
+        }
+newtab-widget-timer-pause-aria =
+    .aria-label = Прыпыніць таймер
+# Variables:
+#   $minutes (number) - The currently selected timer duration in minutes
+newtab-widget-timer-spinbutton-name =
+    .aria-label =
+        { $minutes ->
+            [one] { $minutes } хвіліна
+            [few] { $minutes } хвіліны
+           *[many] { $minutes } хвілін
+        }
+newtab-widget-timer-decrease-min =
+    .title = Паменшыць на 1 хвіліну
+newtab-widget-timer-increase-min =
+    .title = Павялічыць на 1 хвіліну
+newtab-widget-timer-mode-group =
+    .aria-label = Рэжым таймера
+# Small label shown beneath the live time while the focus timer is running or paused.
+newtab-widget-timer-running-focus = Фокус
+# Small label shown beneath the live time while the break timer is running or paused.
+newtab-widget-timer-running-break = Перапынак
+# Context-menu item to hide the Timer widget. Replaces the shared "Hide widget"
+# copy with a widget-specific string per the Nova design.
+newtab-widget-timer-menu-hide = Схаваць таймер
+# Heading shown inside the Timer widget after a focus session ends.
+newtab-widget-timer-celebration-heading-focus = Выдатная праца
+# Heading shown inside the Timer widget after a break session ends.
+newtab-widget-timer-celebration-heading-break = Ваш перапынак скончаны
+# Message shown inside the Timer widget after a focus session ends.
+newtab-widget-timer-celebration-message-focus = Патрэбен перапынак?
+# Message shown inside the Timer widget after a break session ends.
+newtab-widget-timer-celebration-message-break = Гатовыя засяродзіцца?
+
+##
+
+newtab-sports-widget-menu-follow-teams = Падпісацца на каманды
+newtab-sports-widget-menu-view-schedule = Паглядзець расклад
+newtab-sports-widget-menu-view-upcoming = Праглядзець будучыя
+newtab-sports-widget-menu-view-results = Паглядзець вынікі
+# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
+newtab-sports-widget-menu-key-dates = Ключавыя даты
+newtab-sports-widget-menu-learn-more = Падрабязней
+# “Keep tabs on” is an informal expression meaning to stay updated on, stay informed on, or regularly follow something (in this case, World Cup matches and updates).
+newtab-sports-widget-keep-tabs = Сачыце за чэмпіянатам свету
+newtab-sports-widget-get-updates = Атрымлівайце абнаўленні па матчах у рэжыме рэальнага часу і многае іншае.
+newtab-sports-widget-view-schedule =
+    .label = Паглядзець расклад
+newtab-sports-widget-follow-teams =
+    .label = Падпісацца на каманды
+newtab-sports-widget-view-matches =
+    .label = Глядзець матчы
+# Variables:
+#   $number (number) - Maximum number of teams a user can choose to follow in the team selection state
+newtab-sports-widget-follow-teams-title =
+    { $number ->
+        [one] Сачыць за да { $number } каманды
+        [few] Сачыць за да { $number } каманд
+       *[many] Сачыць за да { $number } каманд
+    }
+newtab-sports-widget-choose-wallpaper =
+    .label = Выберыце шпалеры
+newtab-sports-widget-skip = Прапусціць
+newtab-sports-widget-search-country =
+    .placeholder = Пошук краіны
+    .aria-label = Пошук краіны
+newtab-sports-widget-cancel = Скасаваць
+newtab-sports-widget-back-button =
+    .aria-label = Назад
+newtab-sports-widget-done-button =
+    .label = Гатова
+newtab-sports-widget-group-stage = Групавы этап
+newtab-sports-widget-round-32 = 1/16 фіналу
+newtab-sports-widget-round-16 = 1/8 фіналу
+newtab-sports-widget-quarter-finals = Чвэрцьфіналы
+# The "LIVE" string is meant to be uppercase in English, but other languages and locales may vary in how they handle this.
+newtab-sports-widget-live = У ЖЫВЫМ ЭФІРЫ
+newtab-custom-widget-live-refresh =
+    .title = Абнавіць вынікі
+    .aria-label = Абнавіць вынікі
+# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
+newtab-sports-widget-key-dates = Ключавыя даты
+newtab-sports-widget-upcoming = Наступныя
+# Used for a match currently ongoing
+newtab-sports-widget-now = Зараз
+newtab-sports-widget-results = Вынікі
+newtab-sports-widget-semi-finals = Паўфіналы
+newtab-sports-widget-bronze-finals = Гульня за трэцяе месца
+# Final is the final match for 1st place.
+newtab-sports-widget-final = Фінал
+# Variables:
+#   $start (Date) - Start date of a tournament stage
+#   $end (Date) - End date of a tournament stage
+newtab-sports-widget-key-date-range = { DATETIME($start, month: "short", day: "numeric") } – { DATETIME($end, month: "short", day: "numeric") }
+# Variables:
+#   $date (Date) - Date of a single tournament event
+newtab-sports-widget-key-date = { DATETIME($date, month: "short", day: "numeric") }
+newtab-sports-widget-delayed = Затрымліваецца
+newtab-sports-widget-postponed = Адкладзена
+newtab-sports-widget-suspended = Прыпынена
+newtab-sports-widget-cancelled = Адменена
+newtab-sports-widget-information = Інфармацыя пра матч
+newtab-sports-widget-no-live-data = Звесткі матчаў у прамым эфіры зараз не абнаўляюцца
+newtab-sports-widget-view-results-link = Паглядзець вынікі
+newtab-sports-widget-third-place = Трэцяе месца
+# Runner-up is the team in 2nd place.
+newtab-sports-widget-runner-up = Другое месца
+newtab-sports-widget-champions = Чэмпіёны
+newtab-sports-widget-world-cup-champions = Чэмпіёны свету 2026
+
+## Strings for activation window message variants. In certain experiment configurations,
+## the strings from these variants may be displayed in a message below the search input
+## for the first 48 hours of a new profile's lifetime. Some messages include buttons with
+## labels, but not all.
+
+newtab-activation-window-message-dismiss-button =
+    .title = Адхіліць
+    .aria-label = Адхіліць
+# "This space" refers to about:newtab. The call to action here ("make it your own")
+# is to customize newtab with a background image or colour, or by tweaking the
+# existing widgetry that appears on it.
+newtab-activation-window-message-customization-focus-header = Зрабіце гэтую прастору сваёй
+newtab-activation-window-message-customization-focus-message = Выберыце новыя шпалеры, дадайце цэтлікі да вашых любімых сайтаў і будзьце ў курсе гісторый, якія вас цікавяць.
+newtab-activation-window-message-customization-focus-primary-button =
+    .label = Пачаць уладкаванне
+# "This space" refers to about:newtab. The sentiment of "plays by your rules" is
+# meant to evoke the idea that newtab is malleable and customizable. The call to
+# action is to customize newtab with a background image or colour, or by tweaking
+# the existing widgetry that appears on it.
+newtab-activation-window-message-values-focus-header = Гэта прастора гуляе па вашых правілах
+newtab-activation-window-message-values-focus-message = { -brand-product-name } дазваляе аглядаць так, як вам падабаецца, з больш персаналізаваным спосабам пачаць свой дзень у інтэрнэце. Зрабіце { -brand-product-name } сваім уласным.
+
+## Strings for the Clock widget
+
+# Context menu item: toggle the clock card off.
+newtab-clock-widget-menu-hide = Схаваць гадзіннік
+newtab-clock-widget-menu-learn-more = Даведацца больш
+newtab-clock-widget-menu-edit = Змяніць гадзіннікі
+newtab-clock-widget-menu-switch-to-12h = Перайсці на 12-гадзінны фармат
+newtab-clock-widget-menu-switch-to-24h = Перайсці на 24-гадзінны фармат
+newtab-clock-widget-label-your-clocks = Вашы гадзіннікі
+newtab-clock-widget-search-location-input =
+    .label = Месцазнаходжанне
+    .placeholder = Пошук горада
+    .aria-label = Пошук горада
+# "Nickname (optional)" refers to a custom, user-defined label for a saved location
+# (e.g., "Home", "Office", or "School") to make it easier to recognize.
+# Not to be translated as a legal name, username, or alias used for identity verification.
+newtab-clock-widget-input-nickname =
+    .label = Мянушка (неабавязкова)
+    .placeholder = Дадаць мянушку
+    .aria-label = Мянушка (неабавязкова)
+# "Add new clock" is an icon-only button in the widget toolbar — the
+# attributes are consumed as tooltip/screen-reader label only. The button
+# never renders visible text.
+newtab-clock-widget-button-add =
+    .title = Дадаць новы гадзіннік
+    .aria-label = Дадаць новы гадзіннік
+newtab-clock-widget-button-add-clock = Дадаць
+newtab-clock-widget-button-cancel = Скасаваць
+newtab-clock-widget-button-back =
+    .title = Назад
+    .aria-label = Назад
+newtab-clock-widget-button-edit-clock =
+    .title = Змяніць гадзіннік
+    .aria-label = Змяніць гадзіннік
+newtab-clock-widget-button-save = Захаваць
+newtab-clock-widget-button-remove-clock =
+    .title = Выдаліць гадзіннік
+    .aria-label = Выдаліць гадзіннік
+newtab-clock-widget-add-clock-form =
+    .aria-label = Дадаць гадзіннік
+newtab-clock-widget-edit-clock-form =
+    .aria-label = Змяніць гадзіннік
+# "Search results" is the accessible label for the listbox dropdown that appears
+# below the location search field, listing matching cities as the user types.
+# It means "results of the search", not "search within the results".
+newtab-clock-widget-search-results =
+    .aria-label = Вынікі пошуку
+# Shown in place of the search results when the user's query does not match any
+# supported city — e.g. typing a misspelled name or a place not in the IANA
+# time zone list.
+newtab-clock-widget-search-no-results = Няма супадзенняў
+# "Open menu for clock" is an icon-only button in the widget toolbar — the
+# attributes are consumed as tooltip/screen-reader label only. The button
+# never renders visible text.
+newtab-clock-widget-menu-button =
+    .title = Адкрыць меню для гадзінніка
+    .aria-label = Адкрыць меню для гадзінніка
+# $nickname (String) - The user-defined nickname for a saved clock location (e.g., "Home", "Office").
+newtab-clock-widget-label-nickname-with-value = Мянушка: { $nickname }

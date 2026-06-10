@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,6 +9,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/SanitizerBinding.h"
@@ -293,9 +292,9 @@ static CanonicalElementAttributes CanonicalizeElementAttributes(
         CanonicalAttribute canonicalAttr = CanonicalizeAttribute(attribute);
         if (!attributes.EnsureInserted(canonicalAttr)) {
           if (aErrorMsg) {
-            aErrorMsg->Assign(nsFmtCString(
-                FMT_STRING("Duplicate attribute {} in 'attributes' of {}."),
-                canonicalAttr, CanonicalizeElement(aElement)));
+            aErrorMsg->Assign(
+                nsFmtCString("Duplicate attribute {} in 'attributes' of {}.",
+                             canonicalAttr, CanonicalizeElement(aElement)));
             return CanonicalElementAttributes();
           }
         }
@@ -318,8 +317,7 @@ static CanonicalElementAttributes CanonicalizeElementAttributes(
         if (!attributes.EnsureInserted(canonicalAttr)) {
           if (aErrorMsg) {
             aErrorMsg->Assign(nsFmtCString(
-                FMT_STRING(
-                    "Duplicate attribute {} in 'removeAttributes' of {}."),
+                "Duplicate attribute {} in 'removeAttributes' of {}.",
                 canonicalAttr, CanonicalizeElement(aElement)));
             return CanonicalElementAttributes();
           }
@@ -377,8 +375,8 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
       // with attributes element to elements.
       CanonicalElement elementName = CanonicalizeElement(element);
       if (elements.Contains(elementName)) {
-        aRv.ThrowTypeError(nsFmtCString(
-            FMT_STRING("Duplicate element {} in 'elements'."), elementName));
+        aRv.ThrowTypeError(
+            nsFmtCString("Duplicate element {} in 'elements'.", elementName));
         return;
       }
 
@@ -408,8 +406,7 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
       CanonicalElement canonical = CanonicalizeElement(element);
       if (!elements.EnsureInserted(canonical)) {
         aRv.ThrowTypeError(nsFmtCString(
-            FMT_STRING("Duplicate element {} in 'removeElements'."),
-            canonical));
+            "Duplicate element {} in 'removeElements'.", canonical));
         return;
       }
     }
@@ -431,8 +428,7 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
       CanonicalElement canonical = CanonicalizeElement(element);
       if (!elements.EnsureInserted(canonical)) {
         aRv.ThrowTypeError(nsFmtCString(
-            FMT_STRING(
-                "Duplicate element {} in 'replaceWithChildrenElements'."),
+            "Duplicate element {} in 'replaceWithChildrenElements'.",
             canonical));
         return;
       }
@@ -453,8 +449,8 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
       // attribute to attributes.
       CanonicalAttribute canonical = CanonicalizeAttribute(attribute);
       if (!attributes.EnsureInserted(canonical)) {
-        aRv.ThrowTypeError(nsFmtCString(
-            FMT_STRING("Duplicate attribute {} in 'attributes'."), canonical));
+        aRv.ThrowTypeError(
+            nsFmtCString("Duplicate attribute {} in 'attributes'.", canonical));
         return;
       }
     }
@@ -475,8 +471,7 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
       CanonicalAttribute canonical = CanonicalizeAttribute(attribute);
       if (!attributes.EnsureInserted(canonical)) {
         aRv.ThrowTypeError(nsFmtCString(
-            FMT_STRING("Duplicate attribute {} in 'removeAttributes'."),
-            canonical));
+            "Duplicate attribute {} in 'removeAttributes'.", canonical));
         return;
       }
     }
@@ -503,6 +498,15 @@ void Sanitizer::CanonicalizeConfiguration(const SanitizerConfig& aConfig,
   } else if (aConfig.mAttributes.WasPassed()) {
     mDataAttributes = Some(aAllowCommentsAndDataAttributes);
   }
+}
+
+// https://wicg.github.io/sanitizer-api/#built-in-non-replaceable-elements-list
+// The built-in non-replaceable elements list
+static bool IsNonReplaceableElement(const CanonicalElement& aElement) {
+  return aElement ==
+             CanonicalElement(nsGkAtoms::html, nsGkAtoms::nsuri_xhtml) ||
+         aElement == CanonicalElement(nsGkAtoms::svg, nsGkAtoms::nsuri_svg) ||
+         aElement == CanonicalElement(nsGkAtoms::math, nsGkAtoms::nsuri_mathml);
 }
 
 // https://wicg.github.io/sanitizer-api/#sanitizerconfig-valid
@@ -541,32 +545,45 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
   // thrown an error for duplicate elements/attributes by this point. The map
   // and sets can't have duplicates by definition.
 
-  // Step 5. If both config[elements] and config[replaceWithChildrenElements]
-  // exist, then the intersection of config[elements] and
-  // config[replaceWithChildrenElements] is empty.
-  if (mElements && mReplaceWithChildrenElements) {
-    for (const CanonicalElement& name : mElements->Keys()) {
-      if (mReplaceWithChildrenElements->Contains(name)) {
-        aRv.ThrowTypeError(
-            nsFmtCString(FMT_STRING("Element {} can't be in both 'elements' "
-                                    "and 'replaceWithChildrenElements'."),
-                         name));
+  // Step 11. If config["replaceWithChildrenElements"] exists:
+  if (mReplaceWithChildrenElements) {
+    // Step 11.1. For each element of config["replaceWithChildrenElements"]:
+    for (const CanonicalElement& element : *mReplaceWithChildrenElements) {
+      // Step 11.1.1. If the built-in non-replaceable elements list contains
+      // element, then return false.
+      if (IsNonReplaceableElement(element)) {
+        aRv.ThrowTypeError(nsFmtCString(
+            "Element {} is not allowed in 'replaceWithChildrenElements'",
+            element));
         return;
       }
     }
-  }
 
-  // Step 6. If both config[removeElements] and
-  // config[replaceWithChildrenElements] exist, then the intersection of
-  // config[removeElements] and config[replaceWithChildrenElements] is empty.
-  if (mRemoveElements && mReplaceWithChildrenElements) {
-    for (const CanonicalElement& name : *mRemoveElements) {
-      if (mReplaceWithChildrenElements->Contains(name)) {
-        aRv.ThrowTypeError(nsFmtCString(
-            FMT_STRING("Element {} can't be in both 'removeElements' and "
-                       "'replaceWithChildrenElements'."),
-            name));
-        return;
+    // Step 11.2. If config["elements"] exists:
+    if (mElements) {
+      // Step 11.2.1. If the intersection of config["elements"] and
+      // config["replaceWithChildrenElements"] is not empty, then return false.
+      for (const CanonicalElement& name : mElements->Keys()) {
+        if (mReplaceWithChildrenElements->Contains(name)) {
+          aRv.ThrowTypeError(
+              nsFmtCString("Element {} can't be in both 'elements' "
+                           "and 'replaceWithChildrenElements'.",
+                           name));
+          return;
+        }
+      }
+    } else {
+      // Step 11.3. Otherwise:
+      // Step 11.3.1. If the intersection of config["removeElements"] and
+      // config["replaceWithChildrenElements"] is not empty, then return false.
+      for (const CanonicalElement& name : *mRemoveElements) {
+        if (mReplaceWithChildrenElements->Contains(name)) {
+          aRv.ThrowTypeError(
+              nsFmtCString("Element {} can't be in both 'removeElements' and "
+                           "'replaceWithChildrenElements'.",
+                           name));
+          return;
+        }
       }
     }
   }
@@ -596,9 +613,8 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
           for (const CanonicalAttribute& name : *elemAttributes.mAttributes) {
             if (mAttributes->Contains(name)) {
               aRv.ThrowTypeError(nsFmtCString(
-                  FMT_STRING(
-                      "Attribute {} can't be part of both the 'attributes' of "
-                      "the element {} and the global 'attributes'."),
+                  "Attribute {} can't be part of both the 'attributes' of "
+                  "the element {} and the global 'attributes'.",
                   name, entry.GetKey()));
               return;
             }
@@ -612,9 +628,8 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
                *elemAttributes.mRemoveAttributes) {
             if (!mAttributes->Contains(name)) {
               aRv.ThrowTypeError(nsFmtCString(
-                  FMT_STRING(
-                      "Attribute {} can't be in 'removeAttributes' of the "
-                      "element {} but not in the global 'attributes'."),
+                  "Attribute {} can't be in 'removeAttributes' of the "
+                  "element {} but not in the global 'attributes'.",
                   name, entry.GetKey()));
               return;
             }
@@ -632,9 +647,8 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
           for (const CanonicalAttribute& name : *elemAttributes.mAttributes) {
             if (name.IsDataAttribute()) {
               aRv.ThrowTypeError(nsFmtCString(
-                  FMT_STRING(
-                      "Data attribute {} in the 'attributes' of the element {} "
-                      "is redundant with 'dataAttributes' being true."),
+                  "Data attribute {} in the 'attributes' of the element {} "
+                  "is redundant with 'dataAttributes' being true.",
                   name, entry.GetKey()));
               return;
             }
@@ -652,10 +666,10 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
       // attribute.
       for (const CanonicalAttribute& name : *mAttributes) {
         if (name.IsDataAttribute()) {
-          aRv.ThrowTypeError(nsFmtCString(
-              FMT_STRING("Data attribute {} in the global 'attributes' is "
-                         "redundant with 'dataAttributes' being true."),
-              name));
+          aRv.ThrowTypeError(
+              nsFmtCString("Data attribute {} in the global 'attributes' is "
+                           "redundant with 'dataAttributes' being true.",
+                           name));
           return;
         }
       }
@@ -674,8 +688,8 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
         // element[removeAttributes] exist.
         if (elemAttributes.mAttributes && elemAttributes.mRemoveAttributes) {
           return aRv.ThrowTypeError(
-              nsFmtCString(FMT_STRING("Element {} can't have both 'attributes' "
-                                      "and 'removeAttributes'."),
+              nsFmtCString("Element {} can't have both 'attributes' "
+                           "and 'removeAttributes'.",
                            entry.GetKey()));
         }
 
@@ -693,9 +707,8 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
           for (const CanonicalAttribute& name : *elemAttributes.mAttributes) {
             if (mRemoveAttributes->Contains(name)) {
               aRv.ThrowTypeError(nsFmtCString(
-                  FMT_STRING(
-                      "Attribute {} can't be in 'attributes' of the element {} "
-                      "while in the global 'removeAttributes'."),
+                  "Attribute {} can't be in 'attributes' of the element {} "
+                  "while in the global 'removeAttributes'.",
                   name, entry.GetKey()));
               return;
             }
@@ -708,11 +721,11 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
           for (const CanonicalAttribute& name :
                *elemAttributes.mRemoveAttributes) {
             if (mRemoveAttributes->Contains(name)) {
-              aRv.ThrowTypeError(nsFmtCString(
-                  FMT_STRING("Attribute {} can't be part of both the "
-                             "'removeAttributes' of the element {} and the "
-                             "global 'removeAttributes'."),
-                  name, entry.GetKey()));
+              aRv.ThrowTypeError(
+                  nsFmtCString("Attribute {} can't be part of both the "
+                               "'removeAttributes' of the element {} and the "
+                               "global 'removeAttributes'.",
+                               name, entry.GetKey()));
               return;
             }
           }
@@ -1074,10 +1087,9 @@ bool Sanitizer::AllowElement(
     // Step 3.1.1. The user agent may report a warning to the console that this
     // operation is not supported.
     if (auto* win = mGlobal->GetAsInnerWindow()) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "Sanitizer"_ns, win->GetDoc(),
-                                      nsContentUtils::eSECURITY_PROPERTIES,
-                                      "SanitizerAllowElementIgnored2");
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::warningFlag, "Sanitizer"_ns, win->GetDoc(),
+          PropertiesFile::SECURITY_PROPERTIES, "SanitizerAllowElementIgnored2");
     }
 
     // Step 3.1.2. Return false.
@@ -1172,34 +1184,42 @@ bool Sanitizer::RemoveElementCanonical(CanonicalElement&& aElement) {
 // https://wicg.github.io/sanitizer-api/#sanitizer-replace-an-element-with-its-children
 bool Sanitizer::ReplaceElementWithChildren(
     const StringOrSanitizerElementNamespace& aElement) {
+  // Step 1. Let configuration be this’s configuration.
+  // Step 2. Assert: configuration is valid.
   MaybeMaterializeDefaultConfig();
 
-  // Step 1. Set element to the result of canonicalize a sanitizer element
-  // with element.
+  // Step 3. Set element to the result of canonicalize a sanitizer element with
+  // element.
   CanonicalElement element = CanonicalizeElement(aElement);
 
-  // Step 2. If configuration["replaceWithChildrenElements"] contains element:
-  if (mReplaceWithChildrenElements &&
-      mReplaceWithChildrenElements->Contains(element)) {
-    // Step 2.1. Return false.
+  // Step 4. If the built-in non-replaceable elements list contains element:
+  if (IsNonReplaceableElement(element)) {
+    // Step 4.1. Return false.
     return false;
   }
 
-  // Step 3. Remove element from configuration["removeElements"].
+  // Step 5. If configuration["replaceWithChildrenElements"] contains element:
+  if (mReplaceWithChildrenElements &&
+      mReplaceWithChildrenElements->Contains(element)) {
+    // Step 5.1. Return false.
+    return false;
+  }
+
+  // Step 6. Remove element from configuration["removeElements"].
   if (mRemoveElements) {
     mRemoveElements->Remove(element);
   } else {
-    // Step 4. Remove element from configuration["elements"] list.
+    // Step 7. Remove element from configuration["elements"] list.
     mElements->Remove(element);
   }
 
-  // Step 5. Add element to configuration["replaceWithChildrenElements"].
+  // Step 8. Add element to configuration["replaceWithChildrenElements"].
   if (!mReplaceWithChildrenElements) {
     mReplaceWithChildrenElements.emplace();
   }
   mReplaceWithChildrenElements->Insert(std::move(element));
 
-  // Step 6. Return true.
+  // Step 9. Return true.
   return true;
 }
 
@@ -1284,9 +1304,10 @@ bool Sanitizer::AllowAttribute(
 // https://wicg.github.io/sanitizer-api/#sanitizer-remove-an-attribute
 bool Sanitizer::RemoveAttribute(
     const StringOrSanitizerAttributeNamespace& aAttribute) {
+  // Step 1. Assert: configuration is valid.
   MaybeMaterializeDefaultConfig();
 
-  // Step 1. Set attribute to the result of canonicalize a sanitizer attribute
+  // Step 2. Set attribute to the result of canonicalize a sanitizer attribute
   // with attribute.
   CanonicalAttribute attribute = CanonicalizeAttribute(aAttribute);
 
@@ -1294,80 +1315,90 @@ bool Sanitizer::RemoveAttribute(
 }
 
 bool Sanitizer::RemoveAttributeCanonical(CanonicalAttribute&& aAttribute) {
-  // Step 2. If configuration["attributes"] exists:
+  // Step 3. If configuration["attributes"] exists:
   if (mAttributes) {
-    // Step 2.1. Comment: If we have a global allow-list, we need to add
+    // Step 3.1. Comment: If we have a global allow-list, we need to remove
     // attribute.
 
-    // Step 2.2. If configuration["attributes"] does not contain attribute:
-    if (!mAttributes->Contains(aAttribute)) {
-      // Step 2.2.1. Return false.
-      return false;
-    }
+    // Step 3.2. Set modified to the result of remove attribute from
+    // configuration["attributes"].
+    bool modified = mAttributes->EnsureRemoved(aAttribute);
 
-    // Step 2.3. Comment: Fix-up per-element allow and remove lists.
+    // Step 3.3. Comment: Fix-up per-element allow and remove lists.
 
-    // Step 2.4. If configuration["elements"] exists:
+    // Step 3.4. If configuration["elements"] exists:
     if (mElements) {
-      // Step 2.4.1. For each element in configuration["elements"]:
+      // Step 3.4.1. For each element of configuration["elements"]:
       for (auto iter = mElements->Iter(); !iter.Done(); iter.Next()) {
         CanonicalElementAttributes& elemAttributes = iter.Data();
-        // Step 2.4.1.1. If element["removeAttributes"] with default « [] »
+        // Step 3.4.1.1. If element["attributes"] with default « » contains
+        // attribute:
+        if (elemAttributes.mAttributes &&
+            elemAttributes.mAttributes->Contains(aAttribute)) {
+          // Step 3.4.1.1.1. Set modified to true.
+          modified = true;
+
+          // Step 3.4.1.1.2. Remove attribute from element["attributes"].
+          elemAttributes.mAttributes->Remove(aAttribute);
+        }
+
+        // Step 3.4.1.2. If element["removeAttributes"] with default « [] »
         // contains attribute:
         if (elemAttributes.mRemoveAttributes &&
             elemAttributes.mRemoveAttributes->Contains(aAttribute)) {
-          // Step 2.4.1.1.1. Remove attribute from
+          // Step 3.4.1.2.1. Assert: modified is true.
+          MOZ_ASSERT(modified,
+                     "Must have removed attribute from mAttributes already");
+
+          // Step 3.4.1.2.2. Remove attribute from
           // element["removeAttributes"].
           elemAttributes.mRemoveAttributes->Remove(aAttribute);
         }
       }
     }
 
-    // Step 2.5. Remove attribute from configuration["attributes"].
-    mAttributes->Remove(aAttribute);
-
-    // Step 2.6. Return true.
-    return true;
+    // Step 3.5. Return modified.
+    return modified;
   }
 
-  // Step 3. Otherwise:
-  // Step 3.1. Comment: If we have a global remove-list, we need to add
+  // Step 4. Otherwise:
+  // Step 4.1. Comment: If we have a global remove-list, we need to add
   // attribute.
 
-  // Step 3.2. If configuration["removeAttributes"] contains attribute return
+  // Step 4.2. If configuration["removeAttributes"] contains attribute return
   // false.
   if (mRemoveAttributes->Contains(aAttribute)) {
     return false;
   }
 
-  // Step 3.3. Comment: Fix-up per-element allow and remove lists.
-  // Step 3.4. If configuration["elements"] exists:
+  // Step 4.3. Comment: Fix-up per-element allow and remove lists.
+  // Step 4.4. If configuration["elements"] exists:
   if (mElements) {
-    // Step 3.4.1. For each element in configuration["elements"]:
+    // Step 4.4.1. For each element in configuration["elements"]:
     for (auto iter = mElements->Iter(); !iter.Done(); iter.Next()) {
       CanonicalElementAttributes& elemAttributes = iter.Data();
-      // Step 3.4.1.1. If element["attributes"] with default « [] » contains
+      // Step 4.4.1.1. If element["attributes"] with default « [] » contains
       // attribute:
       if (elemAttributes.mAttributes &&
           elemAttributes.mAttributes->Contains(aAttribute)) {
-        // Step 3.4.1.1.1. Remove attribute from element["attributes"].
+        // Step 4.4.1.1.1. Remove attribute from element["attributes"].
         elemAttributes.mAttributes->Remove(aAttribute);
       }
 
-      // Step 3.4.1.2. If element["removeAttributes"] with default « [] »
+      // Step 4.4.1.2. If element["removeAttributes"] with default « [] »
       // contains attribute:
       if (elemAttributes.mRemoveAttributes &&
           elemAttributes.mRemoveAttributes->Contains(aAttribute)) {
-        // Step 3.4.1.2.1. Remove attribute from element["removeAttributes"].
+        // Step 4.4.1.2.1. Remove attribute from element["removeAttributes"].
         elemAttributes.mRemoveAttributes->Remove(aAttribute);
       }
     }
   }
 
-  // Step 3.5. Append attribute to configuration["removeAttributes"].
+  // Step 4.5. Append attribute to configuration["removeAttributes"].
   mRemoveAttributes->Insert(std::move(aAttribute));
 
-  // Step 3.6. Return true.
+  // Step 4.6. Return true.
   return true;
 }
 
@@ -1552,190 +1583,6 @@ static bool IsUnsafeElement(nsAtom* aLocalName, int32_t aNamespaceID) {
 }
 
 // https://wicg.github.io/sanitizer-api/#sanitize-core
-template <bool IsDefaultConfig>
-void Sanitizer::SanitizeChildren(nsINode* aNode, bool aSafe) {
-  // Step 1. For each child in current’s children:
-  nsCOMPtr<nsIContent> next = nullptr;
-  for (nsCOMPtr<nsIContent> child = aNode->GetFirstChild(); child;
-       child = next) {
-    next = child->GetNextSibling();
-
-    // Step 1.1. Assert: child implements Text, Comment, Element, or
-    // DocumentType.
-    MOZ_ASSERT(child->IsText() || child->IsComment() || child->IsElement() ||
-               child->NodeType() == nsINode::DOCUMENT_TYPE_NODE);
-
-    // Step 1.2. If child implements DocumentType, then continue.
-    if (child->NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
-      continue;
-    }
-
-    // Step 1.3. If child implements Text, then continue.
-    if (child->IsText()) {
-      continue;
-    }
-
-    // Step 1.4. If child implements Comment:
-    if (child->IsComment()) {
-      // Step 1.4.1 If configuration["comments"] is not true, then remove
-      // child.
-      if (!mComments) {
-        child->RemoveFromParent();
-      }
-      continue;
-    }
-
-    // Step 1.5. Otherwise:
-    MOZ_ASSERT(child->IsElement());
-
-    // Step 1.5.1. Let elementName be a SanitizerElementNamespace with child’s
-    // local name and namespace.
-    nsAtom* nameAtom = child->NodeInfo()->NameAtom();
-    int32_t namespaceID = child->NodeInfo()->NamespaceID();
-    // Make sure this is optimized away when using the default config.
-    Maybe<CanonicalElement> elementName;
-    // This is only used for the default config case.
-    [[maybe_unused]] StaticAtomSet* elementAttributes = nullptr;
-    if constexpr (!IsDefaultConfig) {
-      elementName.emplace(nameAtom, ToNamespace(namespaceID));
-
-      // Optimization: Remove unsafe elements before doing anything else.
-      // https://wicg.github.io/sanitizer-api/#built-in-safe-baseline-configuration
-      //
-      // We have to do this _before_ handling the
-      // "replaceWithChildrenElements" list, because the "remove an element"
-      // call in removeUnsafe() would implicitly remove it from the list.
-      //
-      // The default config's "elements" allow list does not contain any
-      // unsafe elements so we can skip this.
-      if (aSafe && IsUnsafeElement(nameAtom, namespaceID)) {
-        child->RemoveFromParent();
-        continue;
-      }
-
-      // Step 1.5.2. If configuration["replaceWithChildrenElements"] exists
-      // and if configuration["replaceWithChildrenElements"] contains
-      // elementName:
-      if (mReplaceWithChildrenElements &&
-          mReplaceWithChildrenElements->Contains(*elementName) &&
-          // Temporary fix for Bug 2004112
-          // To be specified by https://github.com/WICG/sanitizer-api/issues/365
-          !!child->GetParent()) {
-        // Note: This follows nsTreeSanitizer by first inserting the
-        // child's children in place of the current child and then
-        // continueing the sanitization from the first inserted grandchild.
-        nsCOMPtr<nsIContent> parent = child->GetParent();
-        nsCOMPtr<nsIContent> firstChild = child->GetFirstChild();
-        nsCOMPtr<nsIContent> newChild = firstChild;
-        for (; newChild; newChild = child->GetFirstChild()) {
-          ErrorResult rv;
-          parent->InsertBefore(*newChild, child, rv);
-          if (rv.Failed()) {
-            // TODO: Abort?
-            break;
-          }
-        }
-
-        child->RemoveFromParent();
-        if (firstChild) {
-          next = firstChild;
-        }
-        continue;
-      }
-
-      // Step 1.5.3. If configuration["removeElements"] exists and
-      // configuration["removeElements"] contains elementName:
-      if (mRemoveElements) {
-        if (mRemoveElements->Contains(*elementName)) {
-          // Step 1.5.3.1. Remove child.
-          child->RemoveFromParent();
-          // Step 1.5.3.2.Continue.
-          continue;
-        }
-      }
-
-      // Step 1.5.4. If configuration["elements"] exists and
-      // configuration["elements"] does not contain elementName:
-      if (mElements) {
-        if (!mElements->Contains(*elementName)) {
-          // Step 1.5.4.1. Remove child.
-          child->RemoveFromParent();
-          // Step 1.5.4.2. Continue.
-          continue;
-        }
-      }
-    } else {
-      // (The default config has no replaceWithChildrenElements or
-      // removeElements)
-
-      // Step 1.5.4. If configuration["elements"] exists and
-      // configuration["elements"] does not contain elementName:
-
-      bool found = false;
-      if (nameAtom->IsStatic()) {
-        ElementsWithAttributes* elements = nullptr;
-        if (namespaceID == kNameSpaceID_XHTML) {
-          elements = sDefaultHTMLElements;
-        } else if (namespaceID == kNameSpaceID_MathML) {
-          elements = sDefaultMathMLElements;
-        } else if (namespaceID == kNameSpaceID_SVG) {
-          elements = sDefaultSVGElements;
-        }
-        if (elements) {
-          if (auto lookup = elements->Lookup(nameAtom->AsStatic())) {
-            found = true;
-            // This is the nullptr for elements without specific allowed
-            // attributes.
-            elementAttributes = lookup->get();
-          }
-        }
-      }
-      if (!found) {
-        // Step 1.5.4.1. Remove child.
-        child->RemoveFromParent();
-        // Step 1.5.4.2. Continue.
-        continue;
-      }
-
-      MOZ_ASSERT(!IsUnsafeElement(nameAtom, namespaceID),
-                 "The default config has no unsafe elements");
-    }
-
-    // Step 1.5.5. If elementName equals «[ "name" → "template", "namespace" →
-    // HTML namespace ]», then call sanitize core on child’s template contents
-    // with configuration and handleJavascriptNavigationUrls.
-    if (auto* templateEl = HTMLTemplateElement::FromNode(child)) {
-      RefPtr<DocumentFragment> frag = templateEl->Content();
-      SanitizeChildren<IsDefaultConfig>(frag, aSafe);
-    }
-
-    // Step 1.5.6. If child is a shadow host, then call sanitize core on child’s
-    // shadow root with configuration and handleJavascriptNavigationUrls.
-    if (RefPtr<ShadowRoot> shadow = child->GetShadowRoot()) {
-      SanitizeChildren<IsDefaultConfig>(shadow, aSafe);
-    }
-
-    // Step 1.5.7-9.
-    if constexpr (!IsDefaultConfig) {
-      SanitizeAttributes(child->AsElement(), *elementName, aSafe);
-    } else {
-      SanitizeDefaultConfigAttributes(child->AsElement(), elementAttributes,
-                                      aSafe);
-    }
-
-    // Step 1.5.10. Call sanitize core on child with configuration and
-    // handleJavascriptNavigationUrls.
-    // TODO: Optimization: Remove recusion similar to nsTreeSanitizer
-    SanitizeChildren<IsDefaultConfig>(child, aSafe);
-  }
-}
-
-static inline bool IsDataAttribute(nsAtom* aName, int32_t aNamespaceID) {
-  return StringBeginsWith(nsDependentAtomString(aName), u"data-"_ns) &&
-         aNamespaceID == kNameSpaceID_None;
-}
-
-// https://wicg.github.io/sanitizer-api/#sanitize-core
 // Step 2.4.9.5. If handleJavascriptNavigationUrls:
 static bool RemoveJavascriptNavigationURLAttribute(Element* aElement,
                                                    nsAtom* aLocalName,
@@ -1796,9 +1643,8 @@ static bool RemoveJavascriptNavigationURLAttribute(Element* aElement,
   // then remove attr.
   if (aLocalName == nsGkAtoms::attributeName &&
       aNamespaceID == kNameSpaceID_None &&
-      aElement->IsAnyOfSVGElements(nsGkAtoms::animate, nsGkAtoms::animateMotion,
-                                   nsGkAtoms::animateTransform,
-                                   nsGkAtoms::set)) {
+      aElement->IsAnyOfSVGElements(
+          nsGkAtoms::animate, nsGkAtoms::animateTransform, nsGkAtoms::set)) {
     nsAutoString value;
     if (!aElement->GetAttr(aNamespaceID, aLocalName, value)) {
       return false;
@@ -1810,171 +1656,361 @@ static bool RemoveJavascriptNavigationURLAttribute(Element* aElement,
   return false;
 }
 
-void Sanitizer::SanitizeAttributes(Element* aChild,
-                                   const CanonicalElement& aElementName,
-                                   bool aSafe) {
-  MOZ_ASSERT(!mIsDefaultConfig);
+// https://wicg.github.io/sanitizer-api/#sanitize-core
+template <bool IsDefaultConfig>
+void Sanitizer::SanitizeChildren(nsINode* aNode, bool aSafe) const {
+  // Step 1. For each child in current’s children:
+  nsCOMPtr<nsIContent> next = nullptr;
+  for (nsCOMPtr<nsIContent> child = aNode->GetFirstChild(); child;
+       child = next) {
+    next = child->GetNextSibling();
 
-  // https://wicg.github.io/sanitizer-api/#sanitize-core
-  // Substeps of 1.5. that are relevant to attributes.
+    // Step 1.1. Assert: child implements Text, Comment, Element, or
+    // DocumentType.
+    MOZ_ASSERT(child->IsText() || child->IsComment() || child->IsElement() ||
+               child->NodeType() == nsINode::DOCUMENT_TYPE_NODE);
 
-  // Step 7. Let elementWithLocalAttributes be « [] ».
-  // Step 8. If configuration["elements"] exists and configuration["elements"]
-  // contains elementName:
-  // Step 8.1. Set elementWithLocalAttributes to
-  // configuration["elements"][elementName].
-  const CanonicalElementAttributes* elementAttributes =
-      mElements ? mElements->Lookup(aElementName).DataPtrOrNull() : nullptr;
+    // Step 1.2. If child implements DocumentType, then continue.
+    if (child->NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
+      continue;
+    }
 
-  // Step 9. For each attribute in child’s attribute list:
-  int32_t count = int32_t(aChild->GetAttrCount());
-  for (int32_t i = count - 1; i >= 0; --i) {
-    // Step 9.1. Let attrName be a SanitizerAttributeNamespace with attribute’s
+    // Step 1.3. If child implements Text, then continue.
+    if (child->IsText()) {
+      continue;
+    }
+
+    // Step 1.4. If child implements Comment:
+    if (child->IsComment()) {
+      // Step 1.4.1 If configuration["comments"] is not true, then remove
+      // child.
+      if (!mComments) {
+        child->Remove();
+      }
+      continue;
+    }
+
+    // Step 1.5. Otherwise:
+    MOZ_ASSERT(child->IsElement());
+
+    // Step 1.5.1. Let elementName be a SanitizerElementNamespace with child’s
     // local name and namespace.
-    const nsAttrName* attr = aChild->GetAttrNameAt(i);
-    RefPtr<nsAtom> attrLocalName = attr->LocalName();
-    int32_t attrNs = attr->NamespaceID();
-    CanonicalAttribute attrName(attrLocalName, ToNamespace(attrNs));
+    nsAtom* nameAtom = child->NodeInfo()->NameAtom();
+    int32_t namespaceID = child->NodeInfo()->NamespaceID();
+    // Make sure this is optimized away when using the default config.
+    Maybe<CanonicalElement> elementName;
+    std::conditional_t<IsDefaultConfig, StaticAtomSet*,
+                       CanonicalElementAttributes*>
+        elementAttributes = nullptr;
+    if constexpr (!IsDefaultConfig) {
+      elementName.emplace(nameAtom, ToNamespace(namespaceID));
 
-    bool remove = false;
-    // Optimization: Remove unsafe event handler content attributes.
-    // https://wicg.github.io/sanitizer-api/#sanitizerconfig-remove-unsafe
-    if (aSafe && attrNs == kNameSpaceID_None &&
-        nsContentUtils::IsEventAttributeName(
-            attrLocalName, EventNameType_All & ~EventNameType_XUL)) {
-      remove = true;
+      // Optimization: Remove unsafe elements before doing anything else.
+      // https://wicg.github.io/sanitizer-api/#built-in-safe-baseline-configuration
+      //
+      // We have to do this _before_ handling the
+      // "replaceWithChildrenElements" list, because the "remove an element"
+      // call in removeUnsafe() would implicitly remove it from the list.
+      //
+      // The default config's "elements" allow list does not contain any
+      // unsafe elements so we can skip this.
+      if (aSafe && IsUnsafeElement(nameAtom, namespaceID)) {
+        child->Remove();
+        continue;
+      }
+
+      // Step 1.5.2. If configuration["replaceWithChildrenElements"] exists
+      // and if configuration["replaceWithChildrenElements"] contains
+      // elementName:
+      if (mReplaceWithChildrenElements &&
+          mReplaceWithChildrenElements->Contains(*elementName)) {
+        // Note: This follows nsTreeSanitizer by first inserting the
+        // child's children in place of the current child and then
+        // continueing the sanitization from the first inserted grandchild.
+        nsCOMPtr<nsIContent> parent = child->GetParent();
+        MOZ_DIAGNOSTIC_ASSERT(parent);
+        nsCOMPtr<nsIContent> firstChild = child->GetFirstChild();
+        nsCOMPtr<nsIContent> newChild = firstChild;
+        for (; newChild; newChild = child->GetFirstChild()) {
+          ErrorResult rv;
+          parent->InsertBefore(*newChild, child, rv);
+          if (rv.Failed()) {
+            // TODO: Abort?
+            break;
+          }
+        }
+
+        child->Remove();
+        if (firstChild) {
+          next = firstChild;
+        }
+        continue;
+      }
+
+      // Step 1.5.3. If configuration["removeElements"] exists and
+      // configuration["removeElements"] contains elementName:
+      if (mRemoveElements) {
+        if (mRemoveElements->Contains(*elementName)) {
+          // Step 1.5.3.1. Remove child.
+          child->Remove();
+          // Step 1.5.3.2.Continue.
+          continue;
+        }
+      }
+
+      // Step 1.5.4. If configuration["elements"] exists and
+      // configuration["elements"] does not contain elementName:
+      if (mElements) {
+        elementAttributes = mElements->Lookup(*elementName).DataPtrOrNull();
+        if (!elementAttributes) {
+          // Step 1.5.4.1. Remove child.
+          child->Remove();
+          // Step 1.5.4.2. Continue.
+          continue;
+        }
+      }
+    } else {
+      // (The default config has no replaceWithChildrenElements or
+      // removeElements)
+
+      // Step 1.5.4. If configuration["elements"] exists and
+      // configuration["elements"] does not contain elementName:
+
+      bool found = false;
+      if (nameAtom->IsStatic()) {
+        ElementsWithAttributes* elements = nullptr;
+        if (namespaceID == kNameSpaceID_XHTML) {
+          elements = sDefaultHTMLElements;
+        } else if (namespaceID == kNameSpaceID_MathML) {
+          elements = sDefaultMathMLElements;
+        } else if (namespaceID == kNameSpaceID_SVG) {
+          elements = sDefaultSVGElements;
+        }
+        if (elements) {
+          if (auto lookup = elements->Lookup(nameAtom->AsStatic())) {
+            found = true;
+            // This is the nullptr for elements without specific allowed
+            // attributes.
+            elementAttributes = lookup->get();
+          }
+        }
+      }
+      if (!found) {
+        // Step 1.5.4.1. Remove child.
+        child->Remove();
+        // Step 1.5.4.2. Continue.
+        continue;
+      }
+
+      MOZ_ASSERT(!IsUnsafeElement(nameAtom, namespaceID),
+                 "The default config has no unsafe elements");
     }
 
-    // Step 9.2. If elementWithLocalAttributes["removeAttributes"] with default
-    // « [] » contains attrName:
-    else if (elementAttributes && elementAttributes->mRemoveAttributes &&
-             elementAttributes->mRemoveAttributes->Contains(attrName)) {
-      // Step 9.2.1. Remove attribute.
-      remove = true;
+    // Step 1.5.5. If elementName equals «[ "name" → "template", "namespace" →
+    // HTML namespace ]», then call sanitize core on child’s template contents
+    // with configuration and handleJavascriptNavigationUrls.
+    if (auto* templateEl = HTMLTemplateElement::FromNode(child)) {
+      RefPtr<DocumentFragment> frag = templateEl->Content();
+      SanitizeChildren<IsDefaultConfig>(frag, aSafe);
     }
 
-    // Step 9.3. Otherwise, if configuration["attributes"] exists:
-    else if (mAttributes) {
-      // Step 9.3.1. If configuration["attributes"] does not contain attrName
-      // and elementWithLocalAttributes["attributes"] with default « [] » does
-      // not contain attrName, and if "data-" is not a code unit prefix of
-      // attribute’s local name and namespace is not null or
-      // configuration["dataAttributes"] is not true:
-      MOZ_ASSERT(mDataAttributes.isSome(),
-                 "mDataAttributes exists iff mAttributes exists");
-      if (!mAttributes->Contains(attrName) &&
-          !(elementAttributes && elementAttributes->mAttributes &&
-            elementAttributes->mAttributes->Contains(attrName)) &&
-          !(*mDataAttributes && IsDataAttribute(attrLocalName, attrNs))) {
-        // Step 9.3.1.1. Remove attribute.
-        remove = true;
+    // Step 1.5.6. If child is a shadow host, then call sanitize core on child’s
+    // shadow root with configuration and handleJavascriptNavigationUrls.
+    if (RefPtr<ShadowRoot> shadow = child->GetShadowRoot()) {
+      SanitizeChildren<IsDefaultConfig>(shadow, aSafe);
+    }
+
+    // Step 1.6.7. If child’s is value is not null:
+    if (CustomElementData* data = child->AsElement()->GetCustomElementData();
+        data && data->GetIs(child->AsElement())) [[unlikely]] {
+      // Step 1.6.7.1. Let isAttrName be «[ "name" → "is", "namespace" → null
+      // ]».
+      // Step 1.6.7.2. If is attribute allowed for isAttrName given
+      // configuration, and elementName is blocked:
+      if (IsDefaultConfig ||
+          !IsAttributeAllowed(elementAttributes, nsGkAtoms::is,
+                              kNameSpaceID_None, aSafe)) {
+        // Step 1.6.7.2.1. Step Set child’s custom element state to "undefined".
+        // Step 1.6.7.2.2. Set child’s custom element definition to null.
+        // Step 1.6.7.2.3. Set child’s is value to null.
+        child->AsElement()->ClearCustomElementData();
       }
     }
 
-    // Step 9.4. Otherwise:
-    else {
-      // Step 9.4.1. If elementWithLocalAttributes["attributes"] exists and
-      // elementWithLocalAttributes["attributes"] does not contain attrName:
-      if (elementAttributes && elementAttributes->mAttributes &&
-          !elementAttributes->mAttributes->Contains(attrName)) {
-        // Step 9.4.1.1. Remove attribute.
-        remove = true;
+    // Step 1.6.7. For each attribute in child’s attribute list:
+    int32_t attrCount = int32_t(child->AsElement()->GetAttrCount());
+    for (int32_t i = attrCount - 1; i >= 0; --i) {
+      // Step 1.6.7.1.  Let attrName be a SanitizerAttributeNamespace with
+      // attribute’s local name and namespace.
+      const nsAttrName* attr = child->AsElement()->GetAttrNameAt(i);
+      RefPtr<nsAtom> attrLocalName = attr->LocalName();
+      int32_t attrNs = attr->NamespaceID();
+
+      // Step 1.6.7.2. If is attribute allowed for attrName given configuration,
+      // and elementName is blocked, then remove attribute.
+      bool remove =
+          !IsAttributeAllowed(elementAttributes, attrLocalName, attrNs, aSafe);
+
+      // Step 1.6.7.3. If handleJavascriptNavigationUrls:
+      if (aSafe && !remove) {
+        remove = RemoveJavascriptNavigationURLAttribute(child->AsElement(),
+                                                        attrLocalName, attrNs);
       }
 
-      // Step 9.4.2. Otherwise, if configuration["removeAttributes"] contains
-      // attrName:
-      else if (mRemoveAttributes->Contains(attrName)) {
-        // Step 9.4.2.1. Remove attribute.
-        remove = true;
+      if (remove) {
+        child->AsElement()->UnsetAttr(attrNs, attrLocalName,
+                                      /* aNotify */ false);
+
+        // XXX Copied from nsTreeSanitizer.
+        // In case the attribute removal shuffled the attribute order, start the
+        // loop again.
+        --attrCount;
+        i = attrCount;  // i will be decremented immediately thanks to the for
+                        // loop
       }
     }
 
-    // Step 5. If handleJavascriptNavigationUrls:
-    if (aSafe && !remove) {
-      remove =
-          RemoveJavascriptNavigationURLAttribute(aChild, attrLocalName, attrNs);
-    }
-
-    if (remove) {
-      aChild->UnsetAttr(attr->NamespaceID(), attr->LocalName(), false);
-
-      // XXX Copied from nsTreeSanitizer.
-      // In case the attribute removal shuffled the attribute order, start the
-      // loop again.
-      --count;
-      i = count;  // i will be decremented immediately thanks to the for loop
-    }
+    // Step 1.5.10. Call sanitize core on child with configuration and
+    // handleJavascriptNavigationUrls.
+    // TODO: Optimization: Remove recusion similar to nsTreeSanitizer
+    SanitizeChildren<IsDefaultConfig>(child, aSafe);
   }
 }
 
-void Sanitizer::SanitizeDefaultConfigAttributes(
-    Element* aChild, StaticAtomSet* aElementAttributes, bool aSafe) {
+static inline bool IsDataAttribute(nsAtom* aName, int32_t aNamespaceID) {
+  return StringBeginsWith(nsDependentAtomString(aName), u"data-"_ns) &&
+         aNamespaceID == kNameSpaceID_None;
+}
+
+// IsAttributeAllowed specialized for the default config.
+bool Sanitizer::IsAttributeAllowed(StaticAtomSet* aElementAttributes,
+                                   nsAtom* aAttrLocalName, int32_t aAttrNs,
+                                   bool) const {
   MOZ_ASSERT(mIsDefaultConfig);
 
-  // https://wicg.github.io/sanitizer-api/#sanitize-core
-  // Substeps of 1.5. that are relevant to attributes.
+  // Step 1. Let elementWithLocalAttributes be an empty ordered map.
+  // Step 2. If configuration["elements"] exists and configuration["elements"]
+  // contains elementName:
+  //  ...
+  // NOTE: This was lookup was already done outside of this function.
 
-  // Step 7-8. (aElementAttributes passed as an argument)
+  // Step 3. If elementWithLocalAttributes["removeAttributes"] with default « »
+  // contains attrName:
+  // NOTE: No local removeAttributes in the default config.
 
-  // Step 9. For each attribute in child’s attribute list:
-  int32_t count = int32_t(aChild->GetAttrCount());
-  for (int32_t i = count - 1; i >= 0; --i) {
-    // Step 1. Let attrName be a SanitizerAttributeNamespace with attribute’s
-    // local name and namespace.
-    const nsAttrName* attr = aChild->GetAttrNameAt(i);
-    RefPtr<nsAtom> attrLocalName = attr->LocalName();
-    int32_t attrNs = attr->NamespaceID();
+  // Step 4. If configuration["attributes"] exists:
+  // NOTE: Always true in the default config.
 
-    // Step 2. If elementWithLocalAttributes["removeAttributes"] with default «
-    // [] » contains attrName:
-    // (No local removeAttributes in the default config)
+  // Step 4.1. Let the boolean globallyAllowed be whether
+  // configuration["attributes"] contains attrName.
+  // NOTE: All attributes allowed by the default config are in the "null"
+  // namespace.
+  bool globallyAllowed = aAttrNs == kNameSpaceID_None &&
+                         sDefaultAttributes->Contains(aAttrLocalName);
 
-    // Step 3. Otherwise, if configuration["attributes"] exists:
-    // Step 3.1. If configuration["attributes"] does not contain attrName and
-    // elementWithLocalAttributes["attributes"] with default « [] » does not
-    // contain attrName, and if "data-" is not a code unit prefix of attribute’s
-    // local name and namespace is not null or configuration["dataAttributes"]
-    // is not true:
-    bool remove = false;
-    // Note: All attributes allowed by the default config are in the "null"
-    // namespace.
-    MOZ_ASSERT(mDataAttributes.isSome(),
-               "mDataAttributes always exists in the default config");
-    if (attrNs != kNameSpaceID_None ||
-        (!sDefaultAttributes->Contains(attrLocalName) &&
-         !(aElementAttributes && aElementAttributes->Contains(attrLocalName)) &&
-         !(*mDataAttributes && IsDataAttribute(attrLocalName, attrNs)))) {
-      // Step 3.1.1. Remove attribute.
-      remove = true;
-    }
+  // Step 4.2. Let the boolean locallyAllowed be whether
+  // elementWithLocalAttributes["attributes"] with default « » contains
+  // attrName.
+  bool locallyAllowed = aAttrNs == kNameSpaceID_None && aElementAttributes &&
+                        aElementAttributes->Contains(aAttrLocalName);
 
-    // Step 4. Otherwise:
-    // (not applicable)
+  // Step 4.3. Let the boolean isDataAttributeAllowed be whether both, "data-"
+  // is a code unit prefix of attrName[name] and attrName[namespace] is null,
+  // and configuration["dataAttributes"] is true.
+  bool isDataAttributeAllowed =
+      *mDataAttributes && IsDataAttribute(aAttrLocalName, aAttrNs);
 
-    // Step 5. If handleJavascriptNavigationUrls:
-    else if (aSafe) {
-      // TODO: This could be further optimized, because the default config
-      // at the moment only allows <a href>.
-      remove =
-          RemoveJavascriptNavigationURLAttribute(aChild, attrLocalName, attrNs);
-    }
+  // Step 4.4. If neither globallyAllowed nor locallyAllowed nor
+  // isDataAttributeAllowed, return blocked.
+  if (!globallyAllowed && !locallyAllowed && !isDataAttributeAllowed) {
+    return false;
+  }
 
-    // The default config attribute allow lists don't contain event
-    // handler attributes.
-    MOZ_ASSERT_IF(!remove,
-                  !nsContentUtils::IsEventAttributeName(
-                      attrLocalName, EventNameType_All & ~EventNameType_XUL));
+  // 5. Otherwise:
+  // ...
 
-    if (remove) {
-      aChild->UnsetAttr(attr->NamespaceID(), attr->LocalName(), false);
+  // The default config attribute allow lists don't contain event
+  // handler attributes.
+  MOZ_ASSERT(!nsContentUtils::IsEventAttributeName(
+      aAttrLocalName, EventNameType_All & ~EventNameType_XUL));
 
-      // XXX Copied from nsTreeSanitizer.
-      // In case the attribute removal shuffled the attribute order, start the
-      // loop again.
-      --count;
-      i = count;  // i will be decremented immediately thanks to the for loop
+  // Step 6. Return allowed.
+  return true;
+}
+
+bool Sanitizer::IsAttributeAllowed(
+    CanonicalElementAttributes* aElementAttributes, nsAtom* aAttrLocalName,
+    int32_t aAttrNs, bool aSafe) const {
+  MOZ_ASSERT(!mIsDefaultConfig);
+
+  // Step 1. Let elementWithLocalAttributes be an empty ordered map.
+  // Step 2. If configuration["elements"] exists and configuration["elements"]
+  // contains elementName:
+  //  ...
+  // NOTE: This was lookup was already done outside of this function.
+
+  // Optimization: Remove unsafe event handler content attributes here, because
+  // we didn't clone the config and called removeUnsafe on it before.
+  // https://wicg.github.io/sanitizer-api/#sanitizerconfig-remove-unsafe
+  if (aSafe && aAttrNs == kNameSpaceID_None &&
+      nsContentUtils::IsEventAttributeName(
+          aAttrLocalName, EventNameType_All & ~EventNameType_XUL)) {
+    return false;
+  }
+
+  CanonicalAttribute attrName(aAttrLocalName, ToNamespace(aAttrNs));
+  // Step 3. If elementWithLocalAttributes["removeAttributes"] with default « »
+  // contains attrName:
+  if (aElementAttributes && aElementAttributes->mRemoveAttributes &&
+      aElementAttributes->mRemoveAttributes->Contains(attrName)) {
+    // Step 3.1. Return blocked.
+    return false;
+  }
+
+  // Step 4. If configuration["attributes"] exists:
+  if (mAttributes) {
+    // Step 4.1. Let the boolean globallyAllowed be whether
+    // configuration["attributes"] contains attrName.
+    bool globallyAllowed = mAttributes->Contains(attrName);
+
+    // Step 4.2. Let the boolean locallyAllowed be whether
+    // elementWithLocalAttributes["attributes"] with default « » contains
+    // attrName.
+    bool locallyAllowed = aElementAttributes &&
+                          aElementAttributes->mAttributes &&
+                          aElementAttributes->mAttributes->Contains(attrName);
+
+    // Step 4.3. Let the boolean isDataAttributeAllowed be whether both, "data-"
+    // is a code unit prefix of attrName[name] and attrName[namespace] is null,
+    // and configuration["dataAttributes"] is true.
+    bool isDataAttributeAllowed =
+        *mDataAttributes && IsDataAttribute(aAttrLocalName, aAttrNs);
+
+    // Step 4.4. If neither globallyAllowed nor locallyAllowed nor
+    // isDataAttributeAllowed, return blocked.
+    if (!globallyAllowed && !locallyAllowed && !isDataAttributeAllowed) {
+      return false;
     }
   }
+  // 5. Otherwise:
+  else {
+    // Step 5.1. If elementWithLocalAttributes["attributes"] exists and
+    // elementWithLocalAttributes["attributes"] does not contain attrName:
+    if (aElementAttributes && aElementAttributes->mAttributes &&
+        !aElementAttributes->mAttributes->Contains(attrName)) {
+      // Step 5.1.1. Return blocked.
+      return false;
+    }
+
+    // Step 5.2. If configuration["removeAttributes"] contains attrName:
+    if (mRemoveAttributes->Contains(attrName)) {
+      // Step 5.2.1. Return blocked.
+      return false;
+    }
+  }
+
+  // Step 6. Return allowed.
+  return true;
 }
 
 }  // namespace mozilla::dom

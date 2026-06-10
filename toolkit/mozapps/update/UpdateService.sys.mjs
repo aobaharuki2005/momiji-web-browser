@@ -1,5 +1,3 @@
-/* -*- Mode: javascript; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -251,6 +249,11 @@ const HTTP_ERROR_OFFSET = 1000;
 // indicating that access was denied. Often, this error code is returned when
 // attempting to access a job created by a different user.
 const HRESULT_E_ACCESSDENIED = -2147024891;
+
+// HRESULT for HTTP 406 defined in bitsmsg.rs as:
+// pub const BG_E_HTTP_ERROR_406: DWORD = 0x80190196;
+// Represented in JavaScript as signed 32-bit integer
+const BG_E_HTTP_ERROR_406 = -2145844842;
 
 const DOWNLOAD_CHUNK_SIZE = 300000; // bytes
 
@@ -7084,6 +7087,11 @@ class Downloader {
           error = request.transferError;
           if (!error) {
             error = new BitsUnknownError();
+          } else if (
+            error.codeType == Ci.nsIBits.ERROR_CODE_TYPE_HRESULT &&
+            error.code == BG_E_HTTP_ERROR_406
+          ) {
+            Glean.update.blocked.add();
           }
         }
         AUSTLMY.pingBitsError(this.isCompleteUpdate, error);

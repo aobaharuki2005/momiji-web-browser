@@ -32,12 +32,11 @@ import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.settings.trustpanel.store.WebsiteInfoState
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemeProvider
 
 private val ICON_SIZE = 16.dp
 private val ICON_PADDING = 8.dp
-private val OUTER_ICON_SHAPE = RoundedCornerShape(4.dp)
 private val INNER_ICON_SHAPE = RoundedCornerShape(0.dp)
 
 @Composable
@@ -100,7 +99,7 @@ private fun ProtectionPanelIcon(
             modifier = Modifier
                 .background(
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    shape = OUTER_ICON_SHAPE,
+                    shape = MaterialTheme.shapes.extraSmall,
                 )
                 .padding(all = ICON_PADDING)
                 .size(ICON_SIZE),
@@ -111,7 +110,7 @@ private fun ProtectionPanelIcon(
             modifier = Modifier
                 .background(
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                    shape = OUTER_ICON_SHAPE,
+                    shape = MaterialTheme.shapes.extraSmall,
                 )
                 .padding(all = ICON_PADDING),
             size = ICON_SIZE,
@@ -123,7 +122,7 @@ private fun ProtectionPanelIcon(
 @Preview
 @Composable
 private fun ProtectionPanelHeaderPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         ProtectionPanelHeader(
@@ -142,7 +141,7 @@ private fun ProtectionPanelHeaderPreview(
 @Preview
 @Composable
 private fun ProtectionPanelHeaderUrlAsTitlePreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         ProtectionPanelHeader(

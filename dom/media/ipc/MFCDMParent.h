@@ -13,6 +13,7 @@
 #include "RemoteMediaManagerParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EventTargetAndLockCapability.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/PMFCDMParent.h"
 #include "mozilla/RefPtr.h"
 
@@ -31,7 +32,7 @@ class MFCDMProxy;
  */
 class MFCDMParent final : public PMFCDMParent {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFCDMParent);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFCDMParent, final);
 
   MFCDMParent(const nsAString& aKeySystem, RemoteMediaManagerParent* aManager,
               nsISerialEventTarget* aManagerThread);
@@ -52,6 +53,9 @@ class MFCDMParent final : public PMFCDMParent {
     return sRegisteredCDMs.Get(aId);
   }
   uint64_t Id() const { return mId; }
+  const nsString& GetKeySystem() const { return mKeySystem; }
+
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvGetCapabilities(
       const MFCDMCapabilitiesRequest& aRequest,
@@ -86,13 +90,21 @@ class MFCDMParent final : public PMFCDMParent {
       const dom::HDCPVersion& aMinHdcpVersion,
       GetStatusForPolicyResolver&& aResolver);
 
+  // Checks whether the HDCP 2.2 link has settled after a hardware reset.
+  // The result is used as a timing signal only; playback proceeds regardless
+  // of whether the check succeeds or fails.
+  RefPtr<GenericPromise> WaitForHDCPSettleAfterReset();
+
   // A thread-safe method to access the CDM proxy. Returns nullptr if the CDM
   // has been shut down.
   MFCDMProxy* GetMFCDMProxy();
 
   void ShutdownCDM();
 
-  void Destroy();
+  // Called when a hardware context reset (e.g. GPU/DRM device lost) invalidates
+  // all active CDM sessions. Closes every open session and resets the trusted
+  // input so the content process can re-establish keys.
+  void OnHardwareContextReset();
 
  private:
   ~MFCDMParent();
@@ -126,6 +138,12 @@ class MFCDMParent final : public PMFCDMParent {
 
   MFCDMSession* GetSession(const nsString& aSessionId);
 
+  // Called after a GPU/DRM hardware context reset to discard the invalid CDM
+  // and create a fresh one so new sessions can be established.
+  HRESULT RecreateCDM();
+  // Sets up the PMPHostApp on the CDM. Only required by PlayReady.
+  HRESULT SetupPMPHostApp() MOZ_REQUIRES(mCDMAccessLock);
+
   mozilla::Mutex& Mutex() MOZ_RETURN_CAPABILITY(mCDMAccessLock.Lock()) {
     return mCDMAccessLock.Lock();
   }
@@ -135,7 +153,9 @@ class MFCDMParent final : public PMFCDMParent {
   const RefPtr<RemoteMediaManagerParent> mManager;
   const RefPtr<nsISerialEventTarget> mManagerThread;
 
-  MOZ_RUNINIT static inline nsTHashMap<nsUint64HashKey, MFCDMParent*>
+  Maybe<MFCDMInitParamsIPDL> mInitParams;
+
+  constinit static inline nsTHashMap<nsUint64HashKey, MFCDMParent*>
       sRegisteredCDMs;
 
   static inline uint64_t sNextId = 1;
@@ -144,7 +164,6 @@ class MFCDMParent final : public PMFCDMParent {
 
   static inline BSTR sWidevineL1Path;
 
-  RefPtr<MFCDMParent> mIPDLSelfRef;
   Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory> mFactory;
   Microsoft::WRL::ComPtr<MFPMPHostWrapper> mPMPHostWrapper;
 

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -375,11 +373,9 @@ RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
              "MaybeAsyncCreateAudioSink (Async part: initialization)",
              [self = RefPtr<AudioSinkWrapper>(this),
               audioSink{std::move(audioSink)}, audioDevice = mAudioDevice,
-              this]() mutable {
-               if (!audioSink || !mAsyncInitTaskQueue->IsEmpty()) {
-                 // Either an AudioSink is not required or there's a
-                 // pending task to init an AudioSink with a possibly
-                 // different device.
+              myDispatchSeq = ++mAsyncDispatchSeq, this]() mutable {
+               if (!audioSink || mAsyncDispatchSeq != myDispatchSeq) {
+                 // No sink needed, or a newer dispatch superseded us.
                  return Promise::CreateAndResolve(nullptr, __func__);
                }
 

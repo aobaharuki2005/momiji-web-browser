@@ -1,10 +1,9 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ExtensionProtocolHandler_h___
-#define ExtensionProtocolHandler_h___
+#ifndef ExtensionProtocolHandler_h_
+#define ExtensionProtocolHandler_h_
 
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/LazyIdleThread.h"
@@ -230,4 +229,4 @@ class ExtensionProtocolHandler final : public nsISubstitutingProtocolHandler,
 }  // namespace net
 }  // namespace mozilla
 
-#endif /* ExtensionProtocolHandler_h___ */
+#endif /* ExtensionProtocolHandler_h_ */

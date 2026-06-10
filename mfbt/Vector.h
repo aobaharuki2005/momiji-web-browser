@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -926,6 +924,21 @@ class MOZ_NON_PARAM MOZ_GSL_OWNER Vector final : private AllocPolicy {
   size_t sizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   void swap(Vector& aOther);
+
+  /**
+   * For internal use by allocation policies that provide garbage collected
+   * memory.
+   *
+   * Trace any allocations owned by this object that were made with AllocPolicy.
+   * Call the supplied closure |aTraceFunc| for each of them, passing a double
+   * pointer to the memory held (e.g. a void** pointer).
+   */
+  template <typename F>
+  void traceOwnedAllocs(F&& aTraceFunc) {
+    if (!usingInlineStorage()) {
+      aTraceFunc(&mBegin);
+    }
+  }
 
  private:
   Vector(const Vector&) = delete;

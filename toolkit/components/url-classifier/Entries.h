@@ -1,4 +1,3 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,8 +6,8 @@
 // chunk data, which may be either 32-bit hashes or complete 256-bit hashes.
 // Chunk numbers are represented in ChunkSet.h.
 
-#ifndef SBEntries_h__
-#define SBEntries_h__
+#ifndef SBEntries_h_
+#define SBEntries_h_
 
 #include "mozilla/crypto_hash_sha2.h"
 #include "mozilla/Base64.h"
@@ -323,4 +322,4 @@ void CopyClassHashTable(const T& aSource, T& aDestination) {
 }  // namespace safebrowsing
 }  // namespace mozilla
 
-#endif  // SBEntries_h__
+#endif  // SBEntries_h_

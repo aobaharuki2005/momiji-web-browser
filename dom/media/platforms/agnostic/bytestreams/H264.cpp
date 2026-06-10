@@ -13,6 +13,7 @@
 #include "ByteStreamsUtils.h"
 #include "ByteWriter.h"
 #include "MediaInfo.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Result.h"
 #include "mozilla/Try.h"
@@ -596,6 +597,9 @@ bool H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest) {
     READSE(offset_for_non_ref_pic, -231, 230);
     READSE(offset_for_top_to_bottom_field, -231, 230);
     uint32_t num_ref_frames_in_pic_order_cnt_cycle = br.ReadUE();
+    if (num_ref_frames_in_pic_order_cnt_cycle > 255) {
+      return false;
+    }
     for (uint32_t i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++) {
       br.ReadSE();  // offset_for_ref_frame[i]
     }
@@ -1270,9 +1274,9 @@ bool H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
   // skip over original exp-golomb encoded width/height
   br.ReadUE();  // skip width
   br.ReadUE();  // skip height
-  uint32_t width = aSize.width;
+  uint32_t width = std::max<uint32_t>(aSize.width, 16);
   uint32_t widthNeeded = width % 16 != 0 ? (width / 16 + 1) * 16 : width;
-  uint32_t height = aSize.height;
+  uint32_t height = std::max<uint32_t>(aSize.height, 16);
   uint32_t heightNeeded = height % 16 != 0 ? (height / 16 + 1) * 16 : height;
   bw.WriteUE(widthNeeded / 16 - 1);
   bw.WriteUE(heightNeeded / 16 - 1);

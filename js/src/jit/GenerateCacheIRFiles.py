@@ -75,6 +75,7 @@ arg_writer_info = {
     "JitCodeField": ("JitCode*", "writeJitCodeField"),
     "RawInt32Field": ("uint32_t", "writeRawInt32Field"),
     "RawPointerField": ("const void*", "writeRawPointerField"),
+    "ICScriptField": ("const ICScript*", "writeICScriptField"),
     "IdField": ("jsid", "writeIdField"),
     "ValueField": ("const Value&", "writeValueField"),
     "WeakValueField": ("const Value&", "writeWeakValueField"),
@@ -105,7 +106,7 @@ arg_writer_info = {
 }
 
 
-def gen_writer_method(name, args, custom_writer):
+def gen_writer_method(name, args, custom_writer, inlining_candidate):
     """Generates a CacheIRWRiter method for a single opcode."""
 
     # Generate a single method that writes the opcode and each argument.
@@ -144,6 +145,8 @@ def gen_writer_method(name, args, custom_writer):
     if custom_writer:
         code += "private:\\\n"
     code += "{} {}({}) {{\\\n".format(ret_type, method_name, ", ".join(method_args))
+    if inlining_candidate:
+        code += "  trialInliningState_ = TrialInliningState::Candidate;\\\n"
     code += f"  writeOp(CacheOp::{name});\\\n"
     code += args_code
     code += "  assertLengthMatches();\\\n"
@@ -181,6 +184,7 @@ arg_reader_info = {
     "JitCodeField": ("uint32_t", "Offset", "reader.stubOffset()"),
     "RawInt32Field": ("uint32_t", "Offset", "reader.stubOffset()"),
     "RawPointerField": ("uint32_t", "Offset", "reader.stubOffset()"),
+    "ICScriptField": ("uint32_t", "Offset", "reader.stubOffset()"),
     "IdField": ("uint32_t", "Offset", "reader.stubOffset()"),
     "ValueField": ("uint32_t", "Offset", "reader.stubOffset()"),
     "WeakValueField": ("uint32_t", "Offset", "reader.stubOffset()"),
@@ -326,6 +330,7 @@ arg_spewer_method = {
     "JitCodeField": "spewField",
     "RawInt32Field": "spewField",
     "RawPointerField": "spewField",
+    "ICScriptField": "spewField",
     "IdField": "spewField",
     "ValueField": "spewField",
     "WeakValueField": "spewField",
@@ -391,7 +396,7 @@ def gen_spewer_method(name, args):
     return code
 
 
-def gen_clone_method(name, args):
+def gen_clone_method(name, args, inlining_candidate):
     """Generates code for cloning a single opcode."""
 
     method_name = "clone" + name
@@ -436,6 +441,8 @@ def gen_clone_method(name, args):
     code = f"void {method_name}"
     code += "(CacheIRReader& reader, CacheIRWriter& writer) {{\\\n"
     code += f"  writer.writeOp(CacheOp::{name});\\\n"
+    if inlining_candidate:
+        code += "  writer.setTrialInliningState(TrialInliningState::Candidate);\\\n"
     code += args_code
     code += "  writer.assertLengthMatches();\\\n"
     code += "}}\\\n"
@@ -469,6 +476,7 @@ arg_length = {
     "JitCodeField": 1,
     "RawInt32Field": 1,
     "RawPointerField": 1,
+    "ICScriptField": 1,
     "RawInt64Field": 1,
     "DoubleField": 1,
     "IdField": 1,
@@ -551,6 +559,9 @@ def generate_cacheirops_header(c_out, yaml_path):
         custom_writer = op.get("custom_writer", False)
         assert isinstance(custom_writer, bool)
 
+        inlining_candidate = op.get("inlining_candidate", False)
+        assert isinstance(inlining_candidate, bool)
+
         if args:
             args_length = " + ".join([str(arg_length[v]) for v in args.values()])
         else:
@@ -559,7 +570,9 @@ def generate_cacheirops_header(c_out, yaml_path):
         transpile_str = "true" if transpile else "false"
         ops_items.append(f"_({name}, {args_length}, {transpile_str}, {cost_estimate})")
 
-        writer_methods.append(gen_writer_method(name, args, custom_writer))
+        writer_methods.append(
+            gen_writer_method(name, args, custom_writer, inlining_candidate)
+        )
         reader_methods.append(gen_reader_method(name, args))
 
         if shared:
@@ -573,7 +586,7 @@ def generate_cacheirops_header(c_out, yaml_path):
 
         spewer_methods.append(gen_spewer_method(name, args))
 
-        clone_methods.append(gen_clone_method(name, args))
+        clone_methods.append(gen_clone_method(name, args, inlining_candidate))
 
     contents = "#define CACHE_IR_OPS(_)\\\n"
     contents += "\\\n".join(ops_items)

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -31,6 +30,13 @@ class AudioNodeExternalInputTrack final : public AudioNodeTrack {
  public:
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
+  AudioNodeExternalInputTrack* AsAudioNodeExternalInputTrack() override {
+    return this;
+  }
+
+  // Main thread only.
+  void SetVolume(float aVolume);
+
  private:
   /**
    * Determines if this is enabled or not.  Disabled nodes produce silence.
@@ -38,6 +44,10 @@ class AudioNodeExternalInputTrack final : public AudioNodeTrack {
    * DOMMediaStream principal.
    */
   bool IsEnabled();
+
+  // Beside the creation, this volume will only be accessed and modified on the
+  // graph thread.
+  float mVolume = 1.0;
 };
 
 }  // namespace mozilla

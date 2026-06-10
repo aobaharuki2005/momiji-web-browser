@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -244,6 +242,22 @@ mozilla::ipc::IPCResult MediaDrmRemoteCDMParent::RecvInit(
         RESULT_DETAIL("AMediaDrm_setPropertyString sessionSharing failed %d",
                       status)));
     return IPC_OK();
+  }
+
+  // Set per-origin ID if available.
+  if (!request.originID().IsEmpty()) {
+    EME_LOG(
+        "[%p] MediaDrmRemoteCDMParent::RecvInit -- "
+        "setting origin ID property (%.4s...)",
+        this, request.originID().get());
+    media_status_t originStatus =
+        AMediaDrm_setPropertyString(mDrm, "origin", request.originID().get());
+    if (originStatus != AMEDIA_OK) {
+      EME_LOG(
+          "[%p] MediaDrmRemoteCDMParent::RecvInit -- "
+          "AMediaDrm_setPropertyString origin ID failed: %d",
+          this, originStatus);
+    }
   }
 
   status = AMediaDrm_setOnEventListener(mDrm, HandleEventCb);
@@ -882,6 +896,43 @@ MediaDrmCrypto::~MediaDrmCrypto() { AMediaCrypto_delete(mCrypto); }
 
 MediaDrmCryptoInfo::~MediaDrmCryptoInfo() {
   AMediaCodecCryptoInfo_delete(mCryptoInfo);
+}
+
+/* static */
+void MediaDrmRemoteCDMParent::UnprovisionMediaDrmOrigins(
+    const nsTArray<nsCString>& aOriginKeys) {
+  EME_LOG("UnprovisionMediaDrmOrigins: unprovisioning %zu origin(s)",
+          aOriginKeys.Length());
+
+  for (const auto& originKey : aOriginKeys) {
+    AMediaDrm* drm = AMediaDrm_createByUUID(WIDEVINE_UUID);
+    if (!drm) {
+      EME_LOG("UnprovisionMediaDrmOrigins: failed to create AMediaDrm");
+      continue;
+    }
+
+    media_status_t status =
+        AMediaDrm_setPropertyString(drm, "origin", originKey.get());
+    if (status != AMEDIA_OK) {
+      EME_LOG("UnprovisionMediaDrmOrigins: setPropertyString origin failed: %d",
+              status);
+      AMediaDrm_release(drm);
+      continue;
+    }
+
+    static constexpr char kUnprovision[] = "unprovision";
+    status = AMediaDrm_provideProvisionResponse(
+        drm, reinterpret_cast<const uint8_t*>(kUnprovision),
+        sizeof(kUnprovision) - 1);
+    if (status != AMEDIA_OK) {
+      EME_LOG(
+          "UnprovisionMediaDrmOrigins: provideProvisionResponse failed: %d "
+          "(may already be unprovisioned)",
+          status);
+    }
+
+    AMediaDrm_release(drm);
+  }
 }
 
 }  // namespace mozilla

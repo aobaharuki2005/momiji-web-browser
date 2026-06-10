@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=4 et :
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GMP_LOADER_H__
-#define GMP_LOADER_H__
+#ifndef GMP_LOADER_H_
+#define GMP_LOADER_H_
 
 #include <stdint.h>
 
@@ -78,4 +76,4 @@ class GMPLoader {
 
 }  // namespace mozilla::gmp
 
-#endif  // GMP_LOADER_H__
+#endif  // GMP_LOADER_H_

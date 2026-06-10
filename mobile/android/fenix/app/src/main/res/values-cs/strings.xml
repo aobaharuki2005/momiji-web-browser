@@ -6,7 +6,7 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 
-<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+<resources xmlns:tools="http://schemas.android.com/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Anonymní %s</string>
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
@@ -19,8 +19,12 @@
   <string name="content_description_menu">Více možností</string>
   <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
   <string name="content_description_private_browsing">Anonymní prohlížení</string>
+  <!-- Content description (not visible, for screen readers etc.): "Normal Browsing" menu button. -->
+  <string name="content_description_normal_browsing">Normální prohlížení</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
   <string name="search_hint">Zadejte hledání nebo adresu</string>
+  <!-- Shorter placeholder text shown in the search bar when an additional action (voice search) is rendered alongside the hint. -->
+  <string name="search_hint_short">Hledat</string>
   <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
   <string name="search_hint_general_engine">Vyhledat na webu</string>
   <!-- Placeholder text shown in search bar when using history search -->
@@ -31,16 +35,12 @@
   <string name="tab_search_hint">Hledat panely</string>
   <!-- Placeholder text shown in the search bar when using application search engines -->
   <string name="application_search_hint">Zadejte hledaný výraz</string>
-  <!-- No Open Tabs Message Description -->
-  <string name="no_open_tabs_description">Tady se zobrazí vaše otevřené panely.</string>
-  <!-- No Private Tabs Message Description -->
-  <string name="no_private_tabs_description">Tady se zobrazí vaše anonymní panely.</string>
   <!-- The header text displayed on the private tabs page when no private tabs are open -->
   <string name="tab_manager_empty_private_tabs_page_header">Anonymní prohlížení</string>
   <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
   <string name="tab_manager_empty_private_tabs_page_description">%1$s si nebude pamatovat vaši historii ani ukládat cookies, ale vytvořené záložky budou uloženy.</string>
   <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
-  <string name="tab_manager_empty_normal_tabs_page_header">Vytvořte nový panel a začněte vyhledávat</string>
+  <string name="tab_manager_empty_normal_tabs_page_header">Otevřete nový panel a začněte vyhledávat</string>
   <!-- Tab tray multi select title in app bar. %1$d is the number of tabs selected -->
   <string name="tab_tray_multi_select_title">Vybráno panelů: %1$d</string>
   <!-- Tab tray multi select title in app bar when no tabs are selected -->
@@ -53,8 +53,6 @@
   <string name="tab_tray_select_collection">Vybrat sbírku</string>
   <!-- Content description for close button while in multiselect mode in tab tray -->
   <string name="tab_tray_close_multiselect_content_description">Opustit režim výběru</string>
-  <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-  <string name="tab_tray_collection_button_multiselect_content_description">Uložit vybrané panely do sbírky</string>
   <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_header">Získejte panely z jakéhokoliv zařízení</string>
   <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
@@ -85,13 +83,6 @@
     Title for info card on private homescreen in True Private Browsing Mode.
   -->
   <string name="felt_privacy_desc_card_title">Nezanechá stopy</string>
-  <!--
-    Explanation for private browsing displayed to users on home view when they first enable
-    private mode in our new Total Private Browsing mode.
-    %1$s is the name of the app (for example "Firefox").
-    %2$s is a link using felt_privacy_info_card_subtitle_link_text as text
-  -->
-  <string name="felt_privacy_info_card_subtitle_2" tools:ignore="UnusedResources" moz:removedIn="147">Když zavřete všechny anonymní panely, %1$s odstraní vaše cookies, historii a data stránek. %2$s</string>
   <!--
     Description of private browsing mode displayed to users on the homepage when they enable private mode.
     %1$s is the name of the app (for example "Firefox").
@@ -207,8 +198,6 @@
   <string name="browser_menu_stop">Zastaví načítání stránky</string>
   <!-- Browser menu button that opens the extensions manager -->
   <string name="browser_menu_extensions">Rozšíření</string>
-  <!-- Browser menu banner header text for extensions onboarding when all installed extensions have been disabled. -->
-  <string name="browser_menu_disabled_extensions_banner_onboarding_header">Máte nainstalovány rozšíření, ale nejsou povolené</string>
   <!-- Browser menu button that opens the extensions manager -->
   <string name="browser_menu_manage_extensions">Správa rozšíření</string>
   <!-- Browser menu group that contains additional settings in collapsed state -->
@@ -228,18 +217,12 @@
   <string name="browser_menu_try_a_recommended_extension_description">Vyzkoušejte doporučené rozšíření</string>
   <!-- Browser menu button that opens account settings -->
   <string name="browser_menu_account_settings">Informace o účtu</string>
-  <!-- Browser menu button that sends a user to help articles -->
-  <string name="browser_menu_help">Nápověda</string>
-  <!-- Browser menu button that sends a to a the what's new article -->
-  <string name="browser_menu_whats_new">Co je nového</string>
   <!-- Browser menu button that opens the settings menu -->
   <string name="browser_menu_settings">Nastavení</string>
   <!-- Browser menu button that opens a user's library -->
   <string name="browser_menu_library">Knihovna</string>
   <!-- Browser menu toggle that requests a desktop site -->
   <string name="browser_menu_desktop_site">Verze stránky pro počítač</string>
-  <!-- Browser menu button that reopens a private tab as a regular tab -->
-  <string name="browser_menu_open_in_regular_tab">Otevřít v běžném panelu</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
   <string name="browser_menu_add_to_homescreen">Přidat na plochu</string>
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
@@ -267,11 +250,6 @@
     Browser menu text shown in custom tabs to indicate this is a Fenix tab
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="browser_menu_powered_by">Zobrazeno pomocí aplikace %1$s</string>
-  <!--
-    Browser menu text shown in custom tabs to indicate this is a Fenix tab
-    %1$s is the name of the app (for example "Firefox").
-  -->
   <string name="browser_menu_powered_by2">Používá %1$s</string>
   <!-- Browser menu button to put the current page in reader mode -->
   <string name="browser_menu_read">Zobrazení čtečky</string>
@@ -280,15 +258,7 @@
   <!-- Browser menu button to open the current page in an external app -->
   <string name="browser_menu_open_app_link">Otevřít v aplikaci</string>
   <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
-  <string name="browser_menu_customize_reader_view">Přizpůsobit zobrazení čtečky</string>
-  <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
   <string name="browser_menu_customize_reader_view_2">Přizpůsobit zobrazení čtečky</string>
-  <!-- Browser menu label for adding a bookmark -->
-  <string name="browser_menu_add">Přidat</string>
-  <!-- Browser menu label for editing a bookmark -->
-  <string name="browser_menu_edit">Upravit</string>
-  <!-- Button shown on the home page that opens the Customize home settings -->
-  <string name="browser_menu_customize_home_1">Přizpůsobit</string>
   <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
   <string name="browser_menu_sign_in">Přihlásit se</string>
   <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
@@ -307,16 +277,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Zavřít nabídku</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Navigace</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Nápověda</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Nastavení</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
-  <string name="browser_extensions_menu_handlebar_content_description">Zavřít seznam s nabídnou rozšíření</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
-  <string name="browser_save_menu_handlebar_content_description">Zavřít seznam s nabídkou uložení</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar tools menu. -->
-  <string name="browser_tools_menu_handlebar_content_description">Zavřít seznam s nabídkou nástrojů</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar custom tab menu. -->
   <string name="browser_custom_tab_menu_handlebar_content_description">Zavřít seznam s nabídkou pro vlastní panel</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
@@ -325,10 +285,14 @@
   <string name="browser_menu_edit_bookmark">Upravit záložku</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->
   <string name="browser_menu_save_as_pdf_2">Uložit jako PDF</string>
+  <!-- Browser menu label for moving the current private tab to a non-private tab -->
+  <string name="browser_menu_move_to_non_private_tab">Přesunout na neanonymní panel</string>
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
   <string name="browser_menu_translate_page_2">Přeložit stránku</string>
-  <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
-  <string name="browser_menu_webcompat_reporter">Nahlásit nefunkční stránku…</string>
+  <!-- Browser menu label for navigating to the summarization feature, which provides site summarization for the current visited page -->
+  <string name="browser_menu_summarize_page">Shrnutí stránky</string>
+  <!-- Browser menu badge text for summarization feature -->
+  <string name="browser_menu_summarize_page_badge">Nové</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
   <string name="browser_menu_webcompat_reporter_2">Nahlásit nefunkční stránku</string>
   <!-- Browser menu label that is displayed when the current page has been translated by the translation feature. -->
@@ -371,7 +335,11 @@
     Content description for the Home screen button on the browser toolbar
   -->
   <string name="browser_toolbar_home">Domovská obrazovka</string>
-  <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+  <!--
+    Browser Toolbar
+
+    Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred.
+  -->
   <string name="browser_toolbar_translate">Přeložit stránku</string>
   <!--
     Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
@@ -379,6 +347,8 @@
     %2$s is the name of the language which the page was translated to. (For example: French)
   -->
   <string name="browser_toolbar_translated_successfully">Stránka byla přeložena z jazyka %1$s do jazyka %2$s.</string>
+  <!-- CFR description for the browser toolbar describing the "Shake to summarize feature" -->
+  <string name="browser_toolbar_summarize_cfr_description">Zatřeste zařízením pro shrnutí této stránky během několika sekund. ⚡️</string>
   <!--
     Translation Toolbar
 
@@ -391,6 +361,58 @@
   <string name="translation_toolbar_expand_action">Otevřít okno s možnostmi překladu</string>
   <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
   <string name="translation_toolbar_close_action">Skrýt zprávu</string>
+  <!--
+    Page summaries
+
+    Toolbar title for the Page summaries settings fragment
+  -->
+  <string name="preferences_page_summaries">Souhrny stránek</string>
+  <!--
+    AI Controls settings
+
+    Title for the AI controls settings screen
+  -->
+  <string name="preferences_ai_controls">Ovládání AI</string>
+  <!-- Headline text for the AI controls banner. %s is the name of the app (for example "Firefox"). -->
+  <string name="ai_controls_banner_headline">V aplikaci %s máte vždy na výběr</string>
+  <!-- Supporting text for the AI controls banner. %s is a learn more link using ai_controls_learn_more as text. -->
+  <string name="ai_controls_banner_supporting_text_2">To zahrnuje i to, zda používat funkce vylepšené o umělou inteligenci. %s</string>
+  <!-- Supporting text for the AI controls banner -->
+  <string name="ai_controls_banner_supporting_text">To zahrnuje i to, zda používat funkce vylepšené umělou inteligencí.</string>
+  <!-- Link text for learning more about AI controls -->
+  <string name="ai_controls_learn_more">Zjistit více</string>
+  <!-- Title for the block AI enhancements toggle -->
+  <string name="ai_controls_block_ai_title">Blokovat vylepšení pomocí AI</string>
+  <!-- Description for the block AI enhancements toggle. %s is the name of the app (for example "Firefox"). -->
+  <string name="ai_controls_block_ai_description">Blokování znamená, že neuvidíte nová či aktuální vylepšení AI v aplikaci %s, ani vyskakovací okna o nich.</string>
+  <!-- Link text to see what AI enhancements are and aren’t included -->
+  <string name="ai_controls_see_whats_included">Podívejte se, co je a není zahrnuto</string>
+  <!-- Banner text shown when AI enhancements are blocked -->
+  <string name="ai_controls_blocked_info_banner">Nová a aktuální vylepšení AI jsou ve výchozím nastavení blokována. Níže odblokujte konkrétní funkce.</string>
+  <!-- Section header for the AI-powered features list -->
+  <string name="ai_controls_ai_powered_features">Funkce založené na umělé inteligenci</string>
+  <!-- Title for the translations AI feature toggle -->
+  <string name="ai_controls_translations_title">Překlady</string>
+  <!-- Description for the translations AI feature toggle -->
+  <string name="ai_controls_translations_description">Všechny překlady zůstávají soukromé ve vašem zařízení.</string>
+  <!-- Link text to navigate to more translations settings -->
+  <string name="ai_controls_more_translations_settings">Další nastavení překladu</string>
+  <!-- Link text to navigate to more page summary settings -->
+  <string name="ai_controls_more_page_summary_settings">Další nastavení souhrnu stránek</string>
+  <!-- Title for the voice search AI feature toggle -->
+  <string name="ai_controls_voice_search_title">Hlasové vyhledávání</string>
+  <!-- Description for the voice search AI feature toggle -->
+  <string name="ai_controls_voice_search_description">Zvuk je převáděn na text pomocí služby Google Speech Services.</string>
+  <!-- Title for the block AI enhancements confirmation dialog -->
+  <string name="ai_controls_block_dialog_title">Blokovat vylepšování umělou inteligencí?</string>
+  <!-- Body text for the block AI enhancements confirmation dialog. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="ai_controls_block_dialog_body">Nová či aktuální vylepšení AI v aplikaci %1$s neuvidíte, ani vyskakovací okna o nich. Poté můžete odblokovat vše, co chcete nadále používat.\n\nBlokování ovlivní také rozšíření aplikace %1$s, která používají umělou inteligenci poskytovanou aplikací.</string>
+  <!-- Label shown above the list of features that will be blocked in the block AI dialog -->
+  <string name="ai_controls_block_dialog_what_will_be_blocked">Co bude blokováno:</string>
+  <!-- Cancel button text in the block AI enhancements confirmation dialog -->
+  <string name="ai_controls_block_dialog_cancel">Zrušit</string>
+  <!-- Block button text in the block AI enhancements confirmation dialog -->
+  <string name="ai_controls_block_dialog_block">Blokovat</string>
   <!--
     Locale Settings Fragment
 
@@ -407,16 +429,18 @@
     Button in the search view that lets a user search by scanning a QR code
   -->
   <string name="search_scan_button_2">Naskenovat QR kód</string>
-  <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-  <string name="search_shortcuts_engine_settings">Nastavení vyhledávače</string>
-  <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+  <!--
+    Search Fragment
+
+    Button in the search view that lets a user navigate to the site in their clipboard
+  -->
   <string name="awesomebar_clipboard_title">Vložit odkaz ze schránky</string>
   <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
   <string name="search_suggestions_onboarding_allow_button">Povolit</string>
   <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
   <string name="search_suggestions_onboarding_do_not_allow_button">Nepovolit</string>
   <!-- Search suggestion onboarding hint title text -->
-  <string name="search_suggestions_onboarding_title">Chcete našeptávat dotazy pro vyhledávač také v anonymním prohlížení?</string>
+  <string name="search_suggestions_onboarding_title">Chcete zobrazovat návrhy vyhledávání také při anonymním prohlížení?</string>
   <!-- Search suggestion onboarding hint description text, %s is the name of the app (for example "Firefox"). -->
   <string name="search_suggestions_onboarding_text">%s bude sdílet text zadávaný do adresního řádku s vaším výchozím vyhledávačem.</string>
   <!-- Search engine suggestion title text. %s is the name of the suggested engine. -->
@@ -438,6 +462,12 @@
     The colon character (in "%s:") is intended to have the screen reader make a small pause between the search engine name and the description of the button.
   -->
   <string name="search_engine_selector_content_description">%s: výběr vyhledávače</string>
+  <!-- Text for the snackbar shown to confirm the deletion of a single browsing history item. %1$s is the shortened URL of the deleted history entry or the the actual deleted search term. Only one such item is deleted at a time. -->
+  <string name="search_suggestions_delete_history_item_snackbar">Adresa %1$s byla smazána z historie</string>
+  <!-- Content description (not visible, for screen readers etc.): Button shown near a history search result allowing to delete it from browsing history. -->
+  <string name="mozac_browser_awesomebar_remove_suggestion" tools:ignore="UnusedResources">Smazat tuto položku historie</string>
+  <!-- Button in the app links prompt that keeps the user in the browser instead of opening the external app. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="applinks_prompt_negative_button">Zůstat v aplikaci %1$s</string>
   <!--
     Home onboarding
 
@@ -452,19 +482,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Zásady ochrany osobních údajů</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Rádi vás udržujeme v bezpečí</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Zjistěte, proč miliony lidí milují Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Bezpečné prohlížení s více možnostmi</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Náš neziskový prohlížeč pomáhá zabránit společnostem v tajném sledování vašeho prohlížení webu.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Více než 100 milionů lidí chrání své soukromí tak, že si volí prohlížeč od neziskové organizace.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Známe sledovací prvky? Automaticky zablokováno. Rozšíření? Vyzkoušejte všech 700. PDF? Naše vestavěná čtečka usnadňuje jejich správu.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Nastavit jako výchozí prohlížeč</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -554,60 +573,60 @@
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Správa</string>
   <!-- Terms of use (ToU) onboarding redesign title. -->
-  <string name="onboarding_redesign_tou_title">Spuštění dokonalého prohlížeče pro Android</string>
+  <string name="onboarding_redesign_tou_title" tools:ignore="UnusedResources">Spuštění dokonalého prohlížeče pro Android</string>
   <!-- Terms of use (ToU) first subheader. -->
-  <string name="onboarding_redesign_tou_subheader_one">Bleskové načítání stránek</string>
+  <string name="onboarding_redesign_tou_subheader_one" tools:ignore="UnusedResources">Bleskové načítání stránek</string>
   <!-- Terms of use (ToU) second subheader. -->
-  <string name="onboarding_redesign_tou_subheader_two">Automatická ochrana proti sledování</string>
+  <string name="onboarding_redesign_tou_subheader_two" tools:ignore="UnusedResources">Automatická ochrana proti sledování</string>
   <!-- Terms of use (ToU) third subheader. -->
-  <string name="onboarding_redesign_tou_subheader_three">Tisíce přizpůsobení</string>
+  <string name="onboarding_redesign_tou_subheader_three" tools:ignore="UnusedResources">Tisíce přizpůsobení</string>
   <!--
     Terms of use (ToU) first body text. %1$s is replaced by an active link,
     using onboarding_redesign_tou_body_one_link_text as text (“Firefox Terms of Use”).
   -->
-  <string name="onboarding_redesign_tou_body_one">Pokračováním souhlasíte s dokumentem %1$s.</string>
+  <string name="onboarding_redesign_tou_body_one" tools:ignore="UnusedResources">Pokračováním souhlasíte s dokumentem %1$s.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
-  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">Podmínky používání Firefoxu</string>
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage,UnusedResources">Podmínky používání Firefoxu</string>
   <!--
     Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
     %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
   -->
-  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefoxu záleží na vašem soukromí. Více se dozvíte v dokumentu %1$s.</string>
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage,UnusedResources">Firefoxu záleží na vašem soukromí. Více se dozvíte v dokumentu %1$s.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
-  <string name="onboarding_redesign_tou_body_two_link_text">Zásady ochrany osobních údajů</string>
+  <string name="onboarding_redesign_tou_body_two_link_text" tools:ignore="UnusedResources">Zásady ochrany osobních údajů</string>
   <!--
     Terms of use (ToU) third body text. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link using onboarding_redesign_tou_body_three_link_text as text (“Manage Settings”).
   -->
-  <string name="onboarding_redesign_tou_body_three" tools:ignore="BrandUsage">Firefox odesílá organizaci Mozilla diagnostické údaje a údaje o interakcích, které pomáhají prohlížeč vylepšovat. %1$s</string>
+  <string name="onboarding_redesign_tou_body_three" tools:ignore="BrandUsage,UnusedResources">Firefox odesílá organizaci Mozilla diagnostické údaje a údaje o interakcích, které pomáhají prohlížeč vylepšovat. %1$s</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
-  <string name="onboarding_redesign_tou_body_three_link_text">Nastavení</string>
+  <string name="onboarding_redesign_tou_body_three_link_text" tools:ignore="UnusedResources">Nastavení</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
-  <string name="onboarding_redesign_tou_agree_and_continue_button_label">Pokračovat</string>
+  <string name="onboarding_redesign_tou_agree_and_continue_button_label" tools:ignore="UnusedResources">Pokračovat</string>
   <!-- Onboarding header for the toolbar selection card. -->
-  <string name="onboarding_redesign_customize_toolbar_title">Kam chcete mít adresní řádek?</string>
+  <string name="onboarding_redesign_customize_toolbar_title" tools:ignore="UnusedResources">Kam chcete mít adresní řádek?</string>
   <!-- Onboarding label for 'Continue' button. -->
-  <string name="onboarding_redesign_continue_button">Pokračovat</string>
+  <string name="onboarding_redesign_continue_button" tools:ignore="UnusedResources">Pokračovat</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Pomozte nám rozvíjet Firefox</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Podělte se s marketingovými partnery Mozilly o to, jak jste Firefox objevili a že ho používáte. Tyto údaje nejsou nikdy prodávány.</string>
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage,UnusedResources">Podělte se s marketingovými partnery Mozilly o to, jak jste Firefox objevili a že ho používáte. Tyto údaje nejsou nikdy prodávány.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
-  <string name="onboarding_marketing_redesign_learn_more">Jak data používáme</string>
+  <string name="onboarding_marketing_redesign_learn_more" tools:ignore="UnusedResources">Jak data používáme</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
-  <string name="onboarding_marketing_redesign_positive_button">Potvrdit</string>
+  <string name="onboarding_marketing_redesign_positive_button" tools:ignore="UnusedResources">Potvrdit</string>
   <!-- Set to default browser onboarding redesign title. -->
-  <string name="onboarding_redesign_set_default_browser_title">Získat automatickou ochranu proti sledování</string>
+  <string name="onboarding_redesign_set_default_browser_title" tools:ignore="UnusedResources">Získat automatickou ochranu proti sledování</string>
   <!-- Set to default browser onboarding redesign body. -->
-  <string name="onboarding_redesign_set_default_browser_body">Jedním klepnutím zastavíte společnosti, aby špehovaly vaše kliky.</string>
+  <string name="onboarding_redesign_set_default_browser_body" tools:ignore="UnusedResources">Jedním klepnutím zastavíte společnosti, aby špehovaly vaše kliky.</string>
   <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Synchronizujte data všude, kde používáte Firefox</string>
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage,UnusedResources">Synchronizujte data všude, kde používáte Firefox</string>
   <!-- Sync onboarding redesign body. -->
-  <string name="onboarding_redesign_sync_body">Získejte záložky, panely a hesla na jakémkoli zařízení. Vše chráněno šifrováním.</string>
+  <string name="onboarding_redesign_sync_body" tools:ignore="UnusedResources">Získejte záložky, panely a hesla na jakémkoli zařízení. Vše chráněno šifrováním.</string>
   <!-- Sync onboarding redesign positive button text. -->
-  <string name="onboarding_redesign_sync_positive_button">Spustit synchronizaci</string>
+  <string name="onboarding_redesign_sync_positive_button" tools:ignore="UnusedResources">Spustit synchronizaci</string>
   <!-- Sync onboarding redesign negative button text. -->
-  <string name="onboarding_redesign_sync_negative_button">Teď ne</string>
+  <string name="onboarding_redesign_sync_negative_button" tools:ignore="UnusedResources">Teď ne</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Pomozte nám rozvíjet Firefox</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -627,46 +646,52 @@
   <!-- ==== Project "Nova" onboarding strings ==== -->
 
   <!-- "Continue" onboarding button. -->
-  <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Pokračovat</string>
+  <string name="nova_onboarding_continue_button">Pokračovat</string>
+  <!-- "Continue browsing" onboarding button. -->
+  <string name="nova_onboarding_continue_browsing_button" tools:ignore="UnusedResources">Pokračovat v prohlížení</string>
   <!-- "Not now" onboarding button. -->
-  <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Teď ne</string>
+  <string name="nova_onboarding_negative_button">Teď ne</string>
+  <!-- "Skip" onboarding button. -->
+  <string name="nova_onboarding_skip_button" tools:ignore="UnusedResources">Přeskočit</string>
   <!-- Terms of use (ToU) onboarding title. -->
   <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Připravte se na volnost</string>
   <!-- Terms of use (ToU) onboarding subtitle. -->
-  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rychlý, bezpečný a nikdy vás neprozradí.\nProhlížení se právě stalo lepším.</string>
+  <string name="nova_onboarding_tou_subtitle">Rychlý, bezpečný a nikdy vás neprozradí.\nProhlížení se právě stalo lepším.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
   -->
-  <string name="nova_onboarding_tou_body_line_1" tools:ignore="UnusedResources">Pokračováním souhlasíte s dokumentem %1$s.</string>
+  <string name="nova_onboarding_tou_body_line_1">Pokračováním souhlasíte s dokumentem %1$s.</string>
   <!-- Terms of use (ToU) onboarding body line one link text for nova_onboarding_tou_body_line_1. 'Firefox' is intentionally hardcoded. -->
-  <string name="nova_onboarding_tou_body_line_1_link_text" tools:ignore="BrandUsage,UnusedResources">Podmínky používání Firefoxu</string>
+  <string name="nova_onboarding_tou_body_line_1_link_text" tools:ignore="BrandUsage">Podmínky používání Firefoxu</string>
   <!--
     Terms of use (ToU) onboarding body line two. 'Firefox' is intentionally hardcoded.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_2_link_text as text (“Privacy Notice”).
   -->
-  <string name="nova_onboarding_tou_body_line_2" tools:ignore="BrandUsage,UnusedResources">Firefoxu záleží na vašem soukromí. Více se dozvíte v dokumentu %1$s.</string>
+  <string name="nova_onboarding_tou_body_line_2" tools:ignore="BrandUsage">Firefoxu záleží na vašem soukromí. Více se dozvíte v dokumentu %1$s.</string>
   <!-- Terms of use (ToU) onboarding body line two link text for nova_onboarding_tou_body_line_2. -->
-  <string name="nova_onboarding_tou_body_line_2_link_text" tools:ignore="UnusedResources">Zásady ochrany osobních údajů</string>
+  <string name="nova_onboarding_tou_body_line_2_link_text">Zásady ochrany osobních údajů</string>
   <!--
     Terms of use (ToU) onboarding body line three. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_3_link_text as text (“Manage Settings”).
   -->
-  <string name="nova_onboarding_tou_body_line_3" tools:ignore="BrandUsage,UnusedResources">Firefox odesílá Mozille diagnostické údaje a údaje o interakcích, které pomáhají prohlížeč vylepšovat. %1$s</string>
+  <string name="nova_onboarding_tou_body_line_3" tools:ignore="BrandUsage">Firefox odesílá Mozille diagnostické údaje a údaje o interakcích, které pomáhají prohlížeč vylepšovat. %1$s</string>
   <!-- Terms of use (ToU) onboarding body line three link text for nova_onboarding_tou_body_line_3. -->
-  <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">Spravovat nastavení</string>
+  <string name="nova_onboarding_tou_body_line_3_link_text">Spravovat nastavení</string>
   <!-- "Set to default" onboarding title. -->
   <string name="nova_onboarding_set_to_default_title" tools:ignore="UnusedResources">Dejte sbohem strašidelným sledovacím prvkům</string>
+  <!-- "Set to default" onboarding title. -->
+  <string name="nova_onboarding_set_to_default_title_2">Otevírejte všechny své odkazy s ochranou soukromí</string>
   <!-- "Set to default" onboarding subtitle. -->
-  <string name="nova_onboarding_set_to_default_subtitle" tools:ignore="UnusedResources">Chráníme vaše data a automaticky bráníme společnostem ve špehování vašeho klikání.</string>
+  <string name="nova_onboarding_set_to_default_subtitle">Chráníme vaše data a automaticky bráníme společnostem ve špehování vašeho klikání.</string>
   <!-- "Set to default" onboarding button. -->
-  <string name="nova_onboarding_set_to_default_button" tools:ignore="UnusedResources">Nastavit jako výchozí prohlížeč</string>
+  <string name="nova_onboarding_set_to_default_button">Nastavit jako výchozí prohlížeč</string>
   <!-- Toolbar selection onboarding title. -->
-  <string name="nova_onboarding_toolbar_selection_title" tools:ignore="UnusedResources">Vyberte si adresní řádek</string>
+  <string name="nova_onboarding_toolbar_selection_title">Vyberte si adresní řádek</string>
   <!-- Toolbar selection onboarding "top" option label. -->
-  <string name="nova_onboarding_toolbar_selection_top_label" tools:ignore="UnusedResources">Nahoře</string>
+  <string name="nova_onboarding_toolbar_selection_top_label">Nahoře</string>
   <!-- Toolbar selection onboarding "bottom" option label. -->
-  <string name="nova_onboarding_toolbar_selection_bottom_label" tools:ignore="UnusedResources">Dole</string>
+  <string name="nova_onboarding_toolbar_selection_bottom_label">Dole</string>
   <!-- Theme selection onboarding title. -->
   <string name="nova_onboarding_theme_selection_title" tools:ignore="UnusedResources">Vyberte si vzhled</string>
   <!-- Theme selection onboarding "automatic" option label. -->
@@ -676,32 +701,77 @@
   <!-- Theme selection onboarding "dark" option label. -->
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">Tmavý</string>
   <!-- Sync onboarding title. -->
-  <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Okamžitě pokračujte tam, kde jste skončili</string>
+  <string name="nova_onboarding_sync_title">Okamžitě pokračujte tam, kde jste skončili</string>
   <!-- Sync onboarding subtitle. -->
-  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Získejte záložky, hesla a další údaje na libovolném zařízení během okamžiku. Vaše osobní údaje zůstanou v bezpečí díky šifrování.</string>
+  <string name="nova_onboarding_sync_subtitle">Získejte záložky, hesla a další údaje na libovolném zařízení během okamžiku. Vaše osobní údaje zůstanou v bezpečí díky šifrování.</string>
   <!-- Sync onboarding button. -->
-  <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Spustit synchronizaci</string>
+  <string name="nova_onboarding_sync_button">Spustit synchronizaci</string>
   <!-- Marketing onboarding title. -->
-  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Pomozte nám vytvořit lepší internet</string>
+  <string name="nova_onboarding_marketing_title">Pomozte nám vytvořit lepší internet</string>
   <!--
     Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
   -->
   <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Podělte se s marketingovými partnery Mozilly o tom, jak jste objevili Firefox a že jej používáte. Tato data nejsou nikdy prodávána. %1$s</string>
+  <!-- Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded. -->
+  <string name="nova_onboarding_marketing_body_2" tools:ignore="BrandUsage">Podělte se s marketingovými partnery Mozilly o to, jak jste Firefox objevili a že ho používáte. Tyto údaje nejsou nikdy prodávány.</string>
+  <!-- Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded. -->
+  <string name="nova_onboarding_marketing_body_3" tools:ignore="BrandUsage">Můžete nám pomoci oslovit více uživatelů tím, že umožníte Mozille informovat kanály, kde propagujeme Firefox, že jste jeho uživatelem.</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    “Platform you came from” refers to the external app, website, store, campaign, or other source that directed the user to Firefox.
+  -->
+  <string name="nova_onboarding_marketing_body_4" tools:ignore="BrandUsage">Pomůžete nám oslovit více lidí tím, že povolíte Mozille sdělovat platformě, odkud jste přišli, že používáte Firefox.</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    “Platform you came from” refers to the external app, website, store, campaign, or other source that directed the user to Firefox.
+  -->
+  <string name="nova_onboarding_marketing_body_5" tools:ignore="BrandUsage,UnusedResources">Pomozte nám oslovit více lidí. Dovolte Mozille informovat platformu, odkud jste přišli, že používáte Firefox.</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    “Platform you came from” refers to the external app, website, store, campaign, or other source that directed the user to Firefox.
+    %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
+  -->
+  <string name="nova_onboarding_marketing_body_6" tools:ignore="BrandUsage,UnusedResources">Pomozte nám oslovit více lidí. Dovolte Mozille informovat platformu, odkud jste přišli, že používáte Firefox. %1$s</string>
   <!-- Marketing onboarding body link text. -->
-  <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Jak data používáme</string>
+  <string name="nova_onboarding_marketing_body_link_text">Jak data používáme</string>
+  <!-- Marketing onboarding primary button text. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_marketing_primary_button_text" tools:ignore="BrandUsage">Pomozte Firefoxu</string>
+  <!-- Marketing onboarding secondary button text. -->
+  <string name="nova_onboarding_marketing_secondary_button_text">Ne, děkuji</string>
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Oznámení vám pomáhají zůstat s Firefoxem ve větším bezpečí</string>
   <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Objevte nejnovější možnosti ochrany soukromí ve Firefoxu, abyste měli vždy informace o tom, jak zůstat v bezpečí.</string>
   <!-- Notifications onboarding button. -->
-  <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Zapnout oznámení</string>
+  <string name="nova_onboarding_notifications_button">Zapnout oznámení</string>
   <!-- "Add search widget" onboarding title. -->
-  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Zvyšte soukromí každého vyhledávání</string>
+  <string name="nova_onboarding_add_search_widget_title">Zvyšte soukromí každého vyhledávání</string>
   <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
-  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">Každé vyhledávání můžete začít z domovské obrazovky telefonu a vědět, že vám automatická ochrana Firefoxu kryje záda.</string>
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage">Každé vyhledávání můžete začít z domovské obrazovky telefonu a vědět, že vám automatická ochrana Firefoxu kryje záda.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
-  <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Přidat miniaplikaci Firefox</string>
+  <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage">Přidat miniaplikaci Firefox</string>
+  <!-- Customize prompt onboarding title. -->
+  <string name="nova_onboarding_customize_prompt_title" tools:ignore="UnusedResources">Snadné přizpůsobení a větší soukromí s každým klepnutím</string>
+  <plurals name="nova_onboarding_customize_prompt_body" tools:ignore="UnusedResources">
+    <!--
+      Customize prompt onboarding body.
+      %1$s is replaced by the product name (for example "Firefox"),
+      %2$,d is replaced by the number of trackers blocked. The comma represents the thousand
+      separator (e.g. 1,000 in English), and it will automatically use the correct character
+      for your locale (don't change or remove it).
+    -->
+    <item quantity="one">%1$s zablokoval v průběhu vašeho prohlížení webu %2$,d sledovací prvek.</item>
+    <item quantity="few">%1$s zablokoval v průběhu vašeho prohlížení webu %2$,d sledovací prvky.</item>
+    <item quantity="many">%1$s zablokoval v průběhu vašeho prohlížení webu %2$,d sledovacích prvků.</item>
+    <item quantity="other">%1$s zablokoval v průběhu vašeho prohlížení webu %2$,d sledovacích prvků.</item>
+  </plurals>
+  <!-- Customize prompt onboarding positive button. -->
+  <string name="nova_onboarding_customize_prompt_positive_button" tools:ignore="UnusedResources">Začít s přizpůsobováním</string>
+  <!-- App icon onboarding title. -->
+  <string name="nova_onboarding_app_icon_prompt_title" tools:ignore="UnusedResources">Vyberte vlastní ikonu aplikace</string>
+  <!-- App icon onboarding body. -->
+  <string name="nova_onboarding_app_icon_prompt_body" tools:ignore="UnusedResources">Dejte své domovské obrazovce osobní nádech.</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
 
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -713,7 +783,7 @@
   <!-- Onboarding toolbar selection card label for 'top' option, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_top_option">Nahoru</string>
   <!-- Onboarding toolbar selection card label for 'bottom' option, used by Nimbus experiments. -->
-  <string name="onboarding_customize_toolbar_bottom_option">Dolu</string>
+  <string name="onboarding_customize_toolbar_bottom_option">Dolů</string>
   <!-- Onboarding toolbar selection card content description for the main image. -->
   <string name="onboarding_customize_toolbar_main_image_content_description">Velký obrázek záhlaví zobrazení výběru panelu nástrojů zobrazující ilustrovaný panel nástrojů.</string>
   <!-- Onboarding toolbar selection card content description for the toolbar placement image. -->
@@ -722,15 +792,15 @@
   <!-- Action label for toolbar options that can be selected. Talkback will append this to say "Double tap to select". -->
   <string name="onboarding_customize_toolbar_a11y_action_label_select">vybrat</string>
   <!-- Onboarding header for the theme selection card, used by Nimbus experiments. -->
-  <string name="onboarding_customize_theme_title" tools:ignore="UnusedResources">Vyberte si motiv</string>
+  <string name="onboarding_customize_theme_title" tools:ignore="UnusedResources">Vyberte si motiv vzhledu</string>
   <!-- Onboarding sub header for theme selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_theme_description" tools:ignore="UnusedResources">Podívejte se na web v tom nejlepším světle.</string>
   <!-- Onboarding label for 'Save and start browsing' button, used by Nimbus experiments. -->
   <string name="onboarding_save_and_start_button">Uložit a začít prohlížet</string>
   <!-- Onboarding theme selection card label for 'dark' option, used by Nimbus experiments. -->
-  <string name="onboarding_customize_theme_dark_option">Tmavá</string>
+  <string name="onboarding_customize_theme_dark_option">Tmavý</string>
   <!-- Onboarding theme selection card label for 'light' option, used by Nimbus experiments. -->
-  <string name="onboarding_customize_theme_light_option">Světlá</string>
+  <string name="onboarding_customize_theme_light_option">Světlý</string>
   <!-- Onboarding theme selection card label for 'System auto' option, used by Nimbus experiments. -->
   <string name="onboarding_customize_theme_system_option">Dle systému</string>
   <!-- Onboarding theme selection card content description for the main image. -->
@@ -768,7 +838,11 @@
   <!-- Preference category for all links about Fenix -->
   <string name="preferences_category_about">O aplikaci</string>
   <!-- Preference category for settings related to changing the default search engine -->
-  <string name="preferences_category_select_default_search_engine">Zvolte nějaký</string>
+  <string name="preferences_category_select_default_search_engine_2">Výchozí vyhledávač pro běžné prohlížení</string>
+  <!-- Preference category for settings related to changing the private browsing search engine -->
+  <string name="preferences_category_select_private_search_engine">Výchozí vyhledávač anonymního prohlížení</string>
+  <!-- Option to set the private browsing mode to use the normal default search engine -->
+  <string name="search_engine_use_default">Použít stejný vyhledávač jako při běžném prohlížení</string>
   <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
   <string name="preferences_manage_search_shortcuts_2">Spravovat alternativní vyhledávače</string>
   <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
@@ -781,8 +855,10 @@
   <string name="preferences_search">Vyhledávání</string>
   <!-- Preference for settings related to Search engines -->
   <string name="preferences_search_engines">Vyhledávače</string>
+  <!-- Settings item to add a search widget on the device's homescreen. -->
+  <string name="preferences_add_search_widget_from_settings">Widget domovské obrazovky</string>
   <!-- Preference for settings related to Search engines suggestions -->
-  <string name="preferences_search_engines_suggestions">Návrhy z vyhledávačů</string>
+  <string name="preferences_search_engines_suggestions">Návrhy od vyhledávačů</string>
   <!-- Preference Category for settings related to Search address bar -->
   <string name="preferences_settings_address_bar">Předvolby adresního řádku</string>
   <!-- Preference Category for settings to Firefox Suggest -->
@@ -817,9 +893,9 @@
   <!-- Preference for enabling "HTTPS-Only" mode -->
   <string name="preferences_https_only_title">Režim „pouze HTTPS“</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
-  <string name="preferences_pbm_lock_screen_title">Používat zámek obrazovky pro skrytí panelů při anonymním prohlížení</string>
+  <string name="preferences_pbm_lock_screen_title">Pomocí zámku obrazovky skrývat panely v anonymním prohlížení</string>
   <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
-  <string name="preferences_pbm_lock_screen_summary_3">Zobrazte si panely odemčení otiskem prstu, PINem nebo obličejem. Zapnutím této možnosti také zabráníte pořizování snímků obrazovky a jejich sdílení.</string>
+  <string name="preferences_pbm_lock_screen_summary_3">Zobrazte si panely odemčením pomocí otisku prstu, PINu nebo obličeje. Zapnutím této možnosti také zabráníte pořizování snímků obrazovky a jejich sdílení.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Blokování lišt cookie</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -885,7 +961,7 @@
   <!-- Preference for changing where the AddressBar is positioned -->
   <string name="preferences_toolbar_2">Umístění adresního řádku</string>
   <!-- Preference for changing toolbar layout -->
-  <string name="preferences_toolbar_layout">Upravit lišty</string>
+  <string name="preferences_toolbar_layout">Rozložení nástrojové lišty</string>
   <!-- Preference for changing default theme to dark or light mode -->
   <string name="preferences_theme">Vzhled</string>
   <!-- Preference for customizing the home screen -->
@@ -893,7 +969,7 @@
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Ikona aplikace</string>
   <!-- Preference for showing the tab strip -->
-  <string name="preferences_tab_strip">Zobrazení lišty s panely</string>
+  <string name="preferences_tab_strip">Zobrazení lišty panelů</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_toolbar_shortcut">Zkratka na nástrojové liště</string>
   <!-- Preference for gestures based actions -->
@@ -917,7 +993,7 @@
   <!-- Preference for developers -->
   <string name="preferences_remote_debugging">Vzdálené ladění pomocí USB</string>
   <!-- Preference title for switch preference to show search suggestions -->
-  <string name="preferences_show_search_suggestions">Našeptávat dotazy pro vyhledávač</string>
+  <string name="preferences_show_search_suggestions">Zobrazovat návrhy vyhledávání</string>
   <!-- Preference title for switch preference to show voice search button -->
   <string name="preferences_show_voice_search">Zobrazit hlasové vyhledávání</string>
   <!-- Preference title for switch preference to show search suggestions also in private mode -->
@@ -932,8 +1008,6 @@
   <string name="preferences_search_browsing_history">Našeptávat z historie prohlížení</string>
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Našeptávat ze záložek</string>
-  <!-- Preference title for switch preference to show shortcuts when searching -->
-  <string name="preferences_show_shortcuts" tools:ignore="UnusedResources" moz:removedIn="147">Zobrazit zkratky</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Hledat v synchronizovaných panelech</string>
   <!-- Preference for account settings -->
@@ -953,13 +1027,15 @@
   -->
   <string name="preferences_show_nonsponsored_suggestions">Návrhy od aplikace %1$s</string>
   <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
-  <string name="preferences_show_nonsponsored_suggestions_summary">Získat návrhy z webu související s vaším vyhledáváním</string>
+  <string name="preferences_show_nonsponsored_suggestions_summary">Získat návrhy z webu souvisejícím s vaším vyhledáváním</string>
+  <!-- Preference title for switch preference to show search optimization cards -->
+  <string name="preferences_show_search_optimization_cards">Dostávat návrhy Mozilly během psaní</string>
   <!-- Preference for link sharing -->
   <string name="preferences_link_sharing">Sdílení odkazu</string>
   <!-- Title for the link sharing toggle. %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="link_sharing_toggle_title">Zahrnout odkaz na stažení aplikace %1$s při sdílení na WhatsAppu</string>
   <!-- Body for the link sharing toggle.  %1$s is replaced by the brand name (e.g. Firefox). -->
-  <string name="link_sharing_toggle_body">Pozvěte své přátele, aby vyzkoušeli rychlejší a bezpečnější procházení s aplikací %1$s pokaždé, když budete sdílet odkaz skrze WhatsApp.</string>
+  <string name="link_sharing_toggle_body">Pozvěte své přátele, aby vyzkoušeli rychlejší a bezpečnější procházení stránek s aplikací %1$s pokaždé, když budete sdílet odkaz skrze WhatsApp.</string>
   <!-- Snackbar message shown when user shares a link -->
   <string name="link_shared_snackbar_message">Odkaz sdílen</string>
   <!-- Snackbar action label shown when user shares a link -->
@@ -972,14 +1048,26 @@
   <string name="preferences_open_links_in_apps_ask">Zeptat se před otevřením</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Nikdy</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Úložiště souborů</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Výchozí umístění stažených souborů</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost" tools:ignore="UnusedResources">Nemáte oprávnění používat tuto složku. Zkuste vybrat jinou.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Spravovat stahování pomocí jiné aplikace</string>
-  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_downloads_settings_clean_up_files_title">Smazat z aplikace %s a zařízení</string>
-  <!-- Summary for the setting to automatically clean up downloaded files -->
-  <string name="preferences_downloads_settings_clean_up_files_summary">Smazáním souborů ze správce stahování je odstraníte také z vašeho zařízení</string>
+  <!-- Preference category for deleting or removing downloads -->
+  <string name="preferences_category_delete_or_remove_downloads">Smazání nebo odebrání stahování</string>
+  <string name="preferences_downloads_delete_from_device">Smazat ze zařízení</string>
+  <string name="preferences_downloads_delete_from_device_description">Soubor bude smazán z vašeho zařízení a odstraněn z historie stahování</string>
+  <string name="preferences_downloads_remove_from_download_history">Odebrat z historie stahování</string>
+  <string name="preferences_downloads_remove_from_download_history_description">Soubor bude odstraněn z vaší historie stahování, ale zůstane uložen ve vašem zařízení</string>
+  <string name="preferences_downloads_ask_when_to_delete_files">Při smazání souboru se ptát</string>
   <!-- Preference for downloads -->
-  <string name="preferences_downloads">Stahování</string>
+  <string name="preferences_downloads_2">Nastavení stahování</string>
   <!-- Preference for enabling gecko engine logs -->
   <string name="preferences_enable_gecko_logs">Povolit protokol jádra Gecko</string>
   <!-- Message to indicate users that we are quitting the application to apply the changes -->
@@ -1035,8 +1123,10 @@
   <!--
     Customize Home
 
-    Header text for jumping back into the recent tab in customize the home screen
+    Title for the customize home screen section with privacy report.
   -->
+  <string name="customize_toggle_privacy_report">Hlášení o soukromí</string>
+  <!-- Header text for jumping back into the recent tab in customize the home screen -->
   <string name="customize_toggle_jump_back_in">Návrat zpět</string>
   <!-- Title for the customize home screen section with bookmarks. -->
   <string name="customize_toggle_bookmarks">Záložky</string>
@@ -1053,6 +1143,8 @@
   <string name="customize_wallpapers">Tapety</string>
   <!-- Title for the customize home screen section with sponsored shortcuts. -->
   <string name="customize_toggle_contile">Sponzorované zkratky</string>
+  <!-- Title for the customize home screen section that toggles the Homepage sports widget. -->
+  <string name="customize_toggle_world_cup" tools:ignore="UnusedResources">Světový šampionát</string>
   <!--
     Wallpapers
 
@@ -1137,8 +1229,6 @@
   <string name="alternative_app_icon_group_solid_colors">Jednobarevné</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Přechody barev</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Jiné</string>
   <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_featured">Doporučené</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
@@ -1206,7 +1296,7 @@
   <!-- Text shown when user enters empty device name -->
   <string name="empty_device_name_error">Název zařízení nemůže být prázdný.</string>
   <!-- Label indicating that sync is in progress -->
-  <string name="sync_syncing_in_progress">Probíhá synchronizace…</string>
+  <string name="sync_syncing_in_progress">Synchronizace…</string>
   <!-- Label summary indicating that sync failed. %s is the date stamp showing last time it succeeded. -->
   <string name="sync_failed_summary">Synchronizace selhala. Poslední úspěch: %s</string>
   <!-- Label summary showing never synced -->
@@ -1266,9 +1356,9 @@
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
   <string name="preferences_usage_data_description_1" tools:ignore="BrandUsage">Údaje o vašem zařízení, konfiguraci hardwaru a používání nám pomáhají zlepšovat funkce, výkon a stabilitu Firefoxu.</string>
   <!-- Preference switch for daily usage ping data collection -->
-  <string name="preferences_daily_usage_ping_title">Ping o denním používání</string>
+  <string name="preferences_daily_usage_ping_title">Denní ping o používání</string>
   <string name="preferences_daily_usage_ping_description">To pomáhá společnosti Mozilla odhadnout počet aktivních uživatelů.</string>
-  <string name="preferences_daily_usage_ping_learn_more">Zjistěte více o denním používání pingu</string>
+  <string name="preferences_daily_usage_ping_learn_more">Zjistěte více o denním pingu o používání</string>
   <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="crash_reporting_snack_bar_message">Hlášení odesláno</string>
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
@@ -1319,11 +1409,11 @@
   <!-- Preference for using bottom toolbar -->
   <string name="preference_bottom_toolbar">Dole</string>
   <!-- Preference for using simple toolbar -->
-  <string name="preference_simple_toolbar">Jednoduchý</string>
+  <string name="preference_simple_toolbar">Jednoduché</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Rozvinuté</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
-  <string name="preference_toolbar_pref_disabled_explanation">Když je zobrazen řádek panelů, musí být adresní řádek nahoře.</string>
+  <string name="preference_toolbar_pref_disabled_explanation">Když se zobrazuje lišta panelů, musí být adresní řádek umístěn nahoře.</string>
   <!-- New tab shortcut in toolbar customization -->
   <string name="toolbar_customize_shortcut_new_tab">Otevře nový panel</string>
   <!-- Share shortcut in toolbar customization -->
@@ -1336,6 +1426,8 @@
   <string name="toolbar_customize_shortcut_homepage">Domovská stránka</string>
   <!-- Back shortcut in toolbar customization -->
   <string name="toolbar_customize_shortcut_back">Zpět</string>
+  <!-- Label for choosing in toolbar customization settings to not use any custom shortcut button. -->
+  <string name="toolbar_customize_shortcut_none">Žádné</string>
   <!--
     App icon Preferences
 
@@ -1359,7 +1451,7 @@
 
     Preferences for showing tab strip
   -->
-  <string name="preference_tab_strip_show">Zobrazit lištu panelů</string>
+  <string name="preference_tab_strip_show">Zobrazovat lištu panelů</string>
   <!--
     Gestures Preferences
 
@@ -1369,9 +1461,11 @@
   <!-- Preference for using the dynamic toolbar -->
   <string name="preference_gestures_dynamic_toolbar">Skrýt nástrojovou lištu při posouvání</string>
   <!-- Preference for showing the opened tabs by swiping up on the toolbar -->
-  <string name="preference_gestures_swipe_toolbar_show_tabs">Zobrazit panely vytažením nástrojové lišty nahoru</string>
+  <string name="preference_gestures_swipe_toolbar_show_tabs_2">Přejeďte prstem po panelu nástrojů ve svislém směru, abyste zobrazili otevřené panely</string>
   <!-- Preference for switching tabs by swiping horizontally on the addressbar -->
   <string name="preference_gestures_swipe_toolbar_switch_tabs_2">Panely přepínat přejetím adresního řádku do stran</string>
+  <!-- Preference for switching for the shake to summarize toggle in page summaries and customize settings -->
+  <string name="preferences_shake_to_summarize">Vytvořit souhrn zatřesením</string>
   <!--
     Library
 
@@ -1504,12 +1598,24 @@
   <string name="studies_remove">Odstranit</string>
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Aktivní</string>
-  <!-- Description for studies -->
-  <string name="studies_description_3">Vyzkoušejte funkce a nápady dříve, než budou veřejně dostupné.</string>
+  <!-- Description for studies. Note: The word "Firefox" should NOT be translated -->
+  <string name="studies_description_4" tools:ignore="BrandUsage">Firefox náhodně vybírá uživatele k testování funkcí, což zlepšuje kvalitu pro všechny.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Instalovat a spouštět studie</string>
+  <string name="studies_title_2">Povolit studie funkcí</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Zjistit více</string>
+  <!--
+    Remote Improvements (Rollouts)
+
+    Title of the Remote Improvements (rollouts) data preference
+  -->
+  <string name="remote_improvements_title">Povolit vzdálená vylepšení</string>
+  <!-- Description for remote improvements. Note: The word "Firefox" should NOT be translated -->
+  <string name="remote_improvements_description" tools:ignore="BrandUsage">Firefox vylepší funkce, výkon a stabilitu mezi aktualizacemi. Změny se aplikují vzdáleně.</string>
+  <!-- Learn more link for remote improvements, links to an article for more information about rollouts. -->
+  <string name="remote_improvements_learn_more">Zjistit více</string>
+  <!-- Title for remote improvements preference in Advanced settings -->
+  <string name="preferences_remote_improvements">Vzdálená vylepšení</string>
   <!--
     Sessions
 
@@ -1522,39 +1628,31 @@
     The %1$s will be replaced by the number of opened private tabs
   -->
   <string name="tabs_header_private_tabs_counter_title">Počet otevřených anonymních panelů: %1$s. Pro přepnutí panelu klepněte.</string>
+  <plurals name="tabs_header_tab_group_counter_title">
+    <!--
+      Title for the list of tab groups used by a11y services
+      The %1$d will be replaced by the number of opened tab groups
+    -->
+    <item quantity="one">Počet otevřených skupin panelů: %1$d. Klepnutím přepnete panely.</item>
+    <item quantity="few">Počet otevřených skupin panelů: %1$d. Klepnutím přepnete panely.</item>
+    <item quantity="many">Počet otevřených skupin panelů: %1$d. Klepnutím přepnete panely.</item>
+    <item quantity="other">Počet otevřených skupin panelů: %1$d. Klepnutím přepnete panely.</item>
+  </plurals>
   <!--
     Title for the list of tabs in the synced tabs used by a11y services
     The %1$s will be replaced by the number of opened synced tabs
   -->
   <string name="tabs_header_synced_tabs_counter_title">Počet otevřených synchronizovaných panelů: %1$s. Pro přepnutí panelu klepněte.</string>
-  <!-- Text for the tabs header private tabs -->
-  <string name="tabs_header_private_tabs_title">Anonymní</string>
-  <!-- Text for the tabs header normal tabs -->
-  <string name="tabs_header_normal_tabs_title">Panely</string>
-  <!-- Text for the tabs header synced tabs -->
-  <string name="tabs_header_synced_tabs_title">Sync</string>
-  <!-- Text for the new tab button in the Tab Manager to indicate opening a new normal tab -->
-  <string name="tab_manager_floating_action_button_new_normal_tab">Nový panel</string>
-  <!-- Text for the new tab button in the Tab Manager to indicate opening a new private tab -->
-  <string name="tab_manager_floating_action_button_new_private_tab">Nový anonymní panel</string>
-  <!-- Text for floating action button in the Tab Manager used to initiate a re-sync of synced tabs -->
-  <string name="tab_manager_floating_action_button_sync_tabs">Synchronizované panely</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_tab">Přidat panel</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
   <string name="add_private_tab">Přidat anonymní panel</string>
-  <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
-  <string name="tab_drawer_fab_content">Anonymní</string>
-  <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
-  <string name="tab_drawer_fab_sync">Synchronizovat</string>
   <!-- Text for the tab search bar placeholder -->
   <string name="tab_manager_search_bar_placeholder">Vyhledávání v panelech</string>
-  <!-- Text shown in the menu for sharing all tabs -->
-  <string name="tab_tray_menu_item_share">Sdílet všechny panely</string>
   <!-- Text shown in the menu to view recently closed tabs -->
   <string name="tab_tray_menu_recently_closed">Nedávno zavřené panely</string>
-  <!-- Text shown in the tabs tray inactive tabs section -->
-  <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Nedávno zavřené</string>
+  <!-- Text shown in the menu to select all tabs. -->
+  <string name="tab_tray_menu_select_all_tabs">Vybrat vše</string>
   <!-- Text shown in the menu to view account settings -->
   <string name="tab_tray_menu_account_settings">Nastavení účtu</string>
   <!-- Text shown in the menu to view tab settings -->
@@ -1569,20 +1667,16 @@
   <string name="tab_manager_close_all_tabs_dialog_confirm">Zavřít panely</string>
   <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
   <string name="tab_manager_close_all_tabs_dialog_cancel">Zrušit</string>
-  <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
-  <string name="tab_tray_multiselect_menu_item_bookmark">Přidat do záložek</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
   <string name="tab_manager_multiselect_menu_item_bookmark_content_description">Přidat vybrané panely do záložek</string>
-  <!-- Text shown in the multiselect menu for closing selected tabs. -->
-  <string name="tab_tray_multiselect_menu_item_close">Zavřít</string>
   <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
   <string name="tab_manager_multiselect_menu_item_close_content_description">Zavřít vybrané panely</string>
   <!-- Text shown in the multiselect menu for sharing selected tabs. -->
   <string name="tab_manager_multiselect_menu_item_share">Sdílet</string>
   <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
   <string name="tab_manager_multiselect_menu_item_add_to_collection">Přidat do sbírky</string>
-  <!-- Content description for tabs tray multiselect share button -->
-  <string name="tab_tray_multiselect_share_content_description">Sdílet vybrané panely</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to a tab group. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_tab_group">Přidat do skupiny</string>
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Nabídka pro vybrané panely</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
@@ -1621,6 +1715,125 @@
   <string name="pwa_site_controls_title_private">%1$s (anonymní režim)</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
   <string name="tab_manager_open_tab_search">Otevřít vyhledávání v panelech</string>
+  <!-- Title for introducing tab groups via an onboarding card shown in the tab manager. -->
+  <string name="tab_group_onboarding_item_title">Vytvořit skupinu panelů</string>
+  <!-- Description for tab groups onboarding shown in the tab manager when in grid view. -->
+  <string name="tab_group_onboarding_grid_item_description">Pro seskupení panelů přetáhněte jeden panel na druhý.</string>
+  <!-- Description for tab groups onboarding shown in the tab manager when in list view. -->
+  <string name="tab_group_onboarding_list_item_description">Vyberte více panelů pro vytvoření skupiny.</string>
+  <!-- The header text displayed on the tab groups page when no tab groups are open -->
+  <string name="tab_manager_empty_tab_groups_page_header">Vyzkoušejte skupiny panelů – méně posouvání, více práce</string>
+  <!-- The description displayed on the tab groups page when no tab groups are open -->
+  <string name="tab_manager_empty_tab_groups_page_description">Vyberte panely a vytvořte skupinu. Budou zde uloženy a připraveny k použití, až je budete potřebovat.</string>
+  <!--
+    Tab Group
+
+    Title for the create tab group bottom sheet
+  -->
+  <string name="create_tab_group_title">Vytvořit skupinu panelů</string>
+  <!-- Title for the edit tab group bottom sheet -->
+  <string name="edit_tab_group_title">Upravit skupinu</string>
+  <string name="create_tab_group_save_button">Uložit</string>
+  <!-- Description for the handle at the top of a bottom sheet, used to drag the sheet up or down. -->
+  <string name="edit_tab_group_bottom_sheet_grabber_content_description">Nová skupina, sbalit úchyt pro přetažení</string>
+  <!--
+    Default tab group name when creating a tab group
+    %d is the number of existing tab groups + 1.
+  -->
+  <string name="create_tab_group_form_default_name">Skupina %d</string>
+  <!-- Label for the tab group name field in the bottom sheet to create or edit a tab group. -->
+  <string name="create_tab_group_name_label">Název</string>
+  <!-- Title for adding more tabs to a tab group. -->
+  <string name="add_to_tab_group_title">Přidat do</string>
+  <!-- Content Description for closing the "Add to Tab Group" panel. -->
+  <string name="add_to_tab_group_bottom_sheet_grabber_content_description">Přidat do skupiny panelů, sbalit úchyt pro přetažení</string>
+  <!-- Content Description for "New tab group" panel. -->
+  <string name="add_to_new_tab_group_content_description">Přidat do nové skupiny panelů</string>
+  <!-- Label for adding to a new tab group. -->
+  <string name="add_to_new_tab_group_title">Nová skupina panelů</string>
+  <plurals name="tab_group_tabs_count_subtitle">
+    <!--
+      Subtitle for the number of tabs in a tab group.
+      %1$d is the number of tabs in a tab group.
+    -->
+    <item quantity="one">%1$d panel</item>
+    <item quantity="few">%1$d panely</item>
+    <item quantity="many">%1$d panelů</item>
+    <item quantity="other">%1$d panelů</item>
+  </plurals>
+  <plurals name="add_to_exiting_tab_group_content_description">
+    <!--
+      Accessibility description for add to existing tab group.
+      %1$s is the group name, %2$d is the number of tabs, %3$s is the color name.
+    -->
+    <item quantity="one">Přidat do skupiny panelů %1$s, %2$d panel, barva %3$s</item>
+    <item quantity="few">Přidat do skupiny panelů %1$s, %2$d panely, barva %3$s</item>
+    <item quantity="many">Přidat do skupiny panelů %1$s, %2$d panelů, barva %3$s</item>
+    <item quantity="other">Přidat do skupiny panelů %1$s, %2$d panelů, barva %3$s</item>
+  </plurals>
+  <plurals name="share_tab_group_button_content_description">
+    <!--
+      Content Description for share tab group button.
+      %1$s is the name of the tab group.
+      %2$d is the number of tabs in a tab group.
+    -->
+    <item quantity="one">Sdílet skupinu panelů %1$s s %2$d panelem.</item>
+    <item quantity="few">Sdílet skupinu panelů %1$s s %2$d panely.</item>
+    <item quantity="many">Sdílet skupinu panelů %1$s s %2$d panely.</item>
+    <item quantity="other">Sdílet skupinu panelů %1$s s %2$d panely.</item>
+  </plurals>
+  <!-- Content description for the grabber/handle of the tab group bottom sheet. -->
+  <string name="tab_group_sheet_dismiss_description">Zobrazit skupinu panelů, úchyt pro sbalení</string>
+  <plurals name="expanded_tab_group_header_description">
+    <!--
+      Accessibility description for the header of an expanded tab group.
+      %1$s is the group name, %2$d is the number of tabs, %3$s is the color name.
+    -->
+    <item quantity="one">Skupina panelů %1$s obsahující %2$d panel, barva %3$s</item>
+    <item quantity="few">Skupina panelů %1$s obsahující %2$d panely, barva %3$s</item>
+    <item quantity="many">Skupina panelů %1$s obsahující %2$d panelů, barva %3$s</item>
+    <item quantity="other">Skupina panelů %1$s obsahující %2$d panelů, barva %3$s</item>
+  </plurals>
+  <!-- Title for the Delete tab group confirmation dialog. -->
+  <string name="delete_tab_group_confirmation_dialog_title">Smazat skupinu panelů?</string>
+  <!-- Text shown in the body of the Delete tab group confirmation dialog. -->
+  <string name="delete_tab_group_confirmation_dialog_body">Tímto se skupina natrvalo odstraní.</string>
+  <!-- Text shown on the confirm button in the Delete tab group confirmation dialog. -->
+  <string name="delete_tab_group_confirmation_dialog_confirm">Smazat skupinu</string>
+  <!-- Text shown on the cancel button in the Delete tab group confirmation dialog. -->
+  <string name="delete_tab_group_confirmation_dialog_cancel">Zrušit</string>
+  <!-- Title for the Close last tab and delete tab group confirmation dialog. -->
+  <string name="close_tab_and_delete_group_confirmation_dialog_title">Zavřít panel a smazat skupinu?</string>
+  <!-- Text shown in the body of the Close last tab and delete tab group confirmation dialog. -->
+  <string name="close_tab_and_delete_group_confirmation_dialog_body">Tímto se skupina natrvalo odstraní.</string>
+  <!-- Text shown on the confirm button in the Close last tab and delete tab group confirmation dialog. -->
+  <string name="close_tab_and_delete_group_confirmation_dialog_confirm">Smazat skupinu</string>
+  <!-- Text shown on the cancel button in the Close last tab and delete tab group confirmation dialog. -->
+  <string name="close_tab_and_delete_group_confirmation_dialog_cancel">Zrušit</string>
+  <!--
+    Color labels for tab groups, used for accessibility and selection UI.
+
+    Tab group color: Yellow
+  -->
+  <string name="tab_group_color_yellow">Žlutá</string>
+  <!-- Tab group color: Orange -->
+  <string name="tab_group_color_orange">Oranžová</string>
+  <!-- Tab group color: Red -->
+  <string name="tab_group_color_red">Červená</string>
+  <!-- Tab group color: Pink -->
+  <string name="tab_group_color_pink">Růžová</string>
+  <!-- Tab group color: Purple -->
+  <string name="tab_group_color_purple">Fialová</string>
+  <!-- Tab group color: Violet -->
+  <string name="tab_group_color_violet">Fialová</string>
+  <!-- Tab group color: Blue -->
+  <string name="tab_group_color_blue">Modrá</string>
+  <!-- Tab group color: Cyan -->
+  <string name="tab_group_color_cyan">Azurová</string>
+  <!-- Tab group color: Green -->
+  <string name="tab_group_color_green">Zelená</string>
+  <!-- Tab group color: Grey -->
+  <string name="tab_group_color_grey">Šedivá</string>
   <!--
     History
 
@@ -1699,10 +1912,19 @@
     This button will dismiss the dialog.
   -->
   <string name="download_file_has_not_enough_storage_dialog_cancel_button_text">Zrušit</string>
+  <plurals name="downloads_delete_dialog_title">
+    <!-- Title for the download deletion confirmation dialog. The message changes depending on how many files are selected. %d is the number of files to be deleted. -->
+    <item quantity="one">Smazat soubor?</item>
+    <item quantity="few">Smazat %d soubory?</item>
+    <item quantity="many">Smazat %d souborů?</item>
+    <item quantity="other">Smazat %d souborů?</item>
+  </plurals>
   <!-- Text for the button to delete a single downloaded file item -->
   <string name="download_delete_item">Smazat</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Návrat zpět</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Přejít do nastavení stahování</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Zpět a zavřít hledání</string>
   <!--
@@ -1720,12 +1942,50 @@
   <string name="download_share_url">Sdílet URL</string>
   <!-- Text for the button to share the download file -->
   <string name="download_share_file">Sdílet soubor</string>
+  <!-- Text for the button to rename the download file -->
+  <string name="download_rename_file">Přejmenovat soubor</string>
   <!-- Alert dialog confirmation before deleting multiple download items, this is the title. -->
   <string name="download_delete_multi_select_dialog_confirmation">Opravdu chcete smazat vybrané položky?</string>
   <!-- Alert dialog confirmation before deleting multiple download items, this is the positive action. -->
   <string name="download_delete_multi_select_dialog_confirm">Smazat</string>
   <!-- Alert dialog confirmation before deleting multiple download items, this is the negative action. -->
   <string name="download_delete_multi_select_dialog_cancel">Zrušit</string>
+  <!-- Alert dialog confirmation before deleting a single download item or many download items, this is one of the radio buttons within the dialog box for the user to select. -->
+  <string name="download_delete_dialog_from_device">Smazat ze zařízení</string>
+  <!-- Alert dialog confirmation before deleting a single download item or many download items, this is one of the radio buttons within the dialog box for the user to select. -->
+  <string name="download_delete_dialog_from_history">Odstranit pouze z historie stahování</string>
+  <!-- Alert dialog confirmation before deleting a single download item or many download items, this is the negative action. -->
+  <string name="download_delete_dialog_cancel">Zrušit</string>
+  <!-- Alert dialog confirmation before deleting a single download item or many download items, this is the positive action. -->
+  <string name="download_delete_dialog_confirm">Potvrdit</string>
+  <!-- Title for the alert dialog confirmation before renaming a download item. -->
+  <string name="download_rename_dialog_title">Přejmenování souboru</string>
+  <!-- Label for the name field in the alert dialog confirmation before renaming a download item. -->
+  <string name="download_rename_dialog_label">Název</string>
+  <string name="download_rename_dialog_confirm_button">Uložit</string>
+  <string name="download_rename_dialog_cancel_button">Zrušit</string>
+  <!--
+    Error message when renaming with a name that already exists.
+    %s is the proposed file name.
+  -->
+  <string name="download_rename_error_exists_error">Soubor s názvem „%s“ již v tomto umístění existuje</string>
+  <!-- Error message when renaming with an invalid file name. -->
+  <string name="download_rename_error_invalid_name_error">Názvy souborů nemohou obsahovat znak „/“</string>
+  <!-- Error message shown when a user tries to rename a downloaded file but only changes the casing (e.g., "file.txt" to "File.txt"). -->
+  <string name="download_rename_error_case_only_error">Zadaný název obsahuje pouze velká nebo malá písmena. Zkuste zadat jiný název souboru.</string>
+  <!-- Title for the alert dialog when the file cannot be renamed. -->
+  <string name="download_rename_error_cannot_rename_title">Soubor se nedá přejmenovat</string>
+  <!-- Description message for the alert dialog when the file cannot be renamed. -->
+  <string name="download_rename_error_cannot_rename_description">Tento soubor není možné přejmenovat z důvodu omezení v systému nebo v úložišti.</string>
+  <string name="download_rename_error_dismiss_button">OK</string>
+  <!--
+    Title for the alert dialog to change file extension.
+    %s is the file type to change to.
+  -->
+  <string name="change_file_extension_title">Změnit typ souboru na %s?</string>
+  <string name="change_file_extension_description">Tím se může otevřít soubor v jiné aplikaci, což může být nebezpečné pro vaše zařízení.</string>
+  <string name="change_file_extension_cancel_button">Zrušit</string>
+  <string name="change_file_extension_confirm_button">Ano, změnit</string>
   <!-- Text for the header of in progress downloads -->
   <string name="download_header_in_progress">Probíhá</string>
   <!--
@@ -1798,6 +2058,16 @@
   <!-- Text for the filter button to show all other file types in the downloads list -->
   <string name="download_content_type_filter_other_1">Ostatní</string>
   <!--
+    Title for the alert dialog to rename a file and/or change its download location before downloading it.
+    %s is the formatted size of the file (e.g., "12.5 MB").
+  -->
+  <string name="download_rename_and_change_location_dialog_title">Stáhnout soubor?\n(%s)</string>
+  <!--
+    Title for the alert dialog to rename a file and/or change its download location
+    when the file size is not available before downloading it.
+  -->
+  <string name="download_rename_and_change_location_dialog_title_with_unknown_size">Stáhnout soubor?</string>
+  <!--
     WebCompat Reporter
 
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
@@ -1830,7 +2100,7 @@
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Co se stalo? Co se mělo stát?</string>
   <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
-  <string name="webcompat_reporter_etp_checkbox_text">Odesílat URL adresy blokované ochranou proti sledování</string>
+  <string name="webcompat_reporter_etp_checkbox_text">Odesílat adresy URL blokované ochranou proti sledování</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Rozšířená ochrana proti sledování může blokovat sledovací prvky a skripty, které některé webové stránky potřebují pro správné fungování.</string>
   <!-- The button text for the preview report button to view a preview of the report. -->
@@ -1918,12 +2188,12 @@
   <string name="bookmark_error_edit_bookmark">Záložku nelze upravit</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">UPRAVIT</string>
+  <!-- Bookmark menu select button -->
+  <string name="bookmark_menu_select_button">Vybrat</string>
   <!-- Bookmark menu move button -->
   <string name="bookmark_menu_move_button">Přesunout</string>
   <!-- Bookmark overflow menu edit button -->
   <string name="bookmark_menu_edit_button">Upravit</string>
-  <!-- Bookmark overflow menu copy button -->
-  <string name="bookmark_menu_copy_button">Kopírovat</string>
   <!-- Bookmark overflow menu share button -->
   <string name="bookmark_menu_share_button">Sdílet</string>
   <!-- Bookmark overflow menu select all bookmarks -->
@@ -1943,13 +2213,19 @@
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">Seřadit podle vlastního pořadí</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
-  <string name="bookmark_sort_menu_newest">Seřadit podle nejnovějších</string>
+  <string name="bookmark_sort_menu_newest">Seřadit od nejnovějších</string>
   <!-- Label for button to sort bookmarks by oldest in the bookmark sorting overflow menu. -->
-  <string name="bookmark_sort_menu_oldest">Seřadit podle nejstaršího</string>
+  <string name="bookmark_sort_menu_oldest">Seřadit od nejstarších</string>
   <!-- Label for button to sort bookmarks in alphabetical order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_a_to_z">Seřadit od A do Z</string>
   <!-- Label for button to sort bookmarks in reverse alphabetical order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_z_to_a">Seřadit od Z do A</string>
+  <!-- Label for button to import bookmarks from file. -->
+  <string name="bookmark_import_menu_button">Importovat ze souboru</string>
+  <!-- Snackbar message shown when a bookmark import attempt fails. -->
+  <string name="bookmark_import_failure_snackbar">Záložky se nepodařilo naimportovat. Zkuste to znovu.</string>
+  <!-- Default name for the folder created when importing bookmarks from a file. -->
+  <string name="bookmark_import_destination_default_name">Importované záložky</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -1972,19 +2248,17 @@
   <!-- Bookmark select folder screen title -->
   <string name="bookmark_select_folder_fragment_label">Vybrat složku</string>
   <!-- Bookmark editing error missing or improper URL -->
-  <string name="bookmark_invalid_url_error">Neplatná URL adresa</string>
+  <string name="bookmark_invalid_url_error">Neplatná adresa URL</string>
   <!--
     Bookmark snackbar message on deletion
     %1$s is the host part of the URL of the bookmark deleted, if any
   -->
   <string name="bookmark_deletion_snackbar_message">Záložka odstraněna: %1$s</string>
-  <!-- Bookmark undo button for deletion snackbar action -->
-  <string name="bookmark_undo_deletion">ZPĚT</string>
-  <!-- Bookmark snackbar message for deleting a single item. %s is the title of the item being deleted -->
-  <string name="bookmark_delete_single_item">Záložka %s byla smazána</string>
-  <!-- Bookmark snackbar message for deleting multiple items. %s is the number of items being deleted -->
-  <string name="bookmark_delete_multiple_items">Smazané položky: %s</string>
-  <!-- Content description for the bookmark navigation bar back button -->
+  <!--
+    Bookmark undo button for deletion snackbar action
+
+    Content description for the bookmark navigation bar back button
+  -->
   <string name="bookmark_navigate_back_button_content_description">Návrat zpět</string>
   <!-- Content description for the bookmark list new folder navigation bar button -->
   <string name="bookmark_add_new_folder_button_content_description">Přidat novou složku</string>
@@ -1998,10 +2272,18 @@
   <string name="select_bookmark_search_button_content_description">Hledat ve složkách</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Nabídka položek pro %s</string>
+  <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
+  <string name="bookmark_select_folder_expand_folder_content_description">Rozbalit složku: %s</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">Zavřít složku: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">Zavřít záložky</string>
+  <!-- Content description for the Import bookmarks button in bookmarks screen. -->
+  <string name="bookmark_import_bookmarks_button_content_description">Importovat ze souboru</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">Nemáte zatím žádné záložky</string>
+  <!-- Title for the bookmark list empty state at the root level. -->
+  <string name="bookmark_empty_list_root_title">Mějte všechny své oblíbené záložky pohromadě</string>
   <!-- Bookmark screen folder description. %s is the count of bookmark folder children -->
   <string name="bookmarks_folder_description">Záložek ve složce: %s</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
@@ -2011,7 +2293,7 @@
   <!-- Description for the bookmark list empty state when you're signed into sync. -->
   <string name="bookmark_empty_list_authenticated_description">Ukládejte si stránky během prohlížení. Získáme také záložky z ostatních synchronizovaných zařízení.</string>
   <!-- Description for the bookmark list empty state when you're in an empty folder. -->
-  <string name="bookmark_empty_list_folder_description">Během procházení si můžete přidávat záložky, abyste později našli své oblíbené stránky.</string>
+  <string name="bookmark_empty_list_folder_description">Během procházení internetu si můžete přidávat záložky, abyste později našli své oblíbené stránky.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Nová složka</string>
   <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
@@ -2189,6 +2471,24 @@
   <string name="menu_print">Tisk</string>
   <!-- Sub-header in the dialog to share a link to another sync device -->
   <string name="share_device_subheader">Poslat do zařízení</string>
+  <!-- Content description for the drag handle that dismisses the Send to Device bottom sheet -->
+  <string name="send_to_devices_bottom_sheet_close_content_description">Zavřít možnost Odeslat do zařízení</string>
+  <!-- Text for the QR code action in the native share sheet -->
+  <string name="share_qr_code">QR kód</string>
+  <!-- Title shown in the QR code display screen -->
+  <string name="qr_code_display_title">QR kód</string>
+  <!-- Content description for the close button in the QR code display screen -->
+  <string name="qr_code_display_close">Zavřít</string>
+  <!-- Heading on the QR code display screen -->
+  <string name="qr_code_display_share_nearby">Sdílet odkaz s lidmi v okolí</string>
+  <!-- Body text on the QR code display screen instructing the user to have others scan the code -->
+  <string name="qr_code_display_instructions">Chcete-li tento odkaz sdílet s lidmi ve svém okolí, požádejte je, aby naskenovali níže uvedený QR kód.</string>
+  <!-- Label for the download button on the QR code display screen -->
+  <string name="qr_code_display_download">Stáhnout</string>
+  <!-- Toast shown when the QR code is successfully saved to Downloads -->
+  <string name="qr_code_download_success">QR kód uložen do složky stažených souborů</string>
+  <!-- Toast shown when saving the QR code to Downloads fails -->
+  <string name="qr_code_download_failure">QR kód se nepodařilo uložit</string>
   <!-- Sub-header in the dialog to share a link to an app from the full list -->
   <string name="share_link_all_apps_subheader">Všechny akce</string>
   <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
@@ -2199,8 +2499,6 @@
   <string name="toast_copy_link_to_clipboard">Zkopírováno do schránky</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Přihlásit ke službě Sync</string>
-  <!-- An option from the three dot menu to sign in -->
-  <string name="sync_menu_sign_in">Přihlásit se</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
   <string name="sync_send_to_all">Poslat do všech zařízení</string>
   <!-- An option from the share dialog to reconnect to sync -->
@@ -2248,31 +2546,13 @@
     The app name is in the text, due to limitations with localizing Nimbus experiments
   -->
   <string name="nimbus_notification_default_browser_text" tools:ignore="BrandUsage,UnusedResources">Nastavit Firefox jako můj výchozí prohlížeč</string>
-  <!-- Title shown in the notification that pops up to re-engage the user -->
-  <string name="notification_re_engagement_title">Vyzkoušejte anonymní prohlížení</string>
-  <!--
-    Text shown in the notification that pops up to re-engage the user.
-    %1$s is a placeholder that will be replaced by the app name.
-  -->
-  <string name="notification_re_engagement_text">Prohlížejte web bez ukládání cookies a historie v aplikaci %1$s</string>
-  <!-- Title A shown in the notification that pops up to re-engage the user -->
-  <string name="notification_re_engagement_A_title">Prohlížejte beze stop</string>
-  <!--
-    Text A shown in the notification that pops up to re-engage the user.
-    %1$s is a placeholder that will be replaced by the app name.
-  -->
-  <string name="notification_re_engagement_A_text">Anonymní prohlížení v aplikaci %1$s neukládá vaše data.</string>
-  <!-- Title B shown in the notification that pops up to re-engage the user -->
-  <string name="notification_re_engagement_B_title">Začnete své první vyhledávání</string>
-  <!-- Text B shown in the notification that pops up to re-engage the user -->
-  <string name="notification_re_engagement_B_text">Najděte něco v okolí, nebo objevte něco zábavného.</string>
   <!--
     Survey
 
     Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments
   -->
-  <string name="nimbus_survey_message_text" tools:ignore="BrandUsage">Pomozte ním prosím zlepšit Firefox vyplněním krátkého dotazníku.</string>
+  <string name="nimbus_survey_message_text" tools:ignore="BrandUsage">Pomozte nám, prosím, zlepšit Firefox vyplněním krátkého dotazníku.</string>
   <!-- Preference for taking the short survey. -->
   <string name="preferences_take_survey">Vyplnit průzkum</string>
   <!-- Preference for not taking the short survey. -->
@@ -2283,8 +2563,6 @@
     Text shown in snackbar when user closes a tab
   -->
   <string name="snackbar_tab_closed">Panel byl zavřen</string>
-  <!-- Text shown in snackbar when user closes all tabs -->
-  <string name="snackbar_tabs_closed">Panely byly zavřeny</string>
   <!-- Text shown in snackbar when user closes multiple inactive tabs. %1$s will be replaced with the number of tabs closed. -->
   <string name="snackbar_num_tabs_closed">Zavřené panely: %1$s</string>
   <!-- Text shown in snackbar when user bookmarks a list of tabs. %s is the name of the folder the bookmark was saved into. -->
@@ -2293,8 +2571,6 @@
   <string name="snackbar_added_to_shortcuts">Přidáno do zkratek</string>
   <!-- Text shown in snackbar when user closes a private tab -->
   <string name="snackbar_private_tab_closed">Anonymní panel byl zavřen</string>
-  <!-- Text shown in snackbar when user erases their private browsing data -->
-  <string name="snackbar_private_data_deleted">Údaje anonymního prohlížení byly vymazány</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
   <string name="snackbar_deleted_undo">ZPĚT</string>
   <!--
@@ -2318,8 +2594,6 @@
   <string name="preference_accessibility_text_size_summary">Úprava velikosti textu na webových stránkách</string>
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Velikost písma</string>
-  <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
-  <string name="a11y_preference_accessibility_font_size_percentage" tools:ignore="UnusedResources" moz:removedIn="148">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Automatická velikost písma</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
@@ -2359,8 +2633,6 @@
   <string name="preferences_delete_browsing_data_on_quit">Mazat soukromá data při ukončení</string>
   <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
   <string name="preference_summary_delete_browsing_data_on_quit_2">Po výběru „Ukončit“ z hlavní nabídky aplikace dojde ke smazání soukromých dat</string>
-  <!-- Action item in menu for the Delete browsing data on quit feature -->
-  <string name="delete_browsing_data_on_quit_action">Ukončit</string>
   <!-- Title text of a delete browsing data dialog. -->
   <string name="delete_history_prompt_title">Časové období mazání</string>
   <!-- Body text of a delete browsing data dialog. -->
@@ -2441,6 +2713,32 @@
   <string name="preference_enhanced_tracking_protection_explanation_2">%s vás chrání před nejběžnějšími sledovacími prvky, které sbírají informace o tom, co děláte na internetu.</string>
   <!-- Text displayed that links to website about enhanced tracking protection -->
   <string name="preference_enhanced_tracking_protection_explanation_learn_more">Zjistit více</string>
+  <plurals name="trackers_blocked_count_2">
+    <!--
+      Trackers blocked card on homepage
+
+      Text shown on the trackers blocked card. %d is the number of trackers blocked.
+    -->
+    <item quantity="one">Zablokován %d sledovací prvek</item>
+    <item quantity="few">Zablokovány %d sledovací prvky</item>
+    <item quantity="many">Zablokováno %d sledovacích prvků</item>
+    <item quantity="other">Zablokováno %d sledovacích prvků</item>
+  </plurals>
+  <plurals name="trackers_blocked_count">
+    <!--
+      Trackers blocked card on homepage
+
+      Text shown on the trackers blocked card. %d is the number of trackers blocked.
+    -->
+    <item quantity="one">Zablokován %d sledovací prvek</item>
+    <item quantity="few">Zablokovány %d sledovací prvky</item>
+    <item quantity="many">Zablokováno %d sledovacích prvků</item>
+    <item quantity="other">Zablokováno %d sledovacích prvků</item>
+  </plurals>
+  <!-- Text shown on the trackers blocked card when no trackers have been blocked yet -->
+  <string name="trackers_blocked_empty">Jste chráněni</string>
+  <!-- Text shown below the trackers blocked card with typing animation -->
+  <string name="help_catch_trackers">Pomozte chytit sledovače</string>
   <!-- Preference for enhanced tracking protection for the standard protection settings -->
   <string name="preference_enhanced_tracking_protection_standard_default_1">Standardní (výchozí)</string>
   <!-- Preference description for enhanced tracking protection for the standard protection settings -->
@@ -2451,10 +2749,6 @@
   <string name="preference_enhanced_tracking_protection_strict">Přísná</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Silnější ochrana, která zlepšuje rychlost načítání stránek. Může ale omezit jejich fungování.</string>
-  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
-  <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Povolit aplikaci %1$s automaticky aplikovat výjimky potřebné k zabránění rozsáhlému rozbití webových stránek.</string>
-  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
-  <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Automaticky také aplikovat výjimky, které jsou potřeba jen k opravě menších problémů a zpřístupnění komfortních funkcí.</string>
   <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Oprava velkých problémů se stránkami (doporučeno)</string>
   <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
@@ -2502,7 +2796,7 @@
   <!-- Option for enhanced tracking protection for the custom protection settings for cookies -->
   <string name="preference_enhanced_tracking_protection_custom_cookies_5">Izolovat cross-site cookies</string>
   <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: & -->
-  <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Požádat webové stránky, aby nesdílely a neprodávaly mé údaje</string>
+  <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Říkat webům, aby nesdílely ani neprodávaly vaše údaje</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
   <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sledující obsah</string>
   <!-- Option for enhanced tracking protection for the custom protection settings for tracking content -->
@@ -2512,7 +2806,7 @@
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_cryptominers">Těžbu kryptoměn</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
-  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Známé vytváření otisků prohlížeče</string>
+  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Známé vytváření otisku prohlížeče</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
   <string name="enhanced_tracking_protection_details">Podrobnosti</string>
   <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -2568,7 +2862,9 @@
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
   <string name="etp_suspected_fingerprinters_description">Zapne ochranu před případným vytvářením otisku prohlížeče.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_known_fingerprinters_title">Známé vytváření otisků prohlížeče</string>
+  <string name="etp_known_fingerprinters_title">Známé vytváření otisku prohlížeče</string>
+  <!-- Label for the fingerprinters category shown in the tracking protections dashboard breakdown -->
+  <string name="tracking_dashboard_fingerprinters_category_name">Vytváření otisku prohlížeče</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.
@@ -2586,7 +2882,7 @@
 
     Preference title for DNS over HTTPS settings
   -->
-  <string name="preference_doh_title">DNS skrze HTTPS</string>
+  <string name="preference_doh_title">DNS over HTTPS</string>
   <!-- Description of the preference to enable "DNS over HTTPS". %1$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
   <string name="preference_doh_summary">Systém DNS (Domain Name System) přes HTTPS odesílá váš požadavek na název domény prostřednictvím šifrovaného připojení, čímž zajišťuje bezpečný systém DNS a znemožňuje ostatním zjistit, na kterou webovou stránku se chystáte vstoupit. %1$s</string>
   <!-- Used as text for the link in `preference_doh_title`, points to documentation about "DNS over HTTPS" -->
@@ -2596,7 +2892,7 @@
   <!-- Content description for the "Info" button -->
   <string name="preference_doh_info_description">Info</string>
   <!-- Content description for the "Add Site" button -->
-  <string name="preference_doh_add_site_description">Přidat stránku</string>
+  <string name="preference_doh_add_site_description">Přidat web</string>
   <!-- Title displayed for "Default Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_default_protection">Výchozí ochrana</string>
   <!-- Summary displayed for "Default Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
@@ -2618,7 +2914,7 @@
   <!-- Bullet point 1 for "Increased Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_increased_protection_info_1">Použije se poskytovatel, kterého jste si vybrali</string>
   <!-- Bullet point 2 for "Increased Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_increased_protection_info_2">Výchozí překladač DNS se použijte jen v případě problému se zabezpečeným DNS</string>
+  <string name="preference_doh_increased_protection_info_2">Výchozí překladač DNS se použije jen v případě problému se zabezpečeným DNS</string>
   <!-- Title displayed for "Max Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection">Maximální ochrana</string>
   <!-- Summary displayed for "Max Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
@@ -2656,7 +2952,7 @@
   <!-- Description of "exceptions" for "DNS over HTTPS". %1$s is the name of the app (for example "Firefox"). -->
   <string name="preference_doh_exceptions_summary">%1$s nebude zabezpečené DNS na těchto serverech a jejich subdoménách používat.</string>
   <!-- Text displayed that links to adding website domain for "DNS over HTTPS" exceptions. -->
-  <string name="preference_doh_exceptions_add">Přidat stránku</string>
+  <string name="preference_doh_exceptions_add">Přidat web</string>
   <!-- Text displayed above the input field when adding exceptions for "DNS over HTTPS". -->
   <string name="preference_doh_exceptions_add_site">Server</string>
   <!-- Placeholder URL displayed in the input field when adding exceptions for "DNS over HTTPS". -->
@@ -2698,7 +2994,7 @@
   <!-- Paste the text in the clipboard -->
   <string name="browser_toolbar_long_press_popup_paste">Vložit</string>
   <!-- Snackbar message shown after an URL has been copied to clipboard. -->
-  <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL adresa zkopírována do schránky</string>
+  <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Adresa URL zkopírována do schránky</string>
   <!-- Title text for the Add To Homescreen dialog -->
   <string name="add_to_homescreen_title">Přidat na plochu</string>
   <!-- Cancel button text for the Add to Homescreen dialog -->
@@ -2823,6 +3119,114 @@
   <string name="saved_logins_sort_strategy_last_used">Naposledy použito</string>
   <!-- Content description (not visible, for screen readers etc.) -->
   <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Nabídka pro řazení hesel</string>
+  <!-- Label for button to import passwords from file. -->
+  <string name="passwords_import_menu_button">Importovat ze souboru</string>
+  <!--
+    Email Masks
+
+    Title for the Email Masks in the settings menu
+  -->
+  <string name="preferences_email_masks">E-mailové masky</string>
+  <!-- Title for the Suggest Email Masks toggle -->
+  <string name="preferences_email_masks_suggest_title">Navrhovat e-mailové masky</string>
+  <!-- Summary for the Suggest Email Masks toggle. -->
+  <string name="preferences_email_masks_suggest_summary">Skryjte svůj skutečný e-mail, abyste ochránili svou doručenou poštu před nevyžádanou poštou. Některé servery nepodporují e-mailové masky.</string>
+  <!-- Text that links to additional information about the Email Masks -->
+  <string name="preferences_email_masks_suggest_learn_more">Zjistit více</string>
+  <!-- Title for the Manage Email Masks links to Firefox Relay dashboard -->
+  <string name="preferences_email_masks_manage_title">Spravovat e-mailové masky</string>
+  <!-- The message displayed when a user has used all of their free-tier email masks, so now the application will choose an existing one at random. -->
+  <string name="email_masks_max_free_tier_reached">Už jste použili svých 5 bezplatných e-mailových masek, proto jsme pro vás vybrali jednu k opětovnému použití.</string>
+  <!-- The message displayed when there was an error with the email mask or Firefox Account services. -->
+  <string name="email_masks_error_retrieving_masks">E-mailové masky nyní nejsou k dispozici. Zkuste to znovu za několik minut.</string>
+  <!--
+    Firefox browser VPN (a browser-only proxy, distinct from the Mozilla VPN service)
+
+    Title for the browser VPN entry in the settings list
+  -->
+  <string name="preferences_ip_protection_title_2">Vestavěná VPN</string>
+  <!-- Label for the BETA badge for the browser VPN entry in the settings list -->
+  <string name="preferences_ip_protection_beta_badge_label">BETA</string>
+  <!-- Title for the browser VPN settings screen (displayed in the app bar) -->
+  <string name="ip_protection_title">VPN</string>
+  <!-- Label for the browser VPN toggle on the settings screen -->
+  <string name="ip_protection_toggle_label">VPN</string>
+  <!-- Headline for the browser VPN promo card. %s is the name of the app (for example "Firefox"). -->
+  <string name="ip_protection_promo_headline">Vestavěná VPN aplikace %s</string>
+  <!-- Body text for the browser VPN promo card . %s is a learn more link using ip_protection_learn_more as text. -->
+  <string name="ip_protection_promo_body_2">Procházejte internet s větší ochranou díky skrytí vaší polohy, a to i na veřejných Wi-Fi sítích. %s</string>
+  <!-- Body text for the browser VPN promo card -->
+  <string name="ip_protection_promo_body">Procházejte internet s větší ochranou díky skrytí vaší polohy, a to i na veřejných Wi-Fi sítích.</string>
+  <!-- Link text that opens additional information about the browser VPN -->
+  <string name="ip_protection_learn_more">Zjistit více</string>
+  <!-- Label for the monthly data allowance section on the browser VPN settings screen -->
+  <string name="ip_protection_data_limit_label">Měsíční datový limit</string>
+  <!--
+    Data usage shown on the browser VPN settings screen.
+    %1$.1f is the data remaining in GB (for example "8.3").
+    %2$.1f is the total monthly allowance in GB (for example "50.0").
+  -->
+  <string name="ip_protection_data_limit_value">Zbývá %1$.1f GB z %2$.1f GB</string>
+  <!--
+    Text shown below the data usage bar describing when the monthly allowance resets.
+    %1$.0f is the total monthly data allowance in GB (for example "50").
+  -->
+  <string name="ip_protection_data_reset_info">Obnovuje se na %1$.0f GB každého prvního dne v měsíci.</string>
+  <!-- Header for the browser VPN `location` section -->
+  <string name="ip_protection_location_section">Umístění</string>
+  <!-- Label for the recommended automatic location option on the browser VPN settings screen -->
+  <string name="ip_protection_location_recommended_label">Doporučené</string>
+  <!-- Description for the recommended automatic location option on the browser VPN settings screen -->
+  <string name="ip_protection_location_recommended_description">Vybere za vás nejrychlejší umístění VPN.</string>
+  <!-- Badge label shown in the menu item when the browser VPN is active -->
+  <string name="preferences_ip_protection_on">Zapnuto</string>
+  <!-- Badge label shown in the menu item when the browser VPN is off -->
+  <string name="preferences_ip_protection_off">Vypnuto</string>
+  <!-- Badge label shown in the menu item while the browser VPN is connecting -->
+  <string name="ip_protection_menu_connecting">Připojování…</string>
+  <!-- Badge label shown in the menu item when the browser VPN is paused -->
+  <string name="ip_protection_menu_paused">Pozastaveno</string>
+  <!-- Badge label shown in the menu item when the browser VPN has an error -->
+  <string name="ip_protection_menu_error">Chyba</string>
+  <!-- Badge label shown in the menu item when the user is eligible to use the browser VPN but should authenticate or authorize it first. -->
+  <string name="ip_protection_menu_auth_required">Vyzkoušejte ho</string>
+  <!-- Content description for the chevron button that opens the browser VPN settings screen -->
+  <string name="ip_protection_navigate_settings">Otevřít nastavení VPN</string>
+  <!--
+    Subtitle shown below the VPN label in menus when the monthly data allowance is exhausted.
+    %1$d is the total monthly allowance in GB (for example "50").
+  -->
+  <string name="ip_protection_menu_limit_reached">Dosažen limit %1$d GB</string>
+  <!--
+    Error message shown on the browser VPN settings screen when the monthly data allowance is exhausted.
+    %1$d is the total monthly allowance in GB (for example "50").
+  -->
+  <string name="ip_protection_data_limit_reached_description">Využili jste všech %1$d GB vašich dat VPN. Přístup bude příští měsíc obnoven.</string>
+  <!-- Label shown next to the browser protection icon in the address bar when the browser VPN is active -->
+  <string name="ip_protection_toolbar_pill_label">VPN zapnuta</string>
+  <!-- Accessibility description for the browser VPN pill in the address bar when the VPN has been activated -->
+  <string name="ip_protection_toolbar_pill_description">VPN je aktivní.</string>
+  <!-- Label for the button that starts the browser VPN authentication or authorization flow on the settings screen -->
+  <string name="ip_protection_get_started">Začít</string>
+  <!-- Headline for the browser VPN onboarding card. %s is the name of the app (for example "Firefox"). -->
+  <string name="ip_protection_onboarding_card_headline">Vyzkoušejte VPN vestavěnou přímo v aplikaci %s</string>
+  <!--
+    The body of the VPN onboarding card.
+    %1$s is a link using ip_protection_onboarding_body_link (“Browse with extra protection”) as text. It links to a support article about VPN on Firefox.
+    %2$d is the total monthly allowance in GB (for example "50").
+  -->
+  <string name="ip_protection_onboarding_body">%1$s skrytím vaší polohy, a to i ve veřejných Wi-Fi sítích. Získejte %2$d GB každý měsíc zdarma.</string>
+  <!-- Used as text for a link in ip_protection_onboarding_body. Make sure to adapt capitalization if the link is in the middle of the sentence. -->
+  <string name="ip_protection_onboarding_body_link">Prohlížejte s extra ochranou</string>
+  <!-- Label for the dismiss button on the onboarding bottom sheet. -->
+  <string name="ip_protection_onboarding_not_now_button">Teď ne</string>
+  <!-- Snackbar (in-app pop-up notification) text to signal the browser VPN connection error -->
+  <string name="ip_protection_connection_error_snackbar">Nepodařilo se připojit k síti VPN. Zkuste to znovu za několik minut.</string>
+  <!--
+    Snackbar (in-app pop-up notification) text to signal the browser VPN has reached the monthly data limit.
+    %1$d is the total monthly allowance in GB (for example "50").
+  -->
+  <string name="ip_protection_data_limit_reached_snackbar">Bylo využito %1$d GB dat přes VPN. Příští měsíc se limit vynuluje.</string>
   <!--
     Autofill
 
@@ -2834,7 +3238,7 @@
   <!-- Preference and title for managing the settings for payment methods -->
   <string name="preferences_credit_cards_2">Platební metody</string>
   <!-- Preference for saving and autofilling credit cards -->
-  <string name="preferences_credit_cards_save_and_autofill_cards_2">Uložení a vyplnění platebních metod</string>
+  <string name="preferences_credit_cards_save_and_autofill_cards_2">Ukládat a vyplňovat platební metody</string>
   <!-- Preference summary for saving and autofilling payment method data. %s is the name of the app (for example "Firefox"). -->
   <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s šifruje všechny vaše uložené platební metody</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -2906,7 +3310,7 @@
   <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
   <string name="credit_cards_biometric_prompt_message_pin">Odemkněte zařízení</string>
   <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-  <string name="credit_cards_biometric_prompt_unlock_message_2">Odemknout pro použití uložených způsobů platby</string>
+  <string name="credit_cards_biometric_prompt_unlock_message_2">Odemknout pro použití uložených platebních metod</string>
   <!-- Title of the "Add address" screen -->
   <string name="addresses_add_address">Přidat adresu</string>
   <!-- Title of the "Edit address" screen -->
@@ -3058,26 +3462,12 @@
     the certificate authority that verified the ticket
   -->
   <string name="certificate_info_verified_by">Ověřil: %1$s</string>
-  <!-- Login overflow menu delete button -->
-  <string name="login_menu_delete_button">Odstranit</string>
-  <!-- Login overflow menu edit button -->
-  <string name="login_menu_edit_button">Upravit</string>
   <!-- Message in delete confirmation dialog for password -->
   <string name="login_deletion_confirmation_2">Opravdu chcete smazat toto heslo?</string>
   <!-- Positive action of a dialog asking to delete -->
   <string name="dialog_delete_positive">Odstranit</string>
   <!-- Negative action of a dialog asking to delete login -->
   <string name="dialog_delete_negative">Zrušit</string>
-  <!-- The saved password options menu description. -->
-  <string name="login_options_menu_2">Možnosti hesel</string>
-  <!-- The editable text field for a website address. -->
-  <string name="saved_login_hostname_description_3">Upravitelné textové pole pro adresu webové stránky.</string>
-  <!-- The editable text field for a username. -->
-  <string name="saved_login_username_description_3">Upravitelné textové pole pro uživatelské jméno.</string>
-  <!-- The editable text field for a login's password. -->
-  <string name="saved_login_password_description_2">Upravitelné textové pole pro heslo.</string>
-  <!-- The button description to save changes to an edited password. -->
-  <string name="save_changes_to_login_2">Uložit změny.</string>
   <!-- The page title for editing a saved password. -->
   <string name="edit_2">Upravit heslo</string>
   <!-- The page title for adding new password. -->
@@ -3135,6 +3525,10 @@
     which navigates the user to a screen displaying all the shortcuts.
   -->
   <string name="homepage_shortcuts_show_all_content_description">Zobrazit všechny zkratky</string>
+  <!-- Label for the "Add shortcut" button displayed as a tile. -->
+  <string name="homepage_shortcuts_add_shortcut">Přidat zkratku</string>
+  <!-- Title text for the "Enter a Website URL" dialog for adding a shortcut. -->
+  <string name="homepage_shortcuts_add_website_title">Zadejte URL adresu webové stránky</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Dosažen maximální počet zkratek</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3233,6 +3627,8 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Příběhy</string>
+  <!-- Header text for the Stories screen. -->
+  <string name="stories_screen_text_news">Novinky</string>
   <!--
     Context description text for the "Discover more" button in the stories home screen section
     which navigates the user to a screen displaying more stories.
@@ -3246,16 +3642,6 @@
   <string name="experiments_snackbar">Pro odesílání dat povolte telemetrii.</string>
   <!-- Snackbar button text to navigate to telemetry settings. -->
   <string name="experiments_snackbar_button">Přejít do nastavení</string>
-  <!--
-    Review quality check feature
-
-    Paragraph explaining the grading system we use to classify the reliability of a product's reviews.
-  -->
-  <string name="review_quality_check_info_review_grade_header" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[Recenzím každého produktu přidělujeme <b>známku písmenem</b> od A do F.]]></string>
-  <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
-  <string name="review_quality_check_explanation_body_adjusted_grading" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[<b>Upravené hodnocení</b> je založeno pouze na recenzích, které považujeme za spolehlivé.]]></string>
-  <!-- Paragraph explaining product review highlights. %s is the name of the retailer (e.g. Amazon). -->
-  <string name="review_quality_check_explanation_body_highlights" moz:removedIn="136" tools:ignore="UnusedResources"><![CDATA[<b>Výběr</b> z recenzí %s za posledních 80 dní, které považujeme za spolehlivé.]]></string>
   <!--
     Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback.
 
@@ -3324,8 +3710,8 @@
   <string name="translation_error_could_not_translate_warning_text">Při překladu došlo k chybě. Zkuste to prosím znovu.</string>
   <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
   <string name="translation_error_could_not_load_languages_warning_text">Nelze načíst jazyky. Zkontrolujte připojení k internetu a zkuste to znovu.</string>
-  <!-- The title of the warning card informs the user that a language is not supported. %1$s is the name of the language that is not supported. -->
-  <string name="translation_error_language_not_supported_warning_text">Je nám líto, ale jazyk %1$s zatím není podporován.</string>
+  <!-- The title of the warning card informs the user that translations from a language are not supported yet. %1$s is the name of the source language. -->
+  <string name="translation_error_language_not_supported_warning_text_2">Překlady z jazyka %1$s zatím nejsou k dispozici.</string>
   <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
   <string name="translation_in_progress_snackbar">Probíhá překlad…</string>
   <!--
@@ -3379,6 +3765,12 @@
   <string name="translation_settings_automatic_never_translate_sites">Nikdy nepřekládat tyto weby</string>
   <!-- Button text for the button that will take the user to the download languages dialog. On the download languages dialog, the user can manage which languages they would like to download for translations. -->
   <string name="translation_settings_download_language">Stáhnout jazyky</string>
+  <!-- Toggle switch title and description for the translation settings control. -->
+  <string name="translation_settings_control_title">Překlady</string>
+  <!-- Description for the translation settings toggle switch. -->
+  <string name="translation_settings_control_description">Všechny překlady zůstávají soukromé ve vašem zařízení.</string>
+  <!-- Clickable text for the translations settings item that links to a website. -->
+  <string name="translation_settings_control_learn_more">Zjistit více</string>
   <!--
     Automatic translation preference screen
 
@@ -3523,7 +3915,7 @@
   -->
   <string name="protection_panel_banner_not_secure_title">Buďte na této stránce opatrní</string>
   <!-- Description text for the protection panel banner when the site is not secure. -->
-  <string name="protection_panel_banner_not_secure_description">Vaše připojení není zabezpečené.</string>
+  <string name="protection_panel_banner_not_secure_description">Vaše spojení není zabezpečené.</string>
   <!-- Title text for the protection panel banner when tracking protection is disabled. -->
   <string name="protection_panel_banner_not_protected_title">Vypnuli jste ochranu</string>
   <!--
@@ -3576,7 +3968,7 @@
     Description text for a dialog confirming whether the user wants to delete all data for current site.
     %s is a placeholder for the base domain of website.
   -->
-  <string name="clear_site_data_dialog_description"><![CDATA[Smazání cookies a dat stránek <b>%s</b> vás může odhlásit ze stránek nebo vymazat nákupní košík.]]></string>
+  <string name="clear_site_data_dialog_description"><![CDATA[Smazání cookies a dat stránek pro <b>%s</b> vás může odhlásit z webů a vyprázdnit vám nákupní košíky.]]></string>
   <!-- Button text on the clear site data dialog to allow users to confirm they wish to clear the site data. -->
   <string name="clear_site_data_dialog_positive_button_text">Vymazat</string>
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
@@ -3592,6 +3984,13 @@
     %s is a placeholder for the name of the certificate authority that issued the certificate.
   -->
   <string name="connection_security_panel_verified_by">Ověřilo %s</string>
+  <!--
+    Text for the connection security panel when the site uses a QWAC.
+    %s is a placeholder for the organization for which the certificate was issued.
+  -->
+  <string name="connection_security_panel_issued_to">Vydaný pro %s</string>
+  <!-- Text for the connection security panel when the site uses a QWAC. -->
+  <string name="connection_security_panel_qualified_certificate">Klasifikovaný podle nařízení (EÚ) 2024/1183.</string>
   <!--
     Debug drawer
 
@@ -3642,6 +4041,8 @@
   <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Přidat mezi anonymní panely</string>
   <!--
     Microsurvey
+    Note: Some strings are marked as unused as they are referenced via the Nimbus experimentation
+    platform and have no persistent reference in code
 
     Prompt view
 
@@ -3680,6 +4081,16 @@
   <string name="likert_scale_option_7" tools:ignore="BrandUsage,UnusedResources">Vyhledávání ve Firefoxu nepoužívám</string>
   <!-- Option for likert scale -->
   <string name="likert_scale_option_8" tools:ignore="UnusedResources">Nepoužívám synchronizaci</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_slow_or_buggy" tools:ignore="UnusedResources">Je pomalý nebo zabugovaný</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_features_hard_to_find_or_missing" tools:ignore="UnusedResources">Funkce se těžko hledají nebo chybí</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_confusing_or_hard_to_use" tools:ignore="UnusedResources">Je matoucí nebo obtížně použitelný</string>
+  <!-- Option for likert scale -->
+  <string name="likert_scale_option_its_okay" tools:ignore="UnusedResources">Je v pořádku, ale ne lepší než ostatní prohlížeče</string>
+  <!-- Option for likert scale. Note: The word "Firefox" should NOT be translated. -->
+  <string name="likert_scale_option_i_plan_to_keep_using" tools:ignore="BrandUsage,UnusedResources">Hodlám pokračovat v používání Firefoxu</string>
   <!-- Text shown in prompt for printing microsurvey. "sec" It's an abbreviation for "second". Note: The word "Firefox" should NOT be translated. -->
   <string name="microsurvey_prompt_printing_title" tools:ignore="BrandUsage,UnusedResources">Pomozte nám vylepšit tisk z Firefoxu. Zabere to jenom chvilku</string>
   <!-- Text shown in prompt for search microsurvey. Note: The word "Firefox" should NOT be translated. -->
@@ -3694,6 +4105,8 @@
   <string name="microsurvey_search_title" tools:ignore="BrandUsage,UnusedResources">Jak jste spokojen(a) s vyhledáváním ve Firefoxu?</string>
   <!-- Text shown in the survey title for sync experience microsurvey. Note: The word "Firefox" should NOT be translated. -->
   <string name="microsurvey_sync_title" tools:ignore="BrandUsage,UnusedResources">Jak jste spokojeni se synchronizací ve Firefoxu?</string>
+  <!-- Text shown in the survey title for 'describe your experience so far' microsurvey. Note: The word "Firefox" should NOT be translated. -->
+  <string name="microsurvey_describe_your_experience_title" tools:ignore="BrandUsage,UnusedResources">Pomozte nám vylepšit Firefox. Co nejlépe vystihuje vaše dosavadní zkušenosti?</string>
   <!--
     Accessibility
 
@@ -3907,7 +4320,7 @@
   -->
   <string name="setup_checklist_task_default_browser">Nastavit jako výchozí prohlížeč</string>
   <!-- The title of the sign-in task for the setup checklist -->
-  <string name="setup_checklist_task_account_sync">Přihlaste se ke svému účtu</string>
+  <string name="setup_checklist_task_account_sync">Přihlaste se do svého účtu</string>
   <!-- The title of the theme selection task for the setup checklist -->
   <string name="setup_checklist_task_theme_selection">Výběr vzhledu</string>
   <!-- The title of the toolbar selection task for the setup checklist -->
@@ -3955,7 +4368,7 @@
   <!-- Authentication prompt title to disable the private tabs mode -->
   <string name="pbm_authentication_disable_lock">Vypnout zámek obrazovky s anonymními panely</string>
   <!-- Label for a preference shown when the device supports screen lock (e.g., PIN, pattern, or password) but the user has not set one up. -->
-  <string name="pbm_authentication_lock_device_feature_disabled">Nastavte si zámek obrazovky pro skrytí panelů</string>
+  <string name="pbm_authentication_lock_device_feature_disabled">Nastavte si zámek obrazovky ke skrývání panelů</string>
   <!-- Title text for the contextual feature recommendation (CFR) suggesting the user enable a screen lock to protect private tabs -->
   <string name="private_tab_cfr_title">Chcete skrýt anonymní panely pomocí zámku obrazovky?</string>
   <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
@@ -3979,7 +4392,7 @@
   <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
   <string name="review_prompt_feedback_header">Je nám líto, že nastaly problémy. Dejte nám vědět, jak můžeme aplikaci %1$s vylepšit.</string>
   <!-- Label for a button opening a feedback forum -->
-  <string name="review_prompt_feedback_button">Zanechání zpětné vazby</string>
+  <string name="review_prompt_feedback_button">Zanechat zpětné vazby</string>
   <!--
     Settings Search Strings
 
@@ -3992,8 +4405,6 @@
   <string name="content_description_settings_search_navigate_back">Návrat zpět</string>
   <!-- Message displayed when the search field in the Settings Search screen is empty -->
   <string name="settings_search_empty_query_placeholder">Žádná poslední vyhledávání</string>
-  <!-- Message when error happens with Settings Search -->
-  <string name="settings_search_error_message" tools:ignore="UnusedResources" moz:removedIn="147">Vyskytla se chyba</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
   <string name="settings_search_clear_recent_searches_message">Vymazat vše</string>
   <!-- Section header for recent search results -->
@@ -4002,6 +4413,8 @@
   <string name="settings_search_no_results_title">Nic se neobjevilo</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">Možná zkusit jiné vyhledávání?</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">Tlačítko vyhledávání v nastavení</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->
@@ -4012,7 +4425,7 @@
     %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
     %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
   -->
-  <string name="terms_of_use_prompt_message_1">Zavedli jsme pro %1$s dokument %2$s a aktualizovali jsme naše %3$s.</string>
+  <string name="terms_of_use_prompt_message_1">Zavedli jsme %2$s aplikace %1$s a aktualizovali jsme naše %3$s.</string>
   <!--
     Second part of the terms of use pop up prompt
     %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
@@ -4044,6 +4457,221 @@
   <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">Více se můžete dozvědět %1$s.</string>
   <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
   <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">zde</string>
+  <!--
+    Sports widget
+
+    Title text shown at the top of the sports widget country selector, encouraging the user to pick a national team to follow.
+  -->
+  <string name="sports_widget_country_selector_title">Sledujte svůj tým</string>
+  <!-- Section header for the North America region in the sports widget country selector. -->
+  <string name="sports_widget_confederation_north_america">Severní Amerika</string>
+  <!-- Section header for the Africa confederation group in the sports widget country selector. -->
+  <string name="sports_widget_confederation_africa">Afrika</string>
+  <!-- Section header for the Asia confederation group in the sports widget country selector. -->
+  <string name="sports_widget_confederation_asia">Asie</string>
+  <!-- Section header for the CONCACAF confederation group in the sports widget country selector. "CONCACAF" is the abbreviation for "Confederation of North, Central America and Caribbean Association Football". -->
+  <string name="sports_widget_confederation_concacaf">CONCACAF</string>
+  <!-- Section header for the Europe confederation group in the sports widget country selector. -->
+  <string name="sports_widget_confederation_europe">Evropa</string>
+  <!-- Section header for the Oceania confederation group in the sports widget country selector. -->
+  <string name="sports_widget_confederation_oceania">Oceánie</string>
+  <!-- Section header for the South America confederation group in the sports widget country selector. -->
+  <string name="sports_widget_confederation_south_america">Jižní Amerika</string>
+  <!-- Country name for England in the sports widget. England cannot be resolved with the Android Intl APIs so it needs an explicit string. -->
+  <string name="sports_widget_country_england">Anglie</string>
+  <!-- Country name for Scotland in the sports widget. Scotland cannot be resolved with the Android Intl APIs so it needs an explicit string. -->
+  <string name="sports_widget_country_scotland">Skotsko</string>
+  <!-- Label shown on the sports widget scoreboard when a match is currently being played live. -->
+  <string name="sports_widget_match_live">ŽIVĚ</string>
+  <!-- Title shown on the sports widget champion scoreboard row celebrating the soccer tournament winner. -->
+  <string name="sports_widget_champions_title">Mistrovství světa ve fotbale 2026</string>
+  <!-- Title shown on the sports widget champion scoreboard celebrating the soccer tournament runners-up. Runners-up means second place. -->
+  <string name="sports_widget_runner_up_title" tools:ignore="UnusedResources">Druhé místo</string>
+  <!-- Title shown on the sports widget champion scoreboard celebrating the soccer tournament third place winners. -->
+  <string name="sports_widget_third_place_title">Třetí místo</string>
+  <!-- Round name shown on the sports widget for the Round of 32 stage in the soccer tournament. -->
+  <string name="sports_widget_round_of_32">Nejlepších 32</string>
+  <!-- Round name shown on the sports widget for the Round of 16 stage in the soccer tournament. -->
+  <string name="sports_widget_round_of_16">Nejlepších 16</string>
+  <!-- Round name shown on the sports widget for the quarter-finals stage in the soccer tournament. -->
+  <string name="sports_widget_quarter_final">Čtvrtfinále</string>
+  <!-- Round name shown on the sports widget for the semi-finals stage in the soccer tournament. -->
+  <string name="sports_widget_semi_final">Semifinále</string>
+  <!-- Round name shown on the sports widget for the final stage in the soccer tournament. -->
+  <string name="sports_widget_final">Finále</string>
+  <!-- Round name shown on the sports widget for the bronze final stage in the soccer tournament. -->
+  <string name="sports_widget_bronze_final">O třetí místo</string>
+  <!-- Sports widget error card message shown when match data fails to load. -->
+  <string name="sports_widget_error_load_failed" tools:ignore="UnusedResources">Informace o utkání nejsou momentálně k dispozici. Zkuste stránku za chvíli znovu načíst.</string>
+  <!-- Sports widget error card message shown when the network connection is interrupted and live updates pause. -->
+  <string name="sports_widget_error_connection_interrupted" tools:ignore="UnusedResources">Spojení přerušeno — aktualizace pozastavena.</string>
+  <!-- Sports widget action label to refresh match data after an error. -->
+  <string name="sports_widget_error_refresh">Obnovit</string>
+  <!-- Sports widget group stage label for group A in the soccer tournament. -->
+  <string name="sports_widget_group_a">Skupina A</string>
+  <!-- Sports widget group stage label for group B in the soccer tournament. -->
+  <string name="sports_widget_group_b">Skupina B</string>
+  <!-- Sports widget group stage label for group C in the soccer tournament. -->
+  <string name="sports_widget_group_c">Skupina C</string>
+  <!-- Sports widget group stage label for group D in the soccer tournament. -->
+  <string name="sports_widget_group_d">Skupina D</string>
+  <!-- Sports widget group stage label for group E in the soccer tournament. -->
+  <string name="sports_widget_group_e">Skupina E</string>
+  <!-- Sports widget group stage label for group F in the soccer tournament. -->
+  <string name="sports_widget_group_f">Skupina F</string>
+  <!-- Sports widget group stage label for group G in the soccer tournament. -->
+  <string name="sports_widget_group_g">Skupina G</string>
+  <!-- Sports widget group stage label for group H in the soccer tournament. -->
+  <string name="sports_widget_group_h">Skupina H</string>
+  <!-- Sports widget group stage label for group I in the soccer tournament. -->
+  <string name="sports_widget_group_i">Skupina I</string>
+  <!-- Sports widget group stage label for group J in the soccer tournament. -->
+  <string name="sports_widget_group_j">Skupina J</string>
+  <!-- Sports widget group stage label for group K in the soccer tournament. -->
+  <string name="sports_widget_group_k">Skupina K</string>
+  <!-- Sports widget group stage label for group L in the soccer tournament. -->
+  <string name="sports_widget_group_l">Skupina L</string>
+  <!-- Sports widget button label to see match results. -->
+  <string name="sports_widget_see_results" tools:ignore="UnusedResources">Zobrazit výsledky</string>
+  <!-- Sports widget button label to view details of a soccer match results. -->
+  <string name="sports_widget_view_match_details" tools:ignore="UnusedResources">Zobrazit podrobnosti o zápase</string>
+  <!-- Sports widget section header for related soccer matches in the same group. -->
+  <string name="sports_widget_related_matches" tools:ignore="UnusedResources">Související zápasy</string>
+  <!-- Sports widget section header for a list of upcoming soccer matches that have not yet started. -->
+  <string name="sports_widget_upcoming" tools:ignore="UnusedResources">Nadcházející</string>
+  <!-- Sports widget match status suffix appended to match scores (e.g., "3 - 2 (Full time)") to indicate the match has been completed. -->
+  <string name="sports_widget_match_full_time_suffix">(Konec zápasu)</string>
+  <!-- Sports widget match status to indicate the match has been completed. -->
+  <string name="sports_widget_match_full_time_2">Konec zápasu</string>
+  <!--
+    Sports widget card title encouraging the user to follow the soccer tournament. “Keep tabs on” is an informal expression
+    meaning to stay updated on or regularly follow something (in this case, World Cup matches and updates).
+    It’s playfully related to Firefox in that “tabs” are a browser feature.
+    It suggests ongoing awareness rather than active monitoring or control. Not to be translated literally as physical “tabs”
+    or tracking in a technical sense; the meaning is about staying informed.
+  -->
+  <string name="sports_widget_card_title">Sledujte Mistrovství světa ve fotbale</string>
+  <!-- Sports widget card description shown below the title on the homepage entry point. -->
+  <string name="sports_widget_card_description">Získejte živé informace o zápasech a další informace.</string>
+  <!-- Sports widget menu item to change the selected team. -->
+  <string name="sports_widget_change_team">Změnit tým</string>
+  <!-- Sports widget menu item to get a custom wallpaper for the widget. -->
+  <string name="sports_widget_get_custom_wallpaper">Získejte vlastní tapetu</string>
+  <!-- Sports widget menu item to remove the widget from the homepage. -->
+  <string name="sports_widget_remove">Odebrat</string>
+  <!-- Sports widget card title shown after a team is eliminated, asking if the user still wants to continue following the soccer tournament. -->
+  <string name="sports_widget_still_want_to_follow">Stále chcete sledovat?</string>
+  <!-- Sports widget card description shown after a team is eliminated, suggesting to choose another team. -->
+  <string name="sports_widget_choose_another_team">Vyberte si jiný tým, abyste byli v obraze ohledně mistrovství světa.</string>
+  <!-- Sports widget button label to follow another team after the current team is eliminated. -->
+  <string name="sports_widget_follow_another_team">Sledovat jiný tým</string>
+  <!-- Sports widget card title shown before the soccer tournament begins on top of a timer that is counting down. -->
+  <string name="sports_widget_countdown_to_world_cup">Odpočítávání do Mistrovství světa</string>
+  <!-- Sports widget button label that navigates the user to the full soccer tournament match schedule. -->
+  <string name="sports_widget_view_schedule">Zobrazit rozpis zápasů</string>
+  <!-- Sports widget button label that dismisses the step of choosing a team to follow. -->
+  <string name="sports_widget_skip">Přeskočit</string>
+  <!-- Sports widget match status label shown during halftime of a match. -->
+  <string name="sports_widget_halftime" tools:ignore="UnusedResources">Poločas</string>
+  <!-- Sports widget match status label shown during extra time of a match. -->
+  <string name="sports_widget_extra_time" tools:ignore="UnusedResources">Prodloužení</string>
+  <!-- Sports widget match status label shown during penalties of a match. -->
+  <string name="sports_widget_penalties">Penalty</string>
+  <!--
+    Sports widget countdown label for days. D is short for Day. The layout only allows for 1–2 characters:
+    if there is an equivalent single character for your language, use that (e.g. T for German).
+    Your translation will be automatically truncated at 2 characters to avoid layout issues.
+  -->
+  <string name="sports_widget_countdown_days">D</string>
+  <!--
+    Sports widget countdown pill abbreviated label for hours. H is short for Hour. The layout only allows for 1–2 characters:
+    if there is an equivalent single character for your language, use that (e.g. S for German).
+    Your translation will be automatically truncated at 2 characters to avoid layout issues.
+  -->
+  <string name="sports_widget_countdown_hours">H</string>
+  <!--
+    Sports widget countdown pill abbreviated label for minutes. M is short for Minute. The layout only allows for 1–2 characters:
+    if there is an equivalent single character for your language, use that.
+    Your translation will be automatically truncated at 2 characters to avoid layout issues
+  -->
+  <string name="sports_widget_countdown_minutes">M</string>
+  <!-- Content description (for accessibility, not displayed) for the close button on the sports widget team / country selector. -->
+  <string name="sports_widget_close_team_selection_sheet_content_description">Zavřít výběr týmu</string>
+  <!-- Content description (for accessibility, not displayed) for the close button on the sports widget card. -->
+  <string name="sports_widget_close_content_description">Zavřít</string>
+  <!-- Content description (for accessibility, not displayed) for the overflow (more options) menu button on the sports widget card. -->
+  <string name="sports_widget_more_options_content_description">Další možnosti</string>
+  <!--
+    Content description (for accessibility, not displayed) announcing the time remaining until the soccer tournament kickoff.
+    %1$d is the number of days, %2$d is the number of hours, and %3$d is the number of minutes.
+  -->
+  <string name="sports_widget_countdown_remaining_content_description">Zbývající čas. Dny: %1$d. Hodiny: %2$d. Minuty: %3$d.</string>
+  <!-- Content description (for accessibility, not displayed)  for the action that navigates to the World Cup website. -->
+  <string name="sports_widget_go_to_world_cup_site_content_description" tools:ignore="UnusedResources">Přejít na stránky Mistrovství světa</string>
+  <!--
+    Content description (for accessibility, not displayed)  announcing an upcoming soccer match.
+    %1$s is the home team name, %2$s is the away team name, %3$s is the match date, %4$s is the kickoff time.
+  -->
+  <string name="sports_widget_upcoming_match_content_description">Nadcházející: %1$s versus %2$s, %3$s v %4$s</string>
+  <!--
+    Content description (for accessibility, not displayed) announcing a soccer match.
+    %1$s is the home team name, %2$s is the away team name, %3$s is trailing context
+    (e.g. formatted score "1 - 2 (Full time)", upcoming match info "Jun 19 5:00 PM",
+    or a match status like "Full time").
+  -->
+  <string name="sports_widget_match_content_description">%1$s - %2$s, %3$s</string>
+  <!--
+    Content description (for accessibility, not displayed)  used for the sports widget card header announcing a live match for a group or stage.
+    %s is the soccer tournament group name or stage (e.g. Group A represented by sports_widget_group_a, Round of 32 represented by sports_widget_round_of_32,
+    or Final represented by sports_widget_final).
+  -->
+  <string name="sports_widget_live_game_content_description">%s, právě se hraje</string>
+  <!--
+    Content description (for accessibility, not displayed) announcing a live score.
+    %1$s is the home team name, %2$d is the home team score, %3$s is the away team name, %4$d is the away team score,
+    and %5$s is the match elapsed time (e.g. 72 minutes).
+  -->
+  <string name="sports_widget_live_score_content_description">%1$s %2$d, %3$s %4$d, %5$s, naživo</string>
+  <!--
+    Content description (for accessibility, not displayed) announcing the elapsed minutes of a live match.
+    %1$s is the clock value, which may be a plain number (e.g. "72") or include extra time (e.g. "90+3").
+  -->
+  <string name="sports_widget_match_elapsed_minutes">Uplynulý čas v minutách: %1$s</string>
+  <!--
+    Content description (for accessibility, not displayed) for a paginated item.
+    %1$s is the soccer tournament group name or stage (e.g. Group A represented by sports_widget_group_a, Round of 32 represented by sports_widget_round_of_32),
+    %2$d is the current page number, and %3$d is the total number of pages.
+  -->
+  <string name="sports_widget_page_position_content_description">%1$s, stránka %2$d z %3$d</string>
+  <!--
+    Content description (for accessibility, not displayed) for a page within the World Cup final results carousel.
+    %1$d is the current page number, and %2$d is the total number of pages.
+  -->
+  <string name="sports_widget_final_results_page_content_description" tools:ignore="UnusedResources">Konečné výsledky Mistrovství světa, stránka %1$d z %2$d</string>
+  <!-- Content description (for accessibility, not displayed) for the World Cup final results page. -->
+  <string name="sports_widget_final_results_content_description">Konečné výsledky mistrovství světa</string>
+  <!-- Content description (for accessibility, not displayed) for the remove button that removes the sports widget from the homepage. -->
+  <string name="sports_widget_remove_content_description" tools:ignore="UnusedResources">Odstranit Mistrovství světa z domovské stránky</string>
+  <!-- Title shown on the sports widget immediately after the user has followed a team. %s is the selected team (e.g., "USA"). -->
+  <string name="sports_widget_team_followed_title">Sledujete: \n%s</string>
+  <!-- Description shown on the sports widget immediately after the user has followed a team -->
+  <string name="sports_widget_team_followed_description">S blížícím se turnajem se sem vraťte pro informace o zápasech.</string>
+  <!-- Sports widget match status label shown during first half of a match. -->
+  <string name="sports_widget_first_half" tools:ignore="UnusedResources">První poločas</string>
+  <!-- Sports widget match status label shown during second half of a match. -->
+  <string name="sports_widget_second_half" tools:ignore="UnusedResources">Druhý poločas</string>
+  <!-- Sports widget error card title shown when the user is offline. -->
+  <string name="sports_widget_error_connection_offline_title">Zdá se, že jste offline.</string>
+  <!-- Sports widget error card description shown when the user is offline. -->
+  <string name="sports_widget_error_connection_offline_description">Zkontrolujte své připojení k internetu a zkuste to znovu.</string>
+  <!-- Sports widget general group stage label in the soccer tournament. -->
+  <string name="sports_widget_group_stage">Skupinová fáze</string>
+  <!-- Sports widget error card title shown when match data fails to load. -->
+  <string name="sports_widget_error_load_failed_title">Informace o zápasech nyní nejsou k dispozici.</string>
+  <!-- Sports widget error card description shown when match data fails to load. -->
+  <string name="sports_widget_error_load_failed_description">Zkuste to za pár minut znovu.</string>
+  <!-- Content description (for accessibility, not displayed) for teams which have not yet been determined in the match schedule. -->
+  <string name="sports_widget_team_to_be_determined">Tým bude upřesněn</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
   <!--
@@ -4058,4 +4686,29 @@
   <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Zásady ochrany osobních údajů</string>
   <!-- The second active link used in privacy_notice_updated_homepage_message -->
   <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Zjistit více</string>
+  <!--
+    Firefox Labs
+
+    Banner title text on the Firefox Labs screen.
+  -->
+  <string name="firefox_labs_banner_title">Vyzkoušejte naše experimentální funkce!</string>
+  <!--
+    Banner description text on the Firefox Labs screen. Provides information on what Firefox Labs does. %s is the name of the app (for example "Firefox Nightly").
+    Text will appear under the Firefox Labs banner title.
+  -->
+  <string name="firefox_labs_experimental_description">Jsou ve fázi vývoje a neustále se vyvíjejí, což by mohlo ovlivnit fungování aplikace %s.</string>
+  <!-- Button text on the Firefox Labs screen for restoring all toggles back to the default settings. The button will turn off any experimental features. -->
+  <string name="firefox_labs_restore_default_button_text">Obnovit výchozí</string>
+  <!-- The title used in a confirmation dialog on the Firefox Labs screen when toggling "on" or "off" an experimental feature that requires a restart. -->
+  <string name="firefox_labs_feature_dialog_title">Vyžadován restart</string>
+  <!-- The text on the dialog on the Firefox Labs screen for the positive button when toggling "on" and "off" experimental features. This prompts the user to confirm that they want to restart the app. -->
+  <string name="firefox_labs_dialog_restart_button">Restartovat</string>
+  <!-- The text on the dialog on the Firefox Labs screen for the negative button when toggling "on" and "off" experimental features. This is used to cancel the action and return to the previous screen. -->
+  <string name="firefox_labs_dialog_cancel_button">Zrušit</string>
+  <!-- The title used in a confirmation dialog on the Firefox Labs screen when restoring the application to its defaults by turning "off" any experimental features. -->
+  <string name="firefox_labs_restore_defaults_dialog_title">Vyžadován restart</string>
+  <!-- The description used in a confirmation dialog on the Firefox Labs screen when restoring the application to its defaults by turning "off" any experimental features. %s is the name of the app (for example "Firefox Nightly") -->
+  <string name="firefox_labs_restore_defaults_dialog_message">Pro obnovení výchozího nastavení restartujte aplikaci %s.</string>
+  <!-- Text displayed on the Firefox Labs screen when there are no Labs experimental features present. -->
+  <string name="firefox_labs_no_labs_available_description">Momentálně nemáte k dispozici žádné experimentální funkce</string>
 </resources>

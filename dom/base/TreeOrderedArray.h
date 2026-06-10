@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +6,7 @@
 #define mozilla_dom_TreeOrderedArray_h
 
 #include "FastFrontRemovableArray.h"
+#include "nsContentUtils.h"
 
 class nsINode;
 template <typename T>
@@ -16,7 +15,7 @@ class RefPtr;
 namespace mozilla::dom {
 
 // A sorted tree-ordered list of pointers (either raw or RefPtr) to nodes.
-template <typename NodePointer>
+template <typename NodePointer, TreeKind K = TreeKind::DOM>
 class TreeOrderedArray : public FastFrontRemovableArray<NodePointer, 1> {
   using Base = FastFrontRemovableArray<NodePointer, 1>;
 

@@ -151,17 +151,12 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
   #toBrowserWindowCoordinates(options, _context) {
     const { position } = options;
 
-    const [x, y] = position;
-    const dpr = this.contentWindow.devicePixelRatio;
-
-    const val = lazy.LayoutUtils.rectToTopLevelWidgetRect(this.contentWindow, {
-      left: x,
-      top: y,
+    return lazy.LayoutUtils.rectToTopLevelWidgetRect(this.contentWindow, {
+      left: position[0],
+      top: position[1],
       height: 0,
       width: 0,
     });
-
-    return [val.x / dpr, val.y / dpr];
   }
 
   // eslint-disable-next-line complexity
@@ -197,7 +192,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
           result = this.#getInViewCentrePoint(data);
           break;
         case "MarionetteCommandsParent:_finalizeAction":
-          this.#finalizeAction();
+          await this.#finalizeAction();
           break;
         case "MarionetteCommandsParent:_toBrowserWindowCoordinates":
           result = this.#toBrowserWindowCoordinates(data);
@@ -222,6 +217,13 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
           break;
         case "MarionetteCommandsParent:generateTestReport":
           result = await this.generateTestReport(data);
+          break;
+        case "MarionetteCommandsParent:getAccessibilityPropertiesForAccessibilityNode":
+          result =
+            await this.getAccessibilityPropertiesForAccessibilityNode(data);
+          break;
+        case "MarionetteCommandsParent:getAccessibilityPropertiesForElement":
+          result = await this.getAccessibilityPropertiesForElement(data);
           break;
         case "MarionetteCommandsParent:getActiveElement":
           result = await this.getActiveElement();
@@ -401,6 +403,26 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
   }
 
   /**
+   * Return the properties for the accessibility node with the given id.
+   */
+  async getAccessibilityPropertiesForAccessibilityNode(options = {}) {
+    const { id } = options;
+
+    return lazy.accessibility.getAccessibilityPropertiesForAccessibilityNode(
+      id
+    );
+  }
+
+  /**
+   * Return the accessibility properties for a given element.
+   */
+  async getAccessibilityPropertiesForElement(options = {}) {
+    const { elem } = options;
+
+    return lazy.accessibility.getAccessibilityPropertiesForElement(elem);
+  }
+
+  /**
    * Return the active element in the document.
    */
   async getActiveElement() {
@@ -461,14 +483,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    */
   async getElementRect(options = {}) {
     const { elem } = options;
-
-    const rect = elem.getBoundingClientRect();
-    return {
-      x: rect.x + this.document.defaultView.pageXOffset,
-      y: rect.y + this.document.defaultView.pageYOffset,
-      width: rect.width,
-      height: rect.height,
-    };
+    return lazy.dom.getElementRect(elem);
   }
 
   /**
@@ -544,10 +559,40 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     let rect;
 
     if (elem) {
+      // Throw an error if 'full' is passed with an element, as this is an invalid state.
+      if (full) {
+        throw new Error(
+          "Full screenshot is not supported when an element is provided."
+        );
+      }
+
       if (scroll) {
         lazy.dom.scrollIntoView(elem);
       }
-      rect = this.getElementRect({ elem });
+
+      rect = lazy.dom.getElementRect(elem);
+
+      // Calculate the intersection between the element's bounding client rect
+      // and the visual viewport to draw a bounding box from the framebuffer.
+      // Spec: https://w3c.github.io/webdriver/#dfn-draw-a-bounding-box-from-the-framebuffer
+      const viewport = win.visualViewport;
+
+      const viewportX = viewport.pageLeft;
+      const viewportY = viewport.pageTop;
+
+      const viewportWidth = win.innerWidth;
+      const viewportHeight = win.innerHeight;
+
+      const left = Math.max(rect.x, viewportX);
+      const top = Math.max(rect.y, viewportY);
+
+      const right = Math.min(rect.x + rect.width, viewportX + viewportWidth);
+      const bottom = Math.min(rect.y + rect.height, viewportY + viewportHeight);
+
+      const width = Math.max(right - left, 0);
+      const height = Math.max(bottom - top, 0);
+
+      rect = new DOMRect(left, top, width, height);
     } else if (full) {
       const docEl = win.document.documentElement;
       rect = new DOMRect(0, 0, docEl.scrollWidth, docEl.scrollHeight);

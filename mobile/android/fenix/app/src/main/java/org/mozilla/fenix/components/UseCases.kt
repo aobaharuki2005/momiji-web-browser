@@ -26,15 +26,25 @@ import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.service.mars.MozAdsClientProvider
+import mozilla.components.service.mars.MozAdsUseCases
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.locale.LocaleUseCases
+import mozilla.components.support.utils.DefaultDownloadFileUtils
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
+import org.mozilla.fenix.components.share.DefaultShareSheetLauncher
+import org.mozilla.fenix.components.share.ShareSheetLauncher
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
+import org.mozilla.fenix.components.usecases.ShareUseCases
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.mars.MARSUseCases
 import org.mozilla.fenix.pbmlock.PrivateBrowsingLockUseCases
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
+import org.mozilla.fenix.settings.downloads.DownloadLocationManager
 import org.mozilla.fenix.wallpapers.WallpapersUseCases
 
 /**
@@ -44,6 +54,7 @@ import org.mozilla.fenix.wallpapers.WallpapersUseCases
 @Suppress("LongParameterList")
 class UseCases(
     private val context: Context,
+    private val crashReporter: Lazy<CrashReporter>,
     private val engine: Lazy<Engine>,
     private val store: Lazy<BrowserStore>,
     private val shortcutManager: Lazy<WebAppShortcutManager>,
@@ -51,6 +62,7 @@ class UseCases(
     private val bookmarksStorage: Lazy<BookmarksStorage>,
     private val historyStorage: Lazy<HistoryStorage>,
     private val syncedTabsCommands: Lazy<SyncedTabsCommands>,
+    adsClientProvider: Lazy<MozAdsClientProvider>,
     appStore: Lazy<AppStore>,
     client: Lazy<Client>,
     strictMode: Lazy<StrictModeManager>,
@@ -94,7 +106,17 @@ class UseCases(
         WebAppUseCases(context, store.value, shortcutManager.value)
     }
 
-    val downloadUseCases by lazyMonitored { DownloadsUseCases(store.value, context.applicationContext) }
+    val downloadUseCases by lazyMonitored {
+        DownloadsUseCases(
+            store = store.value,
+            downloadFileUtils = DefaultDownloadFileUtils(
+                context = context.applicationContext,
+                downloadLocation = {
+                    DownloadLocationManager(context.applicationContext).defaultLocation
+                },
+            ),
+        )
+    }
 
     val contextMenuUseCases by lazyMonitored { ContextMenuUseCases(store.value) }
 
@@ -130,14 +152,41 @@ class UseCases(
 
     val marsUseCases by lazyMonitored { MARSUseCases(client.value) }
 
+    val mozAdsUseCases by lazyMonitored {
+        MozAdsUseCases(
+            adsClientProvider = adsClientProvider,
+            crashReporter = crashReporter.value,
+        )
+    }
+
     val fenixBrowserUseCases by lazyMonitored {
         FenixBrowserUseCases(
             appStore = appStore.value,
-            addNewTabUseCase = tabsUseCases.addTab,
+            tabsUseCases = tabsUseCases,
             loadUrlUseCase = sessionUseCases.loadUrl,
             searchUseCases = searchUseCases,
             homepageTitle = context.getString(R.string.tab_tray_homepage_tab),
             profiler = engine.value.profiler,
+        )
+    }
+
+    val shareSheetLauncher: ShareSheetLauncher by lazyMonitored {
+        DefaultShareSheetLauncher(
+            applicationContext = context.applicationContext,
+            homeActivityClass = HomeActivity::class.java,
+            crashReporter = crashReporter.value,
+        )
+    }
+
+    /**
+     * Use cases for sharing content via the system share sheet or the in-app
+     * share fragment.
+     */
+    val shareUseCases by lazyMonitored {
+        ShareUseCases(
+            browserStore = store.value,
+            shareSheetLauncher = shareSheetLauncher,
+            settings = context.settings(),
         )
     }
 

@@ -11,6 +11,10 @@ requesttimeoutfactor = 2
 
 ["test_ExtensionTaskScheduler.js"]
 
+["test_GuardSets.js"]
+
+["test_GuardSets_propagation.js"]
+
 ["test_QuarantinedDomains.js"]
 
 ["test_change_backgroundServiceWorker_enabled_pref_false.js"]
@@ -141,6 +145,8 @@ skip-if = [
   "os == 'win'", # Bug 1762638
 ]
 
+["test_ext_contentscript_adoptedStyleSheets.js"]
+
 ["test_ext_contentscript_antitracking.js"]
 
 ["test_ext_contentscript_api_injection.js"]
@@ -160,6 +166,8 @@ skip-if = [
 skip-if = [
   "tsan", # Bug 1683730
 ]
+
+["test_ext_contentscript_create_document.js"]
 
 ["test_ext_contentscript_create_iframe.js"]
 
@@ -190,6 +198,8 @@ skip-if = [
 ["test_ext_contentscript_restrictSchemes.js"]
 
 ["test_ext_contentscript_slow_frame.js"]
+
+["test_ext_contentscript_structured_clone.js"]
 
 ["test_ext_contentscript_teardown.js"]
 skip-if = [
@@ -327,6 +337,11 @@ skip-if = [
 
 ["test_ext_downloads.js"]
 
+["test_ext_downloads_blob_url.js"]
+skip-if = [
+  "os == 'android'", # downloads API needs to be implemented in GeckoView - bug 1538348
+]
+
 ["test_ext_downloads_cookieStoreId.js"]
 skip-if = [
   "os == 'android'",
@@ -429,6 +444,8 @@ skip-if = [
 
 ["test_ext_idle.js"]
 
+["test_ext_import_attributes.js"]
+
 ["test_ext_incognito.js"]
 run-if = [
   "appname != 'thunderbird'",
@@ -450,6 +467,8 @@ skip-if = [
 skip-if = [
   "os == 'android'",
 ]
+
+["test_ext_management_setEnabled.js"]
 
 ["test_ext_management_uninstall_self.js"]
 
@@ -701,6 +720,7 @@ skip-if = [
 ["test_ext_storage_session_on_crash.js"]
 skip-if = [
   "isolated_process", # Bug 1709961
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 2023967
 ]
 
 ["test_ext_storage_sync.js"]
@@ -799,6 +819,10 @@ skip-if = [
   "os == 'android'", # Android: downloads.download goes through the embedder app instead of Gecko.
 ]
 
+["test_ext_webRequest_error_after_redirect.js"]
+
+["test_ext_webRequest_error_no_response.js"]
+
 ["test_ext_webRequest_filterTypes.js"]
 
 ["test_ext_webRequest_filter_urls.js"]
@@ -855,6 +879,8 @@ skip-if = [
 
 ["test_ext_webRequest_type_json.js"]
 
+["test_ext_webRequest_type_text.js"]
+
 ["test_ext_webRequest_userContextId.js"]
 
 ["test_ext_webRequest_viewsource.js"]
@@ -910,3 +936,5 @@ prefs = ["extensions.wpt.enabled=true"]
 skip-if = [
   "!nightly_build",
 ]
+
+["text_ext_webRequest_js_cache.js"]

@@ -23,15 +23,14 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class SessionUseCasesTest {
@@ -352,7 +351,7 @@ class SessionUseCasesTest {
         assertNotNull(createdTab)
 
         middleware.assertLastAction(EngineAction.LoadUrlAction::class) { action ->
-            assertEquals(createdTab!!.id, action.tabId)
+            assertEquals(createdTab.id, action.tabId)
             assertEquals(tabCreatedForUrl, action.url)
         }
     }
@@ -375,7 +374,7 @@ class SessionUseCasesTest {
         assertNotNull(createdTab)
 
         middleware.assertLastAction(EngineAction.LoadDataAction::class) { action ->
-            assertEquals(createdTab!!.id, action.tabId)
+            assertEquals(createdTab.id, action.tabId)
             assertEquals("Hello", action.data)
             assertEquals("text/plain", action.mimeType)
             assertEquals("UTF-8", action.encoding)
@@ -393,19 +392,17 @@ class SessionUseCasesTest {
 
     @Test
     fun `CrashRecoveryUseCase will restore list of crashed sessions`() {
-        val store = spy(
-            BrowserStore(
-                middleware = listOf(middleware),
-                initialState = BrowserState(
-                    tabs = listOf(
-                        createTab(url = "https://wwww.mozilla.org", id = "tab1", crashed = true),
-                    ),
-                    customTabs = listOf(
-                        createCustomTab(
-                            "https://wwww.mozilla.org",
-                            id = "customTab1",
-                            crashed = true,
-                        ),
+        val store = BrowserStore(
+            middleware = listOf(middleware),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab(url = "https://wwww.mozilla.org", id = "tab1", crashed = true),
+                ),
+                customTabs = listOf(
+                    createCustomTab(
+                        "https://wwww.mozilla.org",
+                        id = "customTab1",
+                        crashed = true,
                     ),
                 ),
             ),

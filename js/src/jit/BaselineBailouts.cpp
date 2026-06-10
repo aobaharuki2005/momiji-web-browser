@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -639,8 +637,8 @@ bool BaselineStackBuilder::buildBaselineFrame() {
   ArgumentsObject* argsObj = nullptr;
   if (script_->needsArgsObj()) {
     Value maybeArgsObj = iter_.read();
-    MOZ_ASSERT(maybeArgsObj.isObject() || maybeArgsObj.isUndefined() ||
-               maybeArgsObj.isMagic(JS_OPTIMIZED_OUT));
+    MOZ_RELEASE_ASSERT(maybeArgsObj.isObject() || maybeArgsObj.isUndefined() ||
+                       maybeArgsObj.isMagic(JS_OPTIMIZED_OUT));
     if (maybeArgsObj.isObject()) {
       argsObj = &maybeArgsObj.toObject().as<ArgumentsObject>();
     }
@@ -913,7 +911,7 @@ bool BaselineStackBuilder::buildExpressionStack() {
             "      Checking that intermediate value is an object");
     Value returnVal;
     if (iter_.tryRead(&returnVal) && !returnVal.isObject()) {
-      MOZ_ASSERT(!returnVal.isMagic());
+      MOZ_RELEASE_ASSERT(!returnVal.isMagic());
       JitSpew(JitSpew_BaselineBailouts,
               "      Not an object! Overwriting bailout kind");
       bailoutKind_ = BailoutKind::ThrowCheckIsObject;
@@ -1752,7 +1750,7 @@ static bool CopyFromRematerializedFrame(JSContext* cx, JitActivation* act,
   // in InitFromBailout.
   if (rematFrame->isDebuggee()) {
     frame->setIsDebuggee();
-    return DebugAPI::handleIonBailout(cx, rematFrame, frame);
+    DebugAPI::handleIonBailout(cx, rematFrame, frame);
   }
 
   return true;

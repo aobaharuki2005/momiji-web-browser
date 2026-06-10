@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,6 +10,7 @@
 #include "mozilla/EditorForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"  // for Selection::InterlinePosition
@@ -19,7 +19,6 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsCRT.h"
-#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsString.h"
@@ -116,14 +115,14 @@ class EditorDOMPointBase final {
       InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
       : mParent(const_cast<ContainerType*>(aContainer)),
         mChild(nullptr),
-        mOffset(Some(aOffset)),
-        mInterlinePosition(aInterlinePosition) {
+        mOffset(mParent ? Some(aOffset) : Nothing()),
+        mInterlinePosition(aInterlinePosition),
+        mIsChildInitialized(
+            false)  // XXX Should we set to true if end of mParent?
+  {
     NS_WARNING_ASSERTION(
         !mParent || mOffset.value() <= mParent->Length(),
         "The offset is larger than the length of aContainer or negative");
-    if (!mParent) {
-      mOffset.reset();
-    }
   }
 
   template <typename PT, template <typename> typename StrongPtr>
@@ -132,14 +131,14 @@ class EditorDOMPointBase final {
       InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
       : mParent(std::forward<StrongPtr<PT>>(aContainer)),
         mChild(nullptr),
-        mOffset(Some(aOffset)),
-        mInterlinePosition(aInterlinePosition) {
+        mOffset(mParent ? Some(aOffset) : Nothing()),
+        mInterlinePosition(aInterlinePosition),
+        mIsChildInitialized(
+            false)  // XXX Should we set to true if end of mParent?
+  {
     NS_WARNING_ASSERTION(
         !mParent || mOffset.value() <= mParent->Length(),
         "The offset is larger than the length of aContainer or negative");
-    if (!mParent) {
-      mOffset.reset();
-    }
   }
 
   template <typename ContainerType, template <typename> typename StrongPtr>
@@ -164,11 +163,11 @@ class EditorDOMPointBase final {
       : mParent(aPointedNode && aPointedNode->IsContent()
                     ? aPointedNode->GetParentNode()
                     : nullptr),
-        mChild(aPointedNode && aPointedNode->IsContent()
+        mChild(mParent && aPointedNode && aPointedNode->IsContent()
                    ? const_cast<nsIContent*>(aPointedNode->AsContent())
                    : nullptr),
-        mInterlinePosition(aInterlinePosition) {
-    mIsChildInitialized = mChild;
+        mInterlinePosition(aInterlinePosition),
+        mIsChildInitialized(!!mChild) {
     NS_WARNING_ASSERTION(IsSet(),
                          "The child is nullptr or doesn't have its parent");
     NS_WARNING_ASSERTION(mChild && mChild->GetParentNode() == mParent,
@@ -181,8 +180,12 @@ class EditorDOMPointBase final {
       InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
       : mParent(aChild ? aChild->GetParentNode() : nullptr),
         mChild(std::forward<StrongPtr<CT>>(aChild)),
-        mInterlinePosition(aInterlinePosition) {
-    mIsChildInitialized = !!mChild;
+        mInterlinePosition(aInterlinePosition),
+        mIsChildInitialized(!!mChild) {
+    if (NS_WARN_IF(!mParent)) {
+      mChild = nullptr;
+      mIsChildInitialized = false;
+    }
     NS_WARNING_ASSERTION(IsSet(),
                          "The child is nullptr or doesn't have its parent");
     NS_WARNING_ASSERTION(mChild && mChild->GetParentNode() == mParent,
@@ -193,10 +196,15 @@ class EditorDOMPointBase final {
       nsINode* aContainer, nsIContent* aPointedNode, uint32_t aOffset,
       InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
       : mParent(aContainer),
-        mChild(aPointedNode),
-        mOffset(mozilla::Some(aOffset)),
+        mChild(mParent ? aPointedNode : nullptr),
+        mOffset(mParent ? Some(aOffset) : Nothing()),
         mInterlinePosition(aInterlinePosition),
-        mIsChildInitialized(true) {
+        mIsChildInitialized(
+            mParent &&
+            (mChild ||                       // trust the child
+             !mParent->IsContainerNode() ||  // the parent cannot have a child
+             mParent->Length() == *mOffset   // end of the container
+             )) {
     MOZ_DIAGNOSTIC_ASSERT(
         aContainer, "This constructor shouldn't be used when pointing nowhere");
     MOZ_ASSERT(mOffset.value() <= mParent->Length());
@@ -209,12 +217,14 @@ class EditorDOMPointBase final {
   template <typename PT, typename CT>
   explicit EditorDOMPointBase(const RangeBoundaryBase<PT, CT>& aOther)
       : mParent(aOther.mParent),
-        mChild(aOther.mRef ? aOther.mRef->GetNextSibling()
-                           : (aOther.mParent ? aOther.mParent->GetFirstChild()
-                                             : nullptr)),
-        mOffset(aOther.mOffset),
-        mIsChildInitialized(aOther.mRef || (aOther.mOffset.isSome() &&
-                                            !aOther.mOffset.value())) {}
+        mChild(mParent ? (aOther.mRef ? aOther.mRef->GetNextSibling()
+                                      : (aOther.mParent
+                                             ? aOther.mParent->GetFirstChild()
+                                             : nullptr))
+                       : nullptr),
+        mOffset(mParent ? aOther.mOffset : Nothing()),
+        mIsChildInitialized(mParent &&
+                            (aOther.mRef || (mOffset && !mOffset.value()))) {}
 
   void SetInterlinePosition(InterlinePosition aInterlinePosition) {
     MOZ_ASSERT(IsSet());
@@ -625,8 +635,8 @@ class EditorDOMPointBase final {
    * mOffset may be invalidated.
    */
   template <typename ContainerType>
-  void Set(ContainerType* aContainer, uint32_t aOffset) {
-    mParent = aContainer;
+  void Set(const ContainerType* aContainer, uint32_t aOffset) {
+    mParent = const_cast<ContainerType*>(aContainer);
     mChild = nullptr;
     mOffset = mozilla::Some(aOffset);
     mIsChildInitialized = false;
@@ -1335,7 +1345,7 @@ class EditorDOMPointBase final {
       // nullptr.
       return RawRangeBoundary(mParent, mOffset.value(),
                               // Avoid immediately to compute the child node.
-                              RangeBoundaryIsMutationObserved::No);
+                              RangeBoundarySetBy::Offset);
     }
     if (mIsChildInitialized && mOffset.isSome()) {
       // If we've already set both child and offset, we should create
@@ -1350,19 +1360,19 @@ class EditorDOMPointBase final {
 #endif  // #ifdef DEBUG
       return RawRangeBoundary(mParent, mOffset.value(),
                               // Avoid immediately to compute the child node.
-                              RangeBoundaryIsMutationObserved::No);
+                              RangeBoundarySetBy::Offset);
     }
     // Otherwise, we should create RangeBoundaryBase only with available
     // information.
     if (mOffset.isSome()) {
       return RawRangeBoundary(mParent, mOffset.value(),
                               // Avoid immediately to compute the child node.
-                              RangeBoundaryIsMutationObserved::No);
+                              RangeBoundarySetBy::Offset);
     }
     if (mChild) {
-      return RawRangeBoundary(mParent, mChild->GetPreviousSibling());
+      return RawRangeBoundary::FromChild(*mChild);
     }
-    return RawRangeBoundary(mParent, mParent->GetLastChild());
+    return RawRangeBoundary::EndOfParent(*mParent);
   }
 
   already_AddRefed<nsRange> CreateCollapsedRange(ErrorResult& aRv) const {
@@ -1448,6 +1458,10 @@ class EditorDOMPointBase final {
             << (aDOMPoint.mIsChildInitialized ? "true" : "false")
             << ", mInterlinePosition=" << aDOMPoint.mInterlinePosition << " }";
     return aStream;
+  }
+
+  friend inline auto format_as(const SelfType& aDOMPoint) {
+    return ToString(aDOMPoint);
   }
 
  private:
@@ -1695,6 +1709,13 @@ class EditorDOMRangeBase final {
     mEnd.Clear();
   }
 
+  inline void AssertBoundariesAreSetAndValid() const {
+    NS_WARNING_ASSERTION(mStart.IsSetAndValid(), ToString(mStart).c_str());
+    MOZ_ASSERT(mStart.IsSetAndValid());
+    NS_WARNING_ASSERTION(mEnd.IsSetAndValid(), ToString(mEnd).c_str());
+    MOZ_ASSERT(mEnd.IsSetAndValid());
+  }
+
   const PointType& StartRef() const { return mStart; }
   const PointType& EndRef() const { return mEnd; }
 
@@ -1806,6 +1827,10 @@ class EditorDOMRangeBase final {
               << " }";
     }
     return aStream;
+  }
+
+  friend inline auto format_as(const SelfType& aRange) {
+    return ToString(aRange);
   }
 
  private:

@@ -7,6 +7,7 @@ package mozilla.components.compose.browser.toolbar.ui
 import android.content.Context
 import android.text.Spanned
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.DoNotInline
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.ComposeFoundationFlags
@@ -25,6 +26,8 @@ import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,6 +51,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.InterceptPlatformTextInput
@@ -70,17 +78,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.toColorInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import mozilla.components.compose.base.theme.AcornTheme
+import mozilla.components.compose.base.theme.autofillText
+import mozilla.components.compose.base.theme.selectedText
 import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_SEARCH_BOX
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.support.utils.SafeUrl
 
 private const val TEXT_SIZE = 15f
-private const val TEXT_HIGHLIGHT_COLOR = "#5C592ACB"
 private const val MAX_TEXT_LENGTH_TO_PASTE = 2_000
 
 /**
@@ -127,7 +135,14 @@ internal fun InlineAutocompleteTextField(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val suggestionTextColor = MaterialTheme.colorScheme.onSurface
-    val highlightBackgroundColor = Color(TEXT_HIGHLIGHT_COLOR.toColorInt())
+    val highlightBackgroundColor = MaterialTheme.colorScheme.autofillText
+
+    // Set the text field selection colors locally so that the colors will not be overridden when
+    // nested in `MaterialTheme`.
+    val textSelectionColors = TextSelectionColors(
+        handleColor = MaterialTheme.colorScheme.primary,
+        backgroundColor = MaterialTheme.colorScheme.selectedText,
+    )
 
     var suggestionBounds by remember { mutableStateOf<Rect?>(null) }
     val deviceLayoutDirection = LocalLayoutDirection.current
@@ -182,6 +197,7 @@ internal fun InlineAutocompleteTextField(
     CompositionLocalProvider(
         LocalLayoutDirection provides LayoutDirection.Ltr,
         LocalTextToolbar provides pasteInterceptorToolbar,
+        LocalTextSelectionColors provides textSelectionColors,
     ) {
         // Set incognito mode for the keyboard when needed.
         InterceptPlatformTextInput(
@@ -206,7 +222,47 @@ internal fun InlineAutocompleteTextField(
                             keyboardController?.show()
                         }
                     }
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .onPreviewKeyEvent { keyEvent ->
+                        if (keyEvent.type == KeyEventType.KeyUp &&
+                            (keyEvent.key == Key.DirectionRight || keyEvent.key == Key.MoveEnd)
+                        ) {
+                            val currentText = textFieldState.text.toString()
+                            val suggestionText = currentSuggestion?.text
+
+                            if (suggestionText != null && shouldAcceptSuggestion(
+                                    currentText = currentText,
+                                    suggestionText = suggestionText,
+                                    useSuggestion = useSuggestion,
+                                )
+                            ) {
+                                onUrlEdit(
+                                    BrowserToolbarQuery(
+                                        previous = currentText,
+                                        current = suggestionText,
+                                    ),
+                                )
+                                textFieldState.edit {
+                                    replace(0, length, suggestionText)
+                                    selection = TextRange(suggestionText.length)
+                                }
+                                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE)
+                                    as InputMethodManager
+                                imm.updateSelection(
+                                    localView,
+                                    suggestionText.length,
+                                    suggestionText.length,
+                                    -1,
+                                    -1,
+                                )
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        }
+                    },
                 textStyle = TextStyle(
                     fontSize = TEXT_SIZE.sp,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -221,7 +277,7 @@ internal fun InlineAutocompleteTextField(
                     showKeyboardOnFocus = true,
                     keyboardType = KeyboardType.Uri,
                     imeAction = ImeAction.Go,
-                    autoCorrectEnabled = !usePrivateModeQueries,
+                    autoCorrectEnabled = false,
                 ),
                 onKeyboardAction = {
                     keyboardController?.hide()
@@ -450,6 +506,19 @@ internal object NoPersonalizedLearningHelper {
     }
 }
 
+private fun shouldAcceptSuggestion(
+    currentText: String,
+    suggestionText: String,
+    useSuggestion: Boolean,
+): Boolean {
+    val suggestionExtendsCurrentText = suggestionText.startsWith(currentText)
+    val suggestionAddsNewText = suggestionText.length > currentText.length
+
+    return useSuggestion &&
+        suggestionExtendsCurrentText &&
+        suggestionAddsNewText
+}
+
 /**
  * Helper for sanitizing what gets pasted through the contextual menu.
  */
@@ -535,7 +604,7 @@ private class PasteSanitizerTextToolbar(
 private fun InlineAutocompleteTextFieldWithSuggestion() {
     AcornTheme {
         Box(
-            Modifier.background(MaterialTheme.colorScheme.surfaceDim),
+            Modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
             InlineAutocompleteTextField(
                 query = "wiki",
@@ -559,7 +628,7 @@ private fun InlineAutocompleteTextFieldWithSuggestion() {
 private fun InlineAutocompleteTextFieldWithNoQuery() {
     AcornTheme {
         Box(
-            Modifier.background(MaterialTheme.colorScheme.surfaceDim),
+            Modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest),
         ) {
             InlineAutocompleteTextField(
                 query = "",

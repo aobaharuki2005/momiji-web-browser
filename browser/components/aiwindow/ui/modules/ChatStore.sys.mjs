@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 ChromeUtils.defineLazyGetter(lazy, "log", function () {
   return console.createInstance({
     prefix: "ChatStore",
-    maxLogLevelPref: "browser.aiwindow.chatStore.loglevel",
+    maxLogLevelPref: "browser.smartwindow.chatStore.loglevel",
   });
 });
 
@@ -36,10 +36,23 @@ import {
   MESSAGES_BY_DATE,
   MESSAGES_BY_DATE_AND_ROLE,
   DELETE_CONVERSATION_BY_ID,
+  DELETE_CONVERSATIONS_BY_DATE,
+  DELETE_ALL_CONVERSATIONS,
   CONVERSATIONS_OLDEST,
   CONVERSATION_HISTORY,
   ESCAPE_CHAR,
+  REMOVE_ALL_SITE_URLS_FROM_MESSAGES,
+  REMOVE_SITE_URL_FROM_MESSAGES,
   getConversationMessagesSql,
+  getDeleteMessagesByIdsSql,
+  getDeleteEmptyConversationsSql,
+  LLM_TELEMETRY_TABLE,
+  GET_LLM_TELEMETRY_BY_CONV_ID,
+  GET_LLM_TELEMETRY_DATA_BY_CONV_ID,
+  UPSERT_LLM_TELEMETRY,
+  MARK_LLM_TELEMETRY_UNPROCESSED,
+  MARK_LLM_TELEMETRY_PROCESSED,
+  GET_CONVERSATIONS_FOR_TELEMETRY,
 } from "./ChatSql.sys.mjs";
 
 import { ChatMinimal } from "./ChatMessage.sys.mjs";
@@ -49,8 +62,8 @@ export { ChatMessage, ChatMinimal } from "./ChatMessage.sys.mjs";
 export {
   CONVERSATION_STATUS,
   MESSAGE_ROLE,
-  INSIGHTS_FLAG_SOURCE,
-} from "./ChatConstants.sys.mjs";
+  MEMORIES_FLAG_SOURCE,
+} from "./AIWindowConstants.sys.mjs";
 
 import {
   CURRENT_SCHEMA_VERSION,
@@ -58,7 +71,7 @@ import {
   DB_FILE_NAME,
   PREF_BRANCH,
   CONVERSATION_STATUS,
-} from "./ChatConstants.sys.mjs";
+} from "./AIWindowConstants.sys.mjs";
 
 import {
   parseConversationRow,
@@ -88,7 +101,7 @@ const SORTS = ["ASC", "DESC"];
  * @example
  * let { ChatStore, ChatConversation, ChatMessage, MESSAGE_ROLE } =
  *   ChromeUtils.importESModule("resource:///modules/aiwindow/ui/modules/ChatStore.sys.mjs");
- * const chatStore = new ChatStore();
+ * const chatStore = ChatStore;
  * const conversation = new ChatConversation({
  *   title: "title",
  *   description: "description",
@@ -119,15 +132,17 @@ const SORTS = ["ASC", "DESC"];
  *
  * @property {*} x ?
  */
-export class ChatStore {
+class ChatStore {
   #asyncShutdownBlocker;
   #conn;
   #promiseConn;
+  #lastRecordedSize;
 
   constructor() {
     this.#asyncShutdownBlocker = async () => {
       await this.#closeConnection();
     };
+    this.#lastRecordedSize = null;
   }
 
   /**
@@ -137,7 +152,11 @@ export class ChatStore {
    */
   async updateConversation(conversation) {
     await this.#ensureDatabase().catch(e => {
-      lazy.log.error("Could not ensure a database connection.");
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
       throw e;
     });
 
@@ -155,6 +174,12 @@ export class ChatStore {
           updated_date: conversation.updatedDate,
           status: conversation.status,
           active_branch_tip_message_id: conversation.activeBranchTipMessageId,
+          security_properties: toJSONOrNull(conversation.securityProperties),
+          seen_urls: JSON.stringify(Array.from(conversation.seenUrls ?? [])),
+          memories_toggled: conversation.memoriesToggled,
+          serp_urls_for_anonymous_fetch: JSON.stringify(
+            Array.from(conversation.serpUrlsForAnonymousFetch ?? [])
+          ),
         });
 
         const messages = conversation.messages.map(m => ({
@@ -172,17 +197,82 @@ export class ChatStore {
           usage: toJSONOrNull(m.usage),
           page_url: m.pageUrl?.href || "",
           turn_index: m.turnIndex,
-          insights_enabled: m.insightsEnabled,
-          insights_flag_source: m.insightsFlagSource,
-          insights_applied_jsonb: toJSONOrNull(m.insightsApplied),
+          memories_enabled: m.memoriesEnabled,
+          memories_flag_source: m.memoriesFlagSource,
+          memories_applied_jsonb: toJSONOrNull(m.memoriesApplied),
           web_search_queries_jsonb: toJSONOrNull(m.webSearchQueries),
+          tool_ui_data_jsonb: toJSONOrNull(m.toolUIData),
         }));
         await this.#conn.executeCached(MESSAGE_INSERT, messages);
       })
       .catch(e => {
-        lazy.log.error("Transaction failed to execute");
+        lazy.log.error("Transaction failed to execute", e.message, e.stack);
         throw e;
       });
+
+    this.#recordDatabaseSize();
+  }
+
+  /**
+   * Replaces all page_url entries with `null` for all messages .
+   * Additionally, the `page_history_deleted` column will be set to `true`.
+   *
+   */
+  async deleteAllUrlsFromMessages() {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    await this.#conn
+      .executeCached(REMOVE_ALL_SITE_URLS_FROM_MESSAGES)
+      .catch(e => {
+        lazy.log.error(
+          "Could not remove all site urls from messages",
+          e.message,
+          e.stack
+        );
+
+        throw e;
+      });
+
+    this.#recordDatabaseSize();
+  }
+
+  /**
+   * Replaces all page_url values that match the specific page_url with a
+   * `null` value. Additionally, the `page_history_deleted` column
+   * will be set to `true`.
+   *
+   * @param {string} page_url - A URL to remove from messages
+   */
+  async deleteUrlFromMessages(page_url) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    await this.#conn
+      .executeCached(REMOVE_SITE_URL_FROM_MESSAGES, { page_url })
+      .catch(e => {
+        lazy.log.error(
+          `Could not remove 'page_url' entries for ${page_url}`,
+          e.message,
+          e.stack
+        );
+
+        throw e;
+      });
+
+    this.#recordDatabaseSize();
   }
 
   /**
@@ -193,7 +283,11 @@ export class ChatStore {
    */
   async findOldestConversations(numberOfConversations) {
     await this.#ensureDatabase().catch(e => {
-      lazy.log.error("Could not ensure a database connection.");
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
       throw e;
     });
 
@@ -202,7 +296,11 @@ export class ChatStore {
         limit: numberOfConversations,
       })
       .catch(e => {
-        lazy.log.error("Could not retrieve oldest conversations.");
+        lazy.log.error(
+          "Could not retrieve oldest conversations.",
+          e.message,
+          e.stack
+        );
         throw e;
       });
 
@@ -222,7 +320,11 @@ export class ChatStore {
    */
   async findRecentConversations(numberOfConversations) {
     await this.#ensureDatabase().catch(e => {
-      lazy.log.error("Could not ensure a database connection.");
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
       throw e;
     });
 
@@ -231,7 +333,11 @@ export class ChatStore {
         limit: numberOfConversations,
       })
       .catch(e => {
-        lazy.log.error("Could not retrieve most recent conversations.");
+        lazy.log.error(
+          "Could not retrieve most recent conversations.",
+          e.message,
+          e.stack
+        );
         throw e;
       });
 
@@ -251,12 +357,21 @@ export class ChatStore {
    * @returns {ChatConversation} - The conversation and its messages
    */
   async findConversationById(conversationId) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
     const conversations = await this.#findConversationsWithMessages(
       CONVERSATION_BY_ID,
       {
         conv_id: conversationId,
       }
-    );
+    ).catch(() => []);
 
     return conversations[0] ?? null;
   }
@@ -310,6 +425,15 @@ export class ChatStore {
     limit = -1,
     offset = -1
   ) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
     const params = {
       start_date: startDate.getTime(),
       end_date: endDate.getTime(),
@@ -326,6 +450,22 @@ export class ChatStore {
     let rows = await this.#conn.executeCached(sql, params);
 
     return parseMessageRows(rows);
+  }
+
+  /**
+   * Search for messages for the most recent messages, optionally,
+   * filter the messages by a specific message role type.
+   *
+   * This is a wrapper around findMessagesByDate that defines the largest possible start and end date range.
+   *
+   * @param {MessageRole} [role=-1] - The message role type to filter by, one of 0|1|2|3
+   * as defined by the constant MESSAGE_ROLE
+   * @param {number} [limit=-1] - The max number of messages to retrieve
+   *
+   * @returns {Array<ChatMessage>} - An array of ChatMessage entries
+   */
+  async getMostRecentMessages(role = -1, limit = 5) {
+    return this.findMessagesByDate(new Date(0), new Date(), role, limit, -1);
   }
 
   #escapeForLike(searchString) {
@@ -348,6 +488,15 @@ export class ChatStore {
    * object path
    */
   async searchContent(keyChain, role = -1) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
     const path = `$.${keyChain}`;
 
     const query =
@@ -373,17 +522,28 @@ export class ChatStore {
   }
 
   /**
-   * Searches for conversations where the conversation title, or the conversation
-   * contains a user message where the search string contains a partial match
-   * in the message.content.body field
+   * Searches for conversations where the conversation title or a user/assistant
+   * message contains a partial match of the search string in the
+   * message.content.body field.
    *
    * @param {string} searchString - The string to search with for conversations
+   * @param {boolean} [includeMessages=true] - Whether to fetch messages for each conversation
    *
-   * @returns {Array<ChatConversation>} - An array of conversations with messages
-   * that contain a message that matches the search string in the conversation
-   * titles
+   * @returns {Array<ChatConversation>} - An array of conversations with or without messages
+   * that match the search string in title or message body. Each conversation may
+   * have a `matchingSnippet` property containing the raw markdown text of the
+   * first message body that matched the search string.
    */
-  async search(searchString) {
+  async search(searchString, includeMessages = true) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
     const path = `$.body`;
     const pattern = `%${this.#escapeForLike(searchString)}%`;
 
@@ -396,7 +556,15 @@ export class ChatStore {
       return [];
     }
 
-    const conversations = rows.map(parseConversationRow);
+    const conversations = rows.map(row => {
+      const conv = parseConversationRow(row);
+      conv.matchingSnippet = row.getResultByName("matching_snippet");
+      return conv;
+    });
+
+    if (!includeMessages) {
+      return conversations;
+    }
 
     return await this.#getMessagesForConversations(conversations);
   }
@@ -409,6 +577,15 @@ export class ChatStore {
    * @param {string} [sort="desc"] - desc|asc The sorting order based on updated_date for conversations
    */
   async chatHistoryView(pageNumber = 1, pageSize = 20, sort = "desc") {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
     const sorting = SORTS.find(item => item === sort.toUpperCase()) ?? "DESC";
     const offset = pageSize * (pageNumber - 1);
     const limit = pageSize;
@@ -513,6 +690,53 @@ export class ChatStore {
   }
 
   /**
+   * Deletes messages from a conversation
+   *
+   * @param {Array<ChatMessage>} messages
+   */
+  async deleteMessages(messages) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    const chunkSize = 250;
+    const chunks = [];
+    for (let i = 0; i < messages.length; i += chunkSize) {
+      chunks.push(messages.slice(i, i + chunkSize));
+    }
+
+    for (const chunk of chunks) {
+      const conversations = Array.from(
+        chunk.reduce((convs, message) => {
+          convs.add(message.convId);
+
+          return convs;
+        }, new Set())
+      );
+
+      await this.#conn.executeTransaction(async () => {
+        const deleteMessagesSql = getDeleteMessagesByIdsSql(chunk.length);
+        await this.#conn.execute(
+          deleteMessagesSql,
+          chunk.map(m => m.id)
+        );
+
+        const deleteConvsSql = getDeleteEmptyConversationsSql(
+          conversations.length
+        );
+        await this.#conn.execute(deleteConvsSql, conversations);
+      });
+    }
+
+    this.#recordDatabaseSize();
+  }
+
+  /**
    * Returns the file size of the database.
    * Establishes a connection first to make sure the
    * database exists.
@@ -520,7 +744,14 @@ export class ChatStore {
    * @returns {number} - The file size in bytes
    */
   async getDatabaseSize() {
-    await this.#ensureDatabase();
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
 
     const stats = await IOUtils.stat(this.databaseFilePath);
     return stats.size;
@@ -532,11 +763,59 @@ export class ChatStore {
    * @param {string} id - The conv_id of a conversation row to delete
    */
   async deleteConversationById(id) {
-    await this.#ensureDatabase();
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
 
     await this.#conn.execute(DELETE_CONVERSATION_BY_ID, {
       conv_id: id,
     });
+
+    this.#recordDatabaseSize();
+  }
+
+  /**
+   * Deletes all conversations created within the given date range.
+   * Messages are cascade-deleted via foreign key constraints.
+   *
+   * @param {Date} startDate - The start date, inclusive
+   * @param {Date} endDate - The end date, inclusive
+   */
+  async deleteConversationsByDateRange(startDate, endDate) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    await this.#conn.execute(DELETE_CONVERSATIONS_BY_DATE, {
+      start_date: startDate.getTime(),
+      end_date: endDate.getTime(),
+    });
+  }
+
+  /**
+   * Deletes all conversations and their messages.
+   */
+  async deleteAllConversations() {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    await this.#conn.execute(DELETE_ALL_CONVERSATIONS);
   }
 
   /**
@@ -544,6 +823,28 @@ export class ChatStore {
    */
   async destroyDatabase() {
     await this.#removeDatabaseFiles();
+    this.#promiseConn = null;
+    this.#recordDatabaseSizeValue(0);
+  }
+
+  async #recordDatabaseSize() {
+    let size = null;
+    try {
+      size = await this.getDatabaseSize();
+    } catch (e) {
+      lazy.log.error("Could not record database size", e.message, e.stack);
+      return;
+    }
+
+    this.#recordDatabaseSizeValue(size);
+  }
+
+  #recordDatabaseSizeValue(size) {
+    if (size === this.#lastRecordedSize) {
+      return;
+    }
+    this.#lastRecordedSize = size;
+    Glean.smartWindow.chatStorage.set(size);
   }
 
   /**
@@ -573,8 +874,11 @@ export class ChatStore {
         conversations.map(c => c.id)
       )
       .catch(e => {
-        lazy.log.error("Could not retrieve messages for conversatons");
-        lazy.log.error(`${e.message}\n${e.stack}`);
+        lazy.log.error(
+          "Could not retrieve messages for conversatons",
+          e.message,
+          e.stack
+        );
 
         return [];
       });
@@ -594,11 +898,21 @@ export class ChatStore {
   async #openConnection() {
     lazy.log.debug("Opening new connection");
 
+    let markerData = null;
+    if (Services.profiler.IsActive()) {
+      let sizeLabel = "new";
+      try {
+        const stat = await IOUtils.stat(this.databaseFilePath);
+        sizeLabel = `${(stat.size / 1048576).toFixed(1)} MiB`;
+      } catch (_e) {}
+      markerData = { startTime: ChromeUtils.now(), sizeLabel };
+    }
+
     try {
       const confConfig = { path: this.databaseFilePath };
       this.#conn = await lazy.Sqlite.openConnection(confConfig);
     } catch (e) {
-      lazy.log.error("openConnection() could not open db:", e.message);
+      lazy.log.error("openConnection() could not open db:", e.message, e.stack);
       throw e;
     }
 
@@ -619,6 +933,14 @@ export class ChatStore {
       await this.#conn.execute("PRAGMA foreign_keys = ON;");
     } catch (e) {
       lazy.log.warn("Configuring SQLite PRAGMA settings: ", e.message);
+    }
+
+    if (markerData) {
+      ChromeUtils.addProfilerMarker(
+        "SmartWindow",
+        { startTime: markerData.startTime },
+        `ChatStore:open_db(${markerData.sizeLabel})`
+      );
     }
   }
 
@@ -675,7 +997,11 @@ export class ChatStore {
       try {
         await this.#openConnection();
       } catch (e) {
-        lazy.log.error("Could not open the database connection.", e);
+        lazy.log.error(
+          "Could not open the database connection.",
+          e.message,
+          e.stack
+        );
         deferred.reject(new Error("Could not open the database connection"));
         return deferred.promise;
       }
@@ -722,18 +1048,18 @@ export class ChatStore {
         return;
       }
 
-      await this.applyMigrations();
+      await this.applyMigrations(version);
       await this.setSchemaVersion(this.CURRENT_SCHEMA_VERSION);
     });
   }
 
-  async applyMigrations() {
+  async applyMigrations(version) {
     for (const migration of migrations) {
       if (typeof migration !== "function") {
         continue;
       }
 
-      await migration(this.#conn, this.CURRENT_SCHEMA_VERSION);
+      await migration(this.#conn, version);
     }
   }
 
@@ -765,22 +1091,273 @@ export class ChatStore {
 
   async #findConversationsWithMessages(sql, queryParams) {
     await this.#ensureDatabase().catch(e => {
-      lazy.log.error("Could not ensure a database connection.");
-      lazy.log.error(`${e.message}\n${e.stack}`);
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
 
       return [];
     });
 
-    // @todo Bug 2005414
-    // Check summary first, find the one with the largest end_ordinal.
-    // If not found retrieve all messages.
-    // If found compare end_ordinal of the summary with active branch ordinal
-    // to determine if extra messages must be retrieved.
     let rows = await this.#conn.executeCached(sql, queryParams);
 
     const conversations = rows.map(parseConversationRow);
 
     return await this.#getMessagesForConversations(conversations);
+  }
+
+  /**
+   * Marks a conversation's LLM telemetry as unprocessed.
+   *
+   * If the record does not exist, it will be created with an empty prompts object.
+   * If it exists, only the processed flag is updated to 0.
+   *
+   * @param {string} conversationId - The ID of the conversation
+   */
+  async markLLMTelemetryUnprocessed(conversationId) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    await this.#conn
+      .executeCached(MARK_LLM_TELEMETRY_UNPROCESSED, {
+        conv_id: conversationId,
+      })
+      .catch(e => {
+        lazy.log.error(
+          `Could not mark LLM telemetry as unprocessed for ${conversationId}`,
+          e.message,
+          e.stack
+        );
+        throw e;
+      });
+
+    this.#recordDatabaseSize();
+  }
+
+  /**
+   * Merges new LLM telemetry prompts/probabilities into the existing mappings and
+   * marks the conversation as processed (optional).
+   *
+   * @param {string} conversationId - The ID of the conversation to update
+   * @param {object} prompts - New telemetry prompt attributes to merge
+   * @param {object} probabilities - New telemetry probability attributes to merge
+   * @param {number} uniform_sampling_probability - Uniform sampling probability if any, or 0
+   * @param {number} processed - Processed flag value, 0 for unprocessed and 1 for processed
+   */
+  async updateLLMTelemetryRecord(
+    conversationId,
+    prompts = {},
+    probabilities = {},
+    uniform_sampling_probability = 0,
+    processed = 0
+  ) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    await this.#conn
+      .executeTransaction(async () => {
+        const rows = await this.#conn.executeCached(
+          GET_LLM_TELEMETRY_DATA_BY_CONV_ID,
+          { conv_id: conversationId }
+        );
+
+        let existingPrompts = {};
+        let existingProbabilities = {};
+
+        if (rows.length) {
+          try {
+            existingPrompts = JSON.parse(
+              rows[0].getResultByName("telemetry_prompts") || "{}"
+            );
+          } catch (e) {
+            lazy.log.warn(
+              `Could not parse LLM telemetry prompts for ${conversationId}`,
+              e.message
+            );
+          }
+
+          try {
+            existingProbabilities = JSON.parse(
+              rows[0].getResultByName("telemetry_probabilities") || "{}"
+            );
+          } catch (e) {
+            lazy.log.warn(
+              `Could not parse LLM telemetry probabilities for ${conversationId}`,
+              e.message
+            );
+          }
+        }
+
+        const mergedPrompts = {
+          ...existingPrompts,
+          ...(prompts ?? {}),
+        };
+
+        const mergedProbabilities = {
+          ...(probabilities ?? {}),
+          ...existingProbabilities,
+        };
+
+        await this.#conn.executeCached(UPSERT_LLM_TELEMETRY, {
+          conv_id: conversationId,
+          telemetry_prompts: JSON.stringify(mergedPrompts),
+          telemetry_probabilities: JSON.stringify(mergedProbabilities),
+          uniform_sampling_probability,
+          processed_time: Date.now(),
+          processed,
+        });
+      })
+      .catch(e => {
+        lazy.log.error(
+          `Could not update LLM telemetry prompts for ${conversationId}`,
+          e.message,
+          e.stack
+        );
+        throw e;
+      });
+
+    this.#recordDatabaseSize();
+  }
+
+  /**
+   * Gets LLM telemetry for a conversation. (Mainly for tests)
+   *
+   * @param {string} conversationId - The ID of the conversation
+   * @returns {object|null} - LLM telemetry row, or null if none exists
+   */
+  async findLLMTelemetryByConversationId(conversationId) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    const rows = await this.#conn
+      .executeCached(GET_LLM_TELEMETRY_BY_CONV_ID, {
+        conv_id: conversationId,
+      })
+      .catch(e => {
+        lazy.log.error(
+          `Could not retrieve LLM telemetry for ${conversationId}`,
+          e.message,
+          e.stack
+        );
+        throw e;
+      });
+
+    if (!rows.length) {
+      return null;
+    }
+
+    return {
+      convId: rows[0].getResultByName("conv_id"),
+      telemetryPrompts: JSON.parse(
+        rows[0].getResultByName("telemetry_prompts") || "{}"
+      ),
+      telemetryProbabilities: JSON.parse(
+        rows[0].getResultByName("telemetry_probabilities") || "{}"
+      ),
+      uniformSamplingProbability: rows[0].getResultByName(
+        "uniform_sampling_probability"
+      ),
+      processedTime: rows[0].getResultByName("processed_time"),
+      processed: rows[0].getResultByName("processed"),
+    };
+  }
+
+  /**
+   * This method updates the llm_telemetry table to track the latest
+   * turn in which each prompt in telemetryPrompts was run
+   *
+   * @param {string} convId
+   * @param {{[key: string]: number}} telemetryPrompts
+   * @param {number} turnIndex
+   */
+  async markLLMTelemetryProcessed(convId, telemetryPrompts, turnIndex) {
+    await this.#ensureDatabase().catch(e => {
+      lazy.log.error(
+        "Could not ensure a database connection.",
+        e.message,
+        e.stack
+      );
+      throw e;
+    });
+
+    await this.#conn
+      .executeTransaction(async () => {
+        const existingRows = await this.#conn.executeCached(
+          GET_LLM_TELEMETRY_BY_CONV_ID,
+          { conv_id: convId }
+        );
+
+        const existingPrompts = existingRows.length
+          ? JSON.parse(
+              existingRows[0].getResultByName("telemetry_prompts") || "{}"
+            )
+          : {};
+
+        const newPrompts = Object.fromEntries(
+          Object.keys(telemetryPrompts).map(name => [name, turnIndex])
+        );
+
+        await this.#conn.executeCached(MARK_LLM_TELEMETRY_PROCESSED, {
+          conv_id: convId,
+          processed_time: Date.now(),
+          telemetry_prompts: JSON.stringify({
+            ...existingPrompts,
+            ...newPrompts,
+          }),
+        });
+      })
+      .catch(e => {
+        lazy.log.error(
+          `Could not mark ${convId} as processed.`,
+          e.message,
+          e.stack
+        );
+        throw e;
+      });
+  }
+
+  async getConversationsForTelemetry() {
+    await this.#ensureDatabase();
+    const rows = await this.#conn
+      .executeCached(GET_CONVERSATIONS_FOR_TELEMETRY)
+      .catch(e => {
+        lazy.log.error(
+          "Failed to fetch conversations for telemetry",
+          e.message,
+          e.stack
+        );
+        throw e;
+      });
+
+    return rows.map(row => ({
+      convId: row.getResultByName("conv_id"),
+      telemetryJobs: JSON.parse(row.getResultByName("telemetryJobs") ?? "{}"),
+      telemetryProbs: JSON.parse(row.getResultByName("telemetryProbs") ?? "{}"),
+      uniformSamplingProbability: row.getResultByName(
+        "uniform_sampling_probability"
+      ),
+      modelId: row.getResultByName("model_id"),
+      turnIndex: row.getResultByName("turn_index"),
+    }));
   }
 
   async #createDatabaseEntities() {
@@ -791,6 +1368,7 @@ export class ChatStore {
     await this.#conn.execute(MESSAGE_URL_INDEX);
     await this.#conn.execute(MESSAGE_CREATED_DATE_INDEX);
     await this.#conn.execute(MESSAGE_CONV_ID_INDEX);
+    await this.#conn.execute(LLM_TELEMETRY_TABLE);
   }
 
   get #removeDatabaseOnStartup() {
@@ -825,3 +1403,6 @@ export class ChatStore {
     return PathUtils.join(PathUtils.profileDir, this.databaseFileName);
   }
 }
+
+const chatStore = new ChatStore();
+export { chatStore as ChatStore };

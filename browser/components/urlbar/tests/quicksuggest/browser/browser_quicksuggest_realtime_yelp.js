@@ -136,8 +136,8 @@ add_task(async function ui_single() {
   Assert.ok(result.isBestMatch);
 
   info("Check the group label");
-  Assert.equal(getComputedStyle(row, "::before").content, "attr(label)");
-  Assert.equal(row.getAttribute("label"), "Yelp · Sponsored");
+  Assert.equal(getComputedStyle(row, "::before").content, "none");
+  Assert.ok(!row.hasAttribute("label"));
 
   Assert.deepEqual(
     document.l10n.getAttributes(row._content),
@@ -259,7 +259,7 @@ add_task(async function activate_multi() {
     let item = items[index];
 
     let newTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, value.url);
-    await EventUtils.synthesizeMouseAtCenter(item, {}, item.ownerGlobal);
+    EventUtils.synthesizeMouseAtCenter(item, {}, item.documentGlobal);
     let newTab = await newTabOpened;
     Assert.ok(true, `Expected URL is loaded [${value.url}]`);
     BrowserTestUtils.removeTab(newTab);
@@ -285,7 +285,7 @@ add_task(async function activate_multi() {
     let item = items[index];
 
     let newTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, value.url);
-    await EventUtils.synthesizeMouseAtCenter(item, {}, item.ownerGlobal);
+    EventUtils.synthesizeMouseAtCenter(item, {}, item.documentGlobal);
     let newTab = await newTabOpened;
     Assert.ok(true, `Expected URL is loaded [${value.url}]`);
     BrowserTestUtils.removeTab(newTab);

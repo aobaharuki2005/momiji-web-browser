@@ -101,6 +101,7 @@ const fakeNimbusTestPrefs = [
   ["nimbus-test.types.int", 100],
   ["nimbus-test.types.string", "bar"],
   ["nimbus.all_prefs_with_nimbus._prefix_should_be_removed", "not serialized"],
+  ["nimbus.rollouts.enabled", false],
 ];
 
 // NB: Nimbus experiment setup is adapted from
@@ -231,6 +232,9 @@ async function checkBackupIgnoredNimbusPrefs(backupPrefsFilePath) {
   checkPrefNotSerialized(
     "nimbus.all_prefs_with_nimbus._prefix_should_be_removed"
   );
+
+  // nimbus.rollouts.enabled is in the exception list and should be preserved.
+  Assert.ok(contents.includes('user_pref("nimbus.rollouts.enabled", false);'));
 }
 
 async function performBackup() {
@@ -249,6 +253,7 @@ async function performBackup() {
   const simpleCopyFiles = [
     { path: "xulstore.json" },
     { path: "containers.json" },
+    { path: "customKeys.json" },
     { path: "handlers.json" },
     { path: "search.json.mozlz4" },
     { path: "user.js" },

@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIScriptElement_h___
-#define nsIScriptElement_h___
+#ifndef nsIScriptElement_h_
+#define nsIScriptElement_h_
 
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/loader/ScriptKind.h"
@@ -374,4 +372,4 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
   nsWeakPtr mCreatorParser;
 };
 
-#endif  // nsIScriptElement_h___
+#endif  // nsIScriptElement_h_

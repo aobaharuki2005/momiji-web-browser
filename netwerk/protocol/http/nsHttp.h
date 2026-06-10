@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHttp_h__
-#define nsHttp_h__
+#ifndef nsHttp_h_
+#define nsHttp_h_
 
 #include <stdint.h>
 #include "prtime.h"
@@ -17,6 +15,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "NSSErrorsService.h"
+#include "nsIHttpChannelInternal.h"
 
 class nsICacheEntry;
 
@@ -179,6 +178,9 @@ inline bool IsHttp3(SupportedAlpnRank aRank) {
 // Need to be used together with NS_HTTP_CONNECT_ONLY
 #define NS_HTTP_TLS_TUNNEL (1 << 29)
 
+// When set, we use HappyEyeballsConnectionAttempt to establish connection.
+#define NS_HTTP_USE_HAPPY_EYEBALLS (1 << 30)
+
 #define NS_HTTP_TRR_FLAGS_FROM_MODE(x) ((static_cast<uint32_t>(x) & 3) << 19)
 
 #define NS_HTTP_TRR_MODE_FROM_FLAGS(x) \
@@ -328,7 +330,7 @@ struct nsHttpAtom {
     if (_val.IsEmpty()) {
       return nullptr;
     }
-    return _val.BeginReading();
+    return _val.get();
   }
 
   const nsCString& val() const { return _val; }
@@ -391,13 +393,13 @@ namespace nsHttp {
 
 // Declare all atoms
 //
-// The atom names and values are stored in nsHttpAtomList.h and are brought
+// The atom names and values are stored in nsHttpAtomList.inc and are brought
 // to you by the magic of C preprocessing.  Add new atoms to nsHttpAtomList
 // and all support logic will be auto-generated.
 //
 #define HTTP_ATOM(_name, _value) \
   inline constexpr nsHttpAtomLiteral _name(_value);
-#include "nsHttpAtomList.h"
+#include "nsHttpAtomList.inc"
 #undef HTTP_ATOM
 }  // namespace nsHttp
 
@@ -525,17 +527,10 @@ void DisallowHTTPSRR(uint32_t& aCaps);
 
 nsLiteralCString HttpVersionToTelemetryLabel(HttpVersion version);
 
-enum class ProxyDNSStrategy : uint8_t {
-  // To resolve the origin of the end server we are connecting
-  // to.
-  ORIGIN = 1 << 0,
-  // To resolve the host name of the proxy.
-  PROXY = 1 << 1
-};
-
-ProxyDNSStrategy GetProxyDNSStrategyHelper(const char* aType, uint32_t aFlag);
+nsIHttpChannelInternal::ProxyDNSStrategy GetProxyDNSStrategyHelper(
+    const char* aType, uint32_t aFlag);
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // nsHttp_h__
+#endif  // nsHttp_h_

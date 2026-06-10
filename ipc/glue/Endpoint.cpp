@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,7 +32,7 @@ UntypedManagedEndpoint::~UntypedManagedEndpoint() {
     mInner->mOtherSide->ActorEventTarget()->Dispatch(NS_NewRunnableFunction(
         "~ManagedEndpoint (Local)",
         [otherSide = mInner->mOtherSide, id = mInner->mId] {
-          if (IProtocol* actor = otherSide->Get(); actor && actor->CanRecv()) {
+          if (IProtocol* actor = otherSide->Get(); actor && actor->CanSend()) {
             MOZ_DIAGNOSTIC_ASSERT(actor->Id() == id, "Wrong Actor?");
             RefPtr<ActorLifecycleProxy> strongProxy(actor->GetLifecycleProxy());
             strongProxy->Get()->OnMessageReceived(
@@ -49,6 +47,9 @@ UntypedManagedEndpoint::~UntypedManagedEndpoint() {
         [toplevel = mInner->mToplevel, id = mInner->mId] {
           if (IProtocol* actor = toplevel->Get();
               actor && actor->CanSend() && actor->GetIPCChannel()) {
+            // Clear the reservation which was taken when the
+            // UntypedManagedEndpoint was deserialized.
+            actor->ToplevelProtocol()->ClearReservation(id);
             actor->GetIPCChannel()->Send(MakeUnique<IPC::Message>(
                 id, MANAGED_ENDPOINT_DROPPED_MESSAGE_TYPE));
           }
@@ -56,10 +57,33 @@ UntypedManagedEndpoint::~UntypedManagedEndpoint() {
   }
 }
 
+bool UntypedManagedEndpoint::IsValidForManager(
+    IRefCountedProtocol* aManager) const {
+  return IsValid() && aManager && aManager->Id() == mInner->mManagerId &&
+         aManager->GetProtocolId() == mInner->mManagerType;
+}
+
+bool UntypedManagedEndpoint::IsValidForManager(
+    const UntypedManagedEndpoint& aManager) const {
+  return IsValid() && aManager.IsValid() &&
+         aManager.mInner->mId == mInner->mManagerId &&
+         aManager.mInner->mType == mInner->mManagerType;
+}
+
 bool UntypedManagedEndpoint::BindCommon(IProtocol* aActor,
                                         IRefCountedProtocol* aManager) {
   MOZ_ASSERT(aManager);
-  if (!mInner) {
+  if (!aActor) {
+    NS_WARNING("Cannot bind to null actor");
+    return false;
+  }
+
+  if (!IsForProtocol(aActor->GetProtocolId())) {
+    NS_WARNING("Cannot bind to incorrect protocol");
+    return false;
+  }
+
+  if (!IsValidForManager(aManager)) {
     NS_WARNING("Cannot bind to invalid endpoint");
     return false;
   }
@@ -72,15 +96,19 @@ bool UntypedManagedEndpoint::BindCommon(IProtocol* aActor,
                           mInner->mToplevel->Get());
   }
 
-  if (NS_WARN_IF(aManager->Id() != mInner->mManagerId) ||
-      NS_WARN_IF(aManager->GetProtocolId() != mInner->mManagerType) ||
-      NS_WARN_IF(aActor->GetProtocolId() != mInner->mType)) {
-    MOZ_ASSERT_UNREACHABLE("Actor and manager do not match Endpoint");
+  if (!aManager->CanSend() || !aManager->GetIPCChannel()) {
+    NS_WARNING("Manager cannot send");
     return false;
   }
 
-  if (!aManager->CanSend() || !aManager->GetIPCChannel()) {
-    NS_WARNING("Manager cannot send");
+  // The endpoint was never sent over IPC, so instead we'll reserve the
+  // ActorId as-if it was sent over IPC.
+  // WARNING: If you introduce error return paths after this point, but before
+  // SetManagerAndRegister, we may leak our ActorId reservation.
+  if (!mInner->mToplevel &&
+      !aManager->ToplevelProtocol()->TryReserve(mInner->mId)) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Failed to reserve ActorId for in-proc UntypedManagedEndpoint");
     return false;
   }
 
@@ -137,11 +165,28 @@ bool ParamTraits<mozilla::ipc::UntypedManagedEndpoint>::Read(
     return true;
   }
 
+  mozilla::ipc::IToplevelProtocol* toplevel =
+      aReader->GetActor()->ToplevelProtocol();
+
+  mozilla::ipc::ActorId id = 0;
+  if (!ReadParam(aReader, &id)) {
+    return false;
+  }
+
+  // Attempt to perform a reservation.
+  // If this succeeds, immediately construct mInner, so that the reservation is
+  // cleaned up when the ManagedEndpoint is destroyed.
+  if (!toplevel->TryReserve(id)) {
+    aReader->FatalError("Failed to reserve remote ActorId with toplevel");
+    return false;
+  }
+
   aResult->mInner.emplace();
   auto& inner = *aResult->mInner;
-  inner.mToplevel =
-      aReader->GetActor()->ToplevelProtocol()->GetWeakLifecycleProxy();
-  return ReadParam(aReader, &inner.mId) && ReadParam(aReader, &inner.mType) &&
+  inner.mToplevel = toplevel->GetWeakLifecycleProxy();
+  inner.mId = id;
+
+  return ReadParam(aReader, &inner.mType) &&
          ReadParam(aReader, &inner.mManagerId) &&
          ReadParam(aReader, &inner.mManagerType);
 }

@@ -57,15 +57,15 @@ add_task(async function test_js_sources_in_profile_additional_info() {
     info(`Total JS sources collected: ${sources.length}`);
 
     // Check the sources to verify they contain actual source text
-    for (const sourceUuid in sources) {
-      const sourceText = sources[sourceUuid];
+    for (const sourceId in sources) {
+      const sourceText = sources[sourceId];
       Assert.ok(
-        typeof sourceUuid === "string" && !!sourceUuid.length,
-        "sourceUuid should be a non-empty string"
+        typeof sourceId === "string" && !!sourceId.length,
+        "sourceId should be a non-empty string"
       );
       Assert.ok(
         typeof sourceText === "string" && !!sourceText.length,
-        `Source ${sourceUuid} should be a non-empty string`
+        `Source ${sourceId} should be a non-empty string`
       );
     }
   });
@@ -118,8 +118,8 @@ add_task(async function test_js_sources_different_types() {
     let inlineSourceCount = 0;
     let inlineSourceLength = 0;
 
-    for (const sourceUuid in sources) {
-      const sourceText = sources[sourceUuid];
+    for (const sourceId in sources) {
+      const sourceText = sources[sourceId];
       if (typeof sourceText === "string" && sourceText.length) {
         // Check if we found our test functions
         if (
@@ -189,8 +189,8 @@ add_task(async function test_js_sources_external_scripts() {
     let foundInlineScript = false;
     let externalScriptSource = null;
 
-    for (const sourceUuid in sources) {
-      const sourceText = sources[sourceUuid];
+    for (const sourceId in sources) {
+      const sourceText = sources[sourceId];
       if (typeof sourceText === "string" && sourceText.length) {
         // Check for external script content
         if (
@@ -235,5 +235,56 @@ add_task(async function test_js_sources_external_scripts() {
     );
 
     info("Successfully verified external JS file collection");
+  });
+});
+
+/**
+ * Test that unavailable JS sources are omitted from jsSources rather than
+ * included with a placeholder value. When the "jssources" feature is not
+ * enabled, all sources have unavailable data and should not appear in jsSources.
+ */
+add_task(async function test_js_sources_unavailable_are_omitted() {
+  Assert.ok(
+    !Services.profiler.IsActive(),
+    "The profiler is not currently active"
+  );
+
+  const url = BASE_URL + "simple.html";
+  await BrowserTestUtils.withNewTab(url, async contentBrowser => {
+    // Start profiler with js feature but WITHOUT jssources. All source data
+    // will be unavailable.
+    await ProfilerTestUtils.startProfiler({ features: ["js"] });
+
+    await SpecialPowers.spawn(contentBrowser, [], () => {
+      content.window.eval(`
+        function testSourceFunction() {
+          console.log("This is a test function");
+          return 42;
+        }
+        testSourceFunction();
+      `);
+    });
+
+    Services.profiler.Pause();
+    const profileData =
+      await Services.profiler.getProfileDataAsGzippedArrayBuffer();
+    await Services.profiler.StopProfiler();
+
+    Assert.ok(
+      !!profileData.additionalInformation,
+      "Should have additional information"
+    );
+
+    const sources = profileData.additionalInformation.jsSources;
+    Assert.ok(!!sources, "Additional info should contain jsSources");
+    Assert.equal(typeof sources, "object", "jsSources should be an object");
+
+    // Without the jssources feature, all source data is unavailable and must be
+    // omitted entirely.
+    Assert.equal(
+      Object.keys(sources).length,
+      0,
+      "jsSources should be empty when the jssources feature is not enabled"
+    );
   });
 });

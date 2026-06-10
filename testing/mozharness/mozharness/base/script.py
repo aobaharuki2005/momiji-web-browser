@@ -27,6 +27,7 @@ import stat
 import subprocess
 import sys
 import tarfile
+import tempfile
 import threading
 import time
 import traceback
@@ -38,8 +39,6 @@ from pathlib import Path
 from queue import Empty, Queue
 
 import mozinfo
-import six
-from six import binary_type
 
 from mozharness.base.config import BaseConfig
 from mozharness.base.log import (
@@ -1406,7 +1405,10 @@ class ScriptMixin(PlatformMixin):
             for k, v in env.items():
                 # When run locally on Windows machines, some environment
                 # variables may be unicode.
-                env[k] = six.ensure_str(v, pref_encoding)
+                if isinstance(v, bytes):
+                    env[k] = v.decode(pref_encoding)
+                else:
+                    env[k] = str(v)
         if set_self_env:
             self.env = env
         return env
@@ -1785,33 +1787,33 @@ class ScriptMixin(PlatformMixin):
         if isinstance(command, list):
             self.info("Copy/paste: %s" % subprocess.list2cmdline(command))
         # This could potentially return something?
-        tmp_stdout = None
-        tmp_stderr = None
-        tmp_stdout_filename = "%s_stdout" % tmpfile_base_path
-        tmp_stderr_filename = "%s_stderr" % tmpfile_base_path
         if success_codes is None:
             success_codes = [0]
 
-        # TODO probably some more elegant solution than 2 similar passes
         try:
-            tmp_stdout = open(tmp_stdout_filename, "w")
+            tmp_stdout_fd, tmp_stdout_filename = tempfile.mkstemp(
+                suffix="_stdout", prefix=tmpfile_base_path + "_"
+            )
         except OSError:
             level = ERROR
             if halt_on_failure:
                 level = FATAL
             self.log(
-                "Can't open %s for writing!" % tmp_stdout_filename + self.exception(),
+                "Can't open stdout tmpfile for writing!" + self.exception(),
                 level=level,
             )
             return None
         try:
-            tmp_stderr = open(tmp_stderr_filename, "w")
+            tmp_stderr_fd, tmp_stderr_filename = tempfile.mkstemp(
+                suffix="_stderr", prefix=tmpfile_base_path + "_"
+            )
         except OSError:
+            os.close(tmp_stdout_fd)
             level = ERROR
             if halt_on_failure:
                 level = FATAL
             self.log(
-                "Can't open %s for writing!" % tmp_stderr_filename + self.exception(),
+                "Can't open stderr tmpfile for writing!" + self.exception(),
                 level=level,
             )
             return None
@@ -1822,9 +1824,9 @@ class ScriptMixin(PlatformMixin):
         p = subprocess.Popen(
             command,
             shell=shell,
-            stdout=tmp_stdout,
+            stdout=tmp_stdout_fd,
             cwd=cwd,
-            stderr=tmp_stderr,
+            stderr=tmp_stderr_fd,
             env=env,
             bufsize=0,
         )
@@ -1835,8 +1837,11 @@ class ScriptMixin(PlatformMixin):
             level=DEBUG,
         )
         p.wait()
-        tmp_stdout.close()
-        tmp_stderr.close()
+        for fd in (tmp_stdout_fd, tmp_stderr_fd):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
         return_level = DEBUG
         output = None
         if return_type == "output" or not silent:
@@ -1852,7 +1857,7 @@ class ScriptMixin(PlatformMixin):
                     for line in output_lines:
                         if not line or line.isspace():
                             continue
-                        if isinstance(line, binary_type):
+                        if isinstance(line, bytes):
                             line = line.decode("utf-8")
                         self.log(" %s" % line, level=log_level)
                     output = "\n".join(output_lines)
@@ -1867,7 +1872,7 @@ class ScriptMixin(PlatformMixin):
                 for line in errors.rstrip().splitlines():
                     if not line or line.isspace():
                         continue
-                    if isinstance(line, binary_type):
+                    if isinstance(line, bytes):
                         line = line.decode("utf-8")
                     self.log(" %s" % line, level=return_level)
         elif p.returncode not in success_codes and not ignore_errors:
@@ -2185,24 +2190,15 @@ class BaseScript(ScriptMixin, LogMixin):
         # access. If the property depends upon a module which has not
         # been imported at the time the BaseScript initializer is
         # executed, this property access will result in an
-        # Exception. Until Python 3's `inspect.getattr_static` is
-        # available, the simplest approach is to ignore the specific
-        # properties which are known to cause issues. Currently
-        # adb_path and device are ignored since they require the
-        # availablity of the mozdevice package which is not guaranteed
-        # when BaseScript is called.
-        property_list = set(["adb_path", "device"])
-        if six.PY2:
-            if name in property_list:
-                item = None
-            else:
-                item = getattr(self, name)
+        # Exception. With Python 3's `inspect.getattr_static`,
+        # we can check if something is a property without accessing it,
+        # avoiding issues with properties that depend on packages that
+        # may not be available when BaseScript is initialized.
+        item = inspect.getattr_static(self, name)
+        if type(item) is property:
+            item = None
         else:
-            item = inspect.getattr_static(self, name)
-            if type(item) is property:
-                item = None
-            else:
-                item = getattr(self, name)
+            item = getattr(self, name)
         return item
 
     def _dump_config_hierarchy(self, cfg_files):

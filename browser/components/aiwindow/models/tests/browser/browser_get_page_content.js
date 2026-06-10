@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Test that the get_page_content tool call can extract content from a page.
+ * Test that the get_page_content tool call can extract content from pages.
  */
 add_task(async function test_get_page_content_basic() {
   const html = `
@@ -24,7 +24,12 @@ add_task(async function test_get_page_content_basic() {
     </html>
   `;
 
-  const { url, GetPageContent, cleanup } = await setupGetPageContentTest(html);
+  const { ChatConversation } = ChromeUtils.importESModule(
+    "moz-src:///browser/components/aiwindow/ui/modules/ChatConversation.sys.mjs"
+  );
+
+  const { url_list, GetPageContent, cleanup } =
+    await setupGetPageContentTests(html);
 
   // Manually set the ai-window attribute for testing
   // (in production this is set via window features when opening the window)
@@ -40,32 +45,35 @@ add_task(async function test_get_page_content_basic() {
       window.document.documentElement.hasAttribute("ai-window")
   );
 
-  // Create an allowed URLs set containing the test page
-  const allowedUrls = new Set([url]);
+  const conversation = new ChatConversation({
+    title: "",
+    description: "",
+    pageUrl: new URL("https://example.com"),
+    pageMeta: {},
+  });
 
   // Call the tool with the URL
-  const result = await GetPageContent.getPageContent({ url }, allowedUrls);
-
-  info("Extraction result: " + result);
-
-  // Verify the result contains expected content
-  ok(
-    result.includes("Sample Article Title"),
-    "Result should contain the title"
+  const result_array = await GetPageContent.getPageContent(
+    { url_list },
+    conversation
   );
+  const result = result_array[0];
+
+  info("Extraction result: " + JSON.stringify(result));
+
+  ok(result, "Result should be a string");
+  ok(result.includes("Sample Article Title"), "Text should contain the title");
   ok(
     result.includes("first paragraph"),
-    "Result should contain text from the first paragraph"
+    "Text should contain text from the first paragraph"
   );
   ok(
     result.includes("second paragraph"),
-    "Result should contain text from the second paragraph"
+    "Text should contain text from the second paragraph"
   );
-
-  // Verify the result indicates which extraction mode was used
   ok(
-    result.startsWith("Content (") && result.includes(") from"),
-    "Result should indicate the extraction mode used"
+    result.startsWith("Content from"),
+    "Text should start with content prefix"
   );
 
   await cleanup();

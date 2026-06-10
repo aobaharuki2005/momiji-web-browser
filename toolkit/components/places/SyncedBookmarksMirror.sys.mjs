@@ -1391,7 +1391,7 @@ export class SyncedBookmarksMirror {
           // down.
           await cleanupMirrorDatabase(this.db);
         }
-        await this.db.execute(`PRAGMA mirror.optimize(0x02)`);
+        await this.db.execute(`PRAGMA mirror.optimize(0x12)`);
         await this.db.execute(`DETACH mirror`);
         this.finalizeAt.removeBlocker(this.finalizeBound);
       })();
@@ -1768,8 +1768,7 @@ async function initializeTempMirrorEntities(db) {
     mergedGuid TEXT PRIMARY KEY,
     mergedParentGuid TEXT NOT NULL,
     position INTEGER NOT NULL,
-    level INTEGER NOT NULL,
-    lastModifiedMicroseconds INTEGER NOT NULL
+    level INTEGER NOT NULL
   ) WITHOUT ROWID`);
 
   await db.execute(`
@@ -1786,8 +1785,7 @@ async function initializeTempMirrorEntities(db) {
       UPDATE moz_bookmarks SET
         parent = (SELECT id FROM moz_bookmarks
                   WHERE guid = OLD.mergedParentGuid),
-        position = OLD.position,
-        lastModified = OLD.lastModifiedMicroseconds
+        position = OLD.position
       WHERE guid = OLD.mergedGuid;
     END`);
 

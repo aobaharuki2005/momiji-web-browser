@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _MOZILLA_GFX_2D_H
-#define _MOZILLA_GFX_2D_H
+#ifndef MOZILLA_GFX_2D_H
+#define MOZILLA_GFX_2D_H
 
 #include "Types.h"
 #include "Point.h"
@@ -1195,6 +1193,7 @@ class FTUserFontData final
   explicit FTUserFontData(const char* aFilename) : mFilename(aFilename) {}
 
   const uint8_t* FontData() const { return mFontData; }
+  uint32_t FontDataLength() const { return mLength; }
 
   already_AddRefed<mozilla::gfx::SharedFTFace> CloneFace(
       int aFaceIndex = 0) override;
@@ -1453,6 +1452,13 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
   virtual void Destination(const char* aDestination, const Point& aPoint) {}
 
   /**
+   * Associate subsequent calls to other methods with a specific accessibility
+   * node. This is used to generate tagged PDF output. Specifying an id of (0,
+   * 0) disassociates subsequent calls from any accessibility node.
+   */
+  virtual void AccessibleId(uint64_t aBrowsingContextId, uint64_t aAccId) {}
+
+  /**
    * Returns a SourceSurface which is a snapshot of the current contents of the
    * DrawTarget. Multiple calls to Snapshot() without any drawing operations in
    * between will normally return the same SourceSurface object.
@@ -1524,6 +1530,15 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
       const layers::SurfaceDescriptor& aDesc, const gfx::IntSize& aSize,
       SurfaceFormat aFormat) {
     return nullptr;
+  }
+
+  /**
+   * Try to replay a source surface into this draw target, returning `true` on
+   * success. Parameter coordinate spaces match DrawSurface().
+   */
+  virtual bool TryToReplaySurface(SourceSurface* aSurface, const Rect& aDest,
+                                  const Rect& aSource) {
+    return false;
   }
 
   /**
@@ -2158,9 +2173,6 @@ class GFX2D_API Factory {
   static void Init(const Config& aConfig);
   static void ShutDown();
 
-  static bool HasSSE2();
-  static bool HasSSE4();
-
   /**
    * Returns false if any of the following are true:
    *
@@ -2301,7 +2313,8 @@ class GFX2D_API Factory {
   static void CopyDataSourceSurface(DataSourceSurface* aSource,
                                     DataSourceSurface* aDest);
 
-  static uint32_t GetMaxSurfaceSize(BackendType aType);
+  static size_t GetMaxSurfaceSize(BackendType aType);
+  static size_t GetMaxSurfaceArea(BackendType aType);
 
   static LogForwarder* GetLogForwarder() {
     return sConfig ? sConfig->mLogForwarder : nullptr;
@@ -2378,10 +2391,10 @@ class GFX2D_API Factory {
   static void SetSystemTextQuality(uint8_t aQuality);
 
   static already_AddRefed<DataSourceSurface>
-  CreateBGRA8DataSourceSurfaceForD3D11Texture(ID3D11Texture2D* aSrcTexture,
-                                              uint32_t aArrayIndex,
-                                              gfx::ColorSpace2 aColorSpace,
-                                              gfx::ColorRange aColorRange);
+  CreateBGRA8DataSourceSurfaceForD3D11Texture(
+      ID3D11Texture2D* aSrcTexture, uint32_t aArrayIndex,
+      gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
+      gfx::TransferFunction aTransferFunction);
 
   static nsresult CreateSdbForD3D11Texture(
       ID3D11Texture2D* aSrcTexture, const IntSize& aSrcSize,
@@ -2392,7 +2405,8 @@ class GFX2D_API Factory {
                               ID3D11Texture2D* aSrcTexture,
                               uint32_t aArrayIndex,
                               gfx::ColorSpace2 aColorSpace,
-                              gfx::ColorRange aColorRange);
+                              gfx::ColorRange aColorRange,
+                              gfx::TransferFunction aTransferFunction);
 
  private:
   static StaticRefPtr<ID3D11Device> mD3D11Device;
@@ -2404,11 +2418,10 @@ class GFX2D_API Factory {
                               ID3D11Texture2D* aSrcTexture);
 
   // DestTextureT can be TextureData or DataSourceSurface.
-  static bool ConvertSourceAndRetryReadback(DataSourceSurface* aDestCpuTexture,
-                                            ID3D11Texture2D* aSrcTexture,
-                                            uint32_t aArrayIndex,
-                                            gfx::ColorSpace2 aColorSpace,
-                                            gfx::ColorRange aColorRange);
+  static bool ConvertSourceAndRetryReadback(
+      DataSourceSurface* aDestCpuTexture, ID3D11Texture2D* aSrcTexture,
+      uint32_t aArrayIndex, gfx::ColorSpace2 aColorSpace,
+      gfx::ColorRange aColorRange, gfx::TransferFunction aTransferFunction);
 
  protected:
   // This guards access to the singleton devices above, as well as the
@@ -2420,4 +2433,4 @@ class GFX2D_API Factory {
 }  // namespace gfx
 }  // namespace mozilla
 
-#endif  // _MOZILLA_GFX_2D_H
+#endif  // MOZILLA_GFX_2D_H

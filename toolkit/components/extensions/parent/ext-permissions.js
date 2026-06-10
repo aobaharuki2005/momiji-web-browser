@@ -236,6 +236,19 @@ this.permissions = class extends ExtensionAPIPersistent {
         },
 
         async remove(permissions) {
+          if (Services.policies?.isAddonRequiredByPolicy(extension.id)) {
+            // Match Chrome: any origin subsumed by a required manifest origin
+            // (host_permissions or content_scripts patterns) cannot be removed.
+            let manifestSet = extension.getManifestOriginsMatchPatternSet();
+            for (let origin of permissions.origins) {
+              if (manifestSet.subsumes(new MatchPattern(origin))) {
+                throw new ExtensionError(
+                  "You cannot remove required permissions. " +
+                    "Host permissions are locked by enterprise policies."
+                );
+              }
+            }
+          }
           await ExtensionPermissions.remove(
             extension.id,
             permissions,

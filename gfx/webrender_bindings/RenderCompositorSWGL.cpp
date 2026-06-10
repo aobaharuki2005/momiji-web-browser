@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -78,10 +76,8 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
   MOZ_ASSERT(!mDT);
   mDT = mWidget->StartRemoteDrawingInRegion(mDirtyRegion);
   if (!mDT) {
-#if !defined(MOZ_WAYLAND)
     gfxCriticalNoteOnce
         << "RenderCompositorSWGL failed mapping default framebuffer, no dt";
-#endif
     return false;
   }
   // Attempt to lock the underlying buffer directly from the draw target.

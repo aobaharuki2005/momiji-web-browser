@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -56,13 +54,6 @@ class AntiTrackingUtils final {
   // be used for the principal.  Returns true on success.
   static bool CreateStorageFramePermissionKey(nsIPrincipal* aPrincipal,
                                               nsACString& aKey);
-
-  // Given and embedded URI, returns the permission for allowing storage access
-  // requests from that URI's site. This permission is site-scoped in two ways:
-  // the principal it is stored under and the suffix built from aURI are both
-  // the Site rather than Origin.
-  static bool CreateStorageRequestPermissionKey(nsIURI* aURI,
-                                                nsACString& aPermissionKey);
 
   // Returns true if the permission passed in is a storage access permission
   // for the passed in principal argument.

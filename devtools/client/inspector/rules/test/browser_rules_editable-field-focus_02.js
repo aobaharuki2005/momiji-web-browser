@@ -34,7 +34,7 @@ async function testEditableFieldFocus(
   commitKey,
   options = {}
 ) {
-  let ruleEditor = getRuleViewRuleEditor(view, 2);
+  let ruleEditor = getRuleViewRuleEditorAt(view, 2);
   const editor = await focusEditableField(view, ruleEditor.selectorText);
   is(
     inplaceEditor(ruleEditor.selectorText),
@@ -42,7 +42,7 @@ async function testEditableFieldFocus(
     "Focus should be in the 'div' rule selector"
   );
 
-  ruleEditor = getRuleViewRuleEditor(view, 1);
+  ruleEditor = getRuleViewRuleEditorAt(view, 1);
 
   await focusNextField(view, ruleEditor, commitKey, options);
   assertEditor(
@@ -69,7 +69,7 @@ async function testEditableFieldFocus(
     );
   }
 
-  ruleEditor = getRuleViewRuleEditor(view, 1);
+  ruleEditor = getRuleViewRuleEditorAt(view, 1);
 
   await focusNextField(view, ruleEditor, commitKey, options);
   await assertEditor(
@@ -78,7 +78,7 @@ async function testEditableFieldFocus(
     "Focus should have moved to the '#testid' rule selector"
   );
 
-  ruleEditor = getRuleViewRuleEditor(view, 0);
+  ruleEditor = getRuleViewRuleEditorAt(view, 0);
 
   await focusNextField(view, ruleEditor, commitKey, options);
   assertEditor(

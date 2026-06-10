@@ -69,6 +69,12 @@
   <string name="mozac_feature_prompts_before_unload_stay">قېپقال</string>
   <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
   <string name="mozac_feature_prompts_before_unload_leave">ئايرىل</string>
+  <!-- Message shown when a site wants to create a passkey for a related domain. %1$s is the requesting site, %2$s is the related domain the passkey is for. -->
+  <string name="webauthn_related_origin_create_message">%2$s غا %1$s شىفىرلىق ئاچقۇچ ياسىماقچى.</string>
+  <!-- Message shown when a site wants to use a passkey from a related domain. %1$s is the requesting site, %2$s is the related domain the passkey is for. -->
+  <string name="webauthn_related_origin_use_message">%2$s غا %1$s شىفىرلىق ئاچقۇچ ئىشلەتمەكچى.</string>
+  <!-- Continue button label for WebAuthn related origin prompt. -->
+  <string name="webauthn_continue">داۋاملاشتۇر</string>
   <!-- Title of the month chooser dialog. -->
   <string name="mozac_feature_prompts_set_month">ئاي تاللىنىدۇ</string>
   <!-- January (short description), used on the month chooser dialog. -->
@@ -184,4 +190,12 @@
   <string name="mozac_feature_prompts_identity_credentials_continue">داۋاملاشتۇر</string>
   <!-- Text for the cancel button of the Identity Credential dialogs. -->
   <string name="mozac_feature_prompts_identity_credentials_cancel">ۋاز كەچ</string>
+  <!--
+    Email Mask Autofill
+
+    Text for the email mask prompt to allow users to fill an email input field in a sign up form with an email mask.
+  -->
+  <string name="mozac_feature_relay_chip_text">ئېلخەت نىقابى ئىشلىتىدۇ</string>
+  <!-- Informational text for the contextual feature recommendation (CFR) enabling the email mask aliases. The %s is the name of the service, "Firefox Relay". -->
+  <string name="mozac_feature_relay_email_masks_cfr">يېڭى! ھازىردىن باشلاپ %s ئېلخەت نىقابىنى كۆچمە ئۈسكۈنىدىمۇ ئىشلەتكىلى بولىدۇ.</string>
 </resources>

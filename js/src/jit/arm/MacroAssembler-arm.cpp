@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,9 +9,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
-#include "jsmath.h"
-
-#include "jit/arm/Simulator-arm.h"
 #include "jit/AtomicOp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Bailouts.h"
@@ -25,6 +20,7 @@
 #include "jit/ProcessExecutableMemory.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
+#include "util/PortableMath.h"
 #include "vm/BigIntType.h"
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/JSContext.h"
@@ -1730,8 +1726,8 @@ void MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest) {
 
 void MacroAssemblerARMCompat::movePtr(wasm::SymbolicAddress imm,
                                       Register dest) {
-  append(wasm::SymbolicAccess(CodeOffset(currentOffset()), imm));
-  ma_movPatchable(Imm32(-1), dest, Always);
+  BufferOffset offset = ma_movPatchable(Imm32(-1), dest, Always);
+  append(wasm::SymbolicAccess(CodeOffset(offset.getOffset()), imm));
 }
 
 FaultingCodeOffset MacroAssemblerARMCompat::load8ZeroExtend(
@@ -2979,14 +2975,12 @@ void MacroAssemblerARMCompat::boxNonDouble(Register type, Register src,
   breakpoint();
   {
     bind(&isNullOrUndefined);
-    as_cmp(src, Imm8(0));
-    ma_b(&ok, Assembler::Zero);
+    asMasm().branchTest32(Assembler::Zero, src, src, &ok);
     breakpoint();
   }
   {
     bind(&isBoolean);
-    as_cmp(src, Imm8(1));
-    ma_b(&ok, Assembler::BelowOrEqual);
+    asMasm().branch32(Assembler::BelowOrEqual, src, Imm32(1), &ok);
     breakpoint();
   }
   bind(&ok);
@@ -3574,7 +3568,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
 
   // Found a wasm catch handler, restore state and jump to it.
   bind(&wasmCatch);
-  wasm::GenerateJumpToCatchHandler(asMasm(), sp, r0, r1);
+  wasm::GenerateJumpToCatchHandler(asMasm(), sp, r0, r1, r2);
 }
 
 Assembler::Condition MacroAssemblerARMCompat::testStringTruthy(
@@ -4942,20 +4936,24 @@ void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Register64 boundsCheckLimit,
                                        Label* label) {
-  Label ifFalse;
+  MOZ_ASSERT(cond == Assembler::AboveOrEqual || cond == Assembler::Below);
+  Label rejoin;
+  Label* failLabel = cond == Assembler::AboveOrEqual ? label : &rejoin;
   cmp32(index.high, Imm32(0));
-  j(Assembler::NonZero, &ifFalse);
+  j(Assembler::NonZero, failLabel);
   wasmBoundsCheck32(cond, index.low, boundsCheckLimit.low, label);
-  bind(&ifFalse);
+  bind(&rejoin);
 }
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Address boundsCheckLimit, Label* label) {
-  Label ifFalse;
+  MOZ_ASSERT(cond == Assembler::AboveOrEqual || cond == Assembler::Below);
+  Label rejoin;
+  Label* failLabel = cond == Assembler::AboveOrEqual ? label : &rejoin;
   cmp32(index.high, Imm32(0));
-  j(Assembler::NonZero, &ifFalse);
+  j(Assembler::NonZero, failLabel);
   wasmBoundsCheck32(cond, index.low, boundsCheckLimit, label);
-  bind(&ifFalse);
+  bind(&rejoin);
 }
 
 void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,

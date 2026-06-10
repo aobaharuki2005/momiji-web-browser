@@ -4,8 +4,9 @@
 
 use crate::context::QuirksMode;
 use crate::derives::*;
+use crate::device::Device;
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
-use crate::media_queries::{Device, MediaList};
+use crate::media_queries::MediaList;
 use crate::parser::ParserContext;
 use crate::shared_lock::{DeepCloneWithLock, Locked};
 use crate::shared_lock::{SharedRwLock, SharedRwLockReadGuard};
@@ -28,16 +29,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use style_traits::ParsingMode;
 
 use super::scope_rule::ImplicitScopeRoot;
-
-/// This structure holds the user-agent and user stylesheets.
-pub struct UserAgentStylesheets {
-    /// The lock used for user-agent stylesheets.
-    pub shared_lock: SharedRwLock,
-    /// The user or user agent stylesheets.
-    pub user_or_user_agent_stylesheets: Vec<DocumentStyleSheet>,
-    /// The quirks mode stylesheet.
-    pub quirks_mode_stylesheet: DocumentStyleSheet,
-}
 
 /// A set of namespaces applying to a given stylesheet.
 ///
@@ -348,7 +339,19 @@ pub enum AllowImportRules {
 }
 
 impl SanitizationKind {
-    fn allows(self, rule: &CssRule) -> bool {
+    fn allows(self, rule: &CssRule, guard: &SharedRwLockReadGuard) -> bool {
+        if !self.allows_self(rule) {
+            return false;
+        }
+        for child in rule.children(guard) {
+            if !self.allows(child, guard) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn allows_self(self, rule: &CssRule) -> bool {
         debug_assert_ne!(self, SanitizationKind::None);
         // NOTE(emilio): If this becomes more complex (not filtering just by
         // top-level rules), we should thread all the data through nested rules
@@ -368,7 +371,8 @@ impl SanitizationKind {
             // TODO(dshin): Same comment as Layer applies - shouldn't give away
             // something like display size - erring on the side of "safe" for now.
             CssRule::Scope(..) |
-            CssRule::StartingStyle(..) => false,
+            CssRule::StartingStyle(..) |
+            CssRule::AppearanceBase(..) => false,
 
             CssRule::FontFace(..) |
             CssRule::Namespace(..) |
@@ -382,7 +386,8 @@ impl SanitizationKind {
             CssRule::Property(..) |
             CssRule::FontFeatureValues(..) |
             CssRule::FontPaletteValues(..) |
-            CssRule::CounterStyle(..) => !is_standard,
+            CssRule::CounterStyle(..) |
+            CssRule::ViewTransition(..) => !is_standard,
         }
     }
 }
@@ -439,6 +444,7 @@ impl Stylesheet {
             /* namespaces = */ Default::default(),
             error_reporter,
             use_counters,
+            /* attr_taint */ Default::default(),
         );
 
         let mut rule_parser = TopLevelRuleParser {
@@ -464,7 +470,7 @@ impl Stylesheet {
                         // TODO(emilio, nesting): sanitize nested CSS rules, probably?
                         if let Some(ref mut data) = sanitization_data {
                             if let Some(ref rule) = iter.parser.rules.last() {
-                                if !data.kind.allows(rule) {
+                                if !data.kind.allows(rule, &shared_lock.read()) {
                                     iter.parser.rules.pop();
                                     continue;
                                 }
@@ -553,11 +559,11 @@ impl Clone for Stylesheet {
         // Make a deep clone of the media, using the new lock.
         let media = self.media.read_with(&guard).clone();
         let media = Arc::new(lock.wrap(media));
-        let contents = lock.wrap(Arc::new(
+        let contents = lock.wrap(
             self.contents
                 .read_with(&guard)
-                .deep_clone_with_lock(&lock, &guard),
-        ));
+                .deep_clone(&lock, None, &guard),
+        );
 
         Stylesheet {
             contents,

@@ -1,11 +1,10 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=4 sts=2 sw=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIOService.h"
 #include "nsInputStreamPump.h"
+#include "nsIInputStreamPriority.h"
 #include "nsIStreamTransportService.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsThreadUtils.h"
@@ -378,6 +377,13 @@ nsInputStreamPump::AsyncRead(nsIStreamListener* listener) {
     mTargetThread = mozilla::GetCurrentSerialEventTarget();
   }
   NS_ENSURE_STATE(mTargetThread);
+
+  if (mHighPriorityStream) {
+    if (nsCOMPtr<nsIInputStreamPriority> pri =
+            do_QueryInterface(mAsyncStream)) {
+      pri->SetPriority(nsIRunnablePriority::PRIORITY_MEDIUMHIGH);
+    }
+  }
 
   rv = EnsureWaiting();
   if (NS_FAILED(rv)) return rv;

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=78: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -84,6 +82,7 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsStringIterator.h"
+#include "nsTextNode.h"
 #include "nsTreeSanitizer.h"
 #include "nsXPCOM.h"
 #include "nscore.h"
@@ -97,7 +96,7 @@ namespace mozilla {
 
 using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
-using LeafNodeType = HTMLEditUtils::LeafNodeType;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 
 #define kInsertCookie "_moz_Insert Here_moz_"
 
@@ -497,71 +496,112 @@ HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator final {
 EditorDOMPoint
 HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
     const EditorDOMPoint& aLastInsertedPoint) const {
-  EditorDOMPoint pointToPutCaret;
+  MOZ_ASSERT(aLastInsertedPoint.IsInContentNode());
+  MOZ_ASSERT(
+      HTMLEditUtils::IsSimplyEditableNode(*aLastInsertedPoint.GetContainer()));
+  MOZ_ASSERT(aLastInsertedPoint.GetChild());
+  // The last inserted node may be non-editable. Then, we want to put caret
+  // after it.
+  nsIContent* const lastInsertedContent = aLastInsertedPoint.GetChild();
+  const EditorRawDOMPoint firstEditablePoint = [&]() MOZ_NEVER_INLINE_DEBUG {
+    if (HTMLEditUtils::IsSimplyEditableNode(*lastInsertedContent)) {
+      return aLastInsertedPoint.To<EditorRawDOMPoint>();
+    }
+    MOZ_ASSERT(HTMLEditUtils::IsSimplyEditableNode(
+        *aLastInsertedPoint.GetContainer()));
+    return aLastInsertedPoint.NextPoint<EditorRawDOMPoint>();
+  }();
+  if (NS_WARN_IF(!firstEditablePoint.IsSet())) {
+    return EditorDOMPoint();  // No editable node, why?
+  }
 
-  // but don't cross tables
-  nsIContent* containerContent = nullptr;
-  // FIXME: GetChild() might be nullptr, but it's referred as non-null in the
-  // block!
-  if (!aLastInsertedPoint.GetChild() ||
-      !aLastInsertedPoint.GetChild()->IsHTMLElement(nsGkAtoms::table)) {
-    containerContent = HTMLEditUtils::GetLastLeafContent(
-        *aLastInsertedPoint.GetChild(), {LeafNodeType::OnlyEditableLeafNode},
-        BlockInlineCheck::Unused,
-        aLastInsertedPoint.GetChild()->GetAsElementOrParentElement());
-    if (containerContent) {
-      Element* mostDistantInclusiveAncestorTableElement = nullptr;
-      for (Element* maybeTableElement =
-               containerContent->GetAsElementOrParentElement();
+  const EditorRawDOMPoint adjustedEditablePoint = [&]() MOZ_NEVER_INLINE_DEBUG {
+    if (firstEditablePoint != aLastInsertedPoint) {
+      return firstEditablePoint;
+    }
+    if (lastInsertedContent->IsText()) {
+      // End of the last inserted Text.
+      return EditorRawDOMPoint::AtEndOf(*lastInsertedContent);
+    }
+    if (lastInsertedContent->IsHTMLElement(nsGkAtoms::table)) {
+      // After the <table>.
+      return aLastInsertedPoint.NextPoint<EditorRawDOMPoint>();
+    }
+    if (!HTMLEditUtils::IsContainerNode(*lastInsertedContent) ||
+        HTMLEditUtils::IsReplacedElement(*lastInsertedContent)) {
+      // After the atomic content node like <br> or <img>.
+      return aLastInsertedPoint.NextPoint<EditorRawDOMPoint>();
+    }
+    // We want to put caret to the last leaf content in the inserted content.
+    nsIContent* const lastLeaf = HTMLEditUtils::GetLastLeafContent(
+        *lastInsertedContent,
+        {
+            LeafNodeOption::TreatNonEditableNodeAsLeafNode,
+            LeafNodeOption::IgnoreInvisibleText,
+            // FIXME: We cannot visually put caret into empty inline containers
+            // like <span></span> so that let's ignore them.
+        });
+    if (!lastLeaf) {
+      // No meaning content in lastInsertedContent, let's put caret to end of
+      // it.
+      return EditorRawDOMPoint::AtEndOf(*lastInsertedContent);
+    }
+    Element* const mostDistantInclusiveAncestorTableElement =
+        [&]() -> Element* {
+      Element* tableElement = nullptr;
+      for (Element* maybeTableElement = lastLeaf->GetAsElementOrParentElement();
            maybeTableElement &&
            maybeTableElement != aLastInsertedPoint.GetChild();
            maybeTableElement = maybeTableElement->GetParentElement()) {
         if (maybeTableElement->IsHTMLElement(nsGkAtoms::table)) {
-          mostDistantInclusiveAncestorTableElement = maybeTableElement;
+          tableElement = maybeTableElement;
         }
       }
-      // If we're in table elements, we should put caret into the most ancestor
-      // table element.
-      if (mostDistantInclusiveAncestorTableElement) {
-        containerContent = mostDistantInclusiveAncestorTableElement;
-      }
+      return tableElement;
+    }();
+    // If we're in table elements, we should put caret after the most ancestor
+    // table element in the container of aLastInsertedPoint.
+    if (mostDistantInclusiveAncestorTableElement) {
+      MOZ_ASSERT(HTMLEditUtils::IsSimplyEditableNode(
+          *mostDistantInclusiveAncestorTableElement));
+      MOZ_ASSERT(mostDistantInclusiveAncestorTableElement->GetParentNode());
+      MOZ_ASSERT(HTMLEditUtils::IsSimplyEditableNode(
+          *mostDistantInclusiveAncestorTableElement->GetParentNode()));
+      return EditorRawDOMPoint::After(
+          *mostDistantInclusiveAncestorTableElement);
     }
-  }
-  // If we are not in table elements, we should put caret in the last inserted
-  // node.
-  if (!containerContent) {
-    containerContent = aLastInsertedPoint.GetChild();
-  }
-
-  // If the container is a text node or a container element except `<table>`
-  // element, put caret a end of it.
-  if (containerContent->IsText() ||
-      (HTMLEditUtils::IsContainerNode(*containerContent) &&
-       !containerContent->IsHTMLElement(nsGkAtoms::table))) {
-    pointToPutCaret.SetToEndOf(containerContent);
-  }
-  // Otherwise, i.e., it's an atomic element, `<table>` element or data node,
-  // put caret after it.
-  else {
-    pointToPutCaret.SetAfter(containerContent);
-  }
+    MOZ_ASSERT(!lastLeaf->IsHTMLElement(nsGkAtoms::table));
+    if (lastLeaf->IsText()) {
+      // End of the last Text in the last inserted content.
+      return EditorRawDOMPoint::AtEndOf(*lastLeaf);
+    }
+    return !HTMLEditUtils::IsContainerNode(*lastLeaf) ||
+                   HTMLEditUtils::IsReplacedElement(*lastLeaf)
+               ? EditorRawDOMPoint::After(*lastLeaf)
+               : EditorRawDOMPoint::AtEndOf(*lastLeaf);
+  }();
 
   // Make sure we don't end up with selection collapsed after an invisible
   // `<br>` element.
+  EditorDOMPoint pointToPutCaret = adjustedEditablePoint.To<EditorDOMPoint>();
+  // FIXME: Handle preformatted linefeed too
   const WSScanResult prevVisibleThing =
       WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
           // We want to put caret to an editable point so that we need to scan
           // only editable nodes.
           {WSRunScanner::Option::OnlyEditableNodes}, pointToPutCaret);
-  if (prevVisibleThing.ReachedInvisibleBRElement()) {
+  if (prevVisibleThing.ReachedBRElementFollowedByBlockBoundary()) {
     const WSScanResult prevVisibleThingOfBRElement =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
             {WSRunScanner::Option::OnlyEditableNodes},
             EditorRawDOMPoint(prevVisibleThing.BRElementPtr()));
     if (prevVisibleThingOfBRElement.InVisibleOrCollapsibleCharacters()) {
+      // XXX Why not end of the text node?
       pointToPutCaret = prevVisibleThingOfBRElement
                             .PointAfterReachedContent<EditorDOMPoint>();
-    } else if (prevVisibleThingOfBRElement.ReachedSpecialContent()) {
+    } else if (prevVisibleThingOfBRElement.ReachedSpecialContent() ||
+               prevVisibleThingOfBRElement
+                   .ReachedEmptyInlineContainerElement()) {
       pointToPutCaret = prevVisibleThingOfBRElement
                             .PointAfterReachedContentNode<EditorDOMPoint>();
     }
@@ -899,7 +939,12 @@ Result<EditActionResult, nsresult> HTMLEditor::HTMLWithContextInserter::Run(
             .NextPointOrAfterContainer<EditorDOMPoint>();
     if (MOZ_LIKELY(afterLastInsertedContent.IsInContentNode())) {
       nsresult rv = mHTMLEditor.EnsureNoFollowingUnnecessaryLineBreak(
-          afterLastInsertedContent);
+          afterLastInsertedContent,
+          // When user inserting content, the web app may expect that nothing
+          // extant content will be deleted. Therefore, we should preserve
+          // preformatted linefeed at least.
+          PreservePreformattedLineBreak::Yes, PaddingForEmptyBlock::Significant,
+          mEditingHost);
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "HTMLEditor::EnsureNoFollowingUnnecessaryLineBreak() failed");
@@ -1583,7 +1628,13 @@ void HTMLEditor::HTMLTransferablePreparer::AddDataFlavorsInBestOrder(
         break;
     }
   }
-  DebugOnly<nsresult> rvIgnored = aTransferable.AddDataFlavor(kTextMime);
+  // GetAnyTransferData() uses this order, so put URL data before text in HTML
+  // editors to preserve pasted links.
+  DebugOnly<nsresult> rvIgnored = aTransferable.AddDataFlavor(kURLDataMime);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "nsITransferable::AddDataFlavor(kURLDataMime) failed, but ignored");
+  rvIgnored = aTransferable.AddDataFlavor(kTextMime);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "nsITransferable::AddDataFlavor(kTextMime) failed, but ignored");
@@ -1764,12 +1815,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLEditor::BlobReader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBlob)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHTMLEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPointToInsert)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDataTransfer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(HTMLEditor::BlobReader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBlob)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHTMLEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPointToInsert)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDataTransfer)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
@@ -1857,7 +1910,7 @@ nsresult HTMLEditor::BlobReader::OnError(const nsAString& aError) {
   error.AppendElement(aError);
   nsContentUtils::ReportToConsole(
       nsIScriptError::warningFlag, "Editor"_ns, mHTMLEditor->GetDocument(),
-      nsContentUtils::eDOM_PROPERTIES, "EditorFileDropFailed", error);
+      PropertiesFile::DOM_PROPERTIES, "EditorFileDropFailed", error);
   return NS_OK;
 }
 
@@ -1935,10 +1988,9 @@ nsresult HTMLEditor::SlurpBlob(Blob* aBlob, nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aBlobReader);
 
   RefPtr<WeakWorkerRef> workerRef;
-  RefPtr<FileReader> reader = new FileReader(aGlobal, workerRef);
+  RefPtr reader = MakeRefPtr<FileReader>(aGlobal, workerRef);
 
-  RefPtr<SlurpBlobEventListener> eventListener =
-      new SlurpBlobEventListener(aBlobReader);
+  RefPtr eventListener = MakeRefPtr<SlurpBlobEventListener>(aBlobReader);
 
   nsresult rv = reader->AddEventListener(u"load"_ns, eventListener, false);
   if (NS_FAILED(rv)) {
@@ -2101,6 +2153,10 @@ nsresult HTMLEditor::InsertFromTransferableAtSelection(
     CopyASCIItoUTF16(bestFlavor, flavor);
     const SafeToInsertData safeToInsertData = IsSafeToInsertData(nullptr);
 
+    const bool isPlaintextEditor =
+        IsPlaintextMailComposer() ||
+        aEditingHost.IsContentEditablePlainTextOnly();
+
     if (bestFlavor.EqualsLiteral(kFileMime) ||
         bestFlavor.EqualsLiteral(kJPEGImageMime) ||
         bestFlavor.EqualsLiteral(kJPGImageMime) ||
@@ -2166,7 +2222,8 @@ nsresult HTMLEditor::InsertFromTransferableAtSelection(
     }
     if (bestFlavor.EqualsLiteral(kHTMLMime) ||
         bestFlavor.EqualsLiteral(kTextMime) ||
-        bestFlavor.EqualsLiteral(kMozTextInternal)) {
+        bestFlavor.EqualsLiteral(kMozTextInternal) ||
+        bestFlavor.EqualsLiteral(kURLDataMime)) {
       nsAutoString stuffToPaste;
       if (!GetString(genericDataObj, stuffToPaste)) {
         nsAutoCString text;
@@ -2188,6 +2245,17 @@ nsresult HTMLEditor::InsertFromTransferableAtSelection(
                 "HTMLEditor::InsertHTMLWithContextAsSubAction("
                 "DeleteSelectedContent::Yes, "
                 "InlineStylesAtInsertionPoint::Clear) failed");
+            return rv;
+          }
+        } else if (bestFlavor.EqualsLiteral(kURLDataMime) &&
+                   !isPlaintextEditor) {
+          AutoPlaceholderBatch treatAsOneTransaction(
+              *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+          EditorDOMPoint pointToInsert(SelectionRef().AnchorRef());
+          nsresult rv = InsertURLAsLinkInternal(stuffToPaste, pointToInsert,
+                                                DeleteSelectedContent::Yes);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("InsertURLAsLink() failed");
             return rv;
           }
         } else {
@@ -2350,10 +2418,21 @@ nsresult HTMLEditor::InsertFromDataTransfer(
                                "InlineStylesAtInsertionPoint::Clear) failed");
           return rv;
         }
+      } else if (type.EqualsLiteral(kURLDataMime)) {
+        // Handle URL data before text so HTML editors insert a link here.
+        nsAutoString url;
+        GetStringFromDataTransfer(aDataTransfer, type, aIndex, url);
+        AutoPlaceholderBatch treatAsOneTransaction(
+            *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
+        nsresult rv =
+            InsertURLAsLinkInternal(url, aDroppedAt, aDeleteSelectedContent);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertURLAsLink() failed");
+        return rv;
       }
     }
 
-    if (type.EqualsLiteral(kTextMime) || type.EqualsLiteral(kMozTextInternal)) {
+    if (type.EqualsLiteral(kTextMime) || type.EqualsLiteral(kMozTextInternal) ||
+        type.EqualsLiteral(kURLDataMime)) {
       nsAutoString text;
       GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
       AutoPlaceholderBatch treatAsOneTransaction(
@@ -2365,6 +2444,47 @@ nsresult HTMLEditor::InsertFromDataTransfer(
     }
   }
 
+  return NS_OK;
+}
+
+nsresult HTMLEditor::InsertURLAsLinkInternal(
+    const nsAString& aURL, const EditorDOMPoint& aPointToInsert,
+    DeleteSelectedContent aDeleteSelectedContent) {
+  if (aURL.IsEmpty()) {
+    return NS_OK;
+  }
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = PrepareToInsertContent(aPointToInsert, aDeleteSelectedContent);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::PrepareToInsertContent() failed");
+    return rv;
+  }
+  // PrepareToInsertContent() has already updated the selection state
+  // according to aDeleteSelectedContent, so DeleteSelectionAndCreateElement()
+  // just creates the <a> element at the prepared insertion point.
+  Result<RefPtr<Element>, nsresult> linkOrError =
+      DeleteSelectionAndCreateElement(
+          *nsGkAtoms::a, [&aURL](HTMLEditor& aEditor, Element& aNewElement,
+                                 const EditorDOMPoint&) {
+            nsresult rv = aNewElement.SetAttr(kNameSpaceID_None,
+                                              nsGkAtoms::href, aURL, false);
+            if (NS_FAILED(rv)) {
+              NS_WARNING("Element::SetAttr(href) failed");
+              return rv;
+            }
+            RefPtr<nsTextNode> textNode = aEditor.CreateTextNode(aURL);
+            if (NS_WARN_IF(!textNode)) {
+              return NS_ERROR_FAILURE;
+            }
+            aNewElement.AppendChildTo(textNode, false, IgnoreErrors());
+            return NS_OK;
+          });
+  if (MOZ_UNLIKELY(linkOrError.isErr())) {
+    NS_WARNING("HTMLEditor::DeleteSelectionAndCreateElement() failed");
+    return linkOrError.unwrapErr();
+  }
   return NS_OK;
 }
 
@@ -2733,10 +2853,10 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(
 // The following arrays contain the MIME types that we can paste. The arrays
 // are used by CanPaste() and CanPasteTransferable() below.
 
-static const char* textEditorFlavors[] = {kTextMime};
-static const char* textHtmlEditorFlavors[] = {kTextMime,      kHTMLMime,
-                                              kJPEGImageMime, kJPGImageMime,
-                                              kPNGImageMime,  kGIFImageMime};
+static const char* textEditorFlavors[] = {kTextMime, kURLDataMime};
+static const char* textHtmlEditorFlavors[] = {
+    kURLDataMime,  kTextMime,     kHTMLMime,    kJPEGImageMime,
+    kJPGImageMime, kPNGImageMime, kGIFImageMime};
 
 bool HTMLEditor::CanPaste(nsIClipboard::ClipboardType aClipboardType) const {
   if (AreClipboardCommandsUnconditionallyEnabled()) {
@@ -3438,6 +3558,21 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // Set the selection to after the <span> if and only if we wrap the text into
   // it.
   if (containerSpanElement) {
+    // If we inserted the quotation into the new span, it may have a padding
+    // line break at last. However, we don't want it because the user does not
+    // intent to modify the empty line in the quotation block.
+    // FIXME: We need a way to make HandleInsertText() not to insert a padding
+    // line break for the last empty line to save the footprint.
+    if (const RefPtr<HTMLBRElement> brElement = HTMLBRElement::FromNodeOrNull(
+            containerSpanElement->GetLastChild())) {
+      if (brElement->IsPaddingForEmptyLastLine()) {
+        nsresult rv = DeleteNodeWithTransaction(*brElement);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          return rv;
+        }
+      }
+    }
     EditorRawDOMPoint afterNewSpanElement(
         EditorRawDOMPoint::After(*containerSpanElement));
     NS_WARNING_ASSERTION(

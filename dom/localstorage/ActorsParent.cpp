@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6078,8 +6076,8 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
         }
 
         LSItemInfo* itemInfo = aItemInfos->AppendElement();
-        itemInfo->key() = key;
-        itemInfo->value() = value;
+        itemInfo->key() = std::move(key);
+        itemInfo->value() = std::move(value);
       }
 
       mNextLoadIndex++;
@@ -6597,6 +6595,12 @@ mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
 
 mozilla::ipc::IPCResult LSRequestBase::RecvFinish() {
   AssertIsOnOwningThread();
+
+  // A well-behaved content process only sends Finish() after receiving Ready(),
+  // which transitions us to WaitingForFinish.
+  if (NS_WARN_IF(mState != State::WaitingForFinish)) {
+    return IPC_FAIL(this, "Finish received in unexpected state");
+  }
 
   Finish();
 

@@ -49,6 +49,7 @@ class ContextDerived(TreeMetadata):
         "topsrcdir",
         "topobjdir",
         "relsrcdir",
+        "relobjdir",
         "srcdir",
         "objdir",
         "config",
@@ -69,6 +70,7 @@ class ContextDerived(TreeMetadata):
         self.relsrcdir = context.relsrcdir
         self.srcdir = context.srcdir
         self.objdir = context.objdir
+        self.relobjdir = mozpath.relpath(self.objdir, self.topobjdir)
 
         self.config = context.config
 
@@ -86,10 +88,6 @@ class ContextDerived(TreeMetadata):
     def defines(self):
         defines = self._context["DEFINES"]
         return Defines(self._context, defines) if defines else None
-
-    @property
-    def relobjdir(self):
-        return mozpath.relpath(self.objdir, self.topobjdir)
 
 
 class HostMixin:
@@ -376,6 +374,7 @@ class Linkable(ContextDerived):
 
     __slots__ = (
         "cxx_link",
+        "extra_link_deps",
         "lib_defines",
         "linked_libraries",
         "linked_system_libs",
@@ -389,6 +388,7 @@ class Linkable(ContextDerived):
         self.linked_system_libs = []
         self.lib_defines = Defines(context, OrderedDict())
         self.sources = defaultdict(list)
+        self.extra_link_deps = []
 
     @property
     def output_path(self):
@@ -550,13 +550,19 @@ class HostSimpleProgram(HostMixin, BaseProgram):
         return []
 
 
-def cargo_output_directory(context, target_var):
+def cargo_output_directory(context, target_var, libname=""):
     # cargo creates several directories and places its build artifacts
     # in those directories.  The directory structure depends not only
     # on the target, but also what sort of build we are doing.
-    rust_build_kind = "release"
-    if context.config.substs.get("MOZ_DEBUG_RUST"):
-        rust_build_kind = "debug"
+    # Megazord libraries use custom profiles that output to different directories.
+    if "megazord" in libname:
+        rust_build_kind = "release-megazord"
+        if context.config.substs.get("MOZ_DEBUG_RUST"):
+            rust_build_kind = "dev-megazord"
+    else:
+        rust_build_kind = "release"
+        if context.config.substs.get("MOZ_DEBUG_RUST"):
+            rust_build_kind = "debug"
     return mozpath.join(context.config.substs[target_var], rust_build_kind)
 
 
@@ -566,16 +572,19 @@ class BaseRustProgram(Linkable):
     __slots__ = (
         "name",
         "cargo_file",
+        "features",
         "location",
+        "output_category",
         "SUFFIX_VAR",
         "KIND",
         "TARGET_SUBST_VAR",
     )
 
-    def __init__(self, context, name, cargo_file):
+    def __init__(self, context, name, cargo_file, features):
         Linkable.__init__(self, context)
         self.name = name
         self.cargo_file = cargo_file
+        self.output_category = context.get(self.OUTPUT_CATEGORY_VAR)
         # Skip setting properties below which depend on cargo
         # when we don't have a compile environment. The required
         # config keys won't be available, but the instance variables
@@ -586,18 +595,23 @@ class BaseRustProgram(Linkable):
         cargo_dir = cargo_output_directory(context, self.TARGET_SUBST_VAR)
         exe_file = "%s%s" % (name, context.config.substs.get(self.SUFFIX_VAR, ""))
         self.location = mozpath.join(cargo_dir, exe_file)
+        self.features = features
 
 
 class RustProgram(BaseRustProgram):
     SUFFIX_VAR = "BIN_SUFFIX"
     KIND = "target"
     TARGET_SUBST_VAR = "RUST_TARGET"
+    FEATURES_VAR = "RUST_PROGRAM_FEATURES"
+    OUTPUT_CATEGORY_VAR = "RUST_PROGRAM_OUTPUT_CATEGORY"
 
 
 class HostRustProgram(BaseRustProgram):
     SUFFIX_VAR = "HOST_BIN_SUFFIX"
     KIND = "host"
     TARGET_SUBST_VAR = "RUST_HOST_TARGET"
+    FEATURES_VAR = "HOST_RUST_PROGRAM_FEATURES"
+    OUTPUT_CATEGORY_VAR = "HOST_RUST_PROGRAM_OUTPUT_CATEGORY"
 
 
 class RustTests(ContextDerived):
@@ -750,7 +764,9 @@ class BaseRustLibrary:
             self._context,
             "!/"
             + mozpath.join(
-                cargo_output_directory(self._context, self.TARGET_SUBST_VAR),
+                cargo_output_directory(
+                    self._context, self.TARGET_SUBST_VAR, self.import_name
+                ),
                 self.import_name,
             ),
         )
@@ -1275,6 +1291,20 @@ class MozSrcFiles(FinalTargetFiles):
         return mozpath.join("dist/bin/moz-src", self._context.relsrcdir)
 
 
+class JsShellArchive(ContextDerived):
+    """Sandbox container object for JS_SHELL_ARCHIVE_FILES.
+
+    Holds the list of basenames (relative to $(DIST)/bin) that the build
+    backend should pack into the JS shell zip archive.
+    """
+
+    __slots__ = ("files",)
+
+    def __init__(self, context, files):
+        ContextDerived.__init__(self, context)
+        self.files = tuple(files)
+
+
 class ObjdirFiles(FinalTargetFiles):
     """Sandbox container object for OBJDIR_FILES, which is a
     HierarchicalStringList.
@@ -1327,6 +1357,7 @@ class GeneratedFile(ContextDerived):
         "method",
         "outputs",
         "inputs",
+        "extra_deps",
         "flags",
         "required_before_export",
         "required_before_compile",
@@ -1346,6 +1377,7 @@ class GeneratedFile(ContextDerived):
         localized=False,
         force=False,
         required_during_compile=None,
+        extra_deps=(),
     ):
         ContextDerived.__init__(self, context)
         self.script = script
@@ -1353,6 +1385,7 @@ class GeneratedFile(ContextDerived):
         self.outputs = outputs if isinstance(outputs, tuple) else (outputs,)
         self.inputs = inputs
         self.flags = flags
+        self.extra_deps = extra_deps
         self.localized = localized
         self.force = force
 
@@ -1365,6 +1398,9 @@ class GeneratedFile(ContextDerived):
                 for f in self.outputs
                 if f.endswith((".java", ".kt"))
                 or mozpath.match(f, "**/AndroidManifest*.xml")
+                # Special-case for the webcompat addon, for files it automatically
+                # generates with GenerateWebCompatAddonFiles in /mobile/android/moz.build.
+                or mozpath.match(f, "**/webcompat_addon_generated_files/**")
             ]
         else:
             self.required_before_export = False
@@ -1407,6 +1443,7 @@ class GeneratedFile(ContextDerived):
                     ".m",
                     ".mm",
                     ".def",
+                    ".plist",
                     ".s",
                     ".S",
                     "symverscript",

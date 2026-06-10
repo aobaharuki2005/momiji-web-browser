@@ -150,7 +150,7 @@ HRESULT MFCDMSession::Load(const nsAString& aSessionId) {
   // Also, how do we know is this given session ID is equal to the session Id
   // asked from CDM session or not?
   BOOL rv = FALSE;
-  mSession->Load(char16ptr_t(aSessionId.BeginReading()), &rv);
+  mSession->Load(PromiseFlatString(aSessionId).get(), &rv);
   LOG("Load, id=%s, rv=%s", NS_ConvertUTF16toUTF8(aSessionId).get(),
       rv ? "success" : "fail");
   return rv ? S_OK : S_FALSE;

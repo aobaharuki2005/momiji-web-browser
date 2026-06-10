@@ -17,16 +17,20 @@ ChromeUtils.defineESModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   UrlbarController:
     "moz-src:///browser/components/urlbar/UrlbarController.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
+  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
   UrlbarProviderOpenTabs:
     "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
-  UrlbarProvidersManager:
+  UrlbarProviderSearchSuggestions:
+    "moz-src:///browser/components/urlbar/UrlbarProviderSearchSuggestions.sys.mjs",
+  ProvidersManager:
     "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
-  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
   UrlbarTokenizer:
     "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
@@ -199,10 +203,9 @@ function registerBasicTestProvider(results = [], onCancel, type, name) {
     type,
     name,
   });
-  UrlbarProvidersManager.registerProvider(provider);
-  registerCleanupFunction(() =>
-    UrlbarProvidersManager.unregisterProvider(provider)
-  );
+  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
+  providersManager.registerProvider(provider);
+  registerCleanupFunction(() => providersManager.unregisterProvider(provider));
   return provider;
 }
 
@@ -225,7 +228,7 @@ function makeTestServer(port = -1) {
  *   Options for the check.
  * @param {string} [options.name]
  *   The name of the engine to install.
- * @returns {nsISearchEngine} The new engine.
+ * @returns {SearchEngine} The new engine.
  */
 async function addTestSuggestionsEngine(
   suggestionsFn = null,
@@ -249,7 +252,7 @@ async function addTestSuggestionsEngine(
     suggest_url: `http://localhost:${server.identity.primaryPort}/suggest`,
     suggest_url_get_params: "?q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName(name);
+  let engine = SearchService.getEngineByName(name);
   return engine;
 }
 
@@ -262,7 +265,7 @@ async function addTestSuggestionsEngine(
  *        responses. See bug 1626897.
  *        NOTE: Consumers specifying suggestionsFn must include searchStr as a
  *              part of the array returned by suggestionsFn.
- * @returns {nsISearchEngine} The new engine.
+ * @returns {SearchEngine} The new engine.
  */
 async function addTestTailSuggestionsEngine(suggestionsFn = null) {
   // This port number should match the number in engine-tail-suggestions.xml.
@@ -304,7 +307,7 @@ async function addTestTailSuggestionsEngine(suggestionsFn = null) {
     suggest_url: `http://localhost:${server.identity.primaryPort}/suggest`,
     suggest_url_get_params: "?q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("Tail Suggestions");
+  let engine = SearchService.getEngineByName("Tail Suggestions");
   return engine;
 }
 
@@ -386,7 +389,7 @@ function testEngine_setup() {
   add_setup(async () => {
     await cleanupPlaces();
     let engine = await addTestSuggestionsEngine();
-    let oldDefaultEngine = await Services.search.getDefault();
+    let oldDefaultEngine = await SearchService.getDefault();
 
     registerCleanupFunction(async () => {
       Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
@@ -394,16 +397,13 @@ function testEngine_setup() {
       Services.prefs.clearUserPref(
         "browser.search.separatePrivateDefault.ui.enabled"
       );
-      Services.search.setDefault(
+      SearchService.setDefault(
         oldDefaultEngine,
-        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+        SearchService.CHANGE_REASON.UNKNOWN
       );
     });
 
-    Services.search.setDefault(
-      engine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
+    SearchService.setDefault(engine, SearchService.CHANGE_REASON.UNKNOWN);
     Services.prefs.setBoolPref(
       "browser.search.separatePrivateDefault.ui.enabled",
       false
@@ -477,11 +477,6 @@ function makeBookmarkResult(
             "awesome-bar-result-menu"
           : undefined,
     },
-    highlights: {
-      url: UrlbarUtils.HIGHLIGHT.TYPED,
-      title: UrlbarUtils.HIGHLIGHT.TYPED,
-      tags: UrlbarUtils.HIGHLIGHT.TYPED,
-    },
   });
 }
 
@@ -512,10 +507,6 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
       helpUrl:
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
         "awesome-bar-result-menu",
-    },
-    highlights: {
-      suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-      title: UrlbarUtils.HIGHLIGHT.SUGGESTED,
     },
   });
 }
@@ -553,11 +544,6 @@ function makeOmniboxResult(
       keyword,
       icon: UrlbarUtils.ICON.EXTENSION,
     },
-    highlights: {
-      title: UrlbarUtils.HIGHLIGHT.TYPED,
-      content: UrlbarUtils.HIGHLIGHT.TYPED,
-      keyword: UrlbarUtils.HIGHLIGHT.TYPED,
-    },
   });
 }
 
@@ -594,10 +580,6 @@ function makeTabSwitchResult(
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
       userContextId: userContextId || 0,
       tabGroup,
-    },
-    highlights: {
-      url: UrlbarUtils.HIGHLIGHT.TYPED,
-      title: UrlbarUtils.HIGHLIGHT.TYPED,
     },
   });
 }
@@ -638,12 +620,6 @@ function makeKeywordSearchResult(
       input: queryContext.searchString,
       postData: postData || null,
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
-    },
-    highlights: {
-      title: UrlbarUtils.HIGHLIGHT.TYPED,
-      url: UrlbarUtils.HIGHLIGHT.TYPED,
-      keyword: UrlbarUtils.HIGHLIGHT.TYPED,
-      input: UrlbarUtils.HIGHLIGHT.TYPED,
     },
   });
 }
@@ -691,11 +667,6 @@ function makeRemoteTabResult(
     type: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
     source: UrlbarUtils.RESULT_SOURCE.TABS,
     payload,
-    highlights: {
-      url: UrlbarUtils.HIGHLIGHT.TYPED,
-      title: UrlbarUtils.HIGHLIGHT.TYPED,
-      device: UrlbarUtils.HIGHLIGHT.TYPED,
-    },
   });
 }
 
@@ -839,8 +810,10 @@ function makeSearchResult(
   }
 
   if (isRichSuggestion) {
-    payload.icon =
-      "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+    payload.icon = UrlbarUtils.getRemoteIconUrl(
+      "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+      UrlbarProviderSearchSuggestions.RICH_ICON_SIZE
+    );
     payload.description = "description";
   }
 
@@ -851,13 +824,6 @@ function makeSearchResult(
     isRichSuggestion,
     providerName,
     payload,
-    highlights: {
-      engine: UrlbarUtils.HIGHLIGHT.TYPED,
-      suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-      tail: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-      keyword: providesSearchMode ? UrlbarUtils.HIGHLIGHT.TYPED : undefined,
-      query: UrlbarUtils.HIGHLIGHT.TYPED,
-    },
   });
 }
 
@@ -882,6 +848,8 @@ function makeSearchResult(
  *   check which provider offered a result unless this option is specified.
  * @param {number} [options.source]
  *   The source of the result
+ * @param {boolean} [options.isAutofillFallback]
+ *   Whether it's a result of being a fallback for the autofill result.
  * @returns {UrlbarResult}
  */
 function makeVisitResult(
@@ -894,6 +862,7 @@ function makeVisitResult(
     tags = [],
     heuristic = false,
     source = UrlbarUtils.RESULT_SOURCE.HISTORY,
+    isAutofillFallback = false,
   }
 ) {
   let payload = {
@@ -929,18 +898,16 @@ function makeVisitResult(
     payload.tags = tags;
   }
 
+  if (isAutofillFallback) {
+    payload.isAutofillFallback = true;
+  }
+
   return new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.URL,
     source,
     heuristic,
     providerName,
     payload,
-    highlights: {
-      url: UrlbarUtils.HIGHLIGHT.TYPED,
-      title: UrlbarUtils.HIGHLIGHT.TYPED,
-      fallbackTitle: UrlbarUtils.HIGHLIGHT.TYPED,
-      tags: UrlbarUtils.HIGHLIGHT.TYPED,
-    },
   });
 }
 
@@ -1021,7 +988,8 @@ function makeGlobalActionsResult({
  *   The value that would be filled if the autofill result was confirmed.
  *   Has no effect if `autofilled` is not specified.
  * @param {object} [options.conditionalPayloadProperties]
- *   An object mapping payload property names to objects { optional, ignore }.
+ *   An object mapping payload property names to objects
+ *   { optional, ignore, custom }.
  *   See the code below.
  * @param {Array} options.matches
  *   An array of UrlbarResults.
@@ -1193,6 +1161,11 @@ async function check_results({
           continue;
         }
 
+        if (condition?.custom?.(i, actual)) {
+          // The custom assertion consumed this assertion.
+          continue;
+        }
+
         Assert.deepEqual(
           actual.payload[key],
           expected.payload[key],
@@ -1201,6 +1174,30 @@ async function check_results({
       }
     }
   }
+}
+
+/**
+ * Reads a single column from moz_origins for the origin that matches the url.
+ *
+ * @param {string} url
+ *   A URL whose origin row should be looked up.
+ * @param {string} column
+ *   The column name to read from moz_origins.
+ */
+async function getOriginColumn(url, column) {
+  let db = await PlacesUtils.promiseDBConnection();
+  let rows = await db.executeCached(
+    `SELECT o.${column}
+     FROM moz_origins o
+     JOIN moz_places h ON h.origin_id = o.id
+     WHERE h.url_hash = hash(:url) AND h.url = :url
+     LIMIT 1`,
+    { url }
+  );
+  if (!rows.length) {
+    return undefined;
+  }
+  return rows[0].getResultByIndex(0);
 }
 
 /**

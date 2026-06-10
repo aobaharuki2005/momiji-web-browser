@@ -2,21 +2,21 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Bug 1895789 to standarize contextmenu helpers in BrowserTestUtils
-async function openContextMenu() {
-  const contextMenu = document.getElementById("contentAreaContextMenu");
+async function openContextMenu(doc = document) {
+  const contextMenu = doc.getElementById("contentAreaContextMenu");
   const promise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   await BrowserTestUtils.synthesizeMouse(
     null,
     0,
     0,
     { type: "contextmenu" },
-    gBrowser.selectedBrowser
+    doc.documentGlobal.gBrowser.selectedBrowser
   );
   await promise;
 }
 
-async function hideContextMenu() {
-  const contextMenu = document.getElementById("contentAreaContextMenu");
+async function hideContextMenu(doc = document) {
+  const contextMenu = doc.getElementById("contentAreaContextMenu");
   const promise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   contextMenu.hidePopup();
   await promise;
@@ -122,6 +122,78 @@ add_task(async function test_remove_option() {
     Assert.equal(events.length, 1, "One remove event recorded");
     Assert.equal(events[0].extra.provider, "localhost", "Provider recorded");
   });
+});
+
+/**
+ * Check that the chat context menu is hidden in popup windows because
+ * they don't have a sidebar
+ */
+add_task(async function test_hidden_in_popup() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    const popupWindowPromise = BrowserTestUtils.waitForNewWindow();
+    await SpecialPowers.spawn(browser, [], () => {
+      content.open("https://example.com", "_blank", "popup");
+    });
+    const popupWin = await popupWindowPromise;
+
+    await openContextMenu(popupWin.document);
+    await waitMenuState(
+      popupWin.document.getElementById("context-ask-chat"),
+      true,
+      "Menu should be hidden in popup"
+    );
+    await hideContextMenu(popupWin.document);
+
+    await BrowserTestUtils.closeWindow(popupWin);
+  });
+});
+
+/**
+ * Check that the chat context menu is hidden inside a Smart Window,
+ * both directly and when accessed from a sidebar panel sub-window.
+ */
+add_task(async function test_hidden_in_smart_window() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.ml.chat.provider", "http://localhost:8080"]],
+  });
+
+  const { GenAI } = ChromeUtils.importESModule(
+    "resource:///modules/GenAI.sys.mjs"
+  );
+  const menu = document.getElementById("context-ask-chat");
+  const aiWindowDoc = {
+    documentElement: { hasAttribute: attr => attr === "ai-window" },
+  };
+  const buildMenu = async documentGlobal => {
+    let hidden = null;
+    await GenAI.buildAskChatMenu(menu, {
+      browser: {
+        browsingContext: { currentURI: { spec: "https://example.com" } },
+        documentGlobal,
+      },
+      selectionInfo: {},
+      showItem: (item, show) => {
+        hidden = !show;
+      },
+      source: null,
+      contextTabs: null,
+    });
+    return hidden;
+  };
+
+  Assert.ok(
+    await buildMenu({ document: aiWindowDoc }),
+    "Menu hidden when documentGlobal is the Smart Window"
+  );
+  Assert.ok(
+    await buildMenu({
+      document: { documentElement: { hasAttribute: () => false } },
+      browsingContext: { topChromeWindow: { document: aiWindowDoc } },
+    }),
+    "Menu hidden when documentGlobal is a sidebar sub-window inside a Smart Window"
+  );
+
+  await SpecialPowers.popPrefEnv();
 });
 
 /**

@@ -800,6 +800,7 @@ malloc_size_of_is_0!(f32, f64);
 
 malloc_size_of_is_0!(std::sync::atomic::AtomicBool);
 malloc_size_of_is_0!(std::sync::atomic::AtomicIsize);
+malloc_size_of_is_0!(std::sync::atomic::AtomicU32);
 malloc_size_of_is_0!(std::sync::atomic::AtomicUsize);
 malloc_size_of_is_0!(std::num::NonZeroUsize);
 malloc_size_of_is_0!(std::num::NonZeroU64);
@@ -813,7 +814,8 @@ malloc_size_of_is_0!(app_units::Au);
 malloc_size_of_is_0!(
     cssparser::TokenSerializationType,
     cssparser::SourceLocation,
-    cssparser::SourcePosition
+    cssparser::SourcePosition,
+    cssparser::UnicodeRange
 );
 
 malloc_size_of_is_0!(selectors::OpaqueElement);

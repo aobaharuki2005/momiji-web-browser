@@ -19,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getColor
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
@@ -43,6 +45,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 import mozilla.components.browser.toolbar.R as toolbarR
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Vertical padding needed to improve the visual alignment of the popup and respect the UX design.
@@ -59,6 +62,7 @@ private const val TAB_SWIPE_CFR_ARROW_OFFSET = 160
  * @param toolbar will serve as anchor for the CFRs
  * @param isPrivate Whether or not the session is private.
  * @param customTabId Optional custom tab id used to identify the custom tab in which to show a CFR.
+ * @param mainDispatcher The [CoroutineDispatcher] to be used for observing the browser store.
  */
 @Suppress("LongParameterList")
 class BrowserToolbarCFRPresenter(
@@ -68,6 +72,7 @@ class BrowserToolbarCFRPresenter(
     private val toolbar: BrowserToolbar,
     private val isPrivate: Boolean,
     private val customTabId: String? = null,
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) {
     @VisibleForTesting
     internal var scope: CoroutineScope? = null
@@ -84,11 +89,14 @@ class BrowserToolbarCFRPresenter(
         if (!isPrivate && !settings.hasShownTabSwipeCFR &&
             !settings.isTabStripEnabled && settings.isSwipeToolbarToSwitchTabsEnabled
         ) {
-            scope = browserStore.flowScoped { flow ->
+            scope = browserStore.flowScoped(dispatcher = mainDispatcher) { flow ->
                 flow
                     .distinctUntilChangedBy { it.selectedNormalTab?.id }
                     .collect {
-                        if (settings.shouldShowTabSwipeCFR && !settings.hasShownTabSwipeCFR) {
+                        if (settings.shouldShowTabSwipeCFR &&
+                            !settings.hasShownTabSwipeCFR &&
+                            settings.cfrPopupsEnabled
+                        ) {
                             scope?.cancel()
                             settings.shouldShowTabSwipeCFR = false
                             settings.hasShownTabSwipeCFR = true
@@ -100,7 +108,7 @@ class BrowserToolbarCFRPresenter(
 
         when (getCFRToShow()) {
             ToolbarCFR.COOKIE_BANNERS -> {
-                scope = browserStore.flowScoped { flow ->
+                scope = browserStore.flowScoped(dispatcher = mainDispatcher) { flow ->
                     flow.mapNotNull { it.findCustomTabOrSelectedTab(customTabId) }
                         .ifAnyChanged { tab ->
                             arrayOf(
@@ -125,7 +133,10 @@ class BrowserToolbarCFRPresenter(
     }
 
     private fun getCFRToShow(): ToolbarCFR = when {
-        isPrivate && settings.shouldShowCookieBannersCFR && settings.shouldUseCookieBannerPrivateMode -> {
+        isPrivate &&
+            settings.shouldShowCookieBannersCFR &&
+            settings.cfrPopupsEnabled &&
+            settings.shouldUseCookieBannerPrivateMode -> {
             ToolbarCFR.COOKIE_BANNERS
         }
 
@@ -170,7 +181,7 @@ class BrowserToolbarCFRPresenter(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_cookies_disabled),
+                                painter = painterResource(id = iconsR.drawable.mozac_ic_cookies_slash_24),
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )

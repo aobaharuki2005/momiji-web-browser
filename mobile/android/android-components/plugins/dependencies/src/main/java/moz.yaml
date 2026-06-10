@@ -31,11 +31,11 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: 32693fef638471a3667869ba0c0b7a8bb52c15e3 (2026-01-10T05:02:46).
+  release: f7ffaa75a2fd6e8e2b826685ef8372b65934eb85 (2026-06-02T05:02:44).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 32693fef638471a3667869ba0c0b7a8bb52c15e3
+  revision: f7ffaa75a2fd6e8e2b826685ef8372b65934eb85
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
@@ -51,7 +51,7 @@ updatebot:
       - type: vendoring
         enabled: true
         frequency: every
-    try-preset: firefox-android
+    try-preset: android-frontend
 
 vendoring:
   url: https://github.com/mozilla/application-services

@@ -562,6 +562,8 @@
   <string name="tabs_tray_action_erase">Xóa lịch sử duyệt web</string>
   <!-- Label for the option in the Focus "tabs tray" to clos the other tabs except the current tab. -->
   <string name="tabs_tray_action_erase_other">Đóng các thẻ khác</string>
+  <!-- Label for the option in the Focus "tabs tray" to add a new tab. -->
+  <string name="tabs_tray_action_add_new_tab">Thêm thẻ mới</string>
   <!--
     If the user decides to open the current page in another browser and if Firefox is not installed then we show this
     item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play).
@@ -582,6 +584,21 @@
   <string name="security_popup_security_verified">Xác minh bởi: %1$s</string>
   <!-- Content Description of Security Icon in toolbar -->
   <string name="site_security_icon_content_description">Bảo mật trang web</string>
+  <!--
+    %1$s will be replaced with the organization for which the certificate
+    used by the site was issued. For example, the certificate in use by
+    the site https://eidas.ec.europa.eu/ was issued to "The European
+    Commission".
+  -->
+  <string name="qualified_identity">Chứng chỉ được cấp cho %1$s</string>
+  <!--
+    The European Union eIDAS Regulation specifies a type of certificate
+    called a "qualified website authentication certificate" (QWAC) and
+    requires that browsers identify and indicate such certificates. This
+    text was paraphrased from ETSI TS 119 411-5 V2.1.1 section 6.3 and
+    indicates that the website uses a QWAC.
+  -->
+  <string name="qualified_text">Được chứng nhận/đủ điều kiện theo quy định tại Quy định (EU) 2024/1183.</string>
   <string name="preference_autocomplete_duplicate_url_error">URL đã tồn tại</string>
   <!-- Label for the Find in page button -->
   <string name="find_in_page">Tìm trong trang</string>
@@ -929,7 +946,7 @@
     This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. "Focus")
   -->
-  <string name="promote_search_widget_dialog_subtitle">Chúng tôi sẽ để bạn ở chế độ duyệt web riêng tư, nhưng hãy bắt đầu nhanh hơn vào lần sau với tiện ích %1$s trên màn hình chính của bạn.</string>
+  <string name="promote_search_widget_dialog_subtitle">Chúng tôi sẽ để bạn ở chế độ duyệt web riêng tư, nhưng hãy bắt đầu nhanh hơn vào lần sau với widget %1$s trên màn hình chính của bạn.</string>
   <!--
     This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog.

@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -684,6 +682,7 @@ void Statistics::formatJsonDescription(JSONPrinter& json) const {
   // We might be able to omit reason if profiler.firefox.com was able to retrive
   // it from the first slice.  But it doesn't do this yet.
   json.property("reason", ExplainGCReason(slices_[0].reason));
+  json.property("options", ExplainGCOptions(gcOptions));
   json.property("zones_collected", zoneStats.collectedZoneCount);
   json.property("total_zones", zoneStats.zoneCount);
   json.property("total_compartments", zoneStats.compartmentCount);
@@ -827,6 +826,9 @@ Statistics::Statistics(GCRuntime* gc)
 Statistics::~Statistics() {
   if (gcTimerFile && gcTimerFile != stdout && gcTimerFile != stderr) {
     fclose(gcTimerFile);
+  }
+  if (gcProfileFile && gcProfileFile != stdout && gcProfileFile != stderr) {
+    fclose(gcProfileFile);
   }
 }
 
@@ -1253,6 +1255,11 @@ void Statistics::endSlice() {
       printStats();
     }
 
+    if (enableBufferAllocStats_ && gc->rt->isMainRuntime()) {
+      maybePrintProfileHeaders();
+      BufferAllocator::printStats(gc, creationTime(), true, profileFile());
+    }
+
     if (!aborted) {
       endGC();
     }
@@ -1262,11 +1269,6 @@ void Statistics::endSlice() {
     if (ShouldPrintProfile(gc->rt, enableProfiling_, profileWorkers_,
                            profileThreshold_, slices_.back().duration())) {
       printSliceProfile();
-    }
-
-    if (enableBufferAllocStats_ && gc->rt->isMainRuntime()) {
-      maybePrintProfileHeaders();
-      BufferAllocator::printStats(gc, creationTime(), true, profileFile());
     }
 
     // Slice callbacks should only fire for the outermost level.
@@ -1314,7 +1316,7 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
     TimeDuration budgetDuration = slice.budget.timeBudgetDuration();
     runtime->metrics().GC_BUDGET_MS_2(budgetDuration);
 
-    if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
+    if (IsCurrentlyAnimating(runtime->gc.lastAnimationTime(), slice.end)) {
       runtime->metrics().GC_ANIMATION_MS(sliceTime);
     }
 

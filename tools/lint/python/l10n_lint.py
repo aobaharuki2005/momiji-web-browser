@@ -11,8 +11,8 @@ from compare_locales import parser
 from compare_locales.lint.linter import L10nLinter
 from compare_locales.lint.util import l10n_base_reference_and_tests
 from compare_locales.paths import ProjectFiles, TOMLParser
-from filelock import FileLock, Timeout
 from mach import util as mach_util
+from mach.filelock import FileLock, Timeout
 from mozfile import which
 from mozlint import pathutils, result
 from mozpack import path as mozpath
@@ -58,7 +58,7 @@ def lint_strings(name, paths, lintconfig, **lintargs):
         if fp.isfile:
             all_files.append(p)
     # Filter out files explicitly excluded in the l10n.yml configuration.
-    # `browser/locales/en-US/firefox-l10n.js` is a good example.
+    # `toolkit/locales/en-US/chrome/global/intl.css` is a good example.
     all_files, _ = pathutils.filterpaths(
         lintargs["root"],
         all_files,

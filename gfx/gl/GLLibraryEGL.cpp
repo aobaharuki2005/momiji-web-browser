@@ -355,7 +355,7 @@ static bool IsAccelAngleSupported(nsACString* const out_failureId) {
 
 class AngleErrorReporting {
  public:
-  AngleErrorReporting() : mFailureId(nullptr) {
+  constexpr AngleErrorReporting() : mFailureId(nullptr) {
     // No static constructor
   }
 
@@ -390,7 +390,7 @@ class AngleErrorReporting {
   nsACString* mFailureId;
 };
 
-MOZ_RUNINIT AngleErrorReporting gAngleErrorReporter;
+constinit AngleErrorReporting gAngleErrorReporter;
 
 static std::shared_ptr<EglDisplay> GetAndInitDisplayForAccelANGLE(
     GLLibraryEGL& egl, nsACString* const out_failureId,
@@ -760,6 +760,11 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
     const SymLoadStruct symbols[] = {SYMBOL(QueryDevicesEXT), END_OF_SYMBOLS};
     (void)fnLoadSymbols(symbols);
   }
+  {
+    const SymLoadStruct symbols[] = {SYMBOL(QueryDmaBufModifiersEXT),
+                                     END_OF_SYMBOLS};
+    (void)fnLoadSymbols(symbols);
+  }
 
   return true;
 }
@@ -811,7 +816,9 @@ std::shared_ptr<EglDisplay> EglDisplay::Create(
 
   const auto ret =
       std::make_shared<EglDisplay>(PrivateUseOnly{}, lib, display, isWarp);
-  lib.mActiveDisplays.insert({display, ret});
+  // Insert if there is no existing display entry, or assign if there is an
+  // expired weak_ptr that failed to lock above and was awaiting removal.
+  lib.mActiveDisplays.insert_or_assign(display, ret);
   return ret;
 }
 
@@ -820,8 +827,7 @@ EglDisplay::EglDisplay(const PrivateUseOnly&, GLLibraryEGL& lib,
     : mLib(&lib), mDisplay(disp), mIsWARP(isWarp) {
   const bool shouldDumpExts = GLContext::ShouldDumpExts();
 
-  auto rawExtString =
-      (const char*)mLib->fQueryString(mDisplay, LOCAL_EGL_EXTENSIONS);
+  auto rawExtString = mLib->fQueryString(mDisplay, LOCAL_EGL_EXTENSIONS);
   if (!rawExtString) {
     NS_WARNING("Failed to query EGL display extensions!.");
     rawExtString = "";
@@ -836,8 +842,7 @@ EglDisplay::EglDisplay(const PrivateUseOnly&, GLLibraryEGL& lib,
   }
 
   if (IsExtensionSupported(EGLExtension::KHR_surfaceless_context)) {
-    const auto vendor =
-        (const char*)mLib->fQueryString(mDisplay, LOCAL_EGL_VENDOR);
+    const auto vendor = mLib->fQueryString(mDisplay, LOCAL_EGL_VENDOR);
 
     // Bug 1464610: Mali T720 (Amazon Fire 8 HD) claims to support this
     // extension, but if you actually eglMakeCurrent() with EGL_NO_SURFACE, it
@@ -859,6 +864,13 @@ EglDisplay::EglDisplay(const PrivateUseOnly&, GLLibraryEGL& lib,
 
 EglDisplay::~EglDisplay() {
   StaticMutexAutoLock lock(GLLibraryEGL::sMutex);
+  // EglDisplay is being destructed, so its weak_ptr should be expired. If there
+  // is an entry that is still live, it means a new EGLDisplay was subsequently
+  // created that needs to use this display, so avoid terminating it.
+  const auto itr = mLib->mActiveDisplays.find(mDisplay);
+  if (itr != mLib->mActiveDisplays.end() && !itr->second.expired()) {
+    return;
+  }
   fTerminate();
   mLib->mActiveDisplays.erase(mDisplay);
 }
@@ -983,7 +995,7 @@ void GLLibraryEGL::InitLibExtensions() {
   // Ideally we would only blocklist this there, but for now we don't need the
   // client extension list on ANDROID (we mostly need it on ANGLE), and we'd
   // rather not crash.
-  rawExtString = (const char*)fQueryString(nullptr, LOCAL_EGL_EXTENSIONS);
+  rawExtString = fQueryString(nullptr, LOCAL_EGL_EXTENSIONS);
 #endif
 
   if (!rawExtString) {

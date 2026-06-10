@@ -1,5 +1,3 @@
-/* -*- Mode: Java; c-basic-offset: 2; tab-width: 2; indent-tabs-mode: nil; -*- */
-/* vim: set ts=2 et sw=2 tw=100: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -133,6 +131,10 @@ public class WebAuthnUtils {
     public final String[] transports;
     public final String authenticatorAttachment;
     public final Boolean credProps;
+    public final Boolean prfEnabled;
+    public final byte[] prfFirst;
+    public final byte[] prfSecond;
+    public final Boolean largeBlobSupported;
 
     public static final class Builder {
       private byte[] mClientDataJson;
@@ -141,6 +143,10 @@ public class WebAuthnUtils {
       private String[] mTransports;
       private String mAuthenticatorAttachment;
       private Boolean mCredProps;
+      private Boolean mPrfEnabled;
+      private byte[] mPrfFirst;
+      private byte[] mPrfSecond;
+      private Boolean mLargeBlobSupported;
 
       public Builder() {}
 
@@ -174,6 +180,26 @@ public class WebAuthnUtils {
         return this;
       }
 
+      public Builder setPrfEnabled(final boolean prfEnabled) {
+        this.mPrfEnabled = Boolean.valueOf(prfEnabled);
+        return this;
+      }
+
+      public Builder setPrfFirst(final byte[] prfFirst) {
+        this.mPrfFirst = prfFirst;
+        return this;
+      }
+
+      public Builder setPrfSecond(final byte[] prfSecond) {
+        this.mPrfSecond = prfSecond;
+        return this;
+      }
+
+      public Builder setLargeBlobSupported(final boolean largeBlobSupported) {
+        this.mLargeBlobSupported = Boolean.valueOf(largeBlobSupported);
+        return this;
+      }
+
       public MakeCredentialResponse build() {
         return new MakeCredentialResponse(this);
       }
@@ -187,6 +213,10 @@ public class WebAuthnUtils {
       this.transports = builder.mTransports;
       this.authenticatorAttachment = builder.mAuthenticatorAttachment;
       this.credProps = builder.mCredProps;
+      this.prfEnabled = builder.mPrfEnabled;
+      this.prfFirst = builder.mPrfFirst;
+      this.prfSecond = builder.mPrfSecond;
+      this.largeBlobSupported = builder.mLargeBlobSupported;
     }
 
     @WrapForJNI(skip = true)
@@ -206,11 +236,30 @@ public class WebAuthnUtils {
               Base64.encodeToString(
                   this.attestationObject, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING))
           .append(", transports=")
-          .append(String.join(", ", this.transports))
-          .append(", authenticatorAttachment=")
-          .append(this.authenticatorAttachment);
+          .append(String.join(", ", this.transports));
+      if (this.authenticatorAttachment != null) {
+        sb.append(", authenticatorAttachment=").append(this.authenticatorAttachment);
+      }
       if (this.credProps != null) {
         sb.append(", credProps=").append(this.credProps.booleanValue());
+      }
+      if (this.prfEnabled != null) {
+        sb.append(", prfEnabled=").append(this.prfEnabled.booleanValue());
+      }
+      if (this.prfFirst != null) {
+        sb.append(", prfFirst=")
+            .append(
+                Base64.encodeToString(
+                    this.prfFirst, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING));
+      }
+      if (this.prfSecond != null) {
+        sb.append(", prfSecond=")
+            .append(
+                Base64.encodeToString(
+                    this.prfSecond, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING));
+      }
+      if (this.largeBlobSupported != null) {
+        sb.append(", largeBlobSupported=").append(this.largeBlobSupported.booleanValue());
       }
       sb.append("}");
       return sb.toString();
@@ -225,6 +274,10 @@ public class WebAuthnUtils {
     public final byte[] signature;
     public final byte[] userHandle;
     public final String authenticatorAttachment;
+    public final byte[] prfFirst;
+    public final byte[] prfSecond;
+    public final byte[] largeBlobBlob;
+    public final Boolean largeBlobWritten;
 
     public static final class Builder {
       private byte[] mClientDataJson;
@@ -233,6 +286,10 @@ public class WebAuthnUtils {
       private byte[] mSignature;
       private byte[] mUserHandle;
       private String mAuthenticatorAttachment;
+      private byte[] mPrfFirst;
+      private byte[] mPrfSecond;
+      private byte[] mLargeBlobBlob;
+      private Boolean mLargeBlobWritten;
 
       public Builder() {}
 
@@ -266,6 +323,26 @@ public class WebAuthnUtils {
         return this;
       }
 
+      public Builder setPrfFirst(final byte[] prfFirst) {
+        this.mPrfFirst = prfFirst;
+        return this;
+      }
+
+      public Builder setPrfSecond(final byte[] prfSecond) {
+        this.mPrfSecond = prfSecond;
+        return this;
+      }
+
+      public Builder setLargeBlobBlob(final byte[] largeBlobBlob) {
+        this.mLargeBlobBlob = largeBlobBlob;
+        return this;
+      }
+
+      public Builder setLargeBlobWritten(final boolean largeBlobWritten) {
+        this.mLargeBlobWritten = Boolean.valueOf(largeBlobWritten);
+        return this;
+      }
+
       public GetAssertionResponse build() {
         return new GetAssertionResponse(this);
       }
@@ -283,6 +360,10 @@ public class WebAuthnUtils {
         this.userHandle = builder.mUserHandle;
       }
       this.authenticatorAttachment = builder.mAuthenticatorAttachment;
+      this.prfFirst = builder.mPrfFirst;
+      this.prfSecond = builder.mPrfSecond;
+      this.largeBlobBlob = builder.mLargeBlobBlob;
+      this.largeBlobWritten = builder.mLargeBlobWritten;
     }
 
     @WrapForJNI(skip = true)
@@ -312,8 +393,29 @@ public class WebAuthnUtils {
                       this.userHandle, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING)
                   : "(empty)")
           .append(", authenticatorAttachment=")
-          .append(this.authenticatorAttachment)
-          .append("}");
+          .append(this.authenticatorAttachment);
+      if (this.prfFirst != null) {
+        sb.append(", prfFirst=")
+            .append(
+                Base64.encodeToString(
+                    this.prfFirst, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING));
+      }
+      if (this.prfSecond != null) {
+        sb.append(", prfSecond=")
+            .append(
+                Base64.encodeToString(
+                    this.prfSecond, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING));
+      }
+      if (this.largeBlobBlob != null) {
+        sb.append(", largeBlobBlob=")
+            .append(
+                Base64.encodeToString(
+                    this.largeBlobBlob, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING));
+      }
+      if (this.largeBlobWritten != null) {
+        sb.append(", largeBlobWritten=").append(this.largeBlobWritten.booleanValue());
+      }
+      sb.append("}");
       return sb.toString();
     }
   }
@@ -322,103 +424,6 @@ public class WebAuthnUtils {
     public Exception(final String error) {
       super(error);
     }
-  }
-
-  @NonNull
-  public static JSONObject getJSONObjectForMakeCredential(
-      final GeckoBundle credentialBundle,
-      final byte[] userId,
-      final byte[] challenge,
-      final int[] algs,
-      final WebAuthnPublicCredential[] excludeList,
-      final GeckoBundle authenticatorSelection,
-      final GeckoBundle extensions)
-      throws JSONException {
-    final JSONObject json = credentialBundle.toJSONObject();
-    // origin is unnecessary for requestJSON.
-    json.remove("origin");
-    json.remove("isWebAuthn");
-
-    json.put(
-        "challenge",
-        Base64.encodeToString(challenge, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP));
-
-    final JSONObject user = json.getJSONObject("user");
-    user.put(
-        "id", Base64.encodeToString(userId, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP));
-
-    final JSONArray pubKeyCredParams = new JSONArray();
-    for (final int alg : algs) {
-      final JSONObject item = new JSONObject();
-      item.put("alg", alg);
-      item.put("type", "public-key");
-      pubKeyCredParams.put(item);
-    }
-    json.put("pubKeyCredParams", pubKeyCredParams);
-
-    final JSONArray excludeCredentials = new JSONArray();
-    for (final WebAuthnPublicCredential cred : excludeList) {
-      excludeCredentials.put(cred.toJSONObject());
-    }
-    json.put("excludeCredentials", excludeCredentials);
-
-    final JSONObject authenticatorSelectionJSON = authenticatorSelection.toJSONObject();
-    /*
-    dom/webauthn/WebAuthnHandler.cpp: WebAuthnHandler::MakeCredential set `residentKey`
-    to "required" if there is no `residentKey` and `requireResidentKey` is true, and
-    `requireResidentKey` should be true if `residentKey` is "required". So we can retrieve
-    `requireResidentKey`'s value from `residentKey`.
-    `requireResidentKey` is only used if `residentKey` isn't set, so it shouldn't be used by any
-    authenticator that follows the specs.
-     */
-    authenticatorSelectionJSON.put(
-        "requireResidentKey",
-        authenticatorSelection.getString("residentKey", "").equals("required"));
-    json.put("authenticatorSelection", authenticatorSelectionJSON);
-
-    final JSONObject extensionsJSON = extensions.toJSONObject();
-    json.put("extensions", extensionsJSON);
-
-    if (DEBUG) {
-      Log.d(LOGTAG, "getJSONObjectForMakeCredential: JSON=\"" + json.toString() + "\"");
-    }
-
-    return json;
-  }
-
-  @NonNull
-  public static JSONObject getJSONObjectForGetAssertion(
-      final byte[] challenge,
-      final WebAuthnPublicCredential[] allowList,
-      final GeckoBundle assertionBundle,
-      final GeckoBundle extensionsBundle)
-      throws JSONException {
-    final JSONObject json = assertionBundle.toJSONObject();
-    // origin is unnecessary for requestJSON.
-    json.remove("origin");
-    json.remove("isWebAuthn");
-
-    json.put(
-        "challenge",
-        Base64.encodeToString(challenge, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP));
-
-    final JSONArray allowCredentials = new JSONArray();
-    for (final WebAuthnPublicCredential cred : allowList) {
-      allowCredentials.put(cred.toJSONObject());
-    }
-    json.put("allowCredentials", allowCredentials);
-
-    if (extensionsBundle.containsKey("fidoAppId")) {
-      final JSONObject extensions = new JSONObject();
-      extensions.put("appid", extensionsBundle.getString("fidoAppId"));
-      json.put("extensions", extensions);
-    }
-
-    if (DEBUG) {
-      Log.d(LOGTAG, "getJSONObjectForGetAssertion: JSON=\"" + json.toString() + "\"");
-    }
-
-    return json;
   }
 
   public static MakeCredentialResponse getMakeCredentialResponse(final @NonNull String responseJson)
@@ -435,8 +440,37 @@ public class WebAuthnUtils {
 
     try {
       final JSONObject clientExtensionResults = json.getJSONObject("clientExtensionResults");
-      final JSONObject credProps = clientExtensionResults.getJSONObject("credProps");
-      builder.setCredProps(credProps.getBoolean("rk"));
+      try {
+        final JSONObject credProps = clientExtensionResults.getJSONObject("credProps");
+        builder.setCredProps(credProps.getBoolean("rk"));
+      } catch (final JSONException e) {
+        // credProps is optional
+      }
+      try {
+        final JSONObject prf = clientExtensionResults.getJSONObject("prf");
+        if (prf.has("enabled")) {
+          builder.setPrfEnabled(prf.getBoolean("enabled"));
+        }
+        if (prf.has("results")) {
+          final JSONObject prfResults = prf.getJSONObject("results");
+          if (prfResults.has("first")) {
+            builder.setPrfFirst(Base64.decode(prfResults.getString("first"), Base64.URL_SAFE));
+          }
+          if (prfResults.has("second")) {
+            builder.setPrfSecond(Base64.decode(prfResults.getString("second"), Base64.URL_SAFE));
+          }
+        }
+      } catch (final JSONException e) {
+        // prf is optional
+      }
+      try {
+        final JSONObject largeBlob = clientExtensionResults.getJSONObject("largeBlob");
+        if (largeBlob.has("supported")) {
+          builder.setLargeBlobSupported(largeBlob.getBoolean("supported"));
+        }
+      } catch (final JSONException e) {
+        // largeBlob is optional
+      }
     } catch (final JSONException e) {
       // clientExtensionResults is an optional. Ignore exception if nothing.
     }
@@ -448,13 +482,15 @@ public class WebAuthnUtils {
 
     // This response has clientDataJson value, but origin in clientDataJson may be package's
     // fingerprint. So we don't use it into the response.
-    return builder
+    builder
         .setKeyHandle(Base64.decode(json.getString("rawId"), Base64.URL_SAFE))
         .setAttestationObject(
             Base64.decode(response.getString("attestationObject"), Base64.URL_SAFE))
-        .setTransports(transports)
-        .setAuthenticatorAttachment(json.getString("authenticatorAttachment"))
-        .build();
+        .setTransports(transports);
+    if (json.has("authenticatorAttachment")) {
+      builder.setAuthenticatorAttachment(json.getString("authenticatorAttachment"));
+    }
+    return builder.build();
   }
 
   public static GetAssertionResponse getGetAssertionResponse(final @NonNull String responseJson)
@@ -469,14 +505,47 @@ public class WebAuthnUtils {
       // userHandle is an optional. Ignore exception if nothing.
     }
 
+    try {
+      final JSONObject clientExtensionResults = json.getJSONObject("clientExtensionResults");
+      try {
+        final JSONObject prf = clientExtensionResults.getJSONObject("prf");
+        if (prf.has("results")) {
+          final JSONObject prfResults = prf.getJSONObject("results");
+          if (prfResults.has("first")) {
+            builder.setPrfFirst(Base64.decode(prfResults.getString("first"), Base64.URL_SAFE));
+          }
+          if (prfResults.has("second")) {
+            builder.setPrfSecond(Base64.decode(prfResults.getString("second"), Base64.URL_SAFE));
+          }
+        }
+      } catch (final JSONException e) {
+        // prf is optional
+      }
+      try {
+        final JSONObject largeBlob = clientExtensionResults.getJSONObject("largeBlob");
+        if (largeBlob.has("blob")) {
+          builder.setLargeBlobBlob(Base64.decode(largeBlob.getString("blob"), Base64.URL_SAFE));
+        }
+        if (largeBlob.has("written")) {
+          builder.setLargeBlobWritten(largeBlob.getBoolean("written"));
+        }
+      } catch (final JSONException e) {
+        // largeBlob is optional
+      }
+    } catch (final JSONException e) {
+      // clientExtensionResults is optional
+    }
+
     // This response may have clientDataJson value, but signed hash is generated by request
     // parameter's hash. So we don't use the value into response.
 
-    return builder
+    builder
         .setKeyHandle(Base64.decode(json.getString("rawId"), Base64.URL_SAFE))
-        .setAuthenticatorAttachment(json.getString("authenticatorAttachment"))
         .setAuthData(Base64.decode(response.getString("authenticatorData"), Base64.URL_SAFE))
-        .setSignature(Base64.decode(response.getString("signature"), Base64.URL_SAFE))
-        .build();
+        .setSignature(Base64.decode(response.getString("signature"), Base64.URL_SAFE));
+    if (json.has("authenticatorAttachment")) {
+      builder.setAuthenticatorAttachment(json.getString("authenticatorAttachment"));
+    }
+    return builder.build();
   }
 }

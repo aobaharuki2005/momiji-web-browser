@@ -31,6 +31,7 @@ import mozilla.components.lib.auth.canUseBiometricFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.utils.DefaultDateTimeProvider
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.StatusBarUtils
 import mozilla.telemetry.glean.private.NoExtras
@@ -66,6 +67,10 @@ import org.mozilla.focus.utils.ViewUtils
 
 private const val REQUEST_TIME_OUT = 2000L
 
+/**
+ * The main activity of the application, serving as the primary entry point and container for
+ * various fragments like the browser and settings.
+ */
 @Suppress("LargeClass")
 // The main entry point for the app.
 open class MainActivity : EdgeToEdgeActivity() {
@@ -138,7 +143,7 @@ open class MainActivity : EdgeToEdgeActivity() {
         }
 
         if (savedInstanceState == null && intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
-            intentProcessor.handleNewIntent(this, safeIntent)
+            intentProcessor.handleNewIntent(safeIntent)
         }
 
         if (safeIntent.isLauncherIntent) {
@@ -182,12 +187,15 @@ open class MainActivity : EdgeToEdgeActivity() {
         }
     }
 
-    private fun setSplashScreenPreDrawListener(safeIntent: SafeIntent) {
-        val endTime = System.currentTimeMillis() + REQUEST_TIME_OUT
+    private fun setSplashScreenPreDrawListener(
+        safeIntent: SafeIntent,
+        currentTimeProvider: () -> Long = DefaultDateTimeProvider()::currentTimeMillis,
+    ) {
+        val endTime = currentTimeProvider() + REQUEST_TIME_OUT
         binding.container.viewTreeObserver.addOnPreDrawListener(
             object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
-                    return if (System.currentTimeMillis() >= endTime) {
+                    return if (currentTimeProvider() >= endTime) {
                         ExternalIntentNavigation.handleAppNavigation(
                             bundle = safeIntent.extras,
                             context = this@MainActivity,
@@ -269,7 +277,7 @@ open class MainActivity : EdgeToEdgeActivity() {
         val action = intent.action
 
         if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
-            intentProcessor.handleNewIntent(this, intent)
+            intentProcessor.handleNewIntent(intent)
         }
 
         if (ACTION_OPEN == action) {

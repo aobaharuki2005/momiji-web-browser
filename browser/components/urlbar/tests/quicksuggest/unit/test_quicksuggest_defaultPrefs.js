@@ -9,7 +9,11 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
+  TelemetryReportingPolicy:
+    "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
 });
+
+const { SUGGEST_TOU_TIMESTAMP } = QuickSuggest;
 
 const EN_LOCALES = ["en-CA", "en-GB", "en-US", "en-ZA"];
 
@@ -105,7 +109,7 @@ add_setup(async () => {
   await UrlbarTestUtils.initNimbusFeature();
 });
 
-add_task(async function test() {
+add_task(async function primary() {
   let tests = [
     // Regions/locales where Suggest should be enabled to some extent
     { region: "DE", locale: "de" },
@@ -136,7 +140,7 @@ add_task(async function test() {
   ];
 
   for (let { locale, region } of tests) {
-    await doTest({ locale, region });
+    await doPrimaryTest({ locale, region });
   }
 });
 
@@ -151,7 +155,7 @@ add_task(async function test() {
  * @param {string} options.region
  *   The "home" region to simulate.
  */
-async function doTest({ locale, region }) {
+async function doPrimaryTest({ locale, region }) {
   let expectedPrefs =
     EXPECTED_PREFS_BY_LOCALE_BY_REGION[region]?.[locale] ??
     EXPECTED_PREFS_SUGGEST_DISABLED;
@@ -216,4 +220,181 @@ async function doTest({ locale, region }) {
       defaultBranch.set(name, originalDefault);
     }
   }
+}
+
+// Online Suggest should be available at the time Suggest is initialized if: the
+// the user has accepted ToU, and Suggest overall is enabled. Online Suggest
+// should not be available otherwise.
+add_task(async function onlineAvailable_init() {
+  let tests = [
+    // Online should be available iff ToU are accepted
+    {
+      touAcceptedDate: 0,
+      expected: {
+        "quicksuggest.online.available": false,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
+        "flightStatus.featureGate": false,
+        "market.featureGate": false,
+        "sports.featureGate": false,
+      },
+    },
+    {
+      touAcceptedDate: SUGGEST_TOU_TIMESTAMP - 1,
+      expected: {
+        "quicksuggest.online.available": false,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
+        "flightStatus.featureGate": false,
+        "market.featureGate": false,
+        "sports.featureGate": false,
+      },
+    },
+    {
+      touAcceptedDate: SUGGEST_TOU_TIMESTAMP,
+      expected: {
+        "quicksuggest.online.available": true,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.FULL,
+        "flightStatus.featureGate": true,
+        "market.featureGate": true,
+        "sports.featureGate": true,
+      },
+    },
+
+    // ToU accepted but region/locale where Suggest is not enabled: online
+    // should be unavailable
+    {
+      region: "JP",
+      locale: "ja",
+      touAcceptedDate: SUGGEST_TOU_TIMESTAMP,
+      expected: {
+        "quicksuggest.online.available": false,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.NONE,
+        "flightStatus.featureGate": false,
+        "market.featureGate": false,
+        "sports.featureGate": false,
+      },
+    },
+  ];
+
+  for (let { region, locale, touAcceptedDate, expected } of tests) {
+    await doOnlineAvailableTest({
+      region,
+      locale,
+      touAcceptedDate,
+      expected,
+    });
+  }
+});
+
+// Online Suggest should become available at the time the user accepts ToU if
+// Suggest overall is enabled. Online Suggest should remain unavailable
+// otherwise.
+add_task(async function onlineAvailable_onToUAccepted() {
+  // `QuickSuggest.init` must be called so it adds itself as a `UrlbarPrefs`
+  // observer.
+  await QuickSuggest.init();
+
+  let tests = [
+    {
+      region: "US",
+      locale: "en-US",
+      expectedBefore: {
+        "quicksuggest.online.available": false,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
+        "flightStatus.featureGate": false,
+        "market.featureGate": false,
+        "sports.featureGate": false,
+      },
+      expectedAfter: {
+        "quicksuggest.online.available": true,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.FULL,
+        "flightStatus.featureGate": true,
+        "market.featureGate": true,
+        "sports.featureGate": true,
+      },
+    },
+    // region/locale where Suggest is not enabled
+    {
+      region: "JP",
+      locale: "ja",
+      expectedBefore: {
+        "quicksuggest.online.available": false,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.NONE,
+        "flightStatus.featureGate": false,
+        "market.featureGate": false,
+        "sports.featureGate": false,
+      },
+      // same as `expectedBefore`
+      expectedAfter: {
+        "quicksuggest.online.available": false,
+        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.NONE,
+        "flightStatus.featureGate": false,
+        "market.featureGate": false,
+        "sports.featureGate": false,
+      },
+    },
+  ];
+
+  for (let { region, locale, expectedBefore, expectedAfter } of tests) {
+    await doOnlineAvailableTest({
+      region,
+      locale,
+      touAcceptedDate: 0,
+      expected: expectedBefore,
+      callback: async () => {
+        info("Setting ToU accepted date");
+        Services.prefs.setCharPref(
+          TelemetryReportingPolicy.TOU_ACCEPTED_DATE_PREF,
+          SUGGEST_TOU_TIMESTAMP
+        );
+        for (let [name, value] of Object.entries(expectedAfter)) {
+          Assert.equal(
+            UrlbarPrefs.get(name),
+            value,
+            "Pref should have expected value after accepting ToU: " + name
+          );
+        }
+      },
+    });
+  }
+});
+
+async function doOnlineAvailableTest({
+  touAcceptedDate,
+  expected,
+  region = "US",
+  locale = "en-US",
+  callback = null,
+}) {
+  info(
+    "Doing online-available test: " +
+      JSON.stringify({
+        region,
+        locale,
+        touAcceptedDate,
+        expected,
+      })
+  );
+
+  // Set the ToU acceptance date.
+  Services.prefs.setCharPref(
+    TelemetryReportingPolicy.TOU_ACCEPTED_DATE_PREF,
+    touAcceptedDate
+  );
+
+  await QuickSuggestTestUtils.withRegionAndLocale({
+    region,
+    locale,
+    callback: async () => {
+      for (let [name, value] of Object.entries(expected)) {
+        Assert.equal(
+          UrlbarPrefs.get(name),
+          value,
+          "Pref should have expected value: " + name
+        );
+      }
+      await callback?.();
+    },
+  });
+
+  Services.prefs.clearUserPref(TelemetryReportingPolicy.TOU_ACCEPTED_DATE_PREF);
 }

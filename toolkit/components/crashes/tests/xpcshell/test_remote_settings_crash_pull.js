@@ -459,9 +459,9 @@ add_task(
 
 add_task(function test_pref_disabled() {
   const originalPref = Services.prefs.getBoolPref(
-    "browser.crashReports.crashPull"
+    "browser.crashReports.onDemand"
   );
-  Services.prefs.setBoolPref("browser.crashReports.crashPull", false);
+  Services.prefs.setBoolPref("browser.crashReports.onDemand", false);
 
   const originalCollection = RemoteSettingsCrashPull.collection;
   let collectionCalled = false;
@@ -479,14 +479,14 @@ add_task(function test_pref_disabled() {
   );
 
   RemoteSettingsCrashPull.collection = originalCollection;
-  Services.prefs.setBoolPref("browser.crashReports.crashPull", originalPref);
+  Services.prefs.setBoolPref("browser.crashReports.onDemand", originalPref);
 });
 
 add_task(function test_pref_enabled() {
   const originalPref = Services.prefs.getBoolPref(
-    "browser.crashReports.crashPull"
+    "browser.crashReports.onDemand"
   );
-  Services.prefs.setBoolPref("browser.crashReports.crashPull", true);
+  Services.prefs.setBoolPref("browser.crashReports.onDemand", true);
 
   const originalCollection = RemoteSettingsCrashPull.collection;
   let collectionCalled = false;
@@ -501,7 +501,7 @@ add_task(function test_pref_enabled() {
   Assert.ok(collectionCalled, "Method collection() should have been called");
 
   RemoteSettingsCrashPull.collection = originalCollection;
-  Services.prefs.setBoolPref("browser.crashReports.crashPull", originalPref);
+  Services.prefs.setBoolPref("browser.crashReports.onDemand", originalPref);
 });
 
 add_task(function teardown_test() {

@@ -17,6 +17,7 @@ import mozilla.appservices.suggest.SuggestStore
 import mozilla.appservices.suggest.SuggestStoreBuilder
 import mozilla.appservices.suggest.Suggestion
 import mozilla.appservices.suggest.SuggestionQuery
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.feature.fxsuggest.facts.emitSuggestionQueryCountFact
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.remotesettings.RemoteSettingsService
@@ -33,6 +34,7 @@ import mozilla.appservices.suggest.InternalException as UniffiInternalException
 class FxSuggestStorage(
     context: Context,
     remoteSettingsService: RemoteSettingsService,
+    private val crashReporter: CrashReporting? = null,
 ) {
     // Lazily initializes the store on first use. `cacheDir` and using the `File` constructor
     // does I/O, so `store.value` should only be accessed from the read or write scope.
@@ -123,10 +125,11 @@ class FxSuggestStorage(
             operation()
         } catch (e: SuggestApiException) {
             logger.warn("Ignoring exception from `$name`", e)
+            crashReporter?.submitCaughtException(e)
             default
         } catch (e: UniffiInternalException) {
-            Logger.error(e.toString())
-            reportRustError("suggest-internal-error", e.toString())
+            Logger.error("Ignoring internal exception from `$name`", e)
+            reportRustError("suggest-internal-error", e)
             default
         }
     }

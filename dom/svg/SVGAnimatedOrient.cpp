@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -28,7 +26,7 @@ namespace mozilla {
 
 constinit static SVGAttrTearoffTable<SVGAnimatedOrient,
                                      DOMSVGAnimatedEnumeration>
-    sSVGAnimatedEnumTearoffTable;
+    sSVGAnimatedOrientEnumTearoffTable;
 constinit static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAnimatedAngle>
     sSVGAnimatedAngleTearoffTable;
 constinit static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAngle>
@@ -72,7 +70,7 @@ class MOZ_RAII AutoChangeOrientNotifier {
   bool mDoSetAttr;
 };
 
-const unsigned short SVG_ANGLETYPE_TURN = 5;
+constexpr uint16_t SVG_ANGLETYPE_TURN = 5;
 
 static void GetAngleUnitString(nsAString& aUnit, uint16_t aUnitType) {
   switch (aUnitType) {
@@ -153,7 +151,7 @@ bool SVGAnimatedOrient::GetValueFromString(const nsAString& aString,
 }
 
 /* static */
-float SVGAnimatedOrient::GetDegreesPerUnit(uint8_t aUnit) {
+float SVGAnimatedOrient::GetDegreesPerUnit(uint16_t aUnit) {
   switch (aUnit) {
     case SVG_ANGLETYPE_UNSPECIFIED:
     case SVG_ANGLETYPE_DEG:
@@ -331,7 +329,7 @@ void SVGAnimatedOrient::GetAnimAngleValueString(
   GetAngleValueString(aValueAsString, mAnimVal, mAnimValUnit);
 }
 
-void SVGAnimatedOrient::SetBaseValue(float aValue, uint8_t aUnit,
+void SVGAnimatedOrient::SetBaseValue(float aValue, uint16_t aUnit,
                                      SVGElement* aSVGElement, bool aDoSetAttr) {
   float valueInSpecifiedUnits = aValue / GetDegreesPerUnit(aUnit);
   if (aUnit == mBaseValUnit && mBaseVal == valueInSpecifiedUnits &&
@@ -374,7 +372,7 @@ void SVGAnimatedOrient::SetBaseType(SVGEnumValue aValue,
   aRv.ThrowTypeError(err);
 }
 
-void SVGAnimatedOrient::SetAnimValue(float aValue, uint8_t aUnit,
+void SVGAnimatedOrient::SetAnimValue(float aValue, uint16_t aUnit,
                                      SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal == aValue && mAnimValUnit == aUnit &&
       mAnimType == SVG_MARKER_ORIENT_ANGLE) {
@@ -414,10 +412,10 @@ already_AddRefed<DOMSVGAnimatedAngle> SVGAnimatedOrient::ToDOMAnimatedAngle(
 already_AddRefed<DOMSVGAnimatedEnumeration>
 SVGAnimatedOrient::ToDOMAnimatedEnum(SVGElement* aSVGElement) {
   RefPtr<DOMSVGAnimatedEnumeration> domAnimatedEnum =
-      sSVGAnimatedEnumTearoffTable.GetTearoff(this);
+      sSVGAnimatedOrientEnumTearoffTable.GetTearoff(this);
   if (!domAnimatedEnum) {
     domAnimatedEnum = new DOMAnimatedEnum(this, aSVGElement);
-    sSVGAnimatedEnumTearoffTable.AddTearoff(this, domAnimatedEnum);
+    sSVGAnimatedOrientEnumTearoffTable.AddTearoff(this, domAnimatedEnum);
   }
 
   return domAnimatedEnum.forget();
@@ -428,12 +426,13 @@ DOMSVGAnimatedAngle::~DOMSVGAnimatedAngle() {
 }
 
 SVGAnimatedOrient::DOMAnimatedEnum::~DOMAnimatedEnum() {
-  sSVGAnimatedEnumTearoffTable.RemoveTearoff(mVal);
+  sSVGAnimatedOrientEnumTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<SMILAttr> SVGAnimatedOrient::ToSMILAttr(SVGElement* aSVGElement) {
+std::unique_ptr<SMILAttr> SVGAnimatedOrient::ToSMILAttr(
+    SVGElement* aSVGElement) {
   if (aSVGElement->IsSVGElement(nsGkAtoms::marker)) {
-    return MakeUnique<SMILOrient>(this, aSVGElement);
+    return std::make_unique<SMILOrient>(this, aSVGElement);
   }
   // SMILOrient would not be useful for general angle attributes (also,
   // "orient" is the only animatable <angle>-valued attribute in SVG 1.1).

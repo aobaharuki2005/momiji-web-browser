@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -65,7 +64,7 @@ SelectionState::SelectionState(const AutoClonedSelectionRangeArray& aRanges)
     : mDirection(aRanges.GetDirection()) {
   mArray.SetCapacity(aRanges.Ranges().Length());
   for (const OwningNonNull<nsRange>& range : aRanges.Ranges()) {
-    RefPtr<RangeItem> rangeItem = new RangeItem();
+    RefPtr rangeItem = MakeRefPtr<RangeItem>();
     rangeItem->StoreRange(range);
     mArray.AppendElement(std::move(rangeItem));
   }
@@ -710,11 +709,11 @@ AutoTrackLineBreak::AutoTrackLineBreak(RangeUpdater& aRangeUpdater,
   MOZ_ASSERT(aLineBreak->IsPreformattedLineBreak());
 }
 
-void AutoTrackLineBreak::FlushAndStopTracking() {
+void AutoTrackLineBreak::Flush(enum StopTracking aStopTracking) {
   if (!mLineBreak) {
     return;
   }
-  mTracker.FlushAndStopTracking();
+  mTracker.Flush(aStopTracking);
   if (mPoint.GetContainer() == mLineBreak->mContent) {
     mLineBreak->mOffsetInText = Some(mPoint.Offset());
   }

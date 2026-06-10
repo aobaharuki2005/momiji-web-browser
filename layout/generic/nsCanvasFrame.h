@@ -1,13 +1,11 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* rendering object that goes directly inside the document's scrollbars */
 
-#ifndef nsCanvasFrame_h___
-#define nsCanvasFrame_h___
+#ifndef nsCanvasFrame_h_
+#define nsCanvasFrame_h_
 
 #include "mozilla/EventForwards.h"
 #include "nsContainerFrame.h"
@@ -70,7 +68,10 @@ class nsCanvasFrame final : public nsContainerFrame,
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-  nsIContent* GetContentForEvent(const mozilla::WidgetEvent*) const override;
+  nsIContent* GetExplicitEventTargetContent(
+      const mozilla::WidgetEvent* = nullptr) const final;
+  using nsIFrame::GetExplicitEventTargetContent;
+
   nsRect CanvasArea() const;
 
  protected:
@@ -100,4 +101,4 @@ class nsDisplayCanvasBackgroundImage final : public nsDisplayBackgroundImage {
 
 }  // namespace mozilla
 
-#endif /* nsCanvasFrame_h___ */
+#endif /* nsCanvasFrame_h_ */

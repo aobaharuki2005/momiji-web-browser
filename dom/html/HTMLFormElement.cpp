@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,6 +18,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentList.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFormControlsCollection.h"
@@ -29,7 +28,6 @@
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsCOMArray.h"
-#include "nsContentList.h"
 #include "nsContentUtils.h"
 #include "nsDOMAttributeMap.h"
 #include "nsDocShell.h"
@@ -73,7 +71,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIConstraintValidation.h"
-#include "nsIHTMLCollection.h"
 #include "nsLayoutUtils.h"
 #include "nsSandboxFlags.h"
 
@@ -225,7 +222,7 @@ void HTMLFormElement::ReportInvalidUnfocusableElements(
 
       nsContentUtils::ReportToConsole(
           nsIScriptError::errorFlag, "DOM"_ns, element->GetOwnerDocument(),
-          nsContentUtils::eDOM_PROPERTIES, messageName.get(), params,
+          PropertiesFile::DOM_PROPERTIES, messageName.get(), params,
           SourceLocation(element->GetBaseURI()));
     }
   }
@@ -243,7 +240,7 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
 
   // 1-4 of
   // https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit
-  Document* doc = GetComposedDoc();
+  RefPtr<Document> doc = GetComposedDoc();
   if (mIsConstructingEntryList || !doc ||
       (doc->GetSandboxFlags() & SANDBOXED_FORMS)) {
     return;
@@ -349,7 +346,7 @@ void HTMLFormElement::RequestSubmit(nsGenericHTMLElement* aSubmitter,
 
     // 1.2. If submitter's form owner is not this form element, then throw a
     //      "NotFoundError" DOMException.
-    if (fc->GetForm() != this) {
+    if (fc->GetFormInternal() != this) {
       aRv.ThrowNotFoundError("The submitter is not owned by this form.");
       return;
     }
@@ -403,11 +400,13 @@ static void MarkOrphans(Span<T*> aArray) {
   }
 }
 
-static void CollectOrphans(nsINode* aRemovalRoot,
-                           TreeOrderedArray<nsGenericHTMLFormElement*>& aArray
+static void CollectOrphans(
+    nsINode* aRemovalRoot,
+    TreeOrderedArray<nsGenericHTMLFormElement*, TreeKind::ShadowIncludingDOM>&
+        aArray
 #ifdef DEBUG
-                           ,
-                           HTMLFormElement* aThisForm
+    ,
+    HTMLFormElement* aThisForm
 #endif
 ) {
   // Put a script blocker around all the notifications we're about to do.
@@ -441,7 +440,7 @@ static void CollectOrphans(nsINode* aRemovalRoot,
     if (!removed) {
       const auto* fc = nsIFormControl::FromNode(node);
       MOZ_ASSERT(fc);
-      HTMLFormElement* form = fc->GetForm();
+      HTMLFormElement* form = fc->GetFormInternal();
       NS_ASSERTION(form == aThisForm, "How did that happen?");
     }
 #endif /* DEBUG */
@@ -480,7 +479,7 @@ static void CollectOrphans(nsINode* aRemovalRoot,
 
 #ifdef DEBUG
     if (!removed) {
-      HTMLFormElement* form = node->GetForm();
+      HTMLFormElement* form = node->GetFormInternal();
       NS_ASSERTION(form == aThisForm, "How did that happen?");
     }
 #endif /* DEBUG */
@@ -764,7 +763,7 @@ nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
   //
   auto encoding = GetSubmitEncoding()->OutputEncoding();
   RefPtr<FormData> formData =
-      new FormData(GetOwnerGlobal(), encoding, submitter);
+      new FormData(GetRelevantGlobal(), encoding, submitter);
   rv = ConstructEntryList(formData);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
@@ -887,9 +886,8 @@ nsresult HTMLFormElement::SubmitSubmission(
       loadState->SetUserNavigationInvolvement(
           UserNavigationInvolvement::Activation);
     }
-    if (FormData* formData = aFormSubmission->GetFormData();
-        formData && formData->GetSubmitterElement()) {
-      loadState->SetSourceElement(formData->GetSubmitterElement());
+    if (Element* element = aFormSubmission->GetSubmitterElement()) {
+      loadState->SetSourceElement(element);
     } else {
       loadState->SetSourceElement(this);
     }
@@ -1132,8 +1130,9 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   // Determine whether to add the new element to the elements or
   // the not-in-elements list.
   bool childInElements = HTMLFormControlsCollection::ShouldBeInElements(fc);
-  TreeOrderedArray<nsGenericHTMLFormElement*>& controlList =
-      childInElements ? mControls->mElements : mControls->mNotInElements;
+  TreeOrderedArray<nsGenericHTMLFormElement*, TreeKind::ShadowIncludingDOM>&
+      controlList =
+          childInElements ? mControls->mElements : mControls->mNotInElements;
 
   const size_t insertedIndex = controlList.Insert(*aChild, this);
   const bool lastElement = controlList.Length() == insertedIndex + 1;
@@ -1235,8 +1234,9 @@ nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   // Determine whether to remove the child from the elements list
   // or the not in elements list.
   bool childInElements = HTMLFormControlsCollection::ShouldBeInElements(fc);
-  TreeOrderedArray<nsGenericHTMLFormElement*>& controls =
-      childInElements ? mControls->mElements : mControls->mNotInElements;
+  TreeOrderedArray<nsGenericHTMLFormElement*, TreeKind::ShadowIncludingDOM>&
+      controls =
+          childInElements ? mControls->mElements : mControls->mNotInElements;
 
   // Find the index of the child. This will be used later if necessary
   // to find the default submit.
@@ -1268,7 +1268,7 @@ nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
     // Need to reset mDefaultSubmitElement.  Do this asynchronously so
     // that we're not doing it while the DOM is in flux.
     SetDefaultSubmitElement(nullptr);
-    nsContentUtils::AddScriptRunner(new RemoveElementRunnable(this));
+    nsContentUtils::AddScriptRunner(MakeAndAddRef<RemoveElementRunnable>(this));
 
     // Note that we don't need to notify on the old default submit (which is
     // being removed) because it's either being removed from the DOM or
@@ -1693,7 +1693,7 @@ bool HTMLFormElement::CheckValidFormSubmission() {
   }
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(GetOwnerGlobal())) {
+  if (!jsapi.Init(GetRelevantGlobal())) {
     return false;
   }
   JS::Rooted<JS::Value> detail(jsapi.cx());
@@ -1802,7 +1802,7 @@ nsresult HTMLFormElement::AddElementToTableInternal(
 
         // Found an element, create a list, add the element to the list and put
         // the list in the hash
-        RadioNodeList* list = new RadioNodeList(this);
+        RefPtr list = new RadioNodeList(this);
 
         // If an element has a @form, we can assume it *might* be able to not
         // have a parent and still be in the form.
@@ -1818,10 +1818,8 @@ nsresult HTMLFormElement::AddElementToTableInternal(
         list->AppendElement(newFirst ? aChild : content.get());
         list->AppendElement(newFirst ? content.get() : aChild);
 
-        nsCOMPtr<nsISupports> listSupports = do_QueryObject(list);
-
         // Replace the element with the list.
-        entry.Data() = listSupports;
+        entry.Data() = std::move(list);
       } else {
         // There's already a list in the hash, add the child to the list.
         MOZ_ASSERT(nsCOMPtr<RadioNodeList>(do_QueryInterface(entry.Data())));

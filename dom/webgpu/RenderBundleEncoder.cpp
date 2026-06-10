@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,11 +42,16 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
     desc.depth_stencil_format = &depthStencilFormat;
   }
 
-  std::vector<ffi::WGPUTextureFormat> colorFormats = {};
+  std::vector<ffi::WGPUFfiOption_TextureFormat> colorFormats = {};
   for (const auto i : IntegerRange(aDesc.mColorFormats.Length())) {
-    ffi::WGPUTextureFormat format = {ffi::WGPUTextureFormat_Sentinel};
-    format = ConvertTextureFormat(aDesc.mColorFormats[i]);
-    colorFormats.push_back(format);
+    ffi::WGPUFfiOption_TextureFormat opt = {};
+    if (aDesc.mColorFormats[i].IsNull()) {
+      opt.tag = ffi::WGPUFfiOption_TextureFormat_None_TextureFormat;
+    } else {
+      opt.tag = ffi::WGPUFfiOption_TextureFormat_Some_TextureFormat;
+      opt.some = ConvertTextureFormat(aDesc.mColorFormats[i].Value());
+    }
+    colorFormats.push_back(opt);
   }
 
   desc.color_formats = {colorFormats.data(), colorFormats.size()};
@@ -138,15 +142,19 @@ void RenderBundleEncoder::SetIndexBuffer(
 }
 
 void RenderBundleEncoder::SetVertexBuffer(
-    uint32_t aSlot, const Buffer& aBuffer, uint64_t aOffset,
+    uint32_t aSlot, const Buffer* const aBuffer, uint64_t aOffset,
     const dom::Optional<uint64_t>& aSize) {
   if (!mValid) {
     return;
   }
-  mUsedBuffers.AppendElement(&aBuffer);
+  RawId bufferId = 0;
+  if (aBuffer) {
+    mUsedBuffers.AppendElement(aBuffer);
+    bufferId = aBuffer->GetId();
+  }
   const uint64_t* sizeRef = aSize.WasPassed() ? &aSize.Value() : nullptr;
-  ffi::wgpu_render_bundle_set_vertex_buffer(mEncoder.get(), aSlot,
-                                            aBuffer.GetId(), aOffset, sizeRef);
+  ffi::wgpu_render_bundle_set_vertex_buffer(mEncoder.get(), aSlot, bufferId,
+                                            aOffset, sizeRef);
 }
 
 void RenderBundleEncoder::Draw(uint32_t aVertexCount, uint32_t aInstanceCount,

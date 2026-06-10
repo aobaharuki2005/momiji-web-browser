@@ -81,7 +81,7 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
 # Compile
 ## General compilation steps
 
-1. Install [Meson](https://mesonbuild.com/) (0.49 or higher), [Ninja](https://ninja-build.org/), and, for x86\* targets, [nasm](https://nasm.us/) (2.14 or higher)
+1. Install [Meson](https://mesonbuild.com/) (0.54 or higher), [Ninja](https://ninja-build.org/), and, for x86\* targets, [nasm](https://nasm.us/) (2.14 or higher)
 2. Run `mkdir build && cd build` to create a build directory and enter it
 3. Run `meson setup ..` to configure meson, add `--default-library=static` if static linking is desired
 4. Run `ninja` to compile
@@ -123,6 +123,13 @@ The result can be found in `build/doc/html/`. An online version built from maste
 1. In the root directory, run `git clone https://code.videolan.org/videolan/dav1d-test-data.git tests/dav1d-test-data` to fetch the test data repository
 2. During meson configuration, specify `-Dtestdata_tests=true`
 3. Run `meson test -v` after compiling
+
+## Decoder conformance tests (optional but encouraged)
+
+1. Download the argon conformance bitstreams from https://streams.videolan.org/argon/
+2. Extract into dav1d directory by running `tar -xvf argon.tar.zst`
+3. Execute tests with `tests/dav1d_argon.bash -d build/tools/dav1d -a argon`
+4. Expected outcome is `2763 files successfully verified in XXmYYs (dav1d 1.x.y-zz-gHHHHHHH filmgrain=1 cpumask=-1)`
 
 # Support
 

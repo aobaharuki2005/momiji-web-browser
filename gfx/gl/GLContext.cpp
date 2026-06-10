@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -100,6 +98,7 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_color_buffer_float",
     "GL_ARB_compatibility",
     "GL_ARB_copy_buffer",
+    "GL_ARB_copy_image",
     "GL_ARB_depth_clamp",
     "GL_ARB_depth_texture",
     "GL_ARB_draw_buffers",
@@ -355,7 +354,7 @@ static bool LoadSymbolsWithDesc(const SymbolLoader& loader,
 
   if (desc) {
     const nsPrintfCString err("Failed to load symbols for %s.", desc);
-    NS_ERROR(err.BeginReading());
+    NS_ERROR(err.get());
   }
   return false;
 }
@@ -628,9 +627,14 @@ bool GLContext::InitImpl() {
 
   ////////////////
 
-  const char* glVendorString = (const char*)fGetString(LOCAL_GL_VENDOR);
-  const char* glRendererString = (const char*)fGetString(LOCAL_GL_RENDERER);
+  const char* glVendorString =
+      reinterpret_cast<const char*>(fGetString(LOCAL_GL_VENDOR));
+  const char* glRendererString =
+      reinterpret_cast<const char*>(fGetString(LOCAL_GL_RENDERER));
   if (!glVendorString || !glRendererString) return false;
+
+  mVendorString.Assign(glVendorString);
+  mRendererString.Assign(glRendererString);
 
   // The order of these strings must match up with the order of the enum
   // defined in GLContext.h for vendor IDs.
@@ -679,7 +683,9 @@ bool GLContext::InitImpl() {
   }
 
   {
-    const auto versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
+    const auto versionStr =
+        reinterpret_cast<const char*>(fGetString(LOCAL_GL_VERSION));
+    mVersionString.Assign(versionStr);
     if (strstr(versionStr, "Mesa")) {
       mIsMesa = true;
     }
@@ -746,7 +752,7 @@ bool GLContext::InitImpl() {
 
     if (Renderer() == GLRenderer::AndroidEmulator) {
       // Bug 1665300
-      mSymbols.fGetGraphicsResetStatus = 0;
+      mSymbols.fGetGraphicsResetStatus = nullptr;
     }
 
     if (Vendor() == GLVendor::Vivante) {
@@ -1093,6 +1099,13 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
             END_SYMBOLS
         };
         fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_storage);
+    }
+
+    if (IsSupported(GLFeature::copy_image)) {
+        const SymLoadStruct symbols[] = {
+            {(PRFuncPtr*)&mSymbols.fCopyImageSubData, {{"glCopyImageSubData"}}},
+            END_SYMBOLS};
+        fnLoadForFeature(symbols, GLFeature::copy_image);
     }
 
     if (IsSupported(GLFeature::sampler_objects)) {
@@ -1667,14 +1680,12 @@ void GLContext::DebugCallback(GLenum source, GLenum type, GLuint id,
   }
 
   printf_stderr("[KHR_debug: 0x%" PRIxPTR "] ID %u: %s, %s, %s:\n    %s\n",
-                (uintptr_t)this, id, sourceStr.BeginReading(),
-                typeStr.BeginReading(), sevStr.BeginReading(), message);
+                (uintptr_t)this, id, sourceStr.get(), typeStr.get(),
+                sevStr.get(), message);
 }
 
 void GLContext::InitExtensions() {
   MOZ_GL_ASSERT(this, IsCurrent());
-
-  std::vector<nsCString> driverExtensionList;
 
   [&]() {
     if (mSymbols.fGetStringi) {
@@ -1682,22 +1693,27 @@ void GLContext::InitExtensions() {
       if (GetPotentialInteger(LOCAL_GL_NUM_EXTENSIONS, (GLint*)&count)) {
         for (GLuint i = 0; i < count; i++) {
           // This is UTF-8.
-          const char* rawExt = (const char*)fGetStringi(LOCAL_GL_EXTENSIONS, i);
+          const char* rawExt = reinterpret_cast<const char*>(
+              fGetStringi(LOCAL_GL_EXTENSIONS, i));
 
           // We CANNOT use nsDependentCString here, because the spec doesn't
           // guarantee that the pointers returned are different, only that their
           // contents are. On Flame, each of these index string queries returns
           // the same address.
-          driverExtensionList.push_back(nsCString(rawExt));
+          mExtensionStrings.AppendElement(nsCString(rawExt));
         }
         return;
       }
     }
 
-    const char* rawExts = (const char*)fGetString(LOCAL_GL_EXTENSIONS);
+    const char* rawExts =
+        reinterpret_cast<const char*>(fGetString(LOCAL_GL_EXTENSIONS));
     if (rawExts) {
-      nsDependentCString exts(rawExts);
-      SplitByChar(exts, ' ', &driverExtensionList);
+      for (const auto& extension : nsDependentCString(rawExts).Split(' ')) {
+        if (!extension.IsEmpty()) {
+          mExtensionStrings.AppendElement(extension);
+        }
+      }
     }
   }();
   const auto err = fGetError();
@@ -1706,10 +1722,10 @@ void GLContext::InitExtensions() {
   const bool shouldDumpExts = ShouldDumpExts();
   if (shouldDumpExts) {
     printf_stderr("%i GL driver extensions: (*: recognized)\n",
-                  (uint32_t)driverExtensionList.size());
+                  (uint32_t)mExtensionStrings.Length());
   }
 
-  MarkBitfieldByStrings(driverExtensionList, shouldDumpExts, sExtensionNames,
+  MarkBitfieldByStrings(mExtensionStrings, shouldDumpExts, sExtensionNames,
                         &mAvailableExtensions);
 
   if (WorkAroundDriverBugs()) {
@@ -1778,7 +1794,7 @@ void GLContext::InitExtensions() {
 }
 
 void GLContext::PlatformStartup() {
-  RegisterStrongMemoryReporter(new GfxTexturesReporter());
+  RegisterStrongMemoryReporter(MakeAndAddRef<GfxTexturesReporter>());
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
@@ -1993,10 +2009,18 @@ void GLContext::AssertNotPassingStackBufferToTheGL(const void* ptr) {
   // approach of only asserting when address and someStackAddress are
   // on the same page.
   bool isStackAddress = pageDistance <= 1;
+
+#  if !(defined(_WIN32) && !defined(_WIN64))
+  // On 32-bit Windows, heap and stack are adjacent in the limited 2GB address
+  // space, causing false positives where legitimate heap allocations appear
+  // within 1 page of the stack. Disable this assertion there.
   MOZ_ASSERT(!isStackAddress,
              "Please don't pass stack arrays to the GL. "
              "Consider using HeapCopyOfStackArray. "
              "See bug 1005658.");
+#  else
+  (void)isStackAddress;
+#  endif
 }
 
 void GLContext::CreatedProgram(GLContext* aOrigin, GLuint aName) {
@@ -2125,7 +2149,7 @@ static void ReportArrayContents(
   for (uint32_t i = 0; i < copy.Length(); ++i) {
     if (lastContext != copy[i].origin) {
       if (lastContext) {
-        printf_stderr("%s\n", line.BeginReading());
+        printf_stderr("%s\n", line.get());
         line.Assign("");
       }
       line.Append(nsPrintfCString("  [%p - %s] ", copy[i].origin,
@@ -2135,7 +2159,7 @@ static void ReportArrayContents(
     line.AppendInt(copy[i].name);
     line.Append(' ');
   }
-  printf_stderr("%s\n", line.BeginReading());
+  printf_stderr("%s\n", line.get());
 }
 
 void GLContext::ReportOutstandingNames() {
@@ -2632,7 +2656,7 @@ void GLContext::OnContextLostError() const {
   }
 
   const nsPrintfCString hex("<enum 0x%04x>", err);
-  return hex.BeginReading();
+  return std::string(hex.View());
 }
 
 // --
@@ -2671,11 +2695,11 @@ void GLContext::AfterGLCall_Debug(const char* const funcName) const {
     const auto errStr = GLErrorToString(err);
     const auto text = nsPrintfCString("%s: Generated unexpected %s error",
                                       funcName, errStr.c_str());
-    printf_stderr("[gl:%p] %s.\n", this, text.BeginReading());
+    printf_stderr("[gl:%p] %s.\n", this, text.get());
 
     const bool abortOnError = mDebugFlags & DebugFlagAbortOnError;
     if (abortOnError && err != LOCAL_GL_CONTEXT_LOST) {
-      gfxCriticalErrorOnce() << text.BeginReading();
+      gfxCriticalErrorOnce() << text.get();
       MOZ_CRASH(
           "Aborting... (Run with MOZ_GL_DEBUG_ABORT_ON_ERROR=0 to disable)");
     }

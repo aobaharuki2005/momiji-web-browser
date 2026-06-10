@@ -151,7 +151,6 @@ MediaEngineFakeVideoSource::CreateFrom(
     const MediaEngineFakeVideoSource* aSource) {
   auto src = MakeRefPtr<MediaEngineFakeVideoSource>();
   *static_cast<MediaTrackSettings*>(src->mSettings) = *aSource->mSettings;
-  src->mOpts = aSource->mOpts;
   return src.forget();
 }
 

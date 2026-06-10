@@ -1,0 +1,178 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import { IPPProxyManager } from "moz-src:///toolkit/components/ipprotection/IPPProxyManager.sys.mjs";
+import { BANDWIDTH } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const BANDWIDTH_WARNING_DISMISSED_PREF =
+  "browser.ipProtection.bandwidthWarningDismissedThreshold";
+
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  IPProtectionService:
+    "moz-src:///toolkit/components/ipprotection/IPProtectionService.sys.mjs",
+  IPProtectionStates:
+    "moz-src:///toolkit/components/ipprotection/IPProtectionService.sys.mjs",
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "BANDWIDTH_USAGE_ENABLED",
+  "browser.ipProtection.bandwidth.enabled",
+  true,
+  (_pref, _prev, value) => {
+    if (value) {
+      IPPUsageHelper.init();
+    } else {
+      IPPUsageHelper.uninit();
+    }
+  }
+);
+
+/**
+ * @typedef {"none" | "warning-75-percent" | "warning-90-percent"} UsageState
+ * An Object containing instances of UsageState.
+ * @typedef {object} UsageStates
+ *
+ * @property {string} NONE
+ *  Usage is below warning thresholds or the quota is exhausted.
+ * @property {string} WARNING_75_PERCENT
+ *  75% or more of bandwidth has been used.
+ * @property {string} WARNING_90_PERCENT
+ *  90% or more of bandwidth has been used.
+ */
+export const UsageStates = Object.freeze({
+  NONE: "none",
+  WARNING_75_PERCENT: "warning-75-percent",
+  WARNING_90_PERCENT: "warning-90-percent",
+});
+
+/**
+ * Tracks bandwidth usage warning state by listening to IPPProxyManager usage changes.
+ *
+ * @fires IPPUsageHelperSingleton#"IPPUsageHelper:StateChanged"
+ *  When the usage warning state changes. Check the `state` attribute to
+ *  know the current state.
+ */
+class IPPUsageHelperSingleton extends EventTarget {
+  /** @type {UsageState} */
+  #state = UsageStates.NONE;
+
+  constructor() {
+    super();
+    this.handleEvent = this.#handleEvent.bind(this);
+  }
+
+  /**
+   * @returns {UsageState}
+   */
+  get state() {
+    return this.#state;
+  }
+
+  init() {
+    if (!lazy.BANDWIDTH_USAGE_ENABLED) {
+      return;
+    }
+    IPPProxyManager.addEventListener(
+      "IPPProxyManager:UsageChanged",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:StateChanged",
+      this.handleEvent
+    );
+  }
+
+  initOnStartupCompleted() {}
+
+  uninit() {
+    IPPProxyManager.removeEventListener(
+      "IPPProxyManager:UsageChanged",
+      this.handleEvent
+    );
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:StateChanged",
+      this.handleEvent
+    );
+    this.#setState(UsageStates.NONE);
+  }
+
+  #handleEvent(event) {
+    if (event.type === "IPProtectionService:StateChanged") {
+      if (lazy.IPProtectionService.state !== lazy.IPProtectionStates.READY) {
+        this.#setState(UsageStates.NONE);
+      }
+      return;
+    }
+
+    if (event.type !== "IPPProxyManager:UsageChanged") {
+      return;
+    }
+
+    const { usage } = event.detail;
+    if (!usage || usage.max == null || usage.remaining == null) {
+      return;
+    }
+
+    const max = Number(usage.max);
+    const remainingPercent = Number(usage.remaining) / max;
+
+    let newState;
+    if (remainingPercent <= BANDWIDTH.THIRD_THRESHOLD) {
+      newState = UsageStates.WARNING_90_PERCENT;
+    } else if (remainingPercent <= BANDWIDTH.SECOND_THRESHOLD) {
+      newState = UsageStates.WARNING_75_PERCENT;
+    } else {
+      newState = UsageStates.NONE;
+    }
+
+    this.#setState(newState);
+  }
+
+  getDismissedThresholds() {
+    try {
+      const prefValue = Services.prefs.getStringPref(
+        BANDWIDTH_WARNING_DISMISSED_PREF,
+        ""
+      );
+      if (!prefValue) {
+        return { infobar: 0, panel: 0 };
+      }
+      const obj = JSON.parse(prefValue);
+      return {
+        infobar: typeof obj.infobar === "number" ? obj.infobar : 0,
+        panel: typeof obj.panel === "number" ? obj.panel : 0,
+      };
+    } catch {
+      return { infobar: 0, panel: 0 };
+    }
+  }
+
+  setDismissedThresholds(obj) {
+    Services.prefs.setStringPref(
+      BANDWIDTH_WARNING_DISMISSED_PREF,
+      JSON.stringify(obj)
+    );
+  }
+
+  #setState(state) {
+    if (state === this.#state) {
+      return;
+    }
+    this.#state = state;
+    this.dispatchEvent(
+      new CustomEvent("IPPUsageHelper:StateChanged", {
+        bubbles: true,
+        composed: true,
+        detail: { state },
+      })
+    );
+  }
+}
+
+const IPPUsageHelper = new IPPUsageHelperSingleton();
+
+export { IPPUsageHelper };

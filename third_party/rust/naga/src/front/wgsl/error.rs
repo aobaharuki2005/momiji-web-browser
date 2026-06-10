@@ -46,6 +46,10 @@ impl ParseError {
         &self.message
     }
 
+    pub fn notes(&self) -> impl ExactSizeIterator<Item = &str> + '_ {
+        self.notes.iter().map(|note| note.as_str())
+    }
+
     fn diagnostic(&self) -> Diagnostic<()> {
         let diagnostic = Diagnostic::error()
             .with_message(self.message.to_string())
@@ -86,13 +90,14 @@ impl ParseError {
         cfg_if::cfg_if! {
             if #[cfg(feature = "termcolor")] {
                 let writer = term::termcolor::StandardStream::stderr(term::termcolor::ColorChoice::Auto);
+                term::emit_to_write_style(&mut writer.lock(), &config, &files, &self.diagnostic())
+                    .expect("cannot write error");
             } else {
                 let writer = std::io::stderr();
+                term::emit_to_io_write(&mut writer.lock(), &config, &files, &self.diagnostic())
+                    .expect("cannot write error");
             }
         }
-
-        term::emit(&mut writer.lock(), &config, &files, &self.diagnostic())
-            .expect("cannot write error");
     }
 
     /// Emits a summary of the error to a string.
@@ -101,16 +106,16 @@ impl ParseError {
     }
 
     /// Emits a summary of the error to a string.
-    pub fn emit_to_string_with_path<P>(&self, source: &str, path: P) -> String
-    where
-        P: AsRef<std::path::Path>,
-    {
-        let path = path.as_ref().display().to_string();
+    ///
+    /// `path` gives the filename to attribute the error to in the
+    /// output; this function does not try to access the file.
+    pub fn emit_to_string_with_path(&self, source: &str, path: &str) -> String {
         let files = SimpleFile::new(path, replace_control_chars(source));
         let config = term::Config::default();
 
         let mut writer = crate::error::DiagnosticBuffer::new();
-        term::emit(writer.inner_mut(), &config, &files, &self.diagnostic())
+        writer
+            .emit_to_self(&config, &files, &self.diagnostic())
             .expect("cannot write error");
         writer.into_string()
     }
@@ -129,12 +134,44 @@ impl core::fmt::Display for ParseError {
 
 impl core::error::Error for ParseError {}
 
+#[cfg(test)]
+mod parse_error_tests {
+
+    #[test]
+    fn test_notes() {
+        use crate::front::wgsl::parse_str;
+        // wgsl code and notes taken from: `cross_vec2()` in naga/tests/naga/wgsl_errors.rs
+        assert_eq!(
+            parse_str(
+                r#"
+            fn x() -> f32 {
+                return cross(vec2(0., 1.), vec2(0., 1.));
+            }
+        "#,
+            )
+            .unwrap_err()
+            .notes()
+            .collect::<super::Vec<_>>(),
+            [
+                "`cross` accepts the following types for argument #1:",
+                "allowed type: vec3<{AbstractFloat}>",
+                "allowed type: vec3<f32>",
+                "allowed type: vec3<f16>",
+                "allowed type: vec3<f64>"
+            ]
+            .to_vec()
+        );
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ExpectedToken<'a> {
     Token(Token<'a>),
     Identifier,
     AfterIdentListComma,
     AfterIdentListArg,
+    /// LHS expression (identifier component_or_swizzle_specifier?, (`lhs_expression`) component_or_swizzle_specifier?, &`lhs_expression`, *`lhs_expression`)
+    LhsExpression,
     /// Expected: constant, parenthesized expression, identifier
     PrimaryExpression,
     /// Expected: assignment, increment/decrement expression
@@ -145,14 +182,18 @@ pub enum ExpectedToken<'a> {
     WorkgroupSizeSeparator,
     /// Expected: 'struct', 'let', 'var', 'type', ';', 'fn', eof
     GlobalItem,
-    /// Expected a type.
-    Type,
     /// Access of `var`, `let`, `const`.
     Variable,
     /// Access of a function
     Function,
     /// The `diagnostic` identifier of the `@diagnostic(…)` attribute.
     DiagnosticAttribute,
+    /// statement
+    Statement,
+    /// for loop init statement (variable_or_value_statement, variable_updating_statement, func_call_statement)
+    ForInit,
+    /// for loop update statement (variable_updating_statement, func_call_statement)
+    ForUpdate,
 }
 
 #[derive(Clone, Copy, Debug, Error, PartialEq)]
@@ -191,7 +232,6 @@ pub(crate) enum Error<'a> {
     },
     BadIncrDecrReferenceType(Span),
     InvalidResolve(ResolveError),
-    InvalidForInitializer(Span),
     /// A break if appeared outside of a continuing block
     InvalidBreakIf(Span),
     InvalidGatherComponent(Span),
@@ -200,19 +240,20 @@ pub(crate) enum Error<'a> {
     ReservedIdentifierPrefix(Span),
     UnknownAddressSpace(Span),
     InvalidLocalVariableAddressSpace(Span),
+    UnknownRayFlag(Span),
     RepeatedAttribute(Span),
     UnknownAttribute(Span),
     UnknownBuiltin(Span),
     UnknownAccess(Span),
     UnknownIdent(Span, &'a str),
     UnknownScalarType(Span),
-    UnknownType(Span),
     UnknownStorageFormat(Span),
     UnknownConservativeDepth(Span),
     UnknownEnableExtension(Span, &'a str),
     UnknownLanguageExtension(Span, &'a str),
     UnknownDiagnosticRuleName(Span),
     SizeAttributeTooLow(Span, u32),
+    SizeAttributeRequiresFixedFootprint(Span),
     AlignAttributeTooLow(Span, Alignment),
     NonPowerOfTwoAlignAttribute(Span),
     InconsistentBinding(Span),
@@ -228,6 +269,7 @@ pub(crate) enum Error<'a> {
     InvalidAddrOfOperand(Span),
     InvalidAtomicPointer(Span),
     InvalidAtomicOperandType(Span),
+    InvalidAtomicAccess(Span),
     InvalidRayQueryPointer(Span),
     NotPointer(Span),
     NotReference(&'static str, Span),
@@ -276,6 +318,7 @@ pub(crate) enum Error<'a> {
         span: Span,
     },
     CalledEntryPoint(Span),
+    CalledLocalDecl(Span),
     WrongArgumentCount {
         span: Span,
         expected: Range<u32>,
@@ -353,6 +396,7 @@ pub(crate) enum Error<'a> {
     FunctionReturnsVoid(Span),
     FunctionMustUseUnused(Span),
     FunctionMustUseReturnsVoid(Span, Span),
+    FunctionMustUseOnNonFunction(Span),
     InvalidWorkGroupUniformLoad(Span),
     Internal(&'static str),
     ExpectedConstExprConcreteIntegerScalar(Span),
@@ -378,6 +422,10 @@ pub(crate) enum Error<'a> {
         span: Span,
     },
     EnableExtensionNotEnabled {
+        kind: EnableExtension,
+        span: Span,
+    },
+    EnableExtensionNotSupported {
         kind: EnableExtension,
         span: Span,
     },
@@ -419,6 +467,17 @@ pub(crate) enum Error<'a> {
     UnderspecifiedCooperativeMatrix,
     InvalidCooperativeLoadType(Span),
     UnsupportedCooperativeScalar(Span),
+    UnexpectedIdentForEnumerant(Span),
+    UnexpectedExprForEnumerant(Span),
+    UnusedArgsForTemplate(Vec<Span>),
+    UnexpectedTemplate(Span),
+    MissingTemplateArg {
+        span: Span,
+        description: &'static str,
+    },
+    UnexpectedExprForTypeExpression(Span),
+    MissingIncomingPayload(Span),
+    UnterminatedBlockComment(Span),
 }
 
 impl From<ConflictingDiagnosticRuleError> for Error<'_> {
@@ -460,8 +519,7 @@ pub(crate) struct AutoConversionLeafScalarError {
 pub(crate) struct ConcretizationFailedError {
     pub expr_span: Span,
     pub expr_type: String,
-    pub scalar: String,
-    pub inner: ConstantEvaluatorError,
+    pub concretization_preferences: Vec<(String, ConstantEvaluatorError)>,
 }
 
 impl<'a> Error<'a> {
@@ -487,13 +545,17 @@ impl<'a> Error<'a> {
                         Token::IncrementOperation => "increment operation".to_string(),
                         Token::DecrementOperation => "decrement operation".to_string(),
                         Token::Arrow => "->".to_string(),
+                        Token::TemplateArgsStart => "template args start".to_string(),
+                        Token::TemplateArgsEnd => "template args end".to_string(),
                         Token::Unknown(c) => format!("unknown (`{c}`)"),
                         Token::Trivia => "trivia".to_string(),
                         Token::DocComment(s) => format!("doc comment ('{s}')"),
                         Token::ModuleDocComment(s) => format!("module doc comment ('{s}')"),
                         Token::End => "end".to_string(),
+                        Token::UnterminatedBlockComment(s) => format!("unterminated doc comment ('{s}'")
                     },
                     ExpectedToken::Identifier => "identifier".to_string(),
+                    ExpectedToken::LhsExpression => "LHS expression (identifier component_or_swizzle_specifier?, (`lhs_expression`) component_or_swizzle_specifier?, &`lhs_expression`, *`lhs_expression`)".to_string(),
                     ExpectedToken::PrimaryExpression => "expression".to_string(),
                     ExpectedToken::Assignment => "assignment or increment/decrement".to_string(),
                     ExpectedToken::SwitchItem => concat!(
@@ -510,7 +572,6 @@ impl<'a> Error<'a> {
                         "or the end of the file"
                     )
                     .to_string(),
-                    ExpectedToken::Type => "type".to_string(),
                     ExpectedToken::Variable => "variable access".to_string(),
                     ExpectedToken::Function => "function name".to_string(),
                     ExpectedToken::AfterIdentListArg => {
@@ -522,6 +583,9 @@ impl<'a> Error<'a> {
                     ExpectedToken::DiagnosticAttribute => {
                         "the `diagnostic` attribute identifier".to_string()
                     }
+                    ExpectedToken::Statement => "statement".to_string(),
+                    ExpectedToken::ForInit => "for loop initializer statement (`var`/`let`/`const` declaration, assignment, `i++`/`i--` statement, function call)".to_string(),
+                    ExpectedToken::ForUpdate => "for loop update statement (assignment, `i++`/`i--` statement, function call)".to_string(),
                 };
                 ParseError {
                     message: format!(
@@ -617,14 +681,6 @@ impl<'a> Error<'a> {
                 labels: vec![],
                 notes: vec![],
             },
-            Error::InvalidForInitializer(bad_span) => ParseError {
-                message: format!(
-                    "for(;;) initializer is not an assignment or a function call: `{}`",
-                    &source[bad_span]
-                ),
-                labels: vec![(bad_span, "not an assignment or function call".into())],
-                notes: vec![],
-            },
             Error::InvalidBreakIf(bad_span) => ParseError {
                 message: "A break if is only allowed in a continuing block".to_string(),
                 labels: vec![(bad_span, "not in a continuing block".into())],
@@ -669,6 +725,11 @@ impl<'a> Error<'a> {
                 labels: vec![(bad_span, "local variables can only use 'function' address space".into())],
                 notes: vec![],
             },
+            Error::UnknownRayFlag(bad_span) => ParseError {
+                message: format!("unknown ray flag: `{}`", &source[bad_span]),
+                labels: vec![(bad_span, "unknown ray flag".into())],
+                notes: vec![],
+            },
             Error::RepeatedAttribute(bad_span) => ParseError {
                 message: format!("repeated attribute: `{}`", &source[bad_span]),
                 labels: vec![(bad_span, "repeated attribute".into())],
@@ -697,11 +758,6 @@ impl<'a> Error<'a> {
             Error::UnknownConservativeDepth(bad_span) => ParseError {
                 message: format!("unknown conservative depth: `{}`", &source[bad_span]),
                 labels: vec![(bad_span, "unknown conservative depth".into())],
-                notes: vec![],
-            },
-            Error::UnknownType(bad_span) => ParseError {
-                message: format!("unknown type: `{}`", &source[bad_span]),
-                labels: vec![(bad_span, "unknown type".into())],
                 notes: vec![],
             },
             Error::UnknownEnableExtension(span, word) => ParseError {
@@ -733,6 +789,11 @@ impl<'a> Error<'a> {
             Error::SizeAttributeTooLow(bad_span, min_size) => ParseError {
                 message: format!("struct member size must be at least {min_size}"),
                 labels: vec![(bad_span, format!("must be at least {min_size}").into())],
+                notes: vec![],
+            },
+            Error::SizeAttributeRequiresFixedFootprint(bad_span) => ParseError {
+                message: "@size attribute requires a type with creation-fixed footprint".to_string(),
+                labels: vec![(bad_span, "type does not have creation-fixed footprint".into())],
                 notes: vec![],
             },
             Error::AlignAttributeTooLow(bad_span, min_align) => ParseError {
@@ -804,6 +865,11 @@ impl<'a> Error<'a> {
             Error::InvalidAtomicOperandType(span) => ParseError {
                 message: "atomic operand type is inconsistent with the operation".to_string(),
                 labels: vec![(span, "atomic operand type is invalid".into())],
+                notes: vec![],
+            },
+            Error::InvalidAtomicAccess(span) => ParseError {
+                message: "atomic variables cannot be accessed directly; use atomic built-in functions".to_string(),
+                labels: vec![(span, "direct access to atomic variable is not allowed".into())],
                 notes: vec![],
             },
             Error::InvalidRayQueryPointer(span) => ParseError {
@@ -928,6 +994,11 @@ impl<'a> Error<'a> {
                 labels: vec![(span, "entry point cannot be called".into())],
                 notes: vec![],
             },
+            Error::CalledLocalDecl(span) => ParseError {
+                message: "local declaration cannot be called".to_string(),
+                labels: vec![(span, "local declaration cannot be called".into())],
+                notes: vec![],
+            },
             Error::WrongArgumentCount {
                 span,
                 ref expected,
@@ -1041,6 +1112,13 @@ impl<'a> Error<'a> {
                     "declare a return type or remove the attribute".into(),
                 ],
             },
+            Error::FunctionMustUseOnNonFunction(attr) => ParseError {
+                message: "attribute `@must_use` is only valid on function declarations".into(),
+                labels: vec![(attr, "".into())],
+                notes: vec![
+                    "place `@must_use` on a function declaration with a return type".into(),
+                ],
+            },
             Error::InvalidWorkGroupUniformLoad(span) => ParseError {
                 message: "incorrect type passed to workgroupUniformLoad".into(),
                 labels: vec![(span, "".into())],
@@ -1139,19 +1217,20 @@ impl<'a> Error<'a> {
                 let ConcretizationFailedError {
                     expr_span,
                     ref expr_type,
-                    ref scalar,
-                    ref inner,
+                    ref concretization_preferences,
                 } = **error;
                 ParseError {
-                    message: format!("failed to convert expression to a concrete type: {inner}"),
+                    message: "failed to convert expression to a concrete type".to_string(),
                     labels: vec![(
                         expr_span,
                         format!("this expression has type {expr_type}").into(),
                     )],
-                    notes: vec![format!(
-                        "the expression should have been converted to have {} scalar type",
-                        scalar
-                    )],
+                    notes: concretization_preferences
+                        .iter()
+                        .map(|&(ref scalar, ref err)|
+                            format!("the expression couldn't be converted to have {scalar} scalar type: {err}")
+                        )
+                        .collect(),
                 }
             }
             Error::ExceededLimitForNestedBraces { span, limit } => ParseError {
@@ -1239,6 +1318,17 @@ impl<'a> Error<'a> {
                         ),
                     ]
                 },
+            },
+            Error::EnableExtensionNotSupported { kind, span } => ParseError {
+                message: format!(
+                    "the `{}` extension is not supported in the current environment",
+                    kind.to_ident()
+                ),
+                labels: vec![(
+                    span,
+                    "unsupported enable-extension".into(),
+                )],
+                notes: vec![],
             },
             Error::LanguageExtensionNotYetImplemented { kind, span } => ParseError {
                 message: format!(
@@ -1418,6 +1508,61 @@ impl<'a> Error<'a> {
                 labels: vec![(span, "type needs the scalar type specified".into())],
                 notes: vec![format!("must be F32")],
             },
+            Error::UnexpectedIdentForEnumerant(ident_span) => ParseError {
+                message: format!(
+                    "identifier `{}` resolves to a declaration",
+                    &source[ident_span]
+                ),
+                labels: vec![(ident_span, "needs to resolve to a predeclared enumerant".into())],
+                notes: vec![],
+            },
+            Error::UnexpectedExprForEnumerant(expr_span) => ParseError {
+                message: "unexpected expression".to_string(),
+                labels: vec![(expr_span, "needs to be an identifier resolving to a predeclared enumerant".into())],
+                notes: vec![],
+            },
+            Error::UnusedArgsForTemplate(ref expr_spans) => ParseError {
+                message: "unused expressions for template".to_string(),
+                labels: expr_spans.iter().cloned().map(|span| -> (_, _){ (span, "unused".into()) }).collect(),
+                notes: vec![],
+            },
+            Error::UnexpectedTemplate(span) => ParseError {
+                message: "unexpected template".to_string(),
+                labels: vec![(span, "expected identifier".into())],
+                notes: vec![],
+            },
+            Error::MissingTemplateArg {
+                span,
+                description: arg,
+            } => ParseError {
+                message: format!(
+                    "`{}` needs a template argument specified: {arg}",
+                    &source[span]
+                ),
+                labels: vec![(span, "is missing a template argument".into())],
+                notes: vec![],
+            },
+            Error::UnexpectedExprForTypeExpression(expr_span) => ParseError {
+                message: "unexpected expression".to_string(),
+                labels: vec![(expr_span, "needs to be an identifier resolving to a type declaration (alias or struct) or predeclared type(-generator)".into())],
+                notes: vec![],
+            },
+            Error::MissingIncomingPayload(span) => ParseError {
+                message: "incoming payload is missing on a `closest_hit`, `any_hit` or `miss` shader entry point".to_string(),
+                labels: vec![(
+                    span,
+                    "must be paired with a `@incoming_payload` attribute".into(),
+                )],
+                notes: vec![],
+            },
+            Error::UnterminatedBlockComment(span) => ParseError {
+                message: "unterminated block comment".to_string(),
+                labels: vec![(
+                    span,
+                    "must be closed with `*/`".into(),
+                )],
+                notes: vec![],
+            }
         }
     }
 }

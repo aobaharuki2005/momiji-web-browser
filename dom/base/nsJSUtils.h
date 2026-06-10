@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsJSUtils_h__
-#define nsJSUtils_h__
+#ifndef nsJSUtils_h_
+#define nsJSUtils_h_
 
 /**
  * This is not a generated file. It contains common utility functions
@@ -231,4 +229,4 @@ using nsAutoJSString = nsTAutoJSString<char16_t>;
 // Note that this is guaranteed to be UTF-8.
 using nsAutoJSCString = nsTAutoJSString<char>;
 
-#endif /* nsJSUtils_h__ */
+#endif /* nsJSUtils_h_ */

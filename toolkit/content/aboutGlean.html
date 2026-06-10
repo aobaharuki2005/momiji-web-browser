@@ -58,9 +58,6 @@
           </ul>
         </p>
         <p data-l10n-id="about-glean-additional-links"></p>
-        <moz-promo id="promo" type="vibrant" data-l10n-id="about-glean-enable-new-features-promo">
-          <moz-button id="enable-new-features" slot="actions"></moz-button>
-        </moz-promo>
       </div>
       <!-- manual testing tab -->
       <div id="manual-testing" class="tab" hidden="true">
@@ -220,7 +217,10 @@
             <input type="text" name="filter-metrics" id="filter-metrics" pattern="[a-zA-Z0-9\-]*">
             <small data-l10n-id="about-glean-description-for-filter-metrics"></small>
           </div>
-          <button name="load-all" id="load-all" data-l10n-id="about-glean-button-load-all"></button>
+          <div>
+            <button name="load-all" id="load-all" data-l10n-id="about-glean-button-load-all"></button>
+            <button name="export-data" id="export-data" data-l10n-id="about-glean-button-export-data"></button>
+          </div>
         </div>
         <hr>
         <div id="metrics-table-instance" hidden="true">

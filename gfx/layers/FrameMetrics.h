@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,7 +25,8 @@
 #include "mozilla/ScrollSnapTargetId.h"
 #include "mozilla/StaticPtr.h"  // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"  // for TimeStamp
-#include "nsTHashMap.h"         // for nsTHashMap
+#include "mozilla/WritingModes.h"
+#include "nsTHashMap.h"  // for nsTHashMap
 #include "nsString.h"
 #include "PLDHashTable.h"  // for PLDHashNumber
 
@@ -557,8 +556,8 @@ struct FrameMetrics {
   // For RCD-RSF this is the width of the composition bounds ignoring
   // scrollbars. For everything else this will be the same as the width of the
   // composition bounds. Only needed for the "resolution changed" check in
-  // NotifyLayersUpdated, once that switches to using IsResolutionUpdated we can
-  // remove this.
+  // NotifyMainThreadTransaction, once that switches to using
+  // IsResolutionUpdated we can remove this.
   ParentLayerCoord mCompositionBoundsWidthIgnoringScrollbars;
 
   // The area of a scroll frame's contents that has been painted, relative to
@@ -734,7 +733,7 @@ struct FrameMetrics {
   //  - Otherwise, the following places should be updated to include them
   //    (as needed):
   //      FrameMetrics::operator ==
-  //      AsyncPanZoomController::NotifyLayersUpdated
+  //      AsyncPanZoomController::NotifyMainThreadTransaction
   //      The ParamTraits specialization in LayersMessageUtils.h
   //
   // Please add new fields above this comment.
@@ -830,7 +829,8 @@ struct ScrollMetadata {
            mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior &&
            mOverflow == aOther.mOverflow &&
-           mScrollUpdates == aOther.mScrollUpdates;
+           mScrollUpdates == aOther.mScrollUpdates &&
+           mWritingMode == aOther.mWritingMode;
   }
 
   bool operator!=(const ScrollMetadata& aOther) const {
@@ -943,6 +943,11 @@ struct ScrollMetadata {
     return mScrollUpdates;
   }
 
+  void SetWritingMode(const WritingMode aWritingMode) {
+    mWritingMode = aWritingMode;
+  }
+  const WritingMode GetWritingMode() const { return mWritingMode; }
+
   void UpdatePendingScrollInfo(nsTArray<ScrollPositionUpdate>&& aUpdates) {
     MOZ_ASSERT(!aUpdates.IsEmpty());
     mMetrics.UpdatePendingScrollInfo(aUpdates.LastElement());
@@ -1048,12 +1053,15 @@ struct ScrollMetadata {
   // the last transaction.
   CopyableTArray<ScrollPositionUpdate> mScrollUpdates;
 
+  // The writing-mode of this scroll container.
+  WritingMode mWritingMode;
+
   // WARNING!!!!
   //
   // When adding new fields to ScrollMetadata, the following places should be
   // updated to include them (as needed):
   //    1. ScrollMetadata::operator ==
-  //    2. AsyncPanZoomController::NotifyLayersUpdated
+  //    2. AsyncPanZoomController::NotifyMainThreadTransaction
   //    3. The ParamTraits specialization in LayersMessageUtils.h
   //
   // Please add new fields above this comment.

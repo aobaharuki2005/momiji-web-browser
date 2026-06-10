@@ -481,11 +481,11 @@ export class FeatureCallout {
       case "popupshowing":
         // If another panel is showing, close the tour.
         if (
-          event.target.ownerGlobal === this.win &&
+          event.target.documentGlobal === this.win &&
           event.target !== this._container &&
           event.target.localName === "panel" &&
           event.target.id !== "ctrlTab-panel" &&
-          event.target.getAttribute("noautohide") !== "true"
+          !event.target.hasAttribute("noautohide")
         ) {
           this.endTour();
         }
@@ -499,7 +499,7 @@ export class FeatureCallout {
 
       case "unload":
         try {
-          this.teardownFeatureTourProgress();
+          this.endTour();
         } catch (error) {}
         break;
 
@@ -793,6 +793,7 @@ export class FeatureCallout {
    * - %triggerTab%: The <tab> element associated with the current browser.
    * - %triggeredTabBookmark%: Bookmark item in the toolbar matching the current tab's URL or label.
    * - ::%shadow%: Traverses nested shadow DOM boundaries.
+   * - ::%document%: Traverses into a content document.
    *
    * @param {string} selector
    * @returns {{scope: Element, selector: string} | null}
@@ -803,7 +804,7 @@ export class FeatureCallout {
 
     // %triggerTab%
     if (this.browser && normalizedSelector.includes("%triggerTab%")) {
-      const triggerTab = this.browser.ownerGlobal.gBrowser?.getTabForBrowser(
+      const triggerTab = this.browser.documentGlobal.gBrowser?.getTabForBrowser(
         this.browser
       );
       if (!triggerTab) {
@@ -818,7 +819,7 @@ export class FeatureCallout {
 
     // %triggeredTabBookmark%
     if (normalizedSelector.includes("%triggeredTabBookmark%")) {
-      const gBrowser = this.browser?.ownerGlobal?.gBrowser;
+      const gBrowser = this.browser?.documentGlobal?.gBrowser;
       const tab = gBrowser?.getTabForBrowser(this.browser);
       const url = this.browser?.currentURI?.spec;
       const label = tab?.label;
@@ -873,20 +874,27 @@ export class FeatureCallout {
       normalizedSelector = `:scope${postTokenSelector}`;
     }
 
-    // ::%shadow%
-    if (normalizedSelector.includes("::%shadow%")) {
-      let parts = normalizedSelector.split("::%shadow%");
-      for (let i = 0; i < parts.length; i++) {
+    // ::%shadow% and ::%document%
+    if (
+      normalizedSelector.includes("::%shadow%") ||
+      normalizedSelector.includes("::%document%")
+    ) {
+      let parts = normalizedSelector.split(/(::%shadow%|::%document%)/);
+      for (let i = 0; i < parts.length; i += 2) {
         normalizedSelector = parts[i].trim();
-        if (i === parts.length - 1) {
+        if (i + 1 >= parts.length) {
           break;
         }
         let el = scope.querySelector(normalizedSelector);
         if (!el) {
           break;
         }
-        if (el.shadowRoot) {
+        if (parts[i + 1] === "::%shadow%" && el.shadowRoot) {
           scope = el.shadowRoot;
+        } else if (parts[i + 1] === "::%document%" && el.contentDocument) {
+          scope = el.contentDocument;
+        } else {
+          break;
         }
       }
     }
@@ -982,7 +990,7 @@ export class FeatureCallout {
         case "end": {
           // Inline arrow, i.e. arrow is on one of the left/right edges.
           let isRTL =
-            this.ownerGlobal.getComputedStyle(this).direction === "rtl";
+            this.documentGlobal.getComputedStyle(this).direction === "rtl";
           let isRight = isRTL ^ (positionParts[1] === "start");
           let side = isRight ? "end" : "start";
           arrowPosition = `inline-${side}`;
@@ -1022,8 +1030,13 @@ export class FeatureCallout {
     }
 
     const { autohide, ignorekeys, padding } = this.currentScreen.content;
-    const { panel_position, hide_arrow, no_open_on_anchor, arrow_width } =
-      anchor;
+    const {
+      panel_position,
+      hide_arrow,
+      no_open_on_anchor,
+      arrow_width,
+      arrow_corner_distance,
+    } = anchor;
     const needsPanel =
       "MozXULElement" in this.win && !!panel_position?.panel_position_string;
 
@@ -1043,6 +1056,7 @@ export class FeatureCallout {
             type="arrow"
             consumeoutsideclicks="never"
             norolluponanchor="true"
+            nonnative=""
             position="${panel_position.panel_position_string}"
             ${hide_arrow ? "" : 'show-arrow=""'}
             ${autohide ? "" : 'noautohide="true"'}
@@ -1070,6 +1084,14 @@ export class FeatureCallout {
         this._container.style.setProperty("--arrow-width", `${arrow_width}px`);
       } else {
         this._container.style.removeProperty("--arrow-width");
+      }
+      if (arrow_corner_distance) {
+        this._container.style.setProperty(
+          "--arrow-corner-distance",
+          `${arrow_corner_distance}px`
+        );
+      } else {
+        this._container.style.removeProperty("--arrow-corner-distance");
       }
       if (padding) {
         // This property used to accept a number value, either a number or a
@@ -1577,19 +1599,25 @@ export class FeatureCallout {
     const handleActorMessage =
       lazy.AboutWelcomeParent.prototype.onContentMessage.bind({});
     const getActionHandler = name => data =>
-      handleActorMessage(`AWPage:${name}`, data, this.doc);
-
+      handleActorMessage(`AWPage:${name}`, data, this.browser);
     const telemetryMessageHandler = getActionHandler("TELEMETRY_EVENT");
     const AWSendEventTelemetry = data => {
-      if (this.config?.metrics !== "block") {
-        return telemetryMessageHandler(data);
+      if (this.config?.metrics === "block") {
+        return null;
       }
-      return null;
+      if (this.config?.write_in_microsurvey) {
+        if (!data.event_context) {
+          data.event_context = {};
+        }
+        data.event_context.write_in_microsurvey = true;
+      }
+      return telemetryMessageHandler(data);
     };
     this._windowFuncs = {
       AWGetFeatureConfig: () => this.config,
       AWGetSelectedTheme: getActionHandler("GET_SELECTED_THEME"),
       AWGetInstalledAddons: getActionHandler("GET_INSTALLED_ADDONS"),
+      AWEnsureAddonInstalled: getActionHandler("ENSURE_ADDON_INSTALLED"),
       // Do not send telemetry if message config sets metrics as 'block'.
       AWSendEventTelemetry,
       AWSendToDeviceEmailsSupported: getActionHandler(
@@ -2014,7 +2042,7 @@ export class FeatureCallout {
       if (doc !== this.doc) {
         let windowIndex = [
           ...Services.wm.getEnumerator("navigator:browser"),
-        ].indexOf(target.ownerGlobal);
+        ].indexOf(target.documentGlobal);
         source = `window${windowIndex + 1}: ${source}`;
       }
     }
@@ -2252,6 +2280,8 @@ export class FeatureCallout {
     "color",
     "border",
     "accent-color",
+    "step-color",
+    "current-step-color",
     "button-background",
     "button-color",
     "button-border",
@@ -2286,11 +2316,13 @@ export class FeatureCallout {
     "themed-content": {
       all: {
         background:
-          "var(--newtab-background-color, var(--background-color-canvas)) linear-gradient(var(--newtab-background-color-secondary), var(--newtab-background-color-secondary))",
+          "var(--newtab-background-color, var(--background-color-canvas)) image(var(--newtab-background-color-secondary))",
         color: "var(--newtab-text-primary-color, var(--text-color))",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary) 80%, #000)",
         "accent-color": "var(--button-background-color-primary)",
+        "step-color": "color-mix(in srgb, currentColor 50%, transparent)",
+        "current-step-color": "var(--button-background-color-primary)",
         "button-background": "color-mix(in srgb, transparent 93%, #000)",
         "button-color": "var(--newtab-text-primary-color, var(--text-color))",
         "button-border": "transparent",
@@ -2321,11 +2353,11 @@ export class FeatureCallout {
         "link-color-active": "ActiveText",
         "link-color-visited": "VisitedText",
         "dismiss-button-background":
-          "var(--newtab-background-color, var(--background-color-canvas)) linear-gradient(var(--newtab-background-color-secondary), var(--newtab-background-color-secondary))",
+          "var(--newtab-background-color, var(--background-color-canvas)) image(var(--newtab-background-color-secondary)",
         "dismiss-button-background-hover":
-          "var(--newtab-background-color, var(--background-color-canvas)) linear-gradient(color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary)), color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary)))",
+          "var(--newtab-background-color, var(--background-color-canvas)) image(color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary)))",
         "dismiss-button-background-active":
-          "var(--newtab-background-color, var(--background-color-canvas)) linear-gradient(color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary)), color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary)))",
+          "var(--newtab-background-color, var(--background-color-canvas)) image(color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary)))",
       },
       dark: {
         border:
@@ -2339,6 +2371,8 @@ export class FeatureCallout {
         color: "-moz-dialogtext",
         border: "-moz-dialogtext",
         "accent-color": "LinkText",
+        "step-color": "CanvasText",
+        "current-step-color": "CanvasText",
         "button-background": "ButtonFace",
         "button-color": "ButtonText",
         "button-border": "ButtonText",
@@ -2362,6 +2396,8 @@ export class FeatureCallout {
         color: "rgb(12, 12, 13)",
         border: "#CFCFD8",
         "accent-color": "#0A84FF",
+        "step-color": "color-mix(in srgb, currentColor 50%, transparent)",
+        "current-step-color": "#0A84FF",
         "button-background": "rgb(215, 215, 219)",
         "button-color": "rgb(12, 12, 13)",
         "button-border": "transparent",
@@ -2403,6 +2439,8 @@ export class FeatureCallout {
         color: "-moz-dialogtext",
         border: "CanvasText",
         "accent-color": "Highlight",
+        "step-color": "CanvasText",
+        "current-step-color": "CanvasText",
         "button-background": "ButtonFace",
         "button-color": "ButtonText",
         "button-border": "ButtonText",
@@ -2422,11 +2460,13 @@ export class FeatureCallout {
     newtab: {
       all: {
         background:
-          "var(--newtab-background-color, #F9F9FB) linear-gradient(var(--newtab-background-color-secondary, #FFF), var(--newtab-background-color-secondary, #FFF))",
+          "var(--newtab-background-color, #F9F9FB) image(var(--newtab-background-color-secondary, #FFF))",
         color: "var(--newtab-text-primary-color, WindowText)",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary, #FFF) 80%, #000)",
         "accent-color": "#0061e0",
+        "step-color": "color-mix(in srgb, currentColor 50%, transparent)",
+        "current-step-color": "#0061e0",
         "button-background": "color-mix(in srgb, transparent 93%, #000)",
         "button-color": "var(--newtab-text-primary-color, WindowText)",
         "button-border": "transparent",
@@ -2443,16 +2483,18 @@ export class FeatureCallout {
         "link-color-visited": "rgb(0, 97, 224)",
         "icon-success-color": "#2AC3A2",
         "dismiss-button-background":
-          "var(--newtab-background-color, #F9F9FB) linear-gradient(var(--newtab-background-color-secondary, #FFF), var(--newtab-background-color-secondary, #FFF))",
+          "var(--newtab-background-color, #F9F9FB) image(var(--newtab-background-color-secondary, #FFF))",
         "dismiss-button-background-hover":
-          "var(--newtab-background-color, #F9F9FB) linear-gradient(color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary, #FFF)), color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary, #FFF)))",
+          "var(--newtab-background-color, #F9F9FB) image(color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary, #FFF)))",
         "dismiss-button-background-active":
-          "var(--newtab-background-color, #F9F9FB) linear-gradient(color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary, #FFF)), color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary, #FFF)))",
+          "var(--newtab-background-color, #F9F9FB) image(color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary, #FFF)))",
       },
       dark: {
         "accent-color": "rgb(0, 221, 255)",
+        "step-color": "color-mix(in srgb, currentColor 50%, transparent)",
+        "current-step-color": "rgb(0, 211, 255)",
         background:
-          "var(--newtab-background-color, #2B2A33) linear-gradient(var(--newtab-background-color-secondary, #42414D), var(--newtab-background-color-secondary, #42414D))",
+          "var(--newtab-background-color, #2B2A33) image(var(--newtab-background-color-secondary, #42414D))",
         border:
           "color-mix(in srgb, var(--newtab-background-color-secondary, #42414D) 80%, #FFF)",
         "button-background": "color-mix(in srgb, transparent 80%, #000)",
@@ -2464,17 +2506,19 @@ export class FeatureCallout {
         "link-color-visited": "rgb(0, 221, 255)",
         "icon-success-color": "#54FFBD",
         "dismiss-button-background":
-          "var(--newtab-background-color, #2B2A33) linear-gradient(var(--newtab-background-color-secondary, #42414D), var(--newtab-background-color-secondary, #42414D))",
+          "var(--newtab-background-color, #2B2A33) image(var(--newtab-background-color-secondary, #42414D))",
         "dismiss-button-background-hover":
-          "var(--newtab-background-color, #2B2A33) linear-gradient(color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary, #42414D)), color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary, #42414D)))",
+          "var(--newtab-background-color, #2B2A33) image(color-mix(in srgb, currentColor 14%, var(--newtab-background-color-secondary, #42414D)))",
         "dismiss-button-background-active":
-          "var(--newtab-background-color, #2B2A33) linear-gradient(color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary, #42414D), color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary, #42414D)))",
+          "var(--newtab-background-color, #2B2A33) image(color-mix(in srgb, currentColor 21%, var(--newtab-background-color-secondary, #42414D)))",
       },
       hcm: {
         background: "-moz-dialog",
         color: "-moz-dialogtext",
         border: "-moz-dialogtext",
         "accent-color": "SelectedItem",
+        "step-color": "CanvasText",
+        "current-step-color": "CanvasText",
         "button-background": "ButtonFace",
         "button-color": "ButtonText",
         "button-border": "ButtonText",
@@ -2501,15 +2545,16 @@ export class FeatureCallout {
     // stylesheets handle these variables' values.
     chrome: {
       all: {
-        // Use a gradient because it's possible (due to custom themes) that the
-        // arrowpanel-background will be semi-transparent, causing the arrow to
+        // Use image() because it's possible (due to custom themes) that the
+        // panel-background will be semi-transparent, causing the arrow to
         // show through the callout background. Put the Menu color behind the
-        // arrowpanel-background.
-        background:
-          "Menu linear-gradient(var(--arrowpanel-background), var(--arrowpanel-background))",
-        color: "var(--arrowpanel-color)",
-        border: "var(--arrowpanel-border-color)",
+        // panel-background.
+        background: "Menu image(var(--panel-background-color))",
+        color: "var(--panel-text-color)",
+        border: "var(--panel-border-color)",
         "accent-color": "var(--focus-outline-color)",
+        "step-color": "color-mix(in srgb, currentColor 50%, transparent)",
+        "current-step-color": "var(--button-background-color-primary)",
         // Button Background
         "button-background": "var(--button-background-color)",
         "button-background-hover": "var(--button-background-color-hover)",
@@ -2551,22 +2596,24 @@ export class FeatureCallout {
         "link-color-hover": "LinkText",
         "link-color-active": "ActiveText",
         "link-color-visited": "VisitedText",
-        "icon-success-color": "var(--attention-dot-color)",
+        "icon-success-color": "var(--color-accent-attention)",
         // Dismiss Button
         "dismiss-button-background":
-          "Menu linear-gradient(var(--arrowpanel-background), var(--arrowpanel-background))",
+          "Menu image(var(--panel-background-color))",
         "dismiss-button-background-hover":
-          "Menu linear-gradient(color-mix(in srgb, currentColor 14%, var(--arrowpanel-background)))",
+          "Menu image(color-mix(in srgb, currentColor 14%, var(--panel-background-color)))",
         "dismiss-button-background-active":
-          "Menu linear-gradient(color-mix(in srgb, currentColor 21%, var(--arrowpanel-background)))",
+          "Menu image(color-mix(in srgb, currentColor 21%, var(--panel-background-color)))",
       },
       hcm: {
-        background: "var(--arrowpanel-background)",
-        "dismiss-button-background": "var(--arrowpanel-background)",
+        background: "var(--panel-background-color)",
+        "dismiss-button-background": "var(--panel-background-color)",
         "dismiss-button-background-hover":
           "color-mix(in srgb, currentColor 14%, SelectedItem)",
         "dismiss-button-background-active":
           "color-mix(in srgb, currentColor 21%, SelectedItem)",
+        "step-color": "var(--text-color, CanvasText)",
+        "current-step-color": "var(--text-color, CanvasText)",
       },
     },
   };

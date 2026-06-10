@@ -49,9 +49,14 @@ async function test() {
   );
 }
 
-waitUntilApzStable()
+  if (getPlatform() == "mac") {
+    ok(true, "Skipping test on Mac (bug 2041468)");
+    subtestDone();
+  } else {
+  waitUntilApzStable()
   .then(test)
   .then(subtestDone, subtestFailed);
+}
 
   </script>
 </head>

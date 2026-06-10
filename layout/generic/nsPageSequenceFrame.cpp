@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,8 +10,11 @@
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PrintedSheetFrame.h"
+#include "mozilla/ReflowInput.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/intl/AppDateTimeFormat.h"
 #include "nsCOMPtr.h"
@@ -21,7 +22,6 @@
 #include "nsContentUtils.h"
 #include "nsDeviceContext.h"
 #include "nsDisplayList.h"
-#include "nsGkAtoms.h"
 #include "nsHTMLCanvasFrame.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIFrame.h"
@@ -120,16 +120,15 @@ nsPageSequenceFrame::nsPageSequenceFrame(ComputedStyle* aStyle,
       mScrollportSize(mWritingMode),
       mCalledBeginPage(false),
       mCurrentCanvasListSetup(false) {
-  mPageData = MakeUnique<nsSharedPageData>();
-  mPageData->mHeadFootFont =
+  mPageData.mHeadFootFont =
       *PresContext()
            ->Document()
            ->GetFontPrefsForLang(aStyle->StyleFont()->mLanguage)
            ->GetDefaultFont(StyleGenericFontFamily::Serif);
-  mPageData->mHeadFootFont.size =
+  mPageData.mHeadFootFont.size =
       Length::FromPixels(CSSPixel::FromPoints(10.0f));
-  mPageData->mPrintSettings = aPresContext->GetPrintSettings();
-  MOZ_RELEASE_ASSERT(mPageData->mPrintSettings, "How?");
+  mPageData.mPrintSettings = aPresContext->GetPrintSettings();
+  MOZ_RELEASE_ASSERT(mPageData.mPrintSettings, "How?");
 
   // Doing this here so we only have to go get these formats once
   SetPageNumberFormat("pagenumber", "%1$d", true);
@@ -304,10 +303,70 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     return;
   }
 
-  nsIntMargin unwriteableTwips =
-      mPageData->mPrintSettings->GetUnwriteableMarginInTwips();
+  const bool shouldDoMeasuringReflow = [&]() {
+    if (GetPrevInFlow()) {
+      // A measuring reflow is only needed on first-in-flow.
+      return false;
+    }
+    // Only do measuring reflow if there are absolutely positioned descendants
+    // since the purpose is to compute their unfragmented positions, sizes, etc.
+    return nsLayoutUtils::HasAbsolutelyPositionedDescendants(this);
+  }();
 
-  nsIntMargin edgeTwips = mPageData->mPrintSettings->GetEdgeInTwips();
+  if (shouldDoMeasuringReflow) {
+    if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
+      // Mark sheets dirty for an incremental measuring reflow.
+      MarkPrincipalChildrenDirty();
+    }
+
+    for (nsIFrame* kidFrame : mFrames) {
+      auto* sheet = static_cast<PrintedSheetFrame*>(kidFrame);
+      sheet->SetSharedPageData(&mPageData);
+
+      // If we want to reliably access the nsPageFrame before reflowing the
+      // sheet frame, we need to call this:
+      sheet->ClaimPageFrameFromPrevInFlow();
+
+      const nsSize sheetSize = sheet->ComputeSheetSize(aPresContext);
+
+      const auto kidWM = kidFrame->GetWritingMode();
+      LogicalSize availSize(kidWM, sheetSize);
+
+      // Reflow the kid with an unconstrained available block-size, to compute
+      // unfragmented positions, sizes, etc. for absolutely positioned
+      // descendants.
+      availSize.BSize(kidWM) = NS_UNCONSTRAINEDSIZE;
+
+      ReflowInput kidReflowInput(aPresContext, aReflowInput, kidFrame,
+                                 availSize);
+
+      // Given the kid is reflowed under an unconstrained available block-size,
+      // BreakType::Page doesn't really have any effect, but we keep it for
+      // consistency with the normal reflow below.
+      kidReflowInput.mBreakType = BreakType::Page;
+      kidReflowInput.mFlags.mIsInFragmentainerMeasuringReflow = true;
+
+      ReflowOutput kidReflowOutput(kidReflowInput);
+      nsReflowStatus status;
+
+      // Position doesn't matter for measuring reflow.
+      const WritingMode wm = kidFrame->GetWritingMode();
+      ReflowChild(kidFrame, aPresContext, kidReflowOutput, kidReflowInput, wm,
+                  LogicalPoint(wm), sheetSize, ReflowChildFlags::Default,
+                  status);
+      FinishReflowChild(kidFrame, aPresContext, kidReflowOutput,
+                        &kidReflowInput, wm, LogicalPoint(wm), sheetSize,
+                        ReflowChildFlags::Default);
+    }
+
+    // Mark sheets dirty for normal reflow below.
+    MarkPrincipalChildrenDirty();
+  }
+
+  nsIntMargin unwriteableTwips =
+      mPageData.mPrintSettings->GetUnwriteableMarginInTwips();
+
+  nsIntMargin edgeTwips = mPageData.mPrintSettings->GetEdgeInTwips();
 
   // sanity check the values. three inches are sometimes needed
   int32_t threeInches = NS_INCHES_TO_INT_TWIPS(3.0);
@@ -315,10 +374,10 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
       nsIntMargin(threeInches, threeInches, threeInches, threeInches));
   edgeTwips.EnsureAtLeast(unwriteableTwips);
 
-  mPageData->mEdgePaperMargin = nsPresContext::CSSTwipsToAppUnits(edgeTwips);
+  mPageData.mEdgePaperMargin = nsPresContext::CSSTwipsToAppUnits(edgeTwips);
 
   // Get the custom page-range state:
-  mPageData->mPrintSettings->GetPageRanges(mPageData->mPageRanges);
+  mPageData.mPrintSettings->GetPageRanges(mPageData.mPageRanges);
 
   // We use the CSS "margin" property on the -moz-printed-sheet pseudoelement
   // to determine the space between each printed sheet in print preview.
@@ -336,7 +395,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     MOZ_ASSERT(kidFrame->IsPrintedSheetFrame(),
                "we're only expecting PrintedSheetFrame as children");
     auto* sheet = static_cast<PrintedSheetFrame*>(kidFrame);
-    sheet->SetSharedPageData(mPageData.get());
+    sheet->SetSharedPageData(&mPageData);
 
     // If we want to reliably access the nsPageFrame before reflowing the sheet
     // frame, we need to call this:
@@ -348,7 +407,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     ReflowInput kidReflowInput(
         aPresContext, aReflowInput, kidFrame,
         LogicalSize(kidFrame->GetWritingMode(), sheetSize));
-    kidReflowInput.mBreakType = ReflowInput::BreakType::Page;
+    kidReflowInput.mBreakType = BreakType::Page;
 
     ReflowOutput kidReflowOutput(kidReflowInput);
     nsReflowStatus status;
@@ -454,7 +513,7 @@ void nsPageSequenceFrame::SetPageNumberFormat(const char* aPropName,
   nsAutoString pageNumberFormat;
   // Now go get the Localized Page Formating String
   nsresult rv = nsContentUtils::GetLocalizedString(
-      nsContentUtils::ePRINTING_PROPERTIES, aPropName, pageNumberFormat);
+      PropertiesFile::PRINTING_PROPERTIES, aPropName, pageNumberFormat);
   if (NS_FAILED(rv)) {  // back stop formatting
     pageNumberFormat.AssignASCII(aDefPropVal);
   }
@@ -469,15 +528,15 @@ nsresult nsPageSequenceFrame::StartPrint(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
-  if (!mPageData->mPrintSettings) {
-    mPageData->mPrintSettings = aPrintSettings;
+  if (!mPageData.mPrintSettings) {
+    mPageData.mPrintSettings = aPrintSettings;
   }
 
   if (!aDocTitle.IsEmpty()) {
-    mPageData->mDocTitle = aDocTitle;
+    mPageData.mDocTitle = aDocTitle;
   }
   if (!aDocURL.IsEmpty()) {
-    mPageData->mDocURL = aDocURL;
+    mPageData.mDocURL = aDocURL;
   }
 
   // Begin printing of the document
@@ -492,12 +551,9 @@ static void GetPrintCanvasElementsInFrame(
   }
   for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
-      // Check if child is a nsHTMLCanvasFrame.
-      nsHTMLCanvasFrame* canvasFrame = do_QueryFrame(child);
-
-      // If there is a canvasFrame, try to get actual canvas element.
-      if (canvasFrame) {
-        HTMLCanvasElement* canvas =
+      // Check if child is a nsHTMLCanvasFrame, and get the canvas element.
+      if (nsHTMLCanvasFrame* canvasFrame = do_QueryFrame(child)) {
+        auto* canvas =
             HTMLCanvasElement::FromNodeOrNull(canvasFrame->GetContent());
         if (canvas && canvas->GetMozPrintCallback()) {
           aArr->AppendElement(canvas);
@@ -506,8 +562,7 @@ static void GetPrintCanvasElementsInFrame(
       }
 
       if (!child->PrincipalChildList().FirstChild()) {
-        nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(child);
-        if (subdocumentFrame) {
+        if (nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(child)) {
           // Descend into the subdocument
           nsIFrame* root = subdocumentFrame->GetSubdocumentRootFrame();
           child = root;
@@ -594,16 +649,18 @@ nsresult nsPageSequenceFrame::PrePrintNextSheet(nsITimerCallback* aCallback,
       UniquePtr<gfxContext> renderingContext = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
-      DrawTarget* drawTarget = renderingContext->GetDrawTarget();
-      if (NS_WARN_IF(!drawTarget)) {
+      DrawTarget* referenceDt = renderingContext->GetDrawTarget();
+      if (NS_WARN_IF(!referenceDt)) {
         return NS_ERROR_FAILURE;
       }
 
       for (HTMLCanvasElement* canvas : Reversed(mCurrentCanvasList)) {
         CSSIntSize size = canvas->GetSize();
-
-        RefPtr<DrawTarget> canvasTarget = drawTarget->CreateSimilarDrawTarget(
-            size.ToUnknownSize(), drawTarget->GetFormat());
+        RefPtr recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>(nullptr);
+        RefPtr<DrawTarget> canvasTarget =
+            gfx::Factory::CreateRecordingDrawTarget(
+                recorder, referenceDt,
+                gfx::IntRect(gfx::IntPoint(), size.ToUnknownSize()));
         if (!canvasTarget) {
           continue;
         }
@@ -769,18 +826,14 @@ void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 //------------------------------------------------------------------------------
 void nsPageSequenceFrame::SetPageNumberFormat(const nsAString& aFormatStr,
                                               bool aForPageNumOnly) {
-  NS_ASSERTION(mPageData != nullptr, "mPageData string cannot be null!");
-
   if (aForPageNumOnly) {
-    mPageData->mPageNumFormat = aFormatStr;
+    mPageData.mPageNumFormat = aFormatStr;
   } else {
-    mPageData->mPageNumAndTotalsFormat = aFormatStr;
+    mPageData.mPageNumAndTotalsFormat = aFormatStr;
   }
 }
 
 //------------------------------------------------------------------------------
 void nsPageSequenceFrame::SetDateTimeStr(const nsAString& aDateTimeStr) {
-  NS_ASSERTION(mPageData != nullptr, "mPageData string cannot be null!");
-
-  mPageData->mDateTimeStr = aDateTimeStr;
+  mPageData.mDateTimeStr = aDateTimeStr;
 }

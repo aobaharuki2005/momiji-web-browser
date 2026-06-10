@@ -256,7 +256,7 @@ class TabsListBase {
   _refreshDOM() {
     if (!this.#domRefreshPromise) {
       this.#domRefreshPromise = new Promise(resolve => {
-        this.containerNode.ownerGlobal.requestAnimationFrame(() => {
+        this.containerNode.documentGlobal.requestAnimationFrame(() => {
           if (this.#domRefreshPromise) {
             if (this.listenersRegistered) {
               // Only re-render the menu DOM if the menu is still open.
@@ -347,10 +347,12 @@ class TabsListBase {
    * @param {MozTabbrowserTab} tab
    */
   _moveTab(tab) {
-    let item = this.tabToElement.get(tab);
-    if (item) {
-      this._removeItem(item, tab);
-      this._addTab(tab);
+    for (let t of tab.splitview?.tabs ?? [tab]) {
+      let item = this.tabToElement.get(t);
+      if (item) {
+        this._removeItem(item, t);
+        this._addTab(t);
+      }
     }
   }
 
@@ -606,6 +608,10 @@ export class TabsPanel extends TabsListBase {
       "--tab-group-color-pale",
       `var(--tab-group-color-${group.color}-pale)`
     );
+    row.style.setProperty(
+      "--tab-group-background-color",
+      `var(--tab-group-${group.color})`
+    );
 
     let button = doc.createXULElement("toolbarbutton");
     button.setAttribute("context", "open-tab-group-context-menu");
@@ -711,7 +717,7 @@ export class TabsPanel extends TabsListBase {
 
     this.gBrowser.tabContainer.tabDragAndDrop.startTabDrag(
       event,
-      elementToDrag,
+      elementToDrag.splitview || elementToDrag,
       {
         fromTabList: true,
       }
@@ -852,10 +858,19 @@ export class TabsPanel extends TabsListBase {
     }
 
     const threshold = rect.height * 0.5;
-    if (event.clientY < rect.top + threshold) {
-      this._setDropTarget(row, -1);
+    const direction = event.clientY < rect.top + threshold ? -1 : 0;
+    if (
+      getRowVariant(row) === ROW_VARIANT_TAB &&
+      getTabFromRow(row).splitview
+    ) {
+      const tab = getTabFromRow(row);
+      if (tab == tab.splitview.tabs[0]) {
+        this._setDropTarget(row, -1);
+      } else if (tab == tab.splitview.tabs[1]) {
+        this._setDropTarget(row, 0);
+      }
     } else {
-      this._setDropTarget(row, 0);
+      this._setDropTarget(row, direction);
     }
 
     return true;

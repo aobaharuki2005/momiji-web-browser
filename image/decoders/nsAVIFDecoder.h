@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -119,8 +118,7 @@ struct AVIFImage {
 class AVIFParser {
  public:
   static Mp4parseStatus Create(const Mp4parseIo* aIo, ByteStream* aBuffer,
-                               UniquePtr<AVIFParser>& aParserOut,
-                               bool aAllowSequences, bool aAnimateAVIFMajor);
+                               UniquePtr<AVIFParser>& aParserOut);
 
   ~AVIFParser();
 
@@ -135,8 +133,7 @@ class AVIFParser {
  private:
   explicit AVIFParser(const Mp4parseIo* aIo);
 
-  Mp4parseStatus Init(ByteStream* aBuffer, bool aAllowSequences,
-                      bool aAnimateAVIFMajor);
+  Mp4parseStatus Init(ByteStream* aBuffer);
 
   struct FreeAvifParser {
     void operator()(Mp4parseAvifParser* aPtr) { mp4parse_avif_free(aPtr); }

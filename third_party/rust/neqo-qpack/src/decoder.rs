@@ -6,17 +6,17 @@
 
 use std::fmt::{self, Display, Formatter};
 
-use neqo_common::{qdebug, Encoder, Header};
+use neqo_common::{Encoder, Header, qdebug};
 use neqo_transport::{Connection, StreamId};
 
 use crate::{
+    Error, Res, Settings,
     decoder_instructions::DecoderInstruction,
     encoder_instructions::{DecodedEncoderInstruction, EncoderInstructionReader},
     header_block::{HeaderDecoder, HeaderDecoderResult},
     reader::{ReadByte, Reader, ReceiverConnWrapper},
     stats::Stats,
     table::HeaderTable,
-    Error, Res, Settings,
 };
 
 pub const QPACK_UNI_STREAM_TYPE_DECODER: u64 = 0x3;
@@ -46,7 +46,7 @@ impl Decoder {
         send_buf.encode_varint(QPACK_UNI_STREAM_TYPE_DECODER);
         let max_blocked_streams = usize::from(qpack_settings.max_blocked_streams);
         Self {
-            instruction_reader: EncoderInstructionReader::new(),
+            instruction_reader: EncoderInstructionReader::default(),
             table: HeaderTable::new(false),
             acked_inserts: 0,
             max_entries: qpack_settings.max_table_size_decoder >> 5,
@@ -64,7 +64,7 @@ impl Decoder {
         self.table.capacity()
     }
 
-    /// returns a list of unblocked streams
+    /// Returns a list of unblocked streams.
     ///
     /// # Errors
     ///
@@ -79,13 +79,11 @@ impl Decoder {
             return Ok(Vec::new());
         }
 
-        let r = self
+        Ok(self
             .blocked_streams
-            .iter()
-            .filter_map(|(id, req)| (*req <= base_new).then_some(*id))
-            .collect::<Vec<_>>();
-        self.blocked_streams.retain(|(_, req)| *req > base_new);
-        Ok(r)
+            .extract_if(.., |(_, req)| *req <= base_new)
+            .map(|(id, _)| id)
+            .collect())
     }
 
     fn read_instructions(&mut self, conn: &mut Connection, stream_id: StreamId) -> Res<()> {
@@ -162,7 +160,8 @@ impl Decoder {
 
     /// # Errors
     ///
-    /// May return an error in case of any transport error. TODO: define transport errors.
+    /// May return [`Error::Internal`] if the decoder stream is not initialized,
+    /// or [`Error::DecoderStream`] if sending on the decoder stream fails.
     ///
     /// # Panics
     ///
@@ -409,6 +408,20 @@ mod tests {
             &[0x03, 0x01],
             0,
         );
+    }
+
+    /// `dynamic_table_inserts` counts each insert instruction.
+    #[test]
+    fn dynamic_table_inserts_stat_increments() {
+        let mut decoder = connect();
+        assert!(decoder.decoder.set_capacity(200).is_ok());
+        assert_eq!(decoder.decoder.stats().dynamic_table_inserts, 0);
+
+        recv_instruction(&mut decoder, &[0xc4, 0x04, 0x31, 0x32, 0x33, 0x34], &Ok(()));
+        assert_eq!(decoder.decoder.stats().dynamic_table_inserts, 1);
+
+        recv_instruction(&mut decoder, &[0xc4, 0x04, 0x35, 0x36, 0x37, 0x38], &Ok(()));
+        assert_eq!(decoder.decoder.stats().dynamic_table_inserts, 2);
     }
 
     // test insert with name literal - succeeds

@@ -6,10 +6,8 @@ import inspect
 import re
 import types
 from dis import Bytecode
-from functools import wraps
+from functools import cache, wraps
 from io import StringIO
-
-from mozbuild.util import memoize
 
 from . import (
     CombinedDependsFunction,
@@ -56,10 +54,11 @@ class LintSandbox(ConfigureSandbox):
         location.
 
         The location is determined from the values of obj and line.
-        - `obj` can be a function or DependsFunction, in which case
-          `line` corresponds to the line within the function the exception
+
+        - ``obj`` can be a function or DependsFunction, in which case
+          ``line`` corresponds to the line within the function the exception
           will be raised from (as an offset from the function's firstlineno).
-        - `obj` can be a stack frame, in which case `line` is ignored.
+        - ``obj`` can be a stack frame, in which case ``line`` is ignored.
         """
 
         def thrower(e):
@@ -175,7 +174,7 @@ class LintSandbox(ConfigureSandbox):
             return False
         return self._need_help_dependency(obj)
 
-    @memoize
+    @cache
     def _value_for_depends(self, obj):
         with_help = self._help_option in obj.dependencies
         if with_help:

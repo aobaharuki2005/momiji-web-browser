@@ -1,4 +1,3 @@
-# vim:set ts=8 sw=8 sts=8 noet:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -62,7 +61,7 @@ clobber-%:
 PACKAGER_NO_LIBS = 1
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-STAGEDIST = $(ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources
+STAGEDIST = $(ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(MOZ_PKG_RESPATH)
 else
 STAGEDIST = $(ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// @ts-nocheck - TODO - Remove this to type check this file.
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = XPCOMUtils.declareLazy({
@@ -159,6 +161,7 @@ export class SecurityOrchestrator {
    * sessionId will not create duplicate ledgers.
    *
    * @param {string} sessionId - Unique identifier for the session
+   * @returns {lazy.SessionLedger} The session ledger
    */
   registerSession(sessionId) {
     if (!sessionId || typeof sessionId !== "string") {
@@ -166,12 +169,16 @@ export class SecurityOrchestrator {
         "registerSession requires a non-empty string sessionId"
       );
     }
-    if (this.#sessionLedgers.has(sessionId)) {
+
+    let ledger = this.#sessionLedgers.get(sessionId);
+    if (!ledger) {
+      ledger = new lazy.SessionLedger(sessionId);
+      this.#sessionLedgers.set(sessionId, ledger);
+      lazy.console.debug(`[Security] Registered session ${sessionId}`);
+    } else {
       lazy.console.debug(`[Security] Session ${sessionId} already registered`);
-      return;
     }
-    this.#sessionLedgers.set(sessionId, new lazy.SessionLedger(sessionId));
-    lazy.console.debug(`[Security] Registered session ${sessionId}`);
+    return ledger;
   }
 
   /**
@@ -360,7 +367,6 @@ export class SecurityOrchestrator {
         });
         return { effect: lazy.EFFECT_ALLOW };
       }
-
       const policies = this.#policies.get(phase);
       if (!policies || policies.length === 0) {
         const decision = lazy.createAllowDecision({
@@ -380,25 +386,21 @@ export class SecurityOrchestrator {
         });
         return decision;
       }
-
       const fullContext = {
         ...context,
         sessionLedger,
         sessionId,
         timestamp: ChromeUtils.now(),
       };
-
       const { currentTabId, mentionedTabIds = [] } = context;
       const tabsToCheck = [currentTabId, ...mentionedTabIds];
       const linkLedger = sessionLedger.merge(tabsToCheck);
       fullContext.linkLedger = linkLedger;
-
       const decision = lazy.evaluatePhasePolicies(
         policies,
         action,
         fullContext
       );
-
       lazy.logSecurityEvent({
         requestId,
         sessionId,
@@ -411,7 +413,6 @@ export class SecurityOrchestrator {
         decision,
         durationMs: ChromeUtils.now() - startTime,
       });
-
       return decision;
     } catch (error) {
       const errorDecision = lazy.createDenyDecision(
@@ -419,7 +420,6 @@ export class SecurityOrchestrator {
         "Security evaluation failed with unexpected error",
         { error: error.message || String(error) }
       );
-
       lazy.logSecurityEvent({
         requestId,
         sessionId,
@@ -433,8 +433,13 @@ export class SecurityOrchestrator {
         durationMs: ChromeUtils.now() - startTime,
         error,
       });
-
       return errorDecision;
+    } finally {
+      ChromeUtils.addProfilerMarker(
+        "ML.Security.SecurityOrchestrator.evaluate",
+        { startTime },
+        `Evaluate security for action: ${JSON.stringify(envelope?.action)}, phase: ${envelope?.phase}, sessionId: ${sessionId}`
+      );
     }
   }
 

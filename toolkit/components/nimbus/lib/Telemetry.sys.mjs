@@ -5,6 +5,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
 
@@ -92,6 +93,7 @@ const UnenrollReason = Object.freeze({
   PREF_VARIABLE_MISSING: "pref-variable-missing",
   PREF_VARIABLE_NO_LONGER: "pref-variable-no-longer",
   RECIPE_NOT_SEEN: "recipe-not-seen",
+  ROLLOUTS_OPT_OUT: "rollouts-opt-out",
   STUDIES_OPT_OUT: "studies-opt-out",
   TARGETING_MISMATCH: "targeting-mismatch",
   UNENROLLED_IN_ANOTHER_PROFILE: "unenrolled-in-another-profile",
@@ -188,14 +190,24 @@ export const NimbusTelemetry = {
     });
   },
 
-  recordMigration(migration, error) {
+  /**
+   * Record the result of a migration.
+   *
+   * @param {string} migration The name of the migration.
+   * @param {number} duration The duration of the migration.
+   * @param {string | undefined} The reason the migration failed, if any.
+   */
+  recordMigration(migration, duration, errorReason) {
     Glean.nimbusEvents.migration.record(
       Object.assign(
         {
           migration_id: migration,
-          success: typeof error === "undefined",
+          success: typeof errorReason === "undefined",
+          duration,
+          is_first_startup:
+            lazy.FirstStartup.state === lazy.FirstStartup.IN_PROGRESS,
         },
-        typeof error !== "undefined" ? { error_reason: error } : {}
+        typeof errorReason !== "undefined" ? { error_reason: errorReason } : {}
       )
     );
   },
@@ -300,6 +312,7 @@ export const NimbusTelemetry = {
 
       case UnenrollReason.INDIVIDUAL_OPT_OUT:
       case UnenrollReason.LABS_OPT_OUT:
+      case UnenrollReason.ROLLOUTS_OPT_OUT:
       case UnenrollReason.STUDIES_OPT_OUT:
         enrollmentStatus.status = EnrollmentStatus.DISQUALIFIED;
         enrollmentStatus.reason = EnrollmentStatusReason.OPT_OUT;

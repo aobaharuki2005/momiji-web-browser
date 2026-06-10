@@ -1,27 +1,22 @@
-// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AIWindow:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
+  ChatStore:
+    "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.sys.mjs",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "useOldClearHistoryDialog",
-  "privacy.sanitize.useOldClearHistoryDialog",
-  false
-);
 
 var logConsole;
 function log(...msgs) {
@@ -58,15 +53,7 @@ export var Sanitizer = {
    * Pref branches to fetch sanitization options from.
    */
   PREF_CPD_BRANCH: "privacy.cpd.",
-  /*
-   * We need to choose between two branches for shutdown since there are separate prefs for the new
-   * clear history dialog
-   */
-  get PREF_SHUTDOWN_BRANCH() {
-    return lazy.useOldClearHistoryDialog
-      ? "privacy.clearOnShutdown."
-      : "privacy.clearOnShutdown_v2.";
-  },
+  PREF_SHUTDOWN_BRANCH: "privacy.clearOnShutdown_v2.",
 
   /**
    * The fallback timestamp used when no argument is given to
@@ -130,10 +117,11 @@ export var Sanitizer = {
    * @param {string} mode - flag to let the dialog know if it is opened
    *        using the clear on shutdown (clearOnShutdown) settings option
    *        in about:preferences or in a clear site data context (clearSiteData)
+   * @returns {"accept" | "cancel"} - The selected dialog box option.
    *
    * @throws if parentWindow is undefined or doesn't have a gDialogBox.
    */
-  showUI(parentWindow, mode) {
+  async showUI(parentWindow, mode) {
     // Treat the hidden window as not being a parent window:
     if (
       parentWindow?.document.documentURI ==
@@ -142,14 +130,15 @@ export var Sanitizer = {
       parentWindow = null;
     }
 
-    let dialogFile = lazy.useOldClearHistoryDialog
-      ? "sanitize.xhtml"
-      : "sanitize_v2.xhtml";
+    let dialogFile = "sanitize_v2.xhtml";
+    let deferred = Promise.withResolvers();
 
     if (parentWindow?.gDialogBox) {
       parentWindow.gDialogBox.open(`chrome://browser/content/${dialogFile}`, {
         inBrowserWindow: true,
         mode,
+        onAccept: () => deferred.resolve("accept"),
+        onCancel: () => deferred.resolve("cancel"),
       });
     } else {
       Services.ww.openWindow(
@@ -157,9 +146,16 @@ export var Sanitizer = {
         `chrome://browser/content/${dialogFile}`,
         "Sanitize",
         "chrome,titlebar,dialog,centerscreen,modal",
-        { needNativeUI: true, mode }
+        {
+          needNativeUI: true,
+          mode,
+          onAccept: () => deferred.resolve("accept"),
+          onCancel: () => deferred.resolve("cancel"),
+        }
       );
     }
+
+    return deferred.promise;
   },
 
   /**
@@ -881,6 +877,8 @@ export var Sanitizer = {
         timerId = Glean.browserSanitizer.downloads.start();
         await clearData(range, Ci.nsIClearDataService.CLEAR_DOWNLOADS);
         Glean.browserSanitizer.downloads.stopAndAccumulate(timerId);
+
+        await clearChatConversations(range, progress);
       },
     },
 
@@ -907,10 +905,32 @@ export var Sanitizer = {
         }
         await clearData(range, Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);
         Glean.browserSanitizer.cookies.stopAndAccumulate(timerId);
+
+        await clearChatConversations(range, progress);
       },
     },
   },
 };
+
+// Clear chat conversations if AI Window is enabled.
+// (ChatStore uses milliseconds.)
+async function clearChatConversations(range, progress) {
+  if (!lazy.AIWindow.isEnabled) {
+    return;
+  }
+  progress.step = "clearing Smart Window chat conversations";
+  try {
+    if (range) {
+      let startDate = new Date(range[0] / 1000);
+      let endDate = new Date(range[1] / 1000);
+      await lazy.ChatStore.deleteConversationsByDateRange(startDate, endDate);
+    } else {
+      await lazy.ChatStore.deleteAllConversations();
+    }
+  } catch (ex) {
+    log("Failed to clear chat conversations", ex);
+  }
+}
 
 async function sanitizeInternal(items, aItemsToClear, options) {
   let { ignoreTimespan = true, range, progress } = options;
@@ -1020,66 +1040,31 @@ async function sanitizeInternal(items, aItemsToClear, options) {
 
 async function sanitizeOnShutdown(progress) {
   log("Sanitizing on shutdown");
-  if (lazy.useOldClearHistoryDialog) {
-    progress.sanitizationPrefs = {
-      privacy_sanitize_sanitizeOnShutdown: Services.prefs.getBoolPref(
-        "privacy.sanitize.sanitizeOnShutdown"
-      ),
-      privacy_clearOnShutdown_cookies: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.cookies"
-      ),
-      privacy_clearOnShutdown_history: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.history"
-      ),
-      privacy_clearOnShutdown_formdata: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.formdata"
-      ),
-      privacy_clearOnShutdown_downloads: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.downloads"
-      ),
-      privacy_clearOnShutdown_cache: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.cache"
-      ),
-      privacy_clearOnShutdown_sessions: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.sessions"
-      ),
-      privacy_clearOnShutdown_offlineApps: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.offlineApps"
-      ),
-      privacy_clearOnShutdown_siteSettings: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.siteSettings"
-      ),
-      privacy_clearOnShutdown_openWindows: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown.openWindows"
-      ),
-    };
-  } else {
-    // Perform a migration if this is the first time sanitizeOnShutdown is
-    // running for the user with the new dialog
-    Sanitizer.maybeMigratePrefs("clearOnShutdown");
+  // Perform a migration if this is the first time sanitizeOnShutdown is
+  // running for the user with the new dialog
+  Sanitizer.maybeMigratePrefs("clearOnShutdown");
 
-    progress.sanitizationPrefs = {
-      privacy_sanitize_sanitizeOnShutdown: Services.prefs.getBoolPref(
-        "privacy.sanitize.sanitizeOnShutdown"
+  progress.sanitizationPrefs = {
+    privacy_sanitize_sanitizeOnShutdown: Services.prefs.getBoolPref(
+      "privacy.sanitize.sanitizeOnShutdown"
+    ),
+    privacy_clearOnShutdown_v2_cookiesAndStorage: Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.cookiesAndStorage"
+    ),
+    privacy_clearOnShutdown_v2_browsingHistoryAndDownloads:
+      Services.prefs.getBoolPref(
+        "privacy.clearOnShutdown_v2.browsingHistoryAndDownloads"
       ),
-      privacy_clearOnShutdown_v2_cookiesAndStorage: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown_v2.cookiesAndStorage"
-      ),
-      privacy_clearOnShutdown_v2_browsingHistoryAndDownloads:
-        Services.prefs.getBoolPref(
-          "privacy.clearOnShutdown_v2.browsingHistoryAndDownloads"
-        ),
-      privacy_clearOnShutdown_v2_cache: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown_v2.cache"
-      ),
-      privacy_clearOnShutdown_v2_formdata: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown_v2.formdata"
-      ),
-      privacy_clearOnShutdown_v2_siteSettings: Services.prefs.getBoolPref(
-        "privacy.clearOnShutdown_v2.siteSettings"
-      ),
-    };
-  }
+    privacy_clearOnShutdown_v2_cache: Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.cache"
+    ),
+    privacy_clearOnShutdown_v2_formdata: Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.formdata"
+    ),
+    privacy_clearOnShutdown_v2_siteSettings: Services.prefs.getBoolPref(
+      "privacy.clearOnShutdown_v2.siteSettings"
+    ),
+  };
 
   let needsSyncSavePrefs = false;
   if (Sanitizer.shouldSanitizeOnShutdown) {

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -98,19 +97,23 @@ static T safe_unverified(T val) {
   return val;
 }
 
+template <typename E, E MinLegal, E MaxLegal>
+inline E enum_verifier(std::underlying_type_t<E> e) {
+  using U = std::underlying_type_t<E>;
+  MOZ_RELEASE_ASSERT(
+      e >= static_cast<U>(MinLegal) && e <= static_cast<U>(MaxLegal),
+      "unexpected enum value");
+  return static_cast<E>(e);
+};
+
 /* status_verifier is a type validator for XML_Status */
-inline enum XML_Status status_verifier(enum XML_Status s) {
-  MOZ_RELEASE_ASSERT(s >= XML_STATUS_ERROR && s <= XML_STATUS_SUSPENDED,
-                     "unexpected status code");
-  return s;
+inline XML_Status status_verifier(std::underlying_type_t<XML_Status> s) {
+  return enum_verifier<XML_Status, XML_STATUS_ERROR, XML_STATUS_SUSPENDED>(s);
 }
 
 /* error_verifier is a type validator for XML_Error */
-inline enum XML_Error error_verifier(enum XML_Error code) {
-  MOZ_RELEASE_ASSERT(
-      code >= XML_ERROR_NONE && code <= XML_ERROR_INVALID_ARGUMENT,
-      "unexpected XML error code");
-  return code;
+inline XML_Error error_verifier(std::underlying_type_t<XML_Error> code) {
+  return enum_verifier<XML_Error, XML_ERROR_NONE, XML_ERROR_NOT_STARTED>(code);
 }
 
 /* We use unverified_xml_string to just expose sandbox expat strings to Firefox
@@ -429,6 +432,8 @@ void nsExpatDriver::HandleStartElement(rlbox_sandbox_expat& aSandbox,
   tainted_expat<int> count =
       RLBOX_EXPAT_CALL(MOZ_XML_GetSpecifiedAttributeCount);
   MOZ_RELEASE_ASSERT_TAINTED(count >= 0, "Unexpected attribute count");
+  // aAttrs is an array of pairs, so it needs to have an even length.
+  MOZ_RELEASE_ASSERT_TAINTED(count % 2 == 0, "Attribute count must be even");
 
   tainted_expat<uint64_t> attrArrayLengthTainted;
   for (attrArrayLengthTainted = rlbox::sandbox_static_cast<uint64_t>(count);
@@ -1614,11 +1619,12 @@ nsresult nsExpatDriver::Initialize(nsIURI* aURI, nsIContentSink* aSink) {
                     XML_PARAM_ENTITY_PARSING_ALWAYS);
 #endif
 
-  rlbox_sandbox_expat::convert_to_sandbox_equivalent_nonclass_t<unsigned long>
-      salt;
-  MOZ_RELEASE_ASSERT(mozilla::GenerateRandomBytesFromOS(&salt, sizeof(salt)));
-  MOZ_RELEASE_ASSERT(
-      RLBOX_EXPAT_SAFE_MCALL(MOZ_XML_SetHashSalt, safe_unverified<int>, salt));
+  char salt[16];
+  MOZ_RELEASE_ASSERT(mozilla::GenerateRandomBytesFromOS(salt, sizeof(salt)));
+  auto saltBuf = TransferBuffer<char>(Sandbox(), salt, std::size(salt));
+  MOZ_RELEASE_ASSERT(*saltBuf);
+  MOZ_RELEASE_ASSERT(RLBOX_EXPAT_SAFE_MCALL(
+      MOZ_XML_SetHashSalt16Bytes, safe_unverified<XML_Bool>, *saltBuf));
   MOZ_RELEASE_ASSERT(RLBOX_EXPAT_SAFE_MCALL(
       MOZ_XML_SetReparseDeferralEnabled, safe_unverified<XML_Bool>, XML_FALSE));
 

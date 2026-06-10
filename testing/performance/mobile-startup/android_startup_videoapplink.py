@@ -16,7 +16,7 @@ sys.path.insert(0, os.environ["PYTHON_PACKAGES"])
 import cv2
 import numpy as np
 from mozdevice import ADBDevice
-from mozperftest.profiler import ProfilingMediator
+from mozperftest.profiler import PROFILERS, ProfilingMediator
 
 """
 Homeview:
@@ -26,7 +26,7 @@ An error of greater than 0.001 indicates we have the loading bar present, any le
 """
 ACCEPTABLE_THRESHOLD_ERROR = {
     "homeview_startup": 0.0002,
-    "cold_view_nav_end": 0.001,
+    "cold_view_nav_end": 0.003,
     "mobile_restore": 0.001,
 }
 BACKGROUND_TABS = [
@@ -35,15 +35,29 @@ BACKGROUND_TABS = [
     "https://www.temu.com",
     "https://www.espn.com/nfl/game/_/gameId/401671793/chiefs-falcons",
 ]
+SUPPORTED_DEVICES = {"SM-A556E": "a55", "Pixel 6": "p6", "SM-S921B": "s24"}
+VALID_IMAGES_DIR = "testing/performance/mobile-startup/expected_startup_screenshots"
 ERROR_THRESHOLD = 8  # This is the lower bound for the high pass filter to remove noise
-ITERATIONS = 5
 MAX_STARTUP_TIME = 25000  # 25000ms = 25 seconds
 PROD_CHRM = "chrome-m"
 PROD_FENIX = "fenix"
 
+# SHA-256 fingerprint of testing/raptor/browsertime/utils/http2-cert.pem,
+# used for cert_override.txt so Fenix trusts the local HTTPS server.
+SERVER_CERT_FINGERPRINT = (
+    "55:31:7E:DD:E2:BA:47:5B:E4:FF:93:19:F6:5B:EA:74:"
+    "97:BF:46:21:D0:2D:A5:64:8C:C8:3E:C3:3B:64:EC:E6"
+)
+
+
+class InvalidLastFrame(Exception):
+    """If thrown, the difference in images is too high, we suspect a faulty run"""
+
+    pass
+
 
 class ImageAnalzer:
-    def __init__(self, browser, test, test_url):
+    def __init__(self, browser, test, test_url, profilers):
         self.video = None
         self.browser = browser
         self.test = test
@@ -54,7 +68,7 @@ class ImageAnalzer:
         self.video_name = ""
         self.package_name = os.environ["BROWSER_BINARY"]
         self.device = ADBDevice()
-        self.profiler = ProfilingMediator()
+        self.profiler = ProfilingMediator(profilers)
         self.cpu_data = {"total": {"time": []}}
         if self.browser == PROD_FENIX:
             self.package_and_activity = (
@@ -75,11 +89,35 @@ class ImageAnalzer:
         self.device.shell("settings put global window_animation_scale 1")
         self.device.shell("settings put global transition_animation_scale 1")
         self.device.shell("settings put global animator_duration_scale 1")
+        a11y_enabled = self.device.shell_output(
+            "settings get secure accessibility_enabled"
+        )
+        a11y_services = self.device.shell_output(
+            "settings get secure enabled_accessibility_services"
+        )
+        print(
+            f"A11Y STATE: accessibility_enabled={a11y_enabled}, services={a11y_services}"
+        )
+        print("A11Y: Clearing enabled_accessibility_services and accessibility_enabled")
+        self.device.shell('settings put secure enabled_accessibility_services ""')
+        self.device.shell("settings put secure accessibility_enabled 0")
+        a11y_enabled = self.device.shell_output(
+            "settings get secure accessibility_enabled"
+        )
+        a11y_services = self.device.shell_output(
+            "settings get secure enabled_accessibility_services"
+        )
+        print(
+            f"A11Y STATE AFTER CLEAR: accessibility_enabled={a11y_enabled}, services={a11y_services}"
+        )
         self.device.disable_notifications("com.topjohnwu.magisk")
+        self.device_model = self.device.shell_output("getprop ro.product.model")
 
     def app_setup(self):
         if ON_TRY:
             self.device.shell(f"pm clear {self.package_name}")
+            # Bug 2019204 - Clear Security Hub package to prevent 'not responding' dialogs
+            self.device.shell("pm clear com.google.android.apps.security.securityhub")
         time.sleep(3)
         self.skip_onboarding()
         self.device.enable_notifications(
@@ -88,6 +126,41 @@ class ImageAnalzer:
         if self.test != "homeview_startup":
             self.create_background_tabs()
         self.device.shell(f"am force-stop {self.package_name}")
+        # Extra delay needed to avoid shutdown thread active during startup
+        time.sleep(3)
+        if self.test_url.startswith("https"):
+            self._add_cert_override()
+
+    def _add_cert_override(self):
+        """Write cert_override.txt to the Fenix profile.
+
+        This makes Firefox accept the test server's TLS certificate
+        without needing enterprise_roots (which loads certs asynchronously
+        and can race with the first TLS connection).
+        """
+        if self.browser != PROD_FENIX:
+            return
+
+        data_dir = f"/data/data/{self.package_name}/files/mozilla"
+        try:
+            entries = self.device.shell_output(f"ls {data_dir}").strip().split()
+        except Exception:
+            print(f"Profile directory {data_dir} not found, skipping cert override")
+            return
+        profiles = [e for e in entries if ".default" in e]
+        if not profiles:
+            print(f"No .default profile under {data_dir}, skipping cert override")
+            return
+
+        profile_dir = f"{data_dir}/{profiles[0]}"
+        # cert_override.txt format: host:port, hash algorithm OID, fingerprint.
+        # OID.2.16.840.1.101.3.4.2.1 is SHA-256.
+        override_line = (
+            f"localhost:8000\tOID.2.16.840.1.101.3.4.2.1\t{SERVER_CERT_FINGERPRINT}\t"
+        )
+        self.device.shell_output(
+            f"echo '{override_line}' > {profile_dir}/cert_override.txt"
+        )
 
     def skip_onboarding(self):
         # Skip onboarding for chrome and fenix
@@ -167,7 +240,7 @@ class ImageAnalzer:
         # We crop out the bottom 100 pixels to remove the fading in of the OS navigation controls
         # We crop out the right 20 pixels to remove the scroll bar as it interferes with startup accuracy
         if cropped:
-            return frame[100 : int(self.height) - 100, 0 : int(self.width) - 20]
+            return frame[100 : int(self.height) - 150, 0 : int(self.width) - 20]
         return frame
 
     def error(self, img1, img2):
@@ -252,6 +325,12 @@ class ImageAnalzer:
             ):
                 process_name = "com.android.chrome:sandboxed_process"
 
+            # Fenix process names may be tagged with "_disable_art_image_" (see
+            # bug 2005825) but that should be ignored for the process names used
+            # here.
+            if "org.mozilla.fenix" in process_name:
+                process_name = process_name.replace("_disable_art_image_", "")
+
             if process_name not in self.cpu_data.keys():
                 self.cpu_data[process_name] = {}
                 self.cpu_data[process_name]["time"] = []
@@ -275,6 +354,44 @@ class ImageAnalzer:
                 + '-cpu-time", "shouldAlert": true }'
             )
 
+    def validate_end_frame(self, frame_to_check):
+        if SUPPORTED_DEVICES.get(self.device_model, False):
+            device = SUPPORTED_DEVICES.get(self.device_model)
+            filename = f"{self.browser}-{self.test}"
+            if self.test == "cold_view_nav_end":
+                if "shopify" in self.test_url:
+                    filename += "-shopify"
+                elif "localhost" in self.test_url:
+                    filename += "-newssite"
+            filename += f"-{device}.png"
+            validated_image = cv2.imread(str(pathlib.Path(VALID_IMAGES_DIR, filename)))
+            cropped_image = validated_image[
+                100 : int(self.height) - 150, 0 : int(self.width) - 20
+            ]
+            cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+            diff = self.error(self.get_image(frame_to_check), cropped_image)
+            print(f"Error we found in images: {diff}")
+            if diff > 0.5:
+                raise InvalidLastFrame(
+                    "Difference in Images is too high, suspected faulty run"
+                )
+
+    def run_test(self, iteration):
+        self.app_setup()
+        self.get_video(iteration)
+        return self.get_page_loaded_time(iteration)
+
+
+def get_profiler_combinations():
+    """Returns a list of profiler combinations based on which one are enabled.
+    If multiple profilers are enabled, returns each profile,then all enabled profilers together
+    """
+    enabled = [name for name, cls in PROFILERS.items() if cls.is_enabled()]
+
+    if len(enabled) > 1:
+        return [[p] for p in enabled] + [enabled]
+    return [enabled] if enabled else []
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
@@ -290,12 +407,33 @@ if __name__ == "__main__":
         "homeview_startup": "homeview_startup",
     }
 
-    ImageObject = ImageAnalzer(browser, test, test_url)
-    for iteration in range(ITERATIONS):
-        ImageObject.app_setup()
-        ImageObject.get_video(iteration)
-        nav_done_frame = ImageObject.get_page_loaded_time(iteration)
-        start_video_timestamp += [ImageObject.get_time_from_frame_num(nav_done_frame)]
+    base_testing_dir = os.environ["TESTING_DIR"]
+    profiler_combinations = get_profiler_combinations()
+    iterations = 10
+    if not profiler_combinations:
+        profiler_combinations = [[]]
+    for profilers in profiler_combinations:
+        if profilers:
+            subdir_name = "-".join(profilers)
+            output_path = pathlib.Path(base_testing_dir) / subdir_name
+            output_path.mkdir(parents=True, exist_ok=True)
+            os.environ["TESTING_DIR"] = str(output_path)
+            iterations = 5
+        else:
+            os.environ["TESTING_DIR"] = base_testing_dir
+
+        ImageObject = ImageAnalzer(browser, test, test_url, profilers)
+        for iteration in range(iterations):
+            nav_done_frame = ImageObject.run_test(iteration)
+            try:
+                ImageObject.validate_end_frame(nav_done_frame)
+            except InvalidLastFrame:
+                print("Something went wrong, retrying image validation")
+                nav_done_frame = ImageObject.run_test(iteration)
+                ImageObject.validate_end_frame(nav_done_frame)
+            start_video_timestamp += [
+                ImageObject.get_time_from_frame_num(nav_done_frame)
+            ]
     print(
         'perfMetrics: {"values": '
         + str(start_video_timestamp)

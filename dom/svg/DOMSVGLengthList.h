@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -159,7 +157,7 @@ class DOMSVGLengthList final : public nsISupports, public nsWrapperCache {
 
   uint8_t AttrEnum() const { return mAList->mAttrEnum; }
 
-  uint8_t Axis() const { return mAList->mAxis; }
+  SVGLength::Axis Axis() const { return mAList->mAxis; }
 
   /// Used to determine if this list is the baseVal or animVal list.
   bool IsAnimValList() const {

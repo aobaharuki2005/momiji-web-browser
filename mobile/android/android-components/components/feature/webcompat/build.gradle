@@ -4,6 +4,10 @@
 
 import org.apache.tools.ant.filters.ReplaceTokens
 
+plugins {
+    alias(libs.plugins.dependency.analysis)
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -27,24 +31,18 @@ android {
 // the extension at: `resource://android/assets/extensions/webcompat/`.
 tasks.register("syncWebcompatExtension", Sync) {
     def topsrcdir = gradle.mozconfig.topsrcdir
-    from "$topsrcdir/browser/extensions/webcompat"
-    into layout.buildDirectory.dir("generated/assets/extensions/webcompat/")
-    exclude "**/tests/**", "**/components.conf", "**/moz.build"
-
-    // webcompat adopted #include directives in Bug 1936031, which are only
-    // processed for Desktop builds. The filter below pre-processes the files
-    // that include these directives.
-
-    // configuration-cache doesn't allow calling file() from a groovy closure,
-    // in this case filesMatching callback, so we call file before the closure.
-    def interventionsJson = file("$topsrcdir/browser/extensions/webcompat/data/interventions.json")
-    filesMatching([
-        '**/run.js',
-    ]) {
-        filter(ReplaceTokens, beginToken: '', endToken: '', tokens: [
-            '#include data/interventions.json': interventionsJson.text.trim(),
-        ])
+    from ("$topsrcdir/browser/extensions/webcompat") {
+        exclude "run.js"
     }
+    def topobjdir = gradle.mozconfig.topobjdir
+    from ("$topobjdir/mobile/android/webcompat_addon_generated_files")
+    into layout.buildDirectory.dir("generated/assets/extensions/webcompat/")
+    exclude "**/tests/**", "**/components.conf", "**/moz.build", "**/codegen.py", "**/data/interventions", "**/templates"
+}
+
+// Make sure DAGP asset-source exploding happens after syncWebcompatExtension
+tasks.matching { it.name.startsWith("explodeAssetSource") }.configureEach { t ->
+    t.dependsOn(tasks.named("syncWebcompatExtension"))
 }
 
 dependencies {

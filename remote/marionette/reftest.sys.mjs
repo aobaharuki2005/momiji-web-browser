@@ -69,7 +69,6 @@ reftest.Runner = class {
     this.windowUtils = null;
     this.lastURL = null;
     this.useRemoteTabs = lazy.AppInfo.browserTabsRemoteAutostart;
-    this.useRemoteSubframes = lazy.AppInfo.fissionAutostart;
     this.cacheScreenshots = true;
     this.useDrawSnapshot = Services.prefs.getBoolPref(
       "reftest.use-draw-snapshot",
@@ -111,7 +110,6 @@ reftest.Runner = class {
     this.cacheScreenshots = cacheScreenshots;
 
     ChromeUtils.registerWindowActor("MarionetteReftest", {
-      kind: "JSWindowActor",
       parent: {
         esModuleURI:
           "chrome://remote/content/marionette/actors/MarionetteReftestParent.sys.mjs",
@@ -202,14 +200,14 @@ reftest.Runner = class {
     let browser;
     if (lazy.AppInfo.isAndroid) {
       browser = reftestWin.document.getElementsByTagName("browser")[0];
-      browser.setAttribute("remote", "false");
+      browser.removeAttribute("remote");
     } else {
       browser = reftestWin.document.createElementNS(XUL_NS, "xul:browser");
       browser.permanentKey = {};
       browser.setAttribute("id", "browser");
       browser.setAttribute("type", "content");
       browser.setAttribute("primary", "true");
-      browser.setAttribute("remote", this.useRemoteTabs ? "true" : "false");
+      browser.toggleAttribute("remote", this.useRemoteTabs);
     }
     // Make sure the browser element is exactly the right size, no matter
     // what size our window is
@@ -633,15 +631,9 @@ reftest.Runner = class {
     if (lazy.AppInfo.isAndroid) {
       return;
     }
-    let oa = lazy.E10SUtils.predictOriginAttributes({ browser });
-    let remoteType = lazy.E10SUtils.getRemoteTypeForURI(
-      url,
-      this.useRemoteTabs,
-      this.useRemoteSubframes,
-      lazy.E10SUtils.DEFAULT_REMOTE_TYPE,
-      null,
-      oa
-    );
+    let remoteType = ChromeUtils.predictRemoteTypeForURI(url, {
+      window: browser.documentGlobal,
+    });
 
     // Only re-construct the browser if its remote type needs to change.
     if (browser.remoteType !== remoteType) {

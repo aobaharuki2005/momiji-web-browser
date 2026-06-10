@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -144,6 +142,23 @@ bool BaselineCompilerHandler::init() {
   return true;
 }
 
+const SourceLocationIterator&
+BaselineCompilerHandler::sourceLocationIterAtCurrentPc() const {
+  if (!srcLocIter_) {
+    srcLocIter_.emplace(script_->sourceLocationIter());
+  }
+  srcLocIter_->advanceToPC(pc_);
+  return *srcLocIter_;
+}
+
+unsigned BaselineCompilerHandler::line() const {
+  return sourceLocationIterAtCurrentPc().line();
+}
+
+JS::LimitedColumnNumberOneOrigin BaselineCompilerHandler::column() const {
+  return sourceLocationIterAtCurrentPc().column();
+}
+
 bool BaselineCompiler::init() {
   if (!handler.init()) {
     return false;
@@ -248,6 +263,9 @@ MethodStatus BaselineCompiler::compile(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%u:%u",
           script->filename(), script->lineno(),
           script->column().oneOriginValue());
+  if (runtime->geckoProfiler().enabled()) {
+    masm.enableProfilingInstrumentation();
+  }
 
   MOZ_ASSERT(!script->hasBaselineScript());
 
@@ -272,6 +290,9 @@ MethodStatus BaselineCompiler::compileOffThread() {
 }
 
 bool BaselineCompiler::compileImpl() {
+  MOZ_RELEASE_ASSERT(handler.script()->length() <= BaselineMaxScriptLength);
+  MOZ_RELEASE_ASSERT(handler.script()->nslots() <= BaselineMaxScriptSlots);
+
   AutoCreatedBy acb(masm, "BaselineCompiler::compile");
 
   perfSpewer_.startRecording();
@@ -404,6 +425,8 @@ bool BaselineCompiler::finishCompile(JSContext* cx) {
     // Mark the jitcode as having a bytecode map.
     code->setHasBytecodeMap();
   }
+
+  script->jitScript()->setIonThreshold(handler.baseWarmUpThreshold());
 
   script->jitScript()->setBaselineScript(script, baselineScript.release());
 
@@ -659,7 +682,8 @@ void BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 // stubs created when running in the interpreter. This happens on transition to
 // baseline.
 static bool CreateAllocSitesForCacheIRStub(JSScript* script, uint32_t pcOffset,
-                                           ICCacheIRStub* stub) {
+                                           ICCacheIRStub* stub,
+                                           const gc::AutoMarkingLock& lock) {
   const CacheIRStubInfo* stubInfo = stub->stubInfo();
   uint8_t* stubData = stub->stubDataStart();
 
@@ -678,7 +702,7 @@ static bool CreateAllocSitesForCacheIRStub(JSScript* script, uint32_t pcOffset,
           stubInfo->getPtrStubField<ICCacheIRStub, gc::AllocSite>(stub, offset);
       if (site->kind() == gc::AllocSite::Kind::Unknown) {
         gc::AllocSite* newSite =
-            icScript->getOrCreateAllocSite(script, pcOffset);
+            icScript->getOrCreateAllocSite(script, pcOffset, lock);
         if (!newSite) {
           return false;
         }
@@ -695,14 +719,15 @@ static bool CreateAllocSitesForCacheIRStub(JSScript* script, uint32_t pcOffset,
   return true;
 }
 
-static void CreateAllocSitesForICChain(JSScript* script, uint32_t entryIndex) {
+static void CreateAllocSitesForICChain(JSScript* script, uint32_t entryIndex,
+                                       const gc::AutoMarkingLock& lock) {
   JitScript* jitScript = script->jitScript();
   ICStub* stub = jitScript->icEntry(entryIndex).firstStub();
   uint32_t pcOffset = jitScript->fallbackStub(entryIndex)->pcOffset();
 
   while (!stub->isFallback()) {
-    if (!CreateAllocSitesForCacheIRStub(script, pcOffset,
-                                        stub->toCacheIRStub())) {
+    if (!CreateAllocSitesForCacheIRStub(script, pcOffset, stub->toCacheIRStub(),
+                                        lock)) {
       // This is an optimization and safe to skip if we hit OOM or per-zone
       // limit.
       return;
@@ -712,12 +737,15 @@ static void CreateAllocSitesForICChain(JSScript* script, uint32_t entryIndex) {
 }
 
 void BaselineCompilerHandler::createAllocSites() {
+  ICScript* icScript = script()->jitScript()->icScript();
+  gc::AutoMarkingLock lock(script()->zone(), icScript->markingLock());
+
   for (uint32_t allocSiteIndex : allocSiteIndices_) {
-    CreateAllocSitesForICChain(script(), allocSiteIndex);
+    CreateAllocSitesForICChain(script(), allocSiteIndex, lock);
   }
 
   if (needsEnvAllocSite_) {
-    script()->jitScript()->icScript()->ensureEnvAllocSite(script());
+    icScript->ensureEnvAllocSite(script(), lock);
   }
 }
 
@@ -875,8 +903,7 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
     masm.push(FrameDescriptor(FrameType::BaselineJS));
   }
   // Perform the call.
-  masm.call(code);
-  uint32_t callOffset = masm.currentOffset();
+  uint32_t callOffset = masm.callJit(code);
 
   // Pop arguments from framePushed.
   masm.implicitPop(argSize);
@@ -943,6 +970,23 @@ bool BaselineCompilerCodeGen::emitIsDebuggeeCheck() {
   return true;
 }
 
+// Prevent nop sequences for toggled jumps, because they're implemented as
+// short branches on some architectures (e.g. RISCV64) and the short branch
+// range can be exceeded when extra nops are inserted.
+class AutoForbidNopsForToggledJump {
+#if defined(JS_CODEGEN_RISCV64)
+  AutoForbidNops afn_;
+#endif
+
+ public:
+  explicit AutoForbidNopsForToggledJump(MacroAssembler* masm)
+#if defined(JS_CODEGEN_RISCV64)
+      : afn_(masm)
+#endif
+  {
+  }
+};
+
 template <>
 bool BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
   // Use a toggled jump to call FrameIsDebuggeeCheck only if the debugger is
@@ -950,6 +994,8 @@ bool BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
   //
   // TODO(bug 1522394): consider having a cx->realm->isDebuggee guard before the
   // call. Consider moving the callWithABI out-of-line.
+
+  AutoForbidNopsForToggledJump afn(&masm);
 
   Label skipCheck;
   CodeOffset toggleOffset = masm.toggledJump(&skipCheck);
@@ -996,6 +1042,8 @@ bool BaselineCompilerCodeGen::emitHandleCodeCoverageAtPrologue() {
 
 template <>
 bool BaselineInterpreterCodeGen::emitHandleCodeCoverageAtPrologue() {
+  AutoForbidNopsForToggledJump afn(&masm);
+
   Label skipCoverage;
   CodeOffset toggleOffset = masm.toggledJump(&skipCoverage);
   masm.call(handler.codeCoverageAtPrologueLabel());
@@ -1570,39 +1618,6 @@ bool BaselineCodeGen<Handler>::emitInterruptCheck() {
   return true;
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emitTrialInliningCheck(Register count,
-                                                      Register icScript,
-                                                      Register scratch) {
-  if (JitOptions.disableInlining) {
-    return true;
-  }
-
-  // Consider trial inlining.
-  // Note: unlike other warmup thresholds, where we try to enter a
-  // higher tier whenever we are higher than a given warmup count,
-  // trial inlining triggers once when reaching the threshold.
-  Label noTrialInlining;
-  masm.branch32(Assembler::NotEqual, count,
-                Imm32(JitOptions.trialInliningWarmUpThreshold),
-                &noTrialInlining);
-  prepareVMCall();
-
-  masm.PushBaselineFramePtr(FramePointer, scratch);
-
-  using Fn = bool (*)(JSContext*, BaselineFrame*);
-  if (!callVMNonOp<Fn, DoTrialInlining>()) {
-    return false;
-  }
-  // Reload registers potentially clobbered by the call.
-  Address warmUpCounterAddr(icScript, ICScript::offsetOfWarmUpCount());
-  masm.loadPtr(frame.addressOfICScript(), icScript);
-  masm.load32(warmUpCounterAddr, count);
-  masm.bind(&noTrialInlining);
-
-  return true;
-}
-
 template <>
 bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   frame.assertSyncedStack();
@@ -1639,8 +1654,27 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
 
-  if (!emitTrialInliningCheck(countReg, scriptReg, R1.scratchReg())) {
-    return false;
+  if (!JitOptions.disableInlining) {
+    // Consider trial inlining.
+    // Note: unlike other warmup thresholds, where we try to enter a
+    // higher tier whenever we are higher than a given warmup count,
+    // trial inlining triggers once when reaching the threshold.
+    Label noTrialInlining;
+    masm.branch32(Assembler::NotEqual, countReg,
+                  Imm32(JitOptions.trialInliningWarmUpThreshold),
+                  &noTrialInlining);
+    prepareVMCall();
+
+    masm.PushBaselineFramePtr(FramePointer, R1.scratchReg());
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    if (!callVMNonOp<Fn, DoTrialInlining>()) {
+      return false;
+    }
+    // Reload registers potentially clobbered by the call.
+    masm.loadPtr(frame.addressOfICScript(), scriptReg);
+    masm.load32(warmUpCounterAddr, countReg);
+    masm.bind(&noTrialInlining);
   }
 
   if (JSOp(*pc) == JSOp::LoopHead) {
@@ -1656,7 +1690,13 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
   uint32_t warmUpThreshold = OptimizationInfo::warmUpThresholdForPC(
       script, pc, handler.baseWarmUpThreshold());
-  masm.branch32(Assembler::LessThan, countReg, Imm32(warmUpThreshold), &done);
+  int32_t delta = warmUpThreshold - handler.baseWarmUpThreshold();
+  masm.load32(Address(scriptReg, ICScript::offsetOfIonThreshold()),
+              R1.scratchReg());
+  if (delta != 0) {
+    masm.add32(Imm32(delta), R1.scratchReg());
+  }
+  masm.branch32(Assembler::LessThan, countReg, R1.scratchReg(), &done);
 
   // Don't trigger Warp compilations from trial-inlined scripts.
   Address depthAddr(scriptReg, ICScript::offsetOfDepth());
@@ -1786,8 +1826,28 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
 
-  if (!emitTrialInliningCheck(countReg, scriptReg, R1.scratchReg())) {
-    return false;
+  if (!JitOptions.disableInlining) {
+    // Consider trial inlining.
+    // Note: unlike other warmup thresholds, where we try to enter a
+    // higher tier whenever we are higher than a given warmup count,
+    // trial inlining triggers once when reaching the threshold.
+    Label noTrialInlining;
+    masm.branch32(Assembler::NotEqual, countReg,
+                  Imm32(JitOptions.trialInliningWarmUpThreshold),
+                  &noTrialInlining);
+    prepareVMCall();
+
+    masm.PushBaselineFramePtr(FramePointer, R1.scratchReg());
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    if (!callVMNonOp<Fn, DoTrialInlining>()) {
+      return false;
+    }
+    // Reload registers potentially clobbered by the call.
+    loadScript(scriptReg);
+    masm.loadJitScript(scriptReg, scriptReg);
+    masm.load32(warmUpCounterAddr, countReg);
+    masm.bind(&noTrialInlining);
   }
 
   if (JitOptions.baselineBatching) {
@@ -1863,6 +1923,11 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
     // a prebarrier here because we will always be overwriting a nullptr,
     // and we don't need a postbarrier because the script is always tenured.
 #ifdef DEBUG
+    Label queueIsNotFull;
+    masm.branch32(Assembler::Below, countReg,
+                  Imm32(JitOptions.baselineQueueCapacity), &queueIsNotFull);
+    masm.assumeUnreachable("Compile queue should be drained when full");
+    masm.bind(&queueIsNotFull);
     Label queueSlotIsEmpty;
     masm.branchPtr(Assembler::Equal, queueSlot, ImmWord(0), &queueSlotIsEmpty);
     masm.assumeUnreachable(
@@ -1953,6 +2018,8 @@ bool BaselineCompiler::emitDebugTrap() {
 
 template <typename Handler>
 void BaselineCodeGen<Handler>::emitProfilerEnterFrame() {
+  AutoForbidNopsForToggledJump afn(&masm);
+
   // Store stack position to lastProfilingFrame variable, guarded by a toggled
   // jump. Starts off initially disabled.
   Label noInstrument;
@@ -1967,6 +2034,8 @@ void BaselineCodeGen<Handler>::emitProfilerEnterFrame() {
 
 template <typename Handler>
 void BaselineCodeGen<Handler>::emitProfilerExitFrame() {
+  AutoForbidNopsForToggledJump afn(&masm);
+
   // Store previous frame to lastProfilingFrame variable, guarded by a toggled
   // jump. Starts off initially disabled.
   Label noInstrument;
@@ -1977,6 +2046,15 @@ void BaselineCodeGen<Handler>::emitProfilerExitFrame() {
   // Store the start offset in the appropriate location.
   MOZ_ASSERT(!profilerExitFrameToggleOffset_.bound());
   profilerExitFrameToggleOffset_ = toggleOffset;
+}
+
+template <typename Handler>
+void BaselineCodeGen<Handler>::emitProfilerCallSiteInstrumentation() {
+  if (!handler.needsProfilerCallSiteInstrumentation()) {
+    return;
+  }
+
+  masm.instrumentProfilerCallSite();
 }
 
 template <typename Handler>
@@ -2535,9 +2613,11 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emitCheckThis(ValueOperand val, bool reinit) {
   Label thisOK;
   if (reinit) {
-    masm.branchTestMagic(Assembler::Equal, val, &thisOK);
+    masm.branchTestMagicValue(Assembler::Equal, val, JS_UNINITIALIZED_LEXICAL,
+                              &thisOK);
   } else {
-    masm.branchTestMagic(Assembler::NotEqual, val, &thisOK);
+    masm.branchTestMagicValue(Assembler::NotEqual, val,
+                              JS_UNINITIALIZED_LEXICAL, &thisOK);
   }
 
   prepareVMCall();
@@ -2575,7 +2655,8 @@ bool BaselineCodeGen<Handler>::emit_CheckReturn() {
   }
   masm.bind(&checkThis);
   masm.branchTestUndefined(Assembler::NotEqual, R1, &returnBad);
-  masm.branchTestMagic(Assembler::NotEqual, R0, &done);
+  masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_UNINITIALIZED_LEXICAL,
+                            &done);
   masm.bind(&returnBad);
 
   prepareVMCall();
@@ -3216,7 +3297,8 @@ static void MarkElementsNonPackedIfHoleValue(MacroAssembler& masm,
                                              Register elements,
                                              ValueOperand val) {
   Label notHole;
-  masm.branchTestMagic(Assembler::NotEqual, val, &notHole);
+  masm.branchTestMagicValue(Assembler::NotEqual, val, JS_ELEMENTS_HOLE,
+                            &notHole);
   {
     Address elementsFlags(elements, ObjectElements::offsetOfFlags());
     masm.or32(Imm32(ObjectElements::NON_PACKED), elementsFlags);
@@ -4021,8 +4103,8 @@ bool BaselineCompilerCodeGen::emit_SetAliasedVar() {
   // R2.scratchReg() has the scope coordinate object.
 
   Label skipBarrier;
-  masm.branchPtrInNurseryChunk(Assembler::Equal, objReg, temp, &skipBarrier);
   masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, temp, &skipBarrier);
+  masm.branchPtrInNurseryChunk(Assembler::Equal, objReg, temp, &skipBarrier);
 
   // Uses R2.scratchReg() as input
   masm.call(&postBarrierSlot_);  // Won't clobber R0
@@ -4088,9 +4170,9 @@ bool BaselineInterpreterCodeGen::emit_SetAliasedVar() {
 
   // Post barrier.
   Label skipBarrier;
-  masm.branchPtrInNurseryChunk(Assembler::Equal, env, scratch1, &skipBarrier);
   masm.branchValueIsNurseryCell(Assembler::NotEqual, R2, scratch1,
                                 &skipBarrier);
+  masm.branchPtrInNurseryChunk(Assembler::Equal, env, scratch1, &skipBarrier);
   {
     // Post barrier code expects the object in R2.
     masm.movePtr(env, R2.scratchReg());
@@ -4434,8 +4516,8 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
 
     Label skipBarrier;
 
-    masm.branchPtrInNurseryChunk(Assembler::Equal, reg, temp, &skipBarrier);
     masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, temp, &skipBarrier);
+    masm.branchPtrInNurseryChunk(Assembler::Equal, reg, temp, &skipBarrier);
 
     masm.call(&postBarrierSlot_);
 
@@ -4486,8 +4568,8 @@ bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
       masm.loadPtr(frame.addressOfArgsObj(), reg);
 
       Register temp = R1.scratchReg();
-      masm.branchPtrInNurseryChunk(Assembler::Equal, reg, temp, &done);
       masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, temp, &done);
+      masm.branchPtrInNurseryChunk(Assembler::Equal, reg, temp, &done);
 
       masm.call(&postBarrierSlot_);
     }
@@ -4715,6 +4797,10 @@ template <>
 bool BaselineCompilerCodeGen::emitCall(JSOp op) {
   MOZ_ASSERT(IsInvokeOp(op));
 
+  // Record call site for profiler sampling. IC stub calls use raw masm.call()
+  // which doesn't automatically instrument, unlike callJit/callWithABI.
+  emitProfilerCallSiteInstrumentation();
+
   frame.syncStack(0);
 
   uint32_t argc = GET_ARGC(handler.pc());
@@ -4757,6 +4843,10 @@ bool BaselineInterpreterCodeGen::emitCall(JSOp op) {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitSpreadCall(JSOp op) {
   MOZ_ASSERT(IsInvokeOp(op));
+
+  // Record call site for profiler sampling. IC stub calls use raw masm.call()
+  // which doesn't automatically instrument, unlike callJit/callWithABI.
+  emitProfilerCallSiteInstrumentation();
 
   frame.syncStack(0);
   masm.move32(Imm32(1), R0.scratchReg());
@@ -5057,6 +5147,8 @@ template <typename F1, typename F2>
   // The interpreter emits both ifDebuggee and (if present) ifNotDebuggee
   // paths, with a toggled jump followed by a branch on the frame's DEBUGGEE
   // flag.
+
+  AutoForbidNopsForToggledJump afn(&masm);
 
   Label isNotDebuggee, done;
 
@@ -5791,11 +5883,11 @@ bool BaselineCodeGen<Handler>::emit_MoreIter() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emitIsMagicValue() {
+bool BaselineCodeGen<Handler>::emitIsMagicValue(JSWhyMagic why) {
   frame.syncStack(0);
 
   Label isMagic, done;
-  masm.branchTestMagic(Assembler::Equal, frame.addressOfStackValue(-1),
+  masm.branchTestMagic(Assembler::Equal, frame.addressOfStackValue(-1), why,
                        &isMagic);
   masm.moveValue(BooleanValue(false), R0);
   masm.jump(&done);
@@ -5810,7 +5902,7 @@ bool BaselineCodeGen<Handler>::emitIsMagicValue() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_IsNoIter() {
-  return emitIsMagicValue();
+  return emitIsMagicValue(JS_NO_ITER_VALUE);
 }
 
 template <typename Handler>
@@ -5862,7 +5954,7 @@ bool BaselineCodeGen<Handler>::emit_OptimizeGetIterator() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_IsGenClosing() {
-  return emitIsMagicValue();
+  return emitIsMagicValue(JS_GENERATOR_CLOSING);
 }
 
 template <typename Handler>
@@ -6210,6 +6302,8 @@ bool BaselineInterpreterCodeGen::emitAfterYieldDebugInstrumentation(
     Register scratch) {
   // Note that we can't use emitDebugInstrumentation here because the frame's
   // DEBUGGEE flag hasn't been initialized yet.
+
+  AutoForbidNopsForToggledJump afn(&masm);
 
   // If the current Realm is not a debuggee we're done.
   Label done;
@@ -6658,6 +6752,8 @@ bool BaselineCompilerCodeGen::emit_JumpTarget() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JumpTarget() {
+  AutoForbidNopsForToggledJump afn(&masm);
+
   Register scratch1 = R0.scratchReg();
   Register scratch2 = R1.scratchReg();
 
@@ -6737,8 +6833,8 @@ bool BaselineCodeGen<Handler>::emit_InitHomeObject() {
   masm.storeValue(R0, addr);
 
   Label skipBarrier;
-  masm.branchPtrInNurseryChunk(Assembler::Equal, func, temp, &skipBarrier);
   masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, temp, &skipBarrier);
+  masm.branchPtrInNurseryChunk(Assembler::Equal, func, temp, &skipBarrier);
   masm.call(&postBarrierSlot_);
   masm.bind(&skipBarrier);
 
@@ -6818,15 +6914,17 @@ bool BaselineCodeGen<Handler>::emit_ImportMeta() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_DynamicImport() {
-  // Put specifier into R0 and object value into R1
+  // Put specifier into R0 and options into R1
   frame.popRegsAndSync(2);
 
   prepareVMCall();
+  pushUint8BytecodeOperandArg(R2.scratchReg());
   pushArg(R1);
   pushArg(R0);
   pushScriptArg();
 
-  using Fn = JSObject* (*)(JSContext*, HandleScript, HandleValue, HandleValue);
+  using Fn = JSObject* (*)(JSContext*, HandleScript, HandleValue, HandleValue,
+                           ImportPhase);
   if (!callVM<Fn, js::StartDynamicModuleImport>()) {
     return false;
   }
@@ -6999,7 +7097,10 @@ bool BaselineCompiler::emitBody() {
       return false;
     }
 
-    perfSpewer_.recordInstruction(masm, handler.pc(), handler.script(), frame);
+    if (PerfEnabled()) {
+      perfSpewer_.recordInstruction(masm, handler.pc(), handler.line(),
+                                    handler.column(), frame);
+    }
 
 #define EMIT_OP(OP, ...)                                \
   case JSOp::OP: {                                      \
@@ -7169,15 +7270,15 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   // Emit the table.
   masm.haltingAlign(sizeof(void*));
 
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_RISCV64)
   size_t numInstructions = JSOP_LIMIT * (sizeof(uintptr_t) / sizeof(uint32_t));
   AutoForbidPoolsAndNops afp(&masm, numInstructions);
 #endif
 
   tableOffset_ = masm.currentOffset();
 
-  for (size_t i = 0; i < JSOP_LIMIT; i++) {
-    const Label& opLabel = opLabels[i];
+  for (const auto& opLabel : opLabels) {
     MOZ_ASSERT(opLabel.bound());
     CodeLabel cl;
     masm.writeCodePointer(&cl);

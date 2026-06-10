@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -86,13 +84,16 @@ NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 
 static void SubscriptCachePath(JSContext* cx, nsIURI* uri,
                                JS::HandleObject targetObj,
-                               nsACString& cachePath) {
+                               nsACString& cachePath,
+                               scache::ResourceType* aResourceType) {
   // StartupCache must distinguish between non-syntactic vs global when
   // computing the cache key.
   if (!JS_IsGlobalObject(targetObj)) {
-    PathifyURI(JSSUB_CACHE_PREFIX("non-syntactic", "script"), uri, cachePath);
+    PathifyURI(JSSUB_CACHE_PREFIX("non-syntactic", "script"), uri, cachePath,
+               aResourceType);
   } else {
-    PathifyURI(JSSUB_CACHE_PREFIX("global", "script"), uri, cachePath);
+    PathifyURI(JSSUB_CACHE_PREFIX("global", "script"), uri, cachePath,
+               aResourceType);
   }
 }
 
@@ -187,7 +188,8 @@ static bool EvalStencil(JSContext* cx, HandleObject targetObj,
 
   if (script && (storeIntoStartupCache || storeIntoPreloadCache)) {
     nsAutoCString cachePath;
-    SubscriptCachePath(cx, uri, targetObj, cachePath);
+    scache::ResourceType resourceType;
+    SubscriptCachePath(cx, uri, targetObj, cachePath, &resourceType);
 
     nsCString uriStr;
     if (storeIntoPreloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
@@ -437,13 +439,21 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
 
   nsAutoCString cachePath;
-  SubscriptCachePath(cx, uri, targetObj, cachePath);
+  scache::ResourceType resourceType;
+  SubscriptCachePath(cx, uri, targetObj, cachePath, &resourceType);
 
   JS::DecodeOptions decodeOptions;
   ScriptPreloader::FillDecodeOptionsForCachedStencil(decodeOptions);
 
+  // Skip all caching for scripts not from omni.ja to avoid serving stale
+  // bytecode when JAR files from built-in add-ons installed in the profile
+  // directory are updated.
+  bool shouldUseCache =
+      !ignoreCache && (resourceType == scache::ResourceType::Gre ||
+                       resourceType == scache::ResourceType::App);
+
   RefPtr<JS::Stencil> stencil;
-  if (!options.ignoreCache) {
+  if (shouldUseCache) {
     if (!options.wantReturnValue) {
       // NOTE: If we need the return value, we cannot use ScriptPreloader.
       stencil = ScriptPreloader::GetSingleton().GetCachedStencil(
@@ -461,7 +471,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   bool storeIntoStartupCache = false;
   if (!stencil) {
     // Store into startup cache only when the script isn't come from any cache.
-    storeIntoStartupCache = cache;
+    storeIntoStartupCache = cache && shouldUseCache;
 
     JS::CompileOptions compileOptions(cx);
     ScriptPreloader::FillCompileOptionsForCachedStencil(compileOptions);
@@ -486,7 +496,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
 
   // As a policy choice, we don't store scripts that want return values
   // into the preload cache.
-  bool storeIntoPreloadCache = !ignoreCache && !options.wantReturnValue;
+  bool storeIntoPreloadCache = shouldUseCache && !options.wantReturnValue;
 
   (void)EvalStencil(cx, targetObj, loadScope, retval, uri,
                     storeIntoStartupCache, storeIntoPreloadCache, stencil);

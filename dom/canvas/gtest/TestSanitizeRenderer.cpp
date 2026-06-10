@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -226,6 +225,22 @@ TEST(SanitizeRenderer, TestAdreno512)
 {
   const std::string renderer("Adreno (TM) 512");
   const std::string expectation("Adreno (TM) 540, or similar");
+  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
+  EXPECT_EQ(sanitized, expectation);
+}
+
+TEST(SanitizeRenderer, TestAdrenoA33)
+{
+  const std::string renderer("Adreno(TM) A33");
+  const std::string expectation("Adreno (TM) A11, or similar");
+  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
+  EXPECT_EQ(sanitized, expectation);
+}
+
+TEST(SanitizeRenderer, TestAdrenoX1_85)
+{
+  const std::string renderer("Adreno(TM) X1-85 GPU");
+  const std::string expectation("Adreno (TM) X1-45, or similar");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }

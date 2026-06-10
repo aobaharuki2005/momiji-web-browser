@@ -47,7 +47,7 @@ var UAHelpers = {
             `Mozilla/5.0 (Linux; ${AndroidVersion}; ${tablet}) ${fxQuantum}AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${version} Safari/537.36`;
         }
       } else {
-        const WIN_SEGMENT = "Windows NT 11.0; Win64; x64";
+        const WIN_SEGMENT = "Windows NT 10.0; Win64; x64";
         let osSegment;
         if (OS === "macOS" || (noOSGiven && userAgent.includes("Macintosh"))) {
           osSegment = "Macintosh; Intel Mac OS X 10_15_7";

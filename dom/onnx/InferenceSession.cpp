@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,18 +38,37 @@ namespace mozilla::dom {
 static OrtEnv* sEnv = nullptr;
 static OrtApi* sAPI = nullptr;
 
+// RAII wrapper over OrtStatus.
+// Takes ownership of a externally allocated OrtStatus* passed at construction.
+// Move-only. OrtStatus released through OrtApi::ReleaseStatus.
 class AutoOrtStatus {
  public:
   MOZ_IMPLICIT AutoOrtStatus(OrtStatus* aStatus = nullptr) : mStatus(aStatus) {
     MOZ_ASSERT(sAPI);
   }
-  ~AutoOrtStatus() {
-    if (mStatus) {
-      sAPI->ReleaseStatus(mStatus);
+  // Prevent copies
+  AutoOrtStatus(const AutoOrtStatus&) = delete;
+  AutoOrtStatus& operator=(const AutoOrtStatus&) = delete;
+  // Move semantics
+  AutoOrtStatus(AutoOrtStatus&& aOther) noexcept
+      : mStatus(std::exchange(aOther.mStatus, nullptr)) {}
+  AutoOrtStatus& operator=(AutoOrtStatus&& aOther) noexcept {
+    if (this != &aOther) {
+      Release();
+      mStatus = std::exchange(aOther.mStatus, nullptr);
     }
+    return *this;
   }
+  ~AutoOrtStatus() { Release(); }
   explicit operator bool() const { return !!mStatus; }
   const char* Message() const { return sAPI->GetErrorMessage(mStatus); }
+  void Release() {
+    if (mStatus) {
+      sAPI->ReleaseStatus(mStatus);
+      mStatus = nullptr;
+    }
+  }
+
   OrtStatus* mStatus;
 };
 
@@ -111,8 +128,8 @@ OrtSessionOptions* ToOrtSessionOption(
 
   LOGD("Inter op num threads: {}", aOptions.mInterOpNumThreads);
   CALL_API(SetInterOpNumThreads, aOptions.mInterOpNumThreads);
-  LOGD("Inter op num threads: {}", aOptions.mIntraOpNumThreads);
-  CALL_API(SetInterOpNumThreads, aOptions.mIntraOpNumThreads);
+  LOGD("Intra op num threads: {}", aOptions.mIntraOpNumThreads);
+  CALL_API(SetIntraOpNumThreads, aOptions.mIntraOpNumThreads);
   CALL_API(SetSessionLogId, aOptions.mLogId.get());
   CALL_API(SetSessionLogSeverityLevel, aOptions.mLogSeverityLevel);
   CALL_API(SetSessionLogVerbosityLevel, aOptions.mLogVerbosityLevel);
@@ -221,23 +238,23 @@ bool InferenceSession::InInferenceProcess(JSContext*, JSObject*) {
 nsCString InferenceSessionSessionOptionsToString(
     const InferenceSessionSessionOptions& aOptions) {
   return nsFmtCString(
-      FMT_STRING("EnableCpuMemArena: {}, "
-                 "EnableGraphCapture: {}, "
-                 "EnableMemPattern: {}, "
-                 "EnableProfiling: {}, "
-                 "ExecutionMode: {}, "
-                 "ExecutionProviders: {}, "
-                 "Extra: {}, "
-                 "FreeDimensionOverrides: {}, "
-                 "GraphOptimizationLevel: {}, "
-                 "InterOpNumThreads: {}, "
-                 "IntraOpNumThreads: {}, "
-                 "LogId: {}, "
-                 "LogSeverityLevel: {}, "
-                 "LogVerbosityLevel: {}, "
-                 "OptimizedModelFilePath: {}, "
-                 "PreferredOutputLocation: {}, "
-                 "ProfileFilePrefix: {}"),
+      "EnableCpuMemArena: {}, "
+      "EnableGraphCapture: {}, "
+      "EnableMemPattern: {}, "
+      "EnableProfiling: {}, "
+      "ExecutionMode: {}, "
+      "ExecutionProviders: {}, "
+      "Extra: {}, "
+      "FreeDimensionOverrides: {}, "
+      "GraphOptimizationLevel: {}, "
+      "InterOpNumThreads: {}, "
+      "IntraOpNumThreads: {}, "
+      "LogId: {}, "
+      "LogSeverityLevel: {}, "
+      "LogVerbosityLevel: {}, "
+      "OptimizedModelFilePath: {}, "
+      "PreferredOutputLocation: {}, "
+      "ProfileFilePrefix: {}",
       aOptions.mEnableCpuMemArena, aOptions.mEnableGraphCapture,
       aOptions.mEnableMemPattern, aOptions.mEnableProfiling,
       aOptions.mExecutionMode,
@@ -581,9 +598,11 @@ void InferenceSession::Destroy() {
   LOGD("{} {}", __PRETTY_FUNCTION__, fmt::ptr(this));
   if (mSession) {
     sAPI->ReleaseSession(mSession);
+    mSession = nullptr;
   }
   if (mOptions) {
     sAPI->ReleaseSessionOptions(mOptions);
+    mOptions = nullptr;
   }
 }
 

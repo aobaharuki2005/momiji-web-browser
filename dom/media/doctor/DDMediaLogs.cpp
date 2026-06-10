@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -284,7 +282,7 @@ void DDMediaLogs::ProcessBuffer() {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
 
   mMessagesQueue.PopAll([this](const DDLogMessage& message) {
-    DDL_DEBUG("Processing: %s", message.Print().Data());
+    DDL_DEBUG("Processing: %s", message.Print().get());
 
     // Either this message will carry a new object for which to create a
     // lifetime, or we'll find an existing one.

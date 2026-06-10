@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -11,6 +10,7 @@
 #include "nsIGfxInfo.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIUserCharacteristicsPageService.h"
+#include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/Logging.h"
@@ -56,6 +56,8 @@
 #include "gfxConfig.h"
 
 #include "gfxPlatformFontList.h"
+#include "gfxTextRun.h"
+#include "nsGkAtoms.h"
 #include "prsystem.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
@@ -84,6 +86,36 @@ using namespace mozilla;
 static LazyLogModule gUserCharacteristicsLog("UserCharacteristics");
 
 // ==================================================================
+// MathML prefs collection - extracted for testability
+static void CollectMathMLPrefs() {
+  // MathML prefs - only collect those modified from defaults
+  // Format: "shortname=val,..." (e.g. "dis=1,fnt=0")
+  nsAutoCString mathmlPrefs;
+  static const struct {
+    const char* pref;
+    const char* shortName;
+  } kMathMLPrefs[] = {
+      {"mathml.disabled", "dis"},
+      {"mathml.scale_stretchy_operators.enabled", "str"},
+      {"mathml.mathspace_names.disabled", "spc"},
+      {"mathml.mathvariant_styling_fallback.disabled", "var"},
+      {"mathml.operator_dictionary_accent.disabled", "acc"},
+      {"mathml.legacy_mathvariant_attribute.disabled", "leg"},
+      {"mathml.font_family_math.enabled", "fnt"},
+  };
+  for (const auto& p : kMathMLPrefs) {
+    if (Preferences::HasUserValue(p.pref)) {
+      if (!mathmlPrefs.IsEmpty()) {
+        mathmlPrefs.Append(',');
+      }
+      mathmlPrefs.Append(p.shortName);
+      mathmlPrefs.Append('=');
+      mathmlPrefs.Append(Preferences::GetBool(p.pref) ? '1' : '0');
+    }
+  }
+  glean::characteristics::mathml_diag_prefs_modified.Set(mathmlPrefs);
+}
+
 namespace testing {
 extern "C" {
 
@@ -96,6 +128,8 @@ int MaxTouchPoints() {
   return 0;
 #endif
 }
+
+void PopulateMathMLPrefs() { CollectMathMLPrefs(); }
 
 }  // extern "C"
 };  // namespace testing
@@ -292,6 +326,53 @@ void PopulateMissingFonts() {
   glean::characteristics::missing_fonts.Set(aMissingFonts);
 }
 
+// Record the family name of the first font in the math-generic font group
+// that exposes an OpenType MATH table. getComputedStyle on a <math>
+// element cannot expose this: mathml.css applies `math { font-family: math }`
+// so the CSS-author value is always the literal "math" generic, hiding the
+// actual MATH-table font the layout engine picked. Build the same kind of
+// font group the layout engine constructs for a default-styled <math>
+// element (math-generic family, x-math language) and ask
+// gfxFontGroup::GetFirstMathFont() — the same selector layout/mathml/
+// itself uses to find the active MATH font. Returns "Cambria Math" on
+// Windows, "STIX Two Math" on macOS Ventura+, one of "Latin Modern Math"
+// / "STIX Two Math" / "TeX Gyre Pagella Math" / etc. on Linux depending
+// on installed packages, and the literal sentinel "(no MATH font)" on
+// platforms where no MATH-table font is available (Android, pre-Ventura
+// macOS). Distinguishing the no-MATH cohort from a collection failure
+// requires a sentinel rather than an empty string.
+void PopulateMathFontFamily() {
+  AutoTArray<StyleSingleFontFamily, 1> names;
+  names.AppendElement(
+      StyleSingleFontFamily::Generic(StyleGenericFontFamily::Math));
+  StyleFontFamilyList familyList =
+      StyleFontFamilyList::WithNames(std::move(names));
+
+  gfxFontStyle style;
+  RefPtr<gfxFontGroup> fontGroup = new gfxFontGroup(
+      /* aFontVisibilityProvider */ nullptr, familyList, &style,
+      nsGkAtoms::x_math, /* aExplicitLanguage */ false,
+      /* aTextPerf */ nullptr, /* aUserFontSet */ nullptr,
+      /* aDevToCssSize */ 1.0, StyleFontVariantEmoji::Normal);
+
+  RefPtr<gfxFont> mathFont = fontGroup->GetFirstMathFont();
+  if (mathFont) {
+    glean::characteristics::mathml_diag_font_family.Set(
+        mathFont->GetFontEntry()->FamilyName());
+  } else {
+    glean::characteristics::mathml_diag_font_family.Set("(no MATH font)"_ns);
+  }
+}
+
+static void DigestToHex(const nsACString& aDigest, nsCString& aOutHex) {
+  const char HEX[] = "0123456789abcdef";
+  for (size_t i = 0; i < 32; ++i) {
+    uint8_t b = aDigest[i];
+    aOutHex.Append(HEX[(b >> 4) & 0xF]);
+    aOutHex.Append(HEX[b & 0xF]);
+  }
+}
+
 nsresult ProcessFingerprintedFonts(const char* aFonts[],
                                    nsCString& aOutAllowlistedHex,
                                    nsCString& aOutNonAllowlistedHex) {
@@ -336,17 +417,29 @@ nsresult ProcessFingerprintedFonts(const char* aFonts[],
   allowlisted->Finish(false, allowlistedDigest);
   nonallowlisted->Finish(false, nonallowlistedDigest);
 
-  // Convert to hex
-  const char HEX[] = "0123456789abcdef";
-  for (size_t i = 0; i < 32; ++i) {
-    uint8_t b = allowlistedDigest[i];
-    aOutAllowlistedHex.Append(HEX[(b >> 4) & 0xF]);
-    aOutAllowlistedHex.Append(HEX[b & 0xF]);
+  DigestToHex(allowlistedDigest, aOutAllowlistedHex);
+  DigestToHex(nonallowlistedDigest, aOutNonAllowlistedHex);
 
-    b = nonallowlistedDigest[i];
-    aOutNonAllowlistedHex.Append(HEX[(b >> 4) & 0xF]);
-    aOutNonAllowlistedHex.Append(HEX[b & 0xF]);
+  return NS_OK;
+}
+
+nsresult HashFontList(const nsTArray<nsCString>& aFonts, nsCString& aOutHex) {
+  nsresult rv;
+  nsCOMPtr<nsICryptoHash> hash =
+      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hash->Init(nsICryptoHash::SHA256);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (const auto& font : aFonts) {
+    hash->Update(reinterpret_cast<const uint8_t*>(font.get()), font.Length());
   }
+
+  nsAutoCString digest;
+  hash->Finish(false, digest);
+
+  DigestToHex(digest, aOutHex);
 
   return NS_OK;
 }
@@ -365,8 +458,10 @@ already_AddRefed<PopulatePromise> PopulateFingerprintedFonts() {
   }
   std::pair<const char**,
             std::pair<glean::impl::StringMetric, glean::impl::StringMetric>>
-      fontLists[] = {FONT_PAIR(fpjs, fpjs), FONT_PAIR(variantA, variant_a),
-                     FONT_PAIR(variantB, variant_b)};
+      fontLists[] = {
+          FONT_PAIR(fpjs, fpjs),          FONT_PAIR(variantA, variant_a),
+          FONT_PAIR(variantB, variant_b), FONT_PAIR(variantC, variant_c),
+          FONT_PAIR(variantD, variant_d), FONT_PAIR(variantE, variant_e)};
 
 #undef FONT_PAIR
 
@@ -382,6 +477,143 @@ already_AddRefed<PopulatePromise> PopulateFingerprintedFonts() {
 
     metrics.first.Set(allowlistedHex);
     metrics.second.Set(nonallowlistedHex);
+  }
+
+  // Variant F/G font fallback metrics (uses variantF font list)
+  {
+    gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+    if (!pfl) {
+      REJECT_AND_FORGET(populatePromise, __func__, NS_ERROR_FAILURE,
+                        "No platform font list"_ns.AsString());
+    }
+
+    nsTArray<nsCString> variantFontList;
+    for (size_t i = 0; variantF_FontList[i] != nullptr; ++i) {
+      variantFontList.AppendElement(nsCString(variantF_FontList[i]));
+    }
+
+    // Variant F: Test string "A"
+    // Call twice with different visibility levels
+    nsTArray<nsCString> fontsAllowlisted;
+    pfl->ListFontsUsedForString(u"A"_ns, variantFontList, fontsAllowlisted,
+                                FontVisibility::LangPack);
+    nsTArray<nsCString> fontsNonAllowlisted;
+    pfl->ListFontsUsedForString(u"A"_ns, variantFontList, fontsNonAllowlisted,
+                                FontVisibility::User);
+
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
+            ("Variant F Allowlisted fonts:"));
+    for (const auto& font : fontsAllowlisted) {
+      MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("  - %s", font.get()));
+    }
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
+            ("Variant F NonAllowlisted fonts:"));
+    for (const auto& font : fontsNonAllowlisted) {
+      MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("  - %s", font.get()));
+    }
+
+    nsCString aAllowlisted, aNonAllowlisted;
+    if (NS_SUCCEEDED(HashFontList(fontsAllowlisted, aAllowlisted))) {
+      glean::characteristics::fonts_variant_f_allowlisted.Set(aAllowlisted);
+    }
+    if (NS_SUCCEEDED(HashFontList(fontsNonAllowlisted, aNonAllowlisted))) {
+      glean::characteristics::fonts_variant_f_nonallowlisted.Set(
+          aNonAllowlisted);
+    }
+
+    // Variant G: Test emoji U+1F47E (Space Invader)
+    nsTArray<nsCString> emojiFontsAllowlisted;
+    pfl->ListFontsUsedForString(u"\U0001F47E"_ns, variantFontList,
+                                emojiFontsAllowlisted,
+                                FontVisibility::LangPack);
+    nsTArray<nsCString> emojiFontsNonAllowlisted;
+    pfl->ListFontsUsedForString(u"\U0001F47E"_ns, variantFontList,
+                                emojiFontsNonAllowlisted, FontVisibility::User);
+
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
+            ("Variant G Allowlisted fonts:"));
+    for (const auto& font : emojiFontsAllowlisted) {
+      MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("  - %s", font.get()));
+    }
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
+            ("Variant G NonAllowlisted fonts:"));
+    for (const auto& font : emojiFontsNonAllowlisted) {
+      MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("  - %s", font.get()));
+    }
+
+    nsCString emojiAllowlisted, emojiNonAllowlisted;
+    if (NS_SUCCEEDED(HashFontList(emojiFontsAllowlisted, emojiAllowlisted))) {
+      glean::characteristics::fonts_variant_g_allowlisted.Set(emojiAllowlisted);
+    }
+    if (NS_SUCCEEDED(
+            HashFontList(emojiFontsNonAllowlisted, emojiNonAllowlisted))) {
+      glean::characteristics::fonts_variant_g_nonallowlisted.Set(
+          emojiNonAllowlisted);
+    }
+
+    // Variant H: Test multiple emojis
+    nsAutoString textEmojis;
+    for (auto emoji : variantHEmojis) {
+      AppendUCS4ToUTF16(emoji, textEmojis);
+    }
+
+    nsTArray<nsCString> emojisFontsAllowlisted;
+    pfl->ListFontsUsedForString(textEmojis, variantFontList,
+                                emojisFontsAllowlisted,
+                                FontVisibility::LangPack);
+    nsTArray<nsCString> emojisFontsNonAllowlisted;
+    pfl->ListFontsUsedForString(textEmojis, variantFontList,
+                                emojisFontsNonAllowlisted,
+                                FontVisibility::User);
+
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
+            ("Variant H Allowlisted fonts:"));
+    for (const auto& font : emojisFontsAllowlisted) {
+      MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("  - %s", font.get()));
+    }
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
+            ("Variant H NonAllowlisted fonts:"));
+    for (const auto& font : emojisFontsNonAllowlisted) {
+      MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("  - %s", font.get()));
+    }
+
+    nsCString emojisAllowlisted, emojisNonAllowlisted;
+    if (NS_SUCCEEDED(HashFontList(emojisFontsAllowlisted, emojisAllowlisted))) {
+      glean::characteristics::fonts_variant_h_allowlisted.Set(
+          emojisAllowlisted);
+    }
+    if (NS_SUCCEEDED(
+            HashFontList(emojisFontsNonAllowlisted, emojisNonAllowlisted))) {
+      glean::characteristics::fonts_variant_h_nonallowlisted.Set(
+          emojisNonAllowlisted);
+    }
+
+    // Variant I: SVG emojis with emoji-specific font list
+    nsAutoString textVariantIEmojis;
+    for (auto emoji : variantIEmojis) {
+      AppendUCS4ToUTF16(emoji, textVariantIEmojis);
+    }
+
+    nsTArray<nsCString> variantIFontList;
+    for (size_t i = 0; variantI_FontList[i] != nullptr; ++i) {
+      variantIFontList.AppendElement(nsCString(variantI_FontList[i]));
+    }
+
+    nsTArray<nsCString> variantIAllowlisted;
+    pfl->ListFontsUsedForString(textVariantIEmojis, variantIFontList,
+                                variantIAllowlisted, FontVisibility::LangPack);
+    nsTArray<nsCString> variantINonAllowlisted;
+    pfl->ListFontsUsedForString(textVariantIEmojis, variantIFontList,
+                                variantINonAllowlisted, FontVisibility::User);
+
+    nsCString iAllowlisted, iNonAllowlisted;
+    if (NS_SUCCEEDED(HashFontList(variantIAllowlisted, iAllowlisted))) {
+      glean::characteristics::fonts_variant_i_allowlisted.Set(iAllowlisted);
+    }
+    if (NS_SUCCEEDED(HashFontList(variantINonAllowlisted, iNonAllowlisted))) {
+      glean::characteristics::fonts_variant_i_nonallowlisted.Set(
+          iNonAllowlisted);
+    }
   }
 
   populatePromise->Resolve(void_t(), __func__);
@@ -419,6 +651,8 @@ void PopulatePrefs() {
 
   glean::characteristics::prefs_network_cookie_cookiebehavior.Set(
       StaticPrefs::network_cookie_cookieBehavior());
+
+  CollectMathMLPrefs();
 }
 
 void PopulateKeyboardLayout() {
@@ -472,6 +706,46 @@ static void CollectFontPrefValue(nsIPrefBranch* aPrefBranch,
   aModifiedMetric.Set(modifiedCount);
 }
 
+template <typename StringMetric, typename QuantityMetric>
+static void CollectFontIntPrefValue(nsIPrefBranch* aPrefBranch,
+                                    const nsACString& aDefaultLanguageGroup,
+                                    const char* aStartingAt,
+                                    StringMetric& aWesternMetric,
+                                    StringMetric& aDefaultGroupMetric,
+                                    QuantityMetric& aModifiedMetric) {
+  nsTArray<nsCString> prefNames;
+  if (NS_WARN_IF(
+          NS_FAILED(aPrefBranch->GetChildList(aStartingAt, prefNames)))) {
+    return;
+  }
+
+  nsCString westernPref(aStartingAt);
+  westernPref.Append("x-western");
+  nsCString defaultGroupPref(aStartingAt);
+  defaultGroupPref.Append(aDefaultLanguageGroup);
+
+  nsAutoCString westernPrefValue;
+  westernPrefValue.AppendInt(Preferences::GetInt(westernPref.get()));
+  aWesternMetric.Set(westernPrefValue);
+
+  nsAutoCString defaultGroupPrefValue;
+  if (!westernPref.Equals(defaultGroupPref)) {
+    defaultGroupPrefValue.AppendInt(
+        Preferences::GetInt(defaultGroupPref.get()));
+  }
+  aDefaultGroupMetric.Set(defaultGroupPrefValue);
+
+  uint32_t modifiedCount = 0;
+  for (const auto& prefName : prefNames) {
+    if (!prefName.Equals(westernPref) && !prefName.Equals(defaultGroupPref)) {
+      if (Preferences::HasUserValue(prefName.get())) {
+        modifiedCount++;
+      }
+    }
+  }
+  aModifiedMetric.Set(modifiedCount);
+}
+
 template <typename QuantityMetric>
 static void CollectFontPrefModified(nsIPrefBranch* aPrefBranch,
                                     const char* aStartingAt,
@@ -506,6 +780,12 @@ void PopulateFontPrefs() {
                        glean::characteristics::METRIC_NAME##_default_group, \
                        glean::characteristics::METRIC_NAME##_modified)
 
+#define FONT_INT_PREF(PREF_NAME, METRIC_NAME)                                  \
+  CollectFontIntPrefValue(prefRootBranch, fontLanguageGroup, PREF_NAME,        \
+                          glean::characteristics::METRIC_NAME##_western,       \
+                          glean::characteristics::METRIC_NAME##_default_group, \
+                          glean::characteristics::METRIC_NAME##_modified)
+
   // The following preferences can be modified using the advanced font options
   // on the about:preferences page. Every preference has a sub-branch per
   // script, so for example font.default.x-western or font.default.x-cyrillic
@@ -520,10 +800,11 @@ void PopulateFontPrefs() {
   FONT_PREF("font.name.serif.", font_name_serif);
   FONT_PREF("font.name.sans-serif.", font_name_sans_serif);
   FONT_PREF("font.name.monospace.", font_name_monospace);
-  FONT_PREF("font.size.variable.", font_size_variable);
-  FONT_PREF("font.size.monospace.", font_size_monospace);
-  FONT_PREF("font.minimum-size.", font_minimum_size);
+  FONT_INT_PREF("font.size.variable.", font_size_variable);
+  FONT_INT_PREF("font.size.monospace.", font_size_monospace);
+  FONT_INT_PREF("font.minimum-size.", font_minimum_size);
 
+#undef FONT_INT_PREF
 #undef FONT_PREF
 
   CollectFontPrefModified(
@@ -926,7 +1207,7 @@ const RefPtr<PopulatePromise>& TimoutPromise(
 // metric is set, this variable should be incremented. It'll be a lot. It's
 // okay. We're going to need it to know (including during development) what is
 // the source of the data we are looking at.
-const int kSubmissionSchema = 30;
+const int kSubmissionSchema = 43;
 
 const auto* const kUUIDPref =
     "toolkit.telemetry.user_characteristics_ping.uuid";
@@ -1048,9 +1329,6 @@ bool nsUserCharacteristics::ShouldSubmit() {
 
   int32_t currentVersion = GetCurrentVersion();
   int32_t lastSubmissionVersion = Preferences::GetInt(kLastVersionPref, 0);
-  MOZ_ASSERT(lastSubmissionVersion <= currentVersion,
-             "lastSubmissionVersion is somehow greater than currentVersion "
-             "- did you edit prefs improperly?");
 
   if (currentVersion == 0) {
     // Do nothing. We do not want any pings.
@@ -1129,6 +1407,12 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     PopulateProcessorCount();
     PopulateModelName();
     PopulateMisc(false);
+  }
+
+  // Needs the platform font list; skip when it has not been initialized
+  // (e.g. in gtest), but otherwise run in both production and mochitest.
+  if (gfxPlatformFontList::PlatformFontList(/* aMustInitialize */ false)) {
+    PopulateMathFontFamily();
   }
 
   promises.AppendElement(ContentPageStuff());

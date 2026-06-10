@@ -1,5 +1,4 @@
 /* clang-format off */
-/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* clang-format on */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,8 +17,8 @@ using namespace mozilla::a11y;
 
 #define PREF_ACCESSIBILITY_MAC_DEBUG "accessibility.mac.debug"
 
-MOZ_RUNINIT static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
-                              MOXTextMarkerDelegate*>
+constinit static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
+                            MOXTextMarkerDelegate*>
     sDelegates;
 
 @implementation MOXTextMarkerDelegate

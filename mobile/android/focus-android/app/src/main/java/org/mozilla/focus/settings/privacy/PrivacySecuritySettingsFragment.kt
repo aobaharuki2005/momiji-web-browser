@@ -26,6 +26,9 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.widget.CookiesPreference
 
+/**
+ * Settings fragment for privacy and security options.
+ */
 class PrivacySecuritySettingsFragment :
     BaseSettingsFragment(),
     SharedPreferences.OnSharedPreferenceChangeListener {

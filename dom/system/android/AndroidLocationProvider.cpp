@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +6,7 @@
 
 #include "Geolocation.h"
 #include "GeolocationPosition.h"
+#include "mozilla/glean/DomGeolocationMetrics.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
 
 using namespace mozilla;
@@ -25,6 +24,9 @@ AndroidLocationProvider::~AndroidLocationProvider() {
 NS_IMETHODIMP
 AndroidLocationProvider::Startup() {
   if (java::GeckoAppShell::EnableLocationUpdates(true)) {
+    glean::geolocation::geolocation_service
+        .EnumGet(glean::geolocation::GeolocationServiceLabel::eSystem)
+        .Add();
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

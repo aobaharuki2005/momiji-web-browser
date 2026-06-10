@@ -37,8 +37,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 @Suppress("LongParameterList")
@@ -64,7 +64,7 @@ internal fun MenuNavigation(
             .fillMaxWidth()
             .background(
                 color = if (isExtensionsExpanded || isMoreMenuExpanded) {
-                    MaterialTheme.colorScheme.surfaceContainerHighest
+                    MaterialTheme.colorScheme.surfaceContainerHigh
                 } else {
                     MaterialTheme.colorScheme.surface
                 },
@@ -107,7 +107,7 @@ internal fun MenuNavigation(
             MenuNavItem(
                 modifier = Modifier.weight(1f),
                 state = state,
-                painter = painterResource(id = iconsR.drawable.mozac_ic_stop),
+                painter = painterResource(id = iconsR.drawable.mozac_ic_cross_24),
                 label = stringResource(id = R.string.browser_menu_stop),
                 onClick = onStopButtonClick,
             )
@@ -189,7 +189,7 @@ private fun getIconTint(state: MenuItemState): Color {
 @Preview
 @Composable
 private fun MenuNavigationPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         MenuNavigation(
@@ -208,7 +208,7 @@ private fun MenuNavigationPreview(
 @Preview
 @Composable
 private fun MenuNavigationExpandedPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         MenuNavigation(
@@ -227,7 +227,7 @@ private fun MenuNavigationExpandedPreview(
 @Preview
 @Composable
 private fun MenuNavigationSiteLoadingPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         MenuNavigation(
@@ -246,7 +246,7 @@ private fun MenuNavigationSiteLoadingPreview(
 @Preview
 @Composable
 private fun MenuNavigationExpandedSiteLoadingPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         MenuNavigation(

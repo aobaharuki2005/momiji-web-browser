@@ -1,17 +1,17 @@
 "use strict";
 
+// test_newtab calls SpecialPowers.spawn, which injects ContentTaskUtils in the
+// scope of the callback. Eslint doesn't know about that.
+/* global ContentTaskUtils */
+
 test_newtab({
-  test: function test_render_search_handoff() {
-    const usingHandoffComponent = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.search.useHandoffComponent",
-      false
+  test: async function test_render_search_handoff() {
+    const selector = "content-search-handoff-ui";
+
+    let search = await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(selector),
+      "Wait for search handoff component to render"
     );
-
-    const selector = usingHandoffComponent
-      ? "content-search-handoff-ui"
-      : ".search-handoff-button";
-
-    let search = content.document.querySelector(selector);
     ok(search, "Got the content search handoff UI");
   },
 });
@@ -49,8 +49,19 @@ test_newtab({
     ]);
   },
   test: function test_render_logo_false() {
+    // @nova-cleanup(remove-pref): Remove novaEnabled detection
+    const novaEnabled = Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.nova.enabled",
+      false
+    );
+
     let logoWordmark = content.document.querySelector(".logo-and-wordmark");
-    ok(!logoWordmark, "The logo is not rendered when pref is false");
+    // @nova-cleanup(remove-conditional): Remove novaEnabled check; always assert logo is rendered
+    if (!novaEnabled) {
+      ok(!logoWordmark, "The logo is not rendered when pref is false");
+    } else {
+      ok(logoWordmark, "The logo is always rendered when Nova is enabled.");
+    }
   },
 });
 

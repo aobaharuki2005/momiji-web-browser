@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DNSByTypeRecord_h__
-#define DNSByTypeRecord_h__
+#ifndef DNSByTypeRecord_h_
+#define DNSByTypeRecord_h_
 
 #include "mozilla/net/HTTPSSVC.h"
 #include "ipc/IPCMessageUtils.h"
@@ -52,24 +52,6 @@ struct ParamTraits<mozilla::net::IPCTypeRecord> {
     return ReadParam(aReader, &aResult->mData) &&
            ReadParam(aReader, &aResult->mTTL) &&
            ReadParam(aReader, &aResult->mIsTRR);
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::Nothing> {
-  typedef mozilla::Nothing paramType;
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    bool isSome = false;
-    WriteParam(aWriter, isSome);
-  }
-
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    bool isSome;
-    if (!ReadParam(aReader, &isSome)) {
-      return false;
-    }
-    *aResult = mozilla::Nothing();
-    return true;
   }
 };
 
@@ -191,4 +173,4 @@ struct ParamTraits<mozilla::net::SvcFieldValue> {
 
 }  // namespace IPC
 
-#endif  // DNSByTypeRecord_h__
+#endif  // DNSByTypeRecord_h_

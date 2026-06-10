@@ -10,7 +10,7 @@ import subprocess
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
 from mozpack.files import FileListFinder
 
@@ -48,6 +48,10 @@ class HgRepository(Repository):
 
     @property
     def head_ref(self):
+        return self.branch or self.head_rev
+
+    @property
+    def head_rev(self):
         return self._run("log", "-r", ".", "-T", "{node}")
 
     def is_cinnabar_repo(self) -> bool:
@@ -146,6 +150,14 @@ class HgRepository(Repository):
             # "ui.username" doesn't follow the "Full Name <email@domain>" convention
             return None
         return match.group(1)
+
+    def get_remote_url(self, remote=None, push=False):
+        remote = remote or "default"
+        if push:
+            remote = f"{remote}-push"
+
+        url = self._run("paths", remote, return_codes=[0, 1], stderr=subprocess.DEVNULL)
+        return url.strip() if url else None
 
     def _format_diff_filter(self, diff_filter, for_status=False):
         df = diff_filter.lower()
@@ -276,7 +288,32 @@ class HgRepository(Repository):
         except subprocess.CalledProcessError:
             raise MissingVCSExtension(extension)
 
-    def push_to_try(
+    def push(
+        self,
+        remote: Optional[str] = None,
+        ref: Optional[str] = None,
+        dest_branch: Optional[str] = None,
+        force: bool = False,
+    ):
+        if ref and not remote:
+            raise ValueError("Cannot specify ref without specifying remote")
+
+        args = ["push"]
+        if force:
+            args.append("--force")
+        if remote:
+            args.append(remote)
+        if ref:
+            args.extend(["-r", ref])
+        self._run(*args)
+
+    def _resolve_try_branch(self):
+        return self.branch
+
+    def _push_to_git_try(self, *args, **kwargs):
+        raise ValueError("Unable to push to Git from a Mercurial repo")
+
+    def _push_to_hg_try(
         self,
         message: str,
         changed_files: dict[str, str] = {},
@@ -380,20 +417,40 @@ class HgRepository(Repository):
         `changed_files` may contain a dict of file paths and their contents,
         see `stage_changes`.
         """
+        head_ref, cleanup = self.prepare_try_push(commit_message, changed_files)
+        yield head_ref
+        cleanup()
+
+    def prepare_try_push(
+        self, commit_message: str, changed_files: Optional[dict[str, str]] = None
+    ) -> tuple[Optional[str], Callable]:
+        """Create a temporary try commit as a context manager.
+
+        Create a new commit using `commit_message` as the commit message. The commit
+        may be empty, for example when only including try syntax.
+
+        `changed_files` may contain a dict of file paths and their contents,
+        see `stage_changes`.
+
+        This function returns a tuple of the changeset of the new head and a
+        function that can be called to remove the head from the local
+        repository.
+        """
         if changed_files:
             self.stage_changes(changed_files)
 
         # Allow empty commit messages in case we only use try-syntax.
         self._run("--config", "ui.allowemptycommit=1", "commit", "-m", commit_message)
 
-        yield self.head_ref
+        def cleanup():
+            try:
+                self._run("prune", ".")
+            except subprocess.CalledProcessError:
+                # The `evolve` extension is required for `uncommit` and `prune`.
+                self.raise_for_missing_extension("evolve")
+                raise
 
-        try:
-            self._run("prune", ".")
-        except subprocess.CalledProcessError:
-            # The `evolve` extension is required for `uncommit` and `prune`.
-            self.raise_for_missing_extension("evolve")
-            raise
+        return self.head_ref, cleanup
 
     def get_last_modified_time_for_file(self, path: Path):
         """Return last modified in VCS time for the specified file."""

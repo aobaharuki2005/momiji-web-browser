@@ -8,9 +8,13 @@
 newtab-page-title = Nyt faneblad
 newtab-settings-button =
     .title = Tilpas siden Nyt faneblad
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Tilpas denne side
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Tilpas
+newtab-customize-panel-label =
+    .label = Tilpas
 newtab-personalize-settings-icon-label =
     .title = Tilpas nyt faneblad
     .aria-label = Indstillinger
@@ -23,6 +27,9 @@ newtab-personalize-dialog-label =
     .aria-label = Tilpas
 newtab-logo-and-wordmark =
     .aria-label = { -brand-full-name }
+newtab-card-dismiss-button =
+    .title = Afvis
+    .aria-label = Afvis
 
 ## Search box component.
 
@@ -49,7 +56,7 @@ newtab-search-box-input =
     .placeholder = Søg på nettet
     .aria-label = Søg på nettet
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Tilføj søgetjeneste
 newtab-topsites-add-shortcut-header = Ny genvej
@@ -69,6 +76,11 @@ newtab-topsites-url-validation = Gyldig URL påkrævet
 newtab-topsites-image-url-label = URL til selvvalgt billede
 newtab-topsites-use-image-link = Brug selvvalgt billede…
 newtab-topsites-image-validation = Kunne ikke indlæse billede. Prøv en anden URL.
+
+## Clear text button for the URL and image URL input fields in the Top Sites form.
+
+newtab-topsites-clear-input =
+    .aria-label = Ryd tekst
 
 ## Top Sites - General form dialog buttons. These are verbs/actions.
 
@@ -304,9 +316,23 @@ newtab-error-fallback-refresh-link = Prøv igen ved at genindlæse siden.
 
 newtab-custom-shortcuts-title = Genveje
 newtab-custom-shortcuts-subtitle = Gemte eller besøgte websteder
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Genveje
     .description = Gemte eller besøgte websteder
+newtab-custom-shortcuts-nova =
+    .label = Genveje
+newtab-custom-row-description =
+    .description = Antal rækker
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } række
+           *[other] { $num } rækker
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -317,9 +343,12 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Sponsorerede genveje
 newtab-custom-pocket-title = Anbefalet af { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Interessant indhold udvalgt af { -pocket-brand-name }, en del af { -brand-product-name }-familien
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Anbefalede historier
     .description = Interessant indhold udvalgt af { -brand-product-name }-holdet
+newtab-recommended-stories-toggle =
+    .label = Anbefalede historier
 newtab-custom-stories-personalized-toggle =
     .label = Historier
 newtab-custom-stories-personalized-checkbox-label = Tilpassede historier baseret på din aktivitet
@@ -330,18 +359,18 @@ newtab-custom-recent-subtitle = Et udvalg af seneste websteder og indhold
 newtab-custom-weather-toggle =
     .label = Vejr
     .description = Dagens vejrudsigt
-newtab-custom-trending-search-toggle =
-    .label = Populære søgninger
-    .description = Populære og ofte søgte emner
 newtab-custom-widget-weather-toggle =
     .label = Vejr
-newtab-custom-widget-trending-search-toggle =
-    .label = Populære søgninger
 newtab-custom-widget-lists-toggle =
     .label = Lister
 newtab-custom-widget-timer-toggle =
     .label = Timer
 newtab-custom-widget-section-title = Widgets
+newtab-custom-widget-section-toggle =
+    .label = Widgets
+newtab-widget-manage-title = Widgets
+newtab-widget-manage-widget-button =
+    .label = Håndter widgets
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Luk
@@ -353,8 +382,11 @@ newtab-custom-settings = Håndter flere indstillinger
 
 newtab-wallpaper-title = Baggrunde
 newtab-wallpaper-reset = Nulstil til standard
+#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Upload et billede
 newtab-wallpaper-custom-color = Vælg en farve
+newtab-wallpaper-toggle-title =
+    .label = Baggrunde
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = Billedet overskrider grænsen for filstørrelse på { $file_size } MB. Prøv at uploade en mindre fil.
@@ -377,7 +409,9 @@ newtab-wallpaper-light-fox-anniversary = En ræv på en græsmark i et tåget bj
 
 ## Solid Colors
 
+#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Ensfarvede
+newtab-wallpaper-colors = Farver
 newtab-wallpaper-blue = Blå
 newtab-wallpaper-light-blue = Lyseblå
 newtab-wallpaper-light-purple = Lyslilla
@@ -468,7 +502,12 @@ newtab-weather-menu-change-location = Skift sted
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Søg efter sted
     .aria-label = Søg efter sted
+# "Current" refers to the user's physical/geographic location detected via geolocation.
+newtab-weather-change-location-search-use-current =
+    .label = Brug nuværende placering
 newtab-weather-menu-weather-display = Visning af vejr
+newtab-weather-todays-forecast = Dagens vejrudsigt
+newtab-weather-see-full-forecast = Se hele vejrudsigten
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
 # - Detailed: Include simple information plus a short text summary: e.g. "Mostly cloudy"
@@ -491,8 +530,23 @@ newtab-weather-opt-in-not-now =
     .label = Ikke nu
 newtab-weather-opt-in-yes =
     .label = Ja
+newtab-weather-opt-in-headline = Få din lokale vejrudsigt
+newtab-weather-opt-in-use-location =
+    .label = Brug placering
+newtab-weather-opt-in-choose-location = Vælg placering
 # We'll be showing static (fake) weather data if the user has not opted in to using their location
 newtab-weather-static-city = New York City
+# "Highest" here refers to the highest temperature of the day
+newtab-weather-high =
+    .aria-label = Højeste
+# "Lowest" here refers to the lowest temperature of the day
+newtab-weather-low =
+    .aria-label = Laveste
+# Variables:
+#   $provider (string) - Service provider for weather data
+newtab-weather-see-forecast-description =
+    .title = Se vejrudsigter på { $provider }
+    .aria-description = { $provider } ∙ Sponsoreret
 
 ## Topic Labels
 
@@ -539,8 +593,16 @@ newtab-topic-selection-button-pick-interests = Vælg dine interesser
 ## e.g. Following the travel section of stories.
 
 newtab-section-follow-button = Følg
+# Variables:
+#   $topic (string) - Topic that the user can follow
+newtab-section-follow-button-label =
+    .aria-label = Følg { $topic }
 newtab-section-following-button = Følger
 newtab-section-unfollow-button = Stop med at følge
+# Variables:
+#   $topic (string) - Topic that the user is following and can unfollow
+newtab-section-unfollow-button-label =
+    .aria-label = Følger: Stop med at følge { $topic }
 # A modal may appear next to the Follow button, directing users to try out the feature
 newtab-section-follow-highlight-title = Finjuster dit feed
 newtab-section-follow-highlight-subtitle = Følg dine interesserer for at se mere indhold, der passer dig.
@@ -552,6 +614,22 @@ newtab-section-follow-highlight-subtitle = Følg dine interesserer for at se mer
 newtab-section-block-button = Bloker
 newtab-section-blocked-button = Blokeret
 newtab-section-unblock-button = Fjern blokering
+# Variables:
+#   $topic (string) - Name of topic that user is following
+newtab-section-follow-topic =
+    .aria-label = Følg { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is unfollowing
+newtab-section-unfollow-topic =
+    .aria-label = Stop med at følge { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is blocking
+newtab-section-block-topic =
+    .aria-label = Bloker { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is unblocking
+newtab-section-unblock-topic =
+    .aria-label = Fjern blokering af { $topic }
 
 ## Confirmation modal for blocking a section
 
@@ -561,6 +639,7 @@ newtab-section-confirm-block-topic-p2 = Det blokerede emner vil ikke længere bl
 # Variables:
 #   $topic (string) - Name of topic that user is blocking
 newtab-section-block-topic-button = Bloker { $topic }
+newtab-section-block-cancel-button = Annuller
 
 ## Strings for custom wallpaper highlight
 
@@ -582,6 +661,12 @@ newtab-new-user-custom-wallpaper-title = Vælg en baggrund for at gøre { -brand
 newtab-new-user-custom-wallpaper-subtitle = Føl dig hjemme på alle nye faneblade med tilpassede baggrunde og farver.
 newtab-new-user-custom-wallpaper-cta = Prøv det nu
 
+## Strings for Nova wallpaper feature highlight
+
+newtab-wallpaper-feature-highlight-title = Så er der nye baggrunde
+newtab-wallpaper-feature-highlight-subtitle = Vælg din favorit, og få hvert nyt faneblad til at føles som hjemme.
+newtab-wallpaper-feature-highlight-cta = Vælg baggrund
+
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Hent { -brand-product-name } til mobil
@@ -597,7 +682,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = Dine favoritter lige ved hånden
 newtab-shortcuts-highlight-subtitle = Tilføj en genvej for at finde dine foretrukne websteder med et enkelt klik.
 
-## Strings for reporting ads and content
+## Strings for reporting issues with ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Hvorfor rapporterer du dette?
@@ -615,21 +700,27 @@ newtab-report-content-inappropriate-offensive =
     .label = Upassende eller stødende
 newtab-report-content-spam-misleading =
     .label = Spam eller vildledende
+newtab-report-content-requires-payment-subscription =
+    .label = Kræver betaling eller abonnement
+newtab-report-content-requires-payment-subscription-learn-more = Læs mere
 newtab-report-cancel = Annuller
 newtab-report-submit = Indsend
 newtab-toast-thanks-for-reporting =
     .message = Tak for at du rapporterer dette.
-
-## Strings for trending searches
-
-newtab-trending-searches-show-trending =
-    .title = Vis populære søgninger
-newtab-trending-searches-hide-trending =
-    .title = Skjul populære søgninger
-newtab-trending-searches-learn-more = Lær mere
-newtab-trending-searches-dismiss = Skjul populære søgninger
-# "Trending searches refers to popular searches from search engines
-newtab-trending-searches-title = Populære søgninger
+newtab-toast-widgets-hidden =
+    .message = Vælg blyant-ikonet for at tilføje widgets igen.
+# Variables:
+#   $topic (string) - Topic that the user has followed
+newtab-section-toast-follow =
+    .message = Du følger nu { $topic }.
+# Variables:
+#   $topic (string) - Topic that the user has unfollowed
+newtab-section-toast-unfollow =
+    .message = Du følger ikke længere { $topic }.
+# Variables:
+#   $topic (string) - Topic that the user has blocked
+newtab-section-toast-block =
+    .message = Du vil ikke længere se historier om { $topic }.
 
 ## Strings for task / to-do list productivity widget
 
@@ -644,13 +735,19 @@ newtab-widget-lists-label-beta =
 # Variables:
 #   $number (number) - Amount of list items marked complete
 newtab-widget-lists-completed-list = Afsluttede ({ $number })
+newtab-widget-lists-celebration-headline = Godt gået
 newtab-widget-task-list-menu-copy = Kopier
 newtab-widget-lists-menu-edit = Rediger listens navn
+newtab-widget-lists-menu-edit2 =
+    .aria-label = Rediger listens navn
 newtab-widget-lists-menu-create = Opret en ny liste
 newtab-widget-lists-menu-delete = Slet denne liste
 newtab-widget-lists-menu-copy = Kopier liste til udklipsholderen
-newtab-widget-lists-menu-hide = Skjul alle lister
 newtab-widget-lists-menu-learn-more = Læs mere
+newtab-widget-lists-button-add-item = Tilføj et element
+newtab-widget-lists-input-add-an-item2 =
+    .placeholder = Tilføj et element
+    .aria-label = Tilføj et element
 newtab-widget-lists-input-add-an-item =
     .placeholder = Tilføj et element
 newtab-widget-lists-input-error = Inkluder tekst for at tilføje et element.
@@ -667,9 +764,14 @@ newtab-widget-lists-name-label-default =
 newtab-widget-lists-name-placeholder-default =
     .placeholder = Opgaveliste
 # The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new2 =
+    .placeholder = Ny liste
+    .aria-label = Rediger listens navn
+# The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Ny liste
 newtab-widget-section-title = Widgets
+newtab-widget-menu-hide = Skjul widgets
 # Tooltip for hide all widgets button
 newtab-widget-section-hide-all-button =
     .title = Skjul widgets
@@ -680,9 +782,12 @@ newtab-widget-section-maximize =
 newtab-widget-section-minimize =
     .title = Minimer widgets
     .aria-label = Sammenfold alle widgets til kompakt størrelse
+newtab-widget-section-menu-manage = Håndter widgets
+newtab-widget-section-menu-hide-all = Skjul widgets
+newtab-widget-section-menu-learn-more = Læs mere
+newtab-widget-section-feedback = Fortæl os, hvad du synes
 
-## Strings for timer productivity widget
-## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+## Strings introduced by the Nova redesign of the Timer widget
 
 newtab-widget-timer-notification-title = Timer
 newtab-widget-timer-notification-focus = Fokus-tiden er slut. Godt gået. Har du brug for en pause?
@@ -700,8 +805,13 @@ newtab-widget-timer-reset =
     .title = Nulstil
 newtab-widget-timer-menu-notifications = Slå notifikationer fra
 newtab-widget-timer-menu-notifications-on = Slå notifikationer til
-newtab-widget-timer-menu-hide = Skjul timer
 newtab-widget-timer-menu-learn-more = Læs mere
+# The title displays above a set of top news headlines.
+newtab-daily-briefing-card-title = Topoverskrifter
+newtab-daily-briefing-card-menu-dismiss = Afvis
+# Variables:
+#   $minutes (number) - Time since the feed has been refreshed
+newtab-daily-briefing-card-timestamp = Opdateret for { $minutes } m. siden
 newtab-widget-message-title = Hold fokus med lister og den indbyggede timer
 # to-dos stands for "things to do".
 newtab-widget-message-copy = Fra hurtige påmindelser til daglige opgaver — funktionen Fokus hjælper dig med at have styr på tingene og din tid.
@@ -711,3 +821,62 @@ newtab-promo-card-cta = Lær mere
 newtab-promo-card-dismiss-button =
     .title = Afvis
     .aria-label = Afvis
+
+## Strings introduced by the Nova redesign of the Timer widget
+
+# Context-menu item to hide the Timer widget. Replaces the shared "Hide widget"
+# copy with a widget-specific string per the Nova design.
+newtab-widget-timer-menu-hide = Skjul timer
+
+##
+
+newtab-sports-widget-menu-learn-more = Læs mere
+newtab-sports-widget-choose-wallpaper =
+    .label = Vælg en baggrund
+newtab-sports-widget-skip = Spring over
+newtab-sports-widget-cancel = Annuller
+newtab-sports-widget-done-button =
+    .label = Færdig
+# Variables:
+#   $start (Date) - Start date of a tournament stage
+#   $end (Date) - End date of a tournament stage
+newtab-sports-widget-key-date-range = { DATETIME($start, month: "short", day: "numeric") } – { DATETIME($end, month: "short", day: "numeric") }
+# Variables:
+#   $date (Date) - Date of a single tournament event
+newtab-sports-widget-key-date = { DATETIME($date, month: "short", day: "numeric") }
+
+## Strings for activation window message variants. In certain experiment configurations,
+## the strings from these variants may be displayed in a message below the search input
+## for the first 48 hours of a new profile's lifetime. Some messages include buttons with
+## labels, but not all.
+
+newtab-activation-window-message-dismiss-button =
+    .title = Afvis
+    .aria-label = Afvis
+# "This space" refers to about:newtab. The call to action here ("make it your own")
+# is to customize newtab with a background image or colour, or by tweaking the
+# existing widgetry that appears on it.
+newtab-activation-window-message-customization-focus-header = Gør denne plads til din egen
+newtab-activation-window-message-customization-focus-message = Vælg en ny baggrund, tilføj genveje til dine foretrukne websteder, og hold dig opdateret med artikler, som interesserer dig.
+newtab-activation-window-message-customization-focus-primary-button =
+    .label = Gå i gang med at tilpasse
+# "This space" refers to about:newtab. The sentiment of "plays by your rules" is
+# meant to evoke the idea that newtab is malleable and customizable. The call to
+# action is to customize newtab with a background image or colour, or by tweaking
+# the existing widgetry that appears on it.
+newtab-activation-window-message-values-focus-header = Denne plads følger dine regler
+
+## Strings for the Clock widget
+
+newtab-clock-widget-menu-learn-more = Læs mere
+newtab-clock-widget-button-add-clock = Tilføj
+newtab-clock-widget-button-cancel = Annuller
+newtab-clock-widget-button-back =
+    .title = Tilbage
+    .aria-label = Tilbage
+newtab-clock-widget-button-save = Gem
+# "Search results" is the accessible label for the listbox dropdown that appears
+# below the location search field, listing matching cities as the user types.
+# It means "results of the search", not "search within the results".
+newtab-clock-widget-search-results =
+    .aria-label = Søgeresultater

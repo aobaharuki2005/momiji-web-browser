@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = खोजी गर्नुहोस्
     .aria-label = खोजी गर्नुहोस्
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-edit-topsites-header = शीर्ष साइट सम्पादन गर्नुहोस्
 newtab-topsites-title-label = शीर्षक

@@ -299,7 +299,7 @@ async function test_submit_telemetry(tc) {
           "passwordmgr/test/browser/form_basic.html",
       },
       async function (browser) {
-        await SimpleTest.promiseFocus(browser.ownerGlobal);
+        await SimpleTest.promiseFocus(browser.documentGlobal);
 
         info("Waiting for form-processed message");
         await formProcessedPromise;
@@ -401,5 +401,5 @@ async function test_submit_telemetry(tc) {
 
   // Clean up the database before the next test case is executed.
   await cleanupDoorhanger(notif);
-  Services.logins.removeAllUserFacingLogins();
+  await Services.logins.removeAllUserFacingLoginsAsync();
 }

@@ -127,6 +127,8 @@ const TAB_EVENTS = [
   "TabGroupCollapse",
   "TabGroupExpand",
   "TabSplitViewActivate",
+  "SplitViewRemoved",
+  "SplitViewCreated",
 ];
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -161,7 +163,6 @@ const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
 
 import { TabMetrics } from "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs";
-import { TelemetryTimestamps } from "resource://gre/modules/TelemetryTimestamps.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { GlobalState } from "resource:///modules/sessionstore/GlobalState.sys.mjs";
@@ -298,6 +299,17 @@ export var SessionStore = {
     return SessionStoreInternal.getBrowserState();
   },
 
+  /**
+   * Restore the browser to a given state.
+   *
+   * This replaces all open windows with the windows in the provided state.
+   * Session-level state (cookies, global counters, etc.) is also restored.
+   *
+   * This is exclusively used for manual and automated testing purposes.
+   *
+   * @param {string} aState
+   *        A JSON-serialized session state string
+   */
   setBrowserState: function ss_setBrowserState(aState) {
     SessionStoreInternal.setBrowserState(aState);
   },
@@ -754,6 +766,19 @@ export var SessionStore = {
     return SessionStoreInternal.isBrowserInCrashedSet(browser);
   },
 
+  /**
+   * Returns the next available split view ID and increments the counter.
+   *
+   * @returns {number} A unique integer ID for a split view.
+   */
+  getNextSplitViewId() {
+    if (SessionStoreInternal._maxSplitViewId >= Number.MAX_SAFE_INTEGER) {
+      // pathological case, but let's throw rather than quietly continue
+      throw new Error("Maximum _maxSplitViewId exceeded");
+    }
+    return ++SessionStoreInternal._maxSplitViewId;
+  },
+
   // this is used for testing purposes
   resetNextClosedId() {
     SessionStoreInternal._nextClosedId = 0;
@@ -1052,10 +1077,6 @@ var SessionStoreInternal = {
   // they get restored).
   _crashedBrowsers: new WeakSet(),
 
-  // A map (xul:browser -> FrameLoader) that maps a browser to the last
-  // associated frameLoader we heard about.
-  _lastKnownFrameLoader: new WeakMap(),
-
   // A map (xul:browser -> object) that maps a browser associated with a
   // recently closed tab to all its necessary state information we need to
   // properly handle final update message.
@@ -1096,6 +1117,9 @@ var SessionStoreInternal = {
 
   // counter for creating unique window IDs
   _nextWindowID: 0,
+
+  // counter for creating unique split view IDs
+  _maxSplitViewId: 0,
 
   // states for all recently closed windows
   _closedWindows: [],
@@ -1278,7 +1302,6 @@ var SessionStoreInternal = {
       throw new Error("SessionStore.init() must only be called once!");
     }
 
-    TelemetryTimestamps.add("sessionRestoreInitialized");
     Glean.sessionRestore.startupTimeline.sessionRestoreInitialized.set(
       Services.telemetry.msSinceProcessStart()
     );
@@ -1310,6 +1333,9 @@ var SessionStoreInternal = {
     );
 
     if (state) {
+      // Initialize the splitViewId counter and migrate any string-based splitViewIds
+      this._initSplitViewIds(state);
+
       try {
         // If we're doing a DEFERRED session, then we want to pull pinned tabs
         // out so they can be restored, and save any open groups so they are
@@ -1698,7 +1724,7 @@ var SessionStoreInternal = {
 
         if (writeToCache) {
           let win =
-            browsingContext.embedderElement?.ownerGlobal ||
+            browsingContext.embedderElement?.documentGlobal ||
             browsingContext.currentWindowGlobal?.browsingContext?.window;
 
           SessionStoreInternal.onTabStateUpdate(permanentKey, win, {
@@ -1870,10 +1896,9 @@ var SessionStoreInternal = {
     if (listener) {
       let historychange =
         // If it is not the scheduled update (tab closed, window closed etc),
-        // try to store the loading non-web-controlled page opened in _blank
-        // first.
+        // try to store the loading non-web-controlled page first.
         (forStorage &&
-          lazy.SessionHistory.collectNonWebControlledBlankLoadingSession(
+          lazy.SessionHistory.collectNonWebControlledLoadingSession(
             browsingContext
           )) ||
         listener.collect(permanentKey, browsingContext, {
@@ -1887,7 +1912,7 @@ var SessionStoreInternal = {
     }
 
     let win =
-      browser?.ownerGlobal ??
+      browser?.documentGlobal ??
       browsingContext.currentWindowGlobal?.browsingContext?.window;
 
     this.onTabStateUpdate(permanentKey, win, update);
@@ -1899,7 +1924,7 @@ var SessionStoreInternal = {
    * Implement EventListener for handling various window and tab events
    */
   handleEvent: function ssi_handleEvent(aEvent) {
-    let win = aEvent.currentTarget.ownerGlobal;
+    let win = aEvent.currentTarget.documentGlobal;
     let target = aEvent.originalTarget;
     switch (aEvent.type) {
       case "TabOpen":
@@ -1948,6 +1973,8 @@ var SessionStoreInternal = {
       case "TabUngrouped":
       case "TabGroupCollapse":
       case "TabGroupExpand":
+      case "SplitViewRemoved":
+      case "SplitViewCreated":
         this.saveStateDelayed(win);
         break;
       case "TabGroupRemoveRequested":
@@ -1960,6 +1987,7 @@ var SessionStoreInternal = {
         for (const tab of aEvent.detail.tabs) {
           this.maybeRestoreTabContent(tab);
         }
+        this.saveStateDelayed(win);
         break;
       case "oop-browser-crashed":
       case "oop-browser-buildid-mismatch":
@@ -1974,10 +2002,6 @@ var SessionStoreInternal = {
           target.frameLoader &&
           target.permanentKey
         ) {
-          this._lastKnownFrameLoader.set(
-            target.permanentKey,
-            target.frameLoader
-          );
           this.resetEpoch(target.permanentKey, target.frameLoader);
         }
         break;
@@ -2115,7 +2139,6 @@ var SessionStoreInternal = {
           );
           this._deferredAllWindowsRestored.resolve();
         } else {
-          TelemetryTimestamps.add("sessionRestoreRestoring");
           Glean.sessionRestore.startupTimeline.sessionRestoreRestoring.set(
             Services.telemetry.msSinceProcessStart()
           );
@@ -3258,10 +3281,6 @@ var SessionStoreInternal = {
     browser.addEventListener("oop-browser-crashed", this);
     browser.addEventListener("oop-browser-buildid-mismatch", this);
 
-    if (browser.frameLoader) {
-      this._lastKnownFrameLoader.set(browser.permanentKey, browser.frameLoader);
-    }
-
     // Only restore if browser has been lazy.
     if (
       TAB_LAZY_STATES.has(aTab) &&
@@ -3335,6 +3354,9 @@ var SessionStoreInternal = {
     let closedGroups = this._windows[win.__SSi].closedGroups;
     let tabGroupState = lazy.TabGroupState.closed(tabGroup, win.__SSi);
     tabGroupState.tabs = this._collectClosedTabsForTabGroup(tabGroup.tabs, win);
+    tabGroupState.splitViews = this._collectSplitViewDataForTabGroup(
+      tabGroup.tabs
+    );
 
     // TODO(jswinarton) it's unclear if updating lastClosedTabGroupCount is
     // necessary when restoring tab groups — it largely depends on how we
@@ -3379,6 +3401,22 @@ var SessionStoreInternal = {
       });
     });
     return closedTabs;
+  },
+
+  /**
+   * @param {MozTabbrowserTab[]} tabs
+   * @returns {TabSplitViewStateData[]}
+   */
+  _collectSplitViewDataForTabGroup(tabs) {
+    let splitViewData = new Map();
+    tabs.forEach(tab => {
+      if (tab.splitview) {
+        if (!splitViewData.get(tab.splitview.splitViewId)) {
+          splitViewData.set(tab.splitview.splitViewId, tab.splitview.state);
+        }
+      }
+    });
+    return Array.from(splitViewData.values());
   },
 
   /**
@@ -3489,7 +3527,6 @@ var SessionStoreInternal = {
 
     aTab.setAttribute("pending", "true");
 
-    this._lastKnownFrameLoader.delete(browser.permanentKey);
     this._crashedBrowsers.delete(browser.permanentKey);
     aTab.removeAttribute("crashed");
 
@@ -3789,7 +3826,7 @@ var SessionStoreInternal = {
   enterCrashedState(browser) {
     this._crashedBrowsers.add(browser.permanentKey);
 
-    let win = browser.ownerGlobal;
+    let win = browser.documentGlobal;
 
     // If we hadn't yet restored, or were still in the midst of
     // restoring this browser at the time of the crash, we need
@@ -3869,6 +3906,21 @@ var SessionStoreInternal = {
     return JSON.stringify(state);
   },
 
+  /**
+   * Restore the browser to a given state.
+   *
+   * This is the internal implementation of a test-only API that restores
+   * the session state from the provided state object. It:
+   * - Parses the state JSON string
+   * - Initializes session-level counters (split view IDs, etc.) from given values
+   * - Migrates legacy data formats in closed windows
+   * - Closes all windows except the top window
+   * - Restores windows, tabs, cookies, and global state
+   *
+   * @param {string} aState
+   *        A JSON-serialized session state string
+   * @throws {Components.Exception} If state is invalid or missing required properties
+   */
   setBrowserState: function ssi_setBrowserState(aState) {
     this._handleClosedWindows();
 
@@ -3886,6 +3938,10 @@ var SessionStoreInternal = {
     if (!state.windows) {
       throw Components.Exception("No windows", Cr.NS_ERROR_INVALID_ARG);
     }
+
+    // Initialize counter and migrate splitViewIds from persisted given state
+    this._maxSplitViewId = 0;
+    this._initSplitViewIds(state);
 
     this._browserSetState = true;
 
@@ -3966,10 +4022,10 @@ var SessionStoreInternal = {
   },
 
   getTabState: function ssi_getTabState(aTab) {
-    if (!aTab || !aTab.ownerGlobal) {
+    if (!aTab || !aTab.documentGlobal) {
       throw Components.Exception("Need a valid tab", Cr.NS_ERROR_INVALID_ARG);
     }
-    if (!aTab.ownerGlobal.__SSi) {
+    if (!aTab.documentGlobal.__SSi) {
       throw Components.Exception(
         "Default view is not tracked",
         Cr.NS_ERROR_INVALID_ARG
@@ -4006,7 +4062,7 @@ var SessionStoreInternal = {
       );
     }
 
-    let window = aTab.ownerGlobal;
+    let window = aTab.documentGlobal;
     if (!window || !("__SSi" in window)) {
       throw Components.Exception(
         "Window is not tracked",
@@ -4076,10 +4132,10 @@ var SessionStoreInternal = {
     aRestoreImmediately = true,
     { inBackground, tabIndex } = {}
   ) {
-    if (!aTab || !aTab.ownerGlobal) {
+    if (!aTab || !aTab.documentGlobal) {
       throw Components.Exception("Need a valid tab", Cr.NS_ERROR_INVALID_ARG);
     }
-    if (!aTab.ownerGlobal.__SSi) {
+    if (!aTab.documentGlobal.__SSi) {
       throw Components.Exception(
         "Default view is not tracked",
         Cr.NS_ERROR_INVALID_ARG
@@ -4131,10 +4187,10 @@ var SessionStoreInternal = {
         return;
       }
 
-      let window = newTab.ownerGlobal;
+      let window = newTab.documentGlobal;
 
       // The tab or its window might be gone.
-      if (!window || !window.__SSi) {
+      if (!window || !window.__SSi || window.closed) {
         return;
       }
 
@@ -4170,13 +4226,13 @@ var SessionStoreInternal = {
       aWindowOrOptions = this._getTopWindow();
     }
     if (aWindowOrOptions instanceof Ci.nsIDOMWindow) {
-      isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aWindowOrOptions);
+      isPrivate = PrivateBrowsingUtils.isWindowPrivate(aWindowOrOptions);
     } else {
       isPrivate = Boolean(aWindowOrOptions.private);
     }
 
     const browserWindows = Array.from(this._browserWindows).filter(win => {
-      return PrivateBrowsingUtils.isBrowserPrivate(win) === isPrivate;
+      return PrivateBrowsingUtils.isWindowPrivate(win) === isPrivate;
     });
     return browserWindows;
   },
@@ -4564,7 +4620,6 @@ var SessionStoreInternal = {
 
     // Predict the remote type to use for the load to avoid unnecessary process
     // switches.
-    let preferredRemoteType = lazy.E10SUtils.DEFAULT_REMOTE_TYPE;
     let url;
     if (state.entries?.length) {
       let activeIndex = (state.index || state.entries.length) - 1;
@@ -4572,13 +4627,11 @@ var SessionStoreInternal = {
       activeIndex = Math.max(activeIndex, 0);
       url = state.entries[activeIndex].url;
     }
-    if (url) {
-      preferredRemoteType = this.getPreferredRemoteType(
-        url,
-        aTargetWindow,
-        state.userContextId
-      );
-    }
+    let preferredRemoteType = this.getPreferredRemoteType(
+      url,
+      aTargetWindow,
+      state.userContextId
+    );
 
     // create a new tab
     let tabbrowser = aTargetWindow.gBrowser;
@@ -4622,17 +4675,10 @@ var SessionStoreInternal = {
   },
 
   getPreferredRemoteType(url, aWindow, userContextId) {
-    return lazy.E10SUtils.getRemoteTypeForURI(
-      url,
-      aWindow.gMultiProcessBrowser,
-      aWindow.gFissionBrowser,
-      lazy.E10SUtils.DEFAULT_REMOTE_TYPE,
-      null,
-      lazy.E10SUtils.predictOriginAttributes({
-        window: aWindow,
-        userContextId,
-      })
-    );
+    return ChromeUtils.predictRemoteTypeForURI(url, {
+      window: aWindow,
+      userContextId,
+    });
   },
 
   /**
@@ -4763,7 +4809,7 @@ var SessionStoreInternal = {
       for (let win of browserWindows) {
         if (
           !searchPrivateWindows &&
-          PrivateBrowsingUtils.isBrowserPrivate(win)
+          PrivateBrowsingUtils.isWindowPrivate(win)
         ) {
           continue;
         }
@@ -4865,7 +4911,10 @@ var SessionStoreInternal = {
     let window = this._openWindowWithState(state);
     this.windowToFocus = window;
     WINDOW_SHOWING_PROMISES.get(window).promise.then(win =>
-      this.restoreWindows(win, state, { overwriteTabs: true })
+      this.restoreWindows(win, state, {
+        overwriteTabs: true,
+        trigger: "undo_close",
+      })
     );
 
     // Notify of changes to closed objects.
@@ -4955,14 +5004,14 @@ var SessionStoreInternal = {
     }
 
     TAB_CUSTOM_VALUES.get(aTab)[aKey] = aStringValue;
-    this.saveStateDelayed(aTab.ownerGlobal);
+    this.saveStateDelayed(aTab.documentGlobal);
   },
 
   deleteCustomTabValue(aTab, aKey) {
     let state = TAB_CUSTOM_VALUES.get(aTab);
     if (state && aKey in state) {
       delete state[aKey];
-      this.saveStateDelayed(aTab.ownerGlobal);
+      this.saveStateDelayed(aTab.documentGlobal);
     }
   },
 
@@ -5071,7 +5120,7 @@ var SessionStoreInternal = {
     }
 
     let browser = tab.linkedBrowser;
-    let win = browser.ownerGlobal;
+    let win = browser.documentGlobal;
 
     if (!tabData) {
       tabData = lazy.TabState.collect(tab, TAB_CUSTOM_VALUES.get(tab));
@@ -5216,7 +5265,15 @@ var SessionStoreInternal = {
       // the state we're trying to restore and then fallback to the last selected
       // window.
       let windowToUse = windows[lastSessionWindowID];
-      if (!windowToUse && canUseLastWindow) {
+      let lastWindowIsAIWindow =
+        lastWindow && lazy.AIWindow.isAIWindowActive(lastWindow);
+      let thisWindowIsAIWindow =
+        !!winState.isAIWindow && lazy.AIWindow.isAIWindowEnabled();
+      if (
+        !windowToUse &&
+        canUseLastWindow &&
+        lastWindowIsAIWindow == thisWindowIsAIWindow
+      ) {
         windowToUse = lastWindow;
         canUseLastWindow = false;
       }
@@ -5511,7 +5568,7 @@ var SessionStoreInternal = {
       winData.workspaceID = workspaceID;
     }
 
-    winData.isAIWindow = lazy.AIWindow.isAIWindowActiveAndEnabled(aWindow);
+    winData.isAIWindow = lazy.AIWindow.isAIWindowActive(aWindow);
   },
 
   /**
@@ -5624,6 +5681,7 @@ var SessionStoreInternal = {
       selectedWindow: ix + 1,
       _closedWindows: lastClosedWindowsCopy,
       savedGroups: this._savedGroups,
+      maxSplitViewId: this._maxSplitViewId,
       session,
       global: this._globalState.getState(),
     };
@@ -5723,7 +5781,11 @@ var SessionStoreInternal = {
       let tabGroupData = lazy.TabGroupState.collect(tabGroup);
       winData.groups.push(tabGroupData);
     }
-
+    winData.splitViews = [];
+    for (let splitView of aWindow.gBrowser.splitViews) {
+      let splitViewData = splitView.state;
+      winData.splitViews.push(splitViewData);
+    }
     let selectedIndex = tabbrowser.tabbox.selectedIndex + 1;
     // We don't store the Firefox View tab in Session Store, so if it was the last selected "tab" when
     // a window is closed, point to the first item in the tab strip instead (it will never be the Firefox View tab,
@@ -5790,6 +5852,93 @@ var SessionStoreInternal = {
     }
     return tabData;
   },
+
+  _initSplitViewIds(state) {
+    if (this._maxSplitViewId > 0) {
+      this._log.error(
+        `In _initSplitViewIds, _maxSplitViewId already has a value: ${this._maxSplitViewId}`
+      );
+    }
+    // The state object may have nested states in it for a deferred session state,
+    // or the last session state. See `getCurrentState` for details
+    for (let session of [
+      state.deferredInitialState,
+      state.lastSessionState,
+      state,
+    ]) {
+      if (!session) {
+        continue;
+      }
+      this._migrateSplitViewIds(session);
+      this._maxSplitViewId = Math.max(
+        this._maxSplitViewId,
+        session.maxSplitViewId
+      );
+    }
+  },
+
+  /**
+   * Establish a maxSplitViewId and migrate invalid splitViewIds to new integer-based IDs.
+   * We ensure all tabs in a splitview remain associated with an integer ID.
+   *
+   * @param state
+   *        A session state.
+   */
+  _migrateSplitViewIds(state) {
+    // we assume a state with the maxSplitViewId property doesn't need migrating
+    if (typeof state.maxSplitViewId == "number") {
+      return;
+    }
+    let oldToNewMap = new Map();
+    let windowsData = [...state.windows];
+    if (state._closedWindows?.length) {
+      windowsData.push.apply(windowsData, state._closedWindows);
+    }
+    for (let winData of windowsData) {
+      if (!winData || !winData.tabs?.length) {
+        continue;
+      }
+
+      // Tabs in a splitview will share a splitViewId property.
+      // Identify string/invalid IDs, map them to new integer IDs and ensure
+      // both tabs get the new id.
+      for (let tabData of winData.tabs) {
+        let idType = typeof tabData.splitViewId;
+        if (idType === "undefined") {
+          continue;
+        }
+        if (idType === "number") {
+          // This id is valid, so just update our counter so we don't assign new ids
+          // that would conflict with this one.
+          this._maxSplitViewId = Math.max(
+            this._maxSplitViewId,
+            tabData.splitViewId
+          );
+          continue;
+        }
+        if (!oldToNewMap.has(tabData.splitViewId)) {
+          oldToNewMap.set(
+            tabData.splitViewId,
+            SessionStore.getNextSplitViewId()
+          );
+          this._log.debug(
+            `Migrating splitViewId: "${tabData.splitViewId}" -> ${oldToNewMap.get(tabData.splitViewId)}`
+          );
+        }
+        tabData.splitViewId = oldToNewMap.get(tabData.splitViewId);
+      }
+
+      if (winData.splitViews) {
+        for (let splitViewData of winData.splitViews) {
+          if (oldToNewMap.has(splitViewData.id)) {
+            splitViewData.id = oldToNewMap.get(splitViewData.id);
+          }
+        }
+      }
+    }
+    state.maxSplitViewId = this._maxSplitViewId;
+  },
+
   /**
    * restore features to a single window
    *
@@ -5879,14 +6028,15 @@ var SessionStoreInternal = {
     this._log.debug(
       `restoreWindow, will restore ${winData.tabs.length} tabs and ${
         winData.groups?.length ?? 0
-      } tab groups, restoreTabsLazily: ${restoreTabsLazily}`
+      } tab groups and ${winData.splitViews?.length ?? 0} splitviews, restoreTabsLazily: ${restoreTabsLazily}`
     );
     if (winData.tabs.length) {
       var tabs = tabbrowser.createTabsForSessionRestore(
         restoreTabsLazily,
         selectTab,
         winData.tabs,
-        winData.groups ?? []
+        winData.groups ?? [],
+        winData.splitViews ?? []
       );
       this._log.debug(
         `restoreWindow, createTabsForSessionRestore returned ${tabs.length} tabs`
@@ -6018,10 +6168,20 @@ var SessionStoreInternal = {
       let principal = Services.scriptSecurityManager.createNullPrincipal({
         userContextId: tab.userContextId,
       });
-      let sc = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
-      let uri = Services.io.newURI(url);
+      let browsingContext = tab.linkedBrowser.browsingContext;
+      let callbacks = {
+        QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor"]),
+        getInterface(iid) {
+          if (iid.equals(Ci.nsILoadContext)) {
+            // return the cached context
+            return browsingContext;
+          }
+          throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+        },
+      };
       try {
-        sc.speculativeConnect(uri, principal, null, false);
+        let uri = Services.io.newURI(url);
+        Services.io.speculativeConnect(uri, principal, callbacks, false);
         return true;
       } catch (error) {
         // Can't setup speculative connection for this url.
@@ -6068,7 +6228,9 @@ var SessionStoreInternal = {
     for (let window of windows) {
       let state = this._statesToRestore[WINDOW_RESTORE_IDS.get(window)];
       // Wait for these promises after we've restored data into them below.
-      resizePromises.push(this.restoreWindowFeatures(window, state.windows[0]));
+      resizePromises.push(
+        this.restoreWindowFeatures(window, state.windows[0], state.options)
+      );
     }
 
     // Then we restore data into windows.
@@ -6295,14 +6457,15 @@ var SessionStoreInternal = {
     }
 
     let loadArguments = options.loadArguments;
-    let window = tab.ownerGlobal;
+    let window = tab.documentGlobal;
     let tabbrowser = window.gBrowser;
     let forceOnDemand = options.forceOnDemand;
     let isRemotenessUpdate = options.isRemotenessUpdate;
 
     let willRestoreImmediately =
-      options.restoreImmediately || tabbrowser.selectedBrowser == browser;
-
+      options.restoreImmediately ||
+      tabbrowser.selectedBrowser == browser ||
+      (tab.splitview && tab.splitview == tabbrowser.selectedTab.splitview);
     let isBrowserInserted = browser.isConnected;
 
     // Increase the busy state counter before modifying the tab.
@@ -6474,6 +6637,10 @@ var SessionStoreInternal = {
       window.gCustomizeMode.setTab(tab);
     }
 
+    if (tabData.canonicalUrl) {
+      tab.canonicalUrl = tabData.canonicalUrl;
+    }
+
     // Update tab label and icon to show something
     // while we wait for the messages to be processed.
     this.updateTabLabelAndIcon(tab, tabData);
@@ -6497,7 +6664,7 @@ var SessionStoreInternal = {
     }
 
     let browser = aTab.linkedBrowser;
-    let window = aTab.ownerGlobal;
+    let window = aTab.documentGlobal;
     let tabData = lazy.TabState.clone(aTab, TAB_CUSTOM_VALUES.get(aTab));
     let activeIndex = tabData.index - 1;
     let activePageData = tabData.entries[activeIndex] || null;
@@ -6580,10 +6747,25 @@ var SessionStoreInternal = {
    * @param aWinData
    *        Object containing session data for the window
    */
-  restoreWindowFeatures: function ssi_restoreWindowFeatures(aWindow, aWinData) {
+  restoreWindowFeatures: function ssi_restoreWindowFeatures(
+    aWindow,
+    aWinData,
+    aOptions = {}
+  ) {
     var hidden = aWinData.hidden ? aWinData.hidden.split(",") : [];
     var isTaskbarTab =
       aWindow.document.documentElement.hasAttribute("taskbartab");
+
+    const shouldBeAIWindow =
+      !!aWinData.isAIWindow && lazy.AIWindow.isAIWindowEnabled();
+    const trigger = aOptions.trigger ?? "open_browser";
+
+    if (lazy.AIWindow.isAIWindowActive(aWindow) !== shouldBeAIWindow) {
+      lazy.AIWindow.toggleAIWindow(aWindow, shouldBeAIWindow, trigger);
+    } else if (shouldBeAIWindow) {
+      lazy.AIWindow.recordOpenWindowTelemetry(trigger);
+    }
+
     if (!isTaskbarTab) {
       WINDOW_HIDEABLE_FEATURES.forEach(function (aItem) {
         aWindow[aItem].visible = !hidden.includes(aItem);
@@ -6613,7 +6795,6 @@ var SessionStoreInternal = {
         aWinData.sizemode || "",
         aWinData.sizemodeBeforeMinimized || ""
       );
-      this.restoreSidebar(aWindow, aWinData.sidebar, aWinData.isPopup);
       promiseParts.resolve(aWindow);
     }, 0);
     return promiseParts.promise;
@@ -6629,7 +6810,8 @@ var SessionStoreInternal = {
     if (!aSidebar || isPopup) {
       return;
     }
-    aWindow.SidebarController.initializeUIState(aSidebar);
+    aWindow.SidebarController.markSessionRestoreStateReceived();
+    aWindow.SidebarController.updateUIState(aSidebar);
   },
 
   /**
@@ -7048,11 +7230,18 @@ var SessionStoreInternal = {
     if (winState.isPrivate) {
       features.push("private");
     } else if (winState.isAIWindow) {
+      let tab = winState.tabs[winState.selected - 1];
+      let restoreSessionURL = "";
+      if (tab.entries.length) {
+        // tab.index is 1-based in the session store format (0/falsy means unset).
+        let activeIndex = (tab.index || tab.entries.length) - 1;
+        restoreSessionURL = tab.entries[activeIndex].url;
+      }
       argString = lazy.AIWindow.handleAIWindowOptions({
         openerWindow: null,
         args: argString,
         aiWindow: winState.isAIWindow,
-        restoreSession: true,
+        restoreSessionURL,
       });
     }
 
@@ -7276,8 +7465,8 @@ var SessionStoreInternal = {
       !(
         aTabState.entries.length == 1 &&
         (entryUrl == "about:blank" ||
-          entryUrl == "about:home" ||
-          entryUrl == "about:newtab" ||
+          (entryUrl == "about:home" && !aTabState.splitViewId) ||
+          (entryUrl == "about:newtab" && !aTabState.splitViewId) ||
           entryUrl == "about:privatebrowsing") &&
         !aTabState.userTypedValue
       )
@@ -8117,7 +8306,7 @@ var SessionStoreInternal = {
   },
 
   _restoreHistoryComplete(browser) {
-    let win = browser.ownerGlobal;
+    let win = browser.documentGlobal;
     let tab = win?.gBrowser.getTabForBrowser(browser);
     if (!tab) {
       return;
@@ -8135,7 +8324,7 @@ var SessionStoreInternal = {
   },
 
   _restoreTabContentStarted(browser, data) {
-    let win = browser.ownerGlobal;
+    let win = browser.documentGlobal;
     let tab = win?.gBrowser.getTabForBrowser(browser);
     if (!tab) {
       return;
@@ -8204,8 +8393,8 @@ var SessionStoreInternal = {
   },
 
   _restoreTabContentComplete(browser, data) {
-    let win = browser.ownerGlobal;
-    let tab = browser.ownerGlobal?.gBrowser.getTabForBrowser(browser);
+    let win = browser.documentGlobal;
+    let tab = win?.gBrowser.getTabForBrowser(browser);
     if (!tab) {
       return;
     }
@@ -8268,17 +8457,20 @@ var SessionStoreInternal = {
    * @param {MozTabbrowserTabGroup} tabGroup
    */
   addSavedTabGroup(tabGroup) {
-    if (PrivateBrowsingUtils.isWindowPrivate(tabGroup.ownerGlobal)) {
+    if (PrivateBrowsingUtils.isWindowPrivate(tabGroup.documentGlobal)) {
       throw new Error("Refusing to save tab group from private window");
     }
 
     let tabGroupState = lazy.TabGroupState.savedInOpenWindow(
       tabGroup,
-      tabGroup.ownerGlobal.__SSi
+      tabGroup.documentGlobal.__SSi
     );
     tabGroupState.tabs = this._collectClosedTabsForTabGroup(
       tabGroup.tabs,
-      tabGroup.ownerGlobal
+      tabGroup.documentGlobal
+    );
+    tabGroupState.splitViews = this._collectSplitViewDataForTabGroup(
+      tabGroup.tabs
     );
     this._recordSavedTabGroupState(tabGroupState);
   },
@@ -8295,8 +8487,8 @@ var SessionStoreInternal = {
       throw new Error(`No tab group found with id ${tabGroupId}`);
     }
 
-    const win = tabs[0].ownerGlobal;
-    if (!tabs.every(tab => tab.ownerGlobal === win)) {
+    const win = tabs[0].documentGlobal;
+    if (!tabs.every(tab => tab.documentGlobal === win)) {
       throw new Error(`All tabs must be part of the same window`);
     }
 
@@ -8310,6 +8502,10 @@ var SessionStoreInternal = {
       updateTabGroupId: tabGroupId,
     });
     tabGroupState.tabs.push(...newTabState);
+    let newSplitViewData = this._collectSplitViewDataForTabGroup(tabs);
+
+    tabGroupState.splitViews ??= [];
+    tabGroupState.splitViews.push(...newSplitViewData);
 
     let isVerticalMode = win.gBrowser.tabContainer.verticalMode;
     Glean.tabgroup.addTab.record({
@@ -8496,7 +8692,8 @@ var SessionStoreInternal = {
       true,
       0, // TODO Bug 1933113 - Save tab group position and selected tab with saved tab group data
       tabDataList,
-      [tabGroupData]
+      [tabGroupData],
+      tabGroupData.splitViews
     );
 
     this.restoreTabs(targetWindow, tabs, tabDataList, 0);

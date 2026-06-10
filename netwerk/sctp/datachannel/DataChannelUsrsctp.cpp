@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -96,7 +94,9 @@ class DataChannelRegistry {
     return Instance()->LookupImpl(aId);
   }
 
-  virtual ~DataChannelRegistry() {
+  // The singleton pointer has already been cleared before the destructor runs,
+  // so no other thread can reach this object. Skip lock analysis.
+  virtual ~DataChannelRegistry() MOZ_NO_THREAD_SAFETY_ANALYSIS {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
     if (NS_WARN_IF(!mConnections.empty())) {
@@ -132,22 +132,26 @@ class DataChannelRegistry {
     return Instance();
   }
 
-  uintptr_t RegisterImpl(DataChannelConnectionUsrsctp* aConnection) {
+  uintptr_t RegisterImpl(DataChannelConnectionUsrsctp* aConnection)
+      MOZ_REQUIRES(sInstanceMutex) {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     mConnections.emplace(mNextId, aConnection);
     return mNextId++;
   }
 
-  void DeregisterImpl(uintptr_t aId) {
+  void DeregisterImpl(uintptr_t aId) MOZ_REQUIRES(sInstanceMutex) {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     size_t removed = mConnections.erase(aId);
     (void)removed;
     MOZ_DIAGNOSTIC_ASSERT(removed);
   }
 
-  bool Empty() const { return mConnections.empty(); }
+  bool Empty() const MOZ_REQUIRES(sInstanceMutex) {
+    return mConnections.empty();
+  }
 
-  RefPtr<DataChannelConnectionUsrsctp> LookupImpl(uintptr_t aId) {
+  RefPtr<DataChannelConnectionUsrsctp> LookupImpl(uintptr_t aId)
+      MOZ_REQUIRES(sInstanceMutex) {
     auto it = mConnections.find(aId);
     if (NS_WARN_IF(it == mConnections.end())) {
       DC_DEBUG(("Can't find connection ulp %p", (void*)aId));
@@ -215,10 +219,11 @@ class DataChannelRegistry {
     sInitted = false;
   }
 
-  uintptr_t mNextId = 1;
-  std::map<uintptr_t, RefPtr<DataChannelConnectionUsrsctp>> mConnections;
+  uintptr_t mNextId MOZ_GUARDED_BY(sInstanceMutex) = 1;
+  std::map<uintptr_t, RefPtr<DataChannelConnectionUsrsctp>> mConnections
+      MOZ_GUARDED_BY(sInstanceMutex);
   UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker;
-  static StaticMutex sInstanceMutex MOZ_UNANNOTATED;
+  static StaticMutex sInstanceMutex;
   static bool sInitted;
 };
 

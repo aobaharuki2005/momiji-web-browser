@@ -318,6 +318,45 @@ For example:
 
    ``./mach try fuzzy --env "MOZ_LOG=nsHttp:5,SSLTokensCache:5"``
 
+Capturing a profile with logs at startup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a bug reproduces during startup, ``about:logging`` is too late to capture
+it.  You can start the Firefox profiler together with ``MOZ_LOG`` so that the
+log messages are interleaved with profiler samples and markers from all of the
+relevant networking threads.
+
+On Linux:
+
+::
+
+   MOZ_PROFILER_STARTUP=1 \
+   MOZ_LOG='timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,EarlyHint:5' \
+   MOZ_PROFILER_STARTUP_FILTERS='Cache2 I/O,Compositor,DNS Resolver,DOM Worker,GeckoMain,Renderer,Socket Thread,StreamTrans,SwComposite,TRR Background' \
+   MOZ_PROFILER_SHUTDOWN=/tmp/profile.json \
+   MOZ_PROFILER_SYMBOLICATE=1 \
+   /path/to/firefox/firefox
+
+On macOS, replace the last line with
+``/Applications/Firefox.app/Contents/MacOS/firefox``.  On Windows, set the
+variables with ``set`` (as in the Windows section above) and then launch
+``"c:\Program Files\Mozilla Firefox\firefox.exe"``.
+
+If you are working from a local Firefox build, you can use ``./mach run``
+instead of the firefox binary path; ``mach`` will forward the environment
+variables to the build it launches.
+
+The thread filters cover the main networking-related threads
+(``Socket Thread``, ``DNS Resolver``, ``Cache2 I/O``, ``StreamTrans``,
+``TRR Background``) as well as ``GeckoMain``, ``DOM Worker`` and the
+compositor/renderer threads, which is usually what you want when diagnosing a
+startup networking issue.  ``sync`` is included in ``MOZ_LOG`` so that no log
+messages are lost if Firefox crashes during startup.
+
+When Firefox exits the profile is written to ``/tmp/profile.json``.  Open it
+on https://profiler.firefox.com to inspect it, or upload it and share the
+resulting link.
+
 How to enable QUIC logging
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The steps to enable QUIC logging (`QLOG <https://datatracker.ietf.org/doc/draft-ietf-quic-qlog-main-schema/>`__) are:

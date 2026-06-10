@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -23,7 +22,7 @@
  *
  * NOTE: What you need to do when you add new event messages?
  * - If the new events are dispatched to the DOM, they should be registered in
- *   dom/events/EventNameList.h
+ *   dom/events/EventNameList.inc
  * - If the new events are dispatched to the DOM, set proper default values of
  *   "bubbles" and "cancelable" in WidgetEvent::SetDefaultCancelableAndBubbles()
  *   defined in widget/BasicEvents.h.
@@ -155,8 +154,6 @@ NS_EVENT_MESSAGE(eFormReset)
 NS_EVENT_MESSAGE(eFormChange)
 NS_EVENT_MESSAGE(eFormSelect)
 NS_EVENT_MESSAGE(eFormInvalid)
-NS_EVENT_MESSAGE(eFormCheckboxStateChange)
-NS_EVENT_MESSAGE(eFormRadioStateChange)
 NS_EVENT_MESSAGE(eFormData)
 
 // Need separate focus/blur notifications for non-native widgets
@@ -243,6 +240,8 @@ NS_EVENT_MESSAGE(eLegacyDOMFocusOut)
 // pagetransition events
 NS_EVENT_MESSAGE(ePageShow)
 NS_EVENT_MESSAGE(ePageHide)
+
+NS_EVENT_MESSAGE(ePageReveal)
 
 // Canvas events
 NS_EVENT_MESSAGE(eContextLost)

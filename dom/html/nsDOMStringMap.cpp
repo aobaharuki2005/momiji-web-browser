@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -78,6 +76,7 @@ void nsDOMStringMap::NamedGetter(const nsAString& aProp, bool& found,
   found = mElement->GetAttr(attr, aResult);
 }
 
+// https://html.spec.whatwg.org/#dom-domstringmap-setitem
 void nsDOMStringMap::NamedSetter(const nsAString& aProp,
                                  const nsAString& aValue, ErrorResult& rv) {
   nsAutoString attr;
@@ -86,16 +85,15 @@ void nsDOMStringMap::NamedSetter(const nsAString& aProp,
     return;
   }
 
-  nsresult res = nsContentUtils::CheckQName(attr, false);
-  if (NS_FAILED(res)) {
-    rv.Throw(res);
+  if (!nsContentUtils::IsValidAttributeLocalName(attr)) {
+    rv.ThrowInvalidCharacterError("Invalid attribute name");
     return;
   }
 
   RefPtr<nsAtom> attrAtom = NS_Atomize(attr);
   MOZ_ASSERT(attrAtom, "Should be infallible");
 
-  res = mElement->SetAttr(kNameSpaceID_None, attrAtom, aValue, true);
+  nsresult res = mElement->SetAttr(kNameSpaceID_None, attrAtom, aValue, true);
   if (NS_FAILED(res)) {
     rv.Throw(res);
   }

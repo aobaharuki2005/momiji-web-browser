@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -38,14 +36,14 @@ ParseRecordObject* ParseRecordObject::create(JSContext* cx,
   }
 
   if (parseNode) {
-    obj->initSlot(ParseNodeSlot, StringValue(parseNode));
+    obj->initReservedSlot(ParseNodeSlot, StringValue(parseNode));
   }
-  obj->initSlot(ValueSlot, val);
+  obj->initReservedSlot(ValueSlot, val);
   return obj;
 }
 
 JS::PropertyKey ParseRecordObject::getKey(JSContext* cx) const {
-  Rooted<Value> slot(cx, getSlot(KeySlot));
+  Rooted<Value> slot(cx, getReservedSlot(KeySlot));
   Rooted<JS::PropertyKey> key(cx);
   MOZ_ALWAYS_TRUE(JS_ValueToId(cx, slot, &key));
   return key;
@@ -56,7 +54,7 @@ bool ParseRecordObject::setKey(JSContext* cx, const JS::PropertyKey& key) {
   if (!JS_IdToValue(cx, key, &val)) {
     return false;
   }
-  setSlot(KeySlot, val);
+  setReservedSlot(KeySlot, val);
   return true;
 }
 

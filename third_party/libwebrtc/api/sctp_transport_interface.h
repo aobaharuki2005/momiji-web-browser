@@ -11,14 +11,52 @@
 #ifndef API_SCTP_TRANSPORT_INTERFACE_H_
 #define API_SCTP_TRANSPORT_INTERFACE_H_
 
+#include <cstdint>
 #include <optional>
+#include <vector>
 
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "api/dtls_transport_interface.h"
 #include "api/ref_count.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
+
+// Constants that are important to API users
+
+// The number of outgoing streams that we'll negotiate.
+// Note: "max" and "min" here are inclusive.
+constexpr uint16_t kMaxSctpStreams = 65535;
+constexpr uint16_t kMaxSctpSid = kMaxSctpStreams - 1;
+constexpr uint16_t kMinSctpSid = 0;
+// The maximum number of streams that can be negotiated according to spec.
+constexpr uint16_t kSpecMaxSctpSid = 65535;
+
+// This is the default SCTP port to use. It is passed along the wire and the
+// connectee and connector must be using the same port. It is not related to the
+// ports at the IP level. (Corresponds to: sockaddr_conn.sconn_port in
+// usrsctp.h)
+const int kSctpDefaultPort = 5000;
+
+// Error cause codes defined at
+// https://www.iana.org/assignments/sctp-parameters/sctp-parameters.xhtml#sctp-parameters-24
+enum class SctpErrorCauseCode : uint16_t {
+  kInvalidStreamIdentifier = 1,
+  kMissingMandatoryParameter = 2,
+  kStaleCookieError = 3,
+  kOutOfResource = 4,
+  kUnresolvableAddress = 5,
+  kUnrecognizedChunkType = 6,
+  kInvalidMandatoryParameter = 7,
+  kUnrecognizedParameters = 8,
+  kNoUserData = 9,
+  kCookieReceivedWhileShuttingDown = 10,
+  kRestartWithNewAddresses = 11,
+  kUserInitiatedAbort = 12,
+  kProtocolViolation = 13,
+};
 
 // States of a SCTP transport, corresponding to the JS API specification.
 // http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate
@@ -29,6 +67,26 @@ enum class SctpTransportState {
   kClosed,      // Closed by local or remote party.
   kNumValues
 };
+template <typename Sink>
+void AbslStringify(Sink& sink, SctpTransportState state) {
+  switch (state) {
+    case SctpTransportState::kNew:
+      sink.Append("New");
+      break;
+    case SctpTransportState::kConnecting:
+      sink.Append("Connecting");
+      break;
+    case SctpTransportState::kConnected:
+      sink.Append("Connected");
+      break;
+    case SctpTransportState::kClosed:
+      sink.Append("Closed");
+      break;
+    default:
+      absl::Format(&sink, "illegal state %d", static_cast<int>(state));
+      break;
+  }
+}
 
 // This object gives snapshot information about the changeable state of a
 // SctpTransport.
@@ -57,6 +115,13 @@ class RTC_EXPORT SctpTransportInformation {
   scoped_refptr<DtlsTransportInterface> dtls_transport_;
   std::optional<double> max_message_size_;
   std::optional<int> max_channels_;
+  template <typename Sink>
+  friend void AbslStringify(Sink& sink, const SctpTransportInformation& info) {
+    absl::Format(
+        &sink, "[state %v msgsize %s channels %s]", info.state_,
+        info.max_message_size_ ? absl::StrCat(*info.max_message_size_) : "none",
+        info.max_channels_ ? absl::StrCat(*info.max_channels_) : "none");
+  }
 };
 
 class SctpTransportObserverInterface {
@@ -105,6 +170,12 @@ struct SctpOptions {
   // `max_message_size` sets the maxium message size on the connection.
   // It must be smaller than or equal to kSctpSendBufferSize.
   int max_message_size = kSctpSendBufferSize;
+
+  // Negotiated in the SCTP handshake.
+  int max_sctp_streams = kMaxSctpStreams;
+  // draft-hancke-tsvwg-snap
+  std::optional<std::vector<uint8_t>> local_init;
+  std::optional<std::vector<uint8_t>> remote_init;
 };
 
 }  // namespace webrtc

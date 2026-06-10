@@ -7,7 +7,9 @@ import {
   kTextureDimensions,
   kTextureUsages,
   isValidTextureUsageCombination,
-  kValidCombinationsOfOneOrTwoTextureUsages } from
+  kValidCombinationsOfOneOrTwoTextureUsages,
+  kAllTextureUsages,
+  kSomeBogusTextureUsage } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
@@ -135,7 +137,7 @@ fn((t) => {
     () => {
       t.createTextureTracked(descriptor);
     },
-    !textureDimensionAndFormatCompatibleForDevice(t.device, dimension, format)
+    !textureDimensionAndFormatCompatibleForDevice(t.device.features, dimension, format)
   );
 });
 
@@ -298,7 +300,8 @@ fn((t) => {
   };
 
   const success =
-  sampleCount === 1 || sampleCount === 4 && isTextureFormatMultisampled(t.device, format);
+  sampleCount === 1 ||
+  sampleCount === 4 && isTextureFormatMultisampled(t.device.features, format);
 
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
@@ -357,7 +360,7 @@ fn((t) => {
   if ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0) {
     t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
   }
-  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
   if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
     t.skipIfTransientAttachmentNotSupported();
   }
@@ -380,12 +383,12 @@ fn((t) => {
 
   const satisfyWithStorageUsageRequirement =
   (usage & GPUConst.TextureUsage.STORAGE_BINDING) === 0 ||
-  isTextureFormatUsableWithStorageAccessMode(t.device, format, 'write-only');
+  isTextureFormatUsableWithStorageAccessMode(t.device.features, format, 'write-only');
 
   const success =
   sampleCount === 1 && satisfyWithStorageUsageRequirement ||
   sampleCount === 4 &&
-  isTextureFormatMultisampled(t.device, format) && (
+  isTextureFormatMultisampled(t.device.features, format) && (
   dimension === '2d' || dimension === undefined) &&
   mipLevelCount === 1 &&
   arrayLayerCount === 1 &&
@@ -992,7 +995,7 @@ fn((t) => {
   size[0] <= maxTextureDimension3D &&
   size[1] <= maxTextureDimension3D &&
   size[2] <= maxTextureDimension3D &&
-  textureDimensionAndFormatCompatibleForDevice(t.device, '3d', format);
+  textureDimensionAndFormatCompatibleForDevice(t.device.features, '3d', format);
 
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
@@ -1034,7 +1037,7 @@ fn((t) => {
     usage
   };
 
-  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
   if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
     t.skipIfTransientAttachmentNotSupported();
   }
@@ -1044,12 +1047,15 @@ fn((t) => {
   // Note that we unconditionally test copy usages for all formats and
   // expect failure if copying from or to is not supported.
   if (usage & GPUTextureUsage.STORAGE_BINDING) {
-    if (!isTextureFormatUsableWithStorageAccessMode(t.device, format, 'write-only'))
+    if (!isTextureFormatUsableWithStorageAccessMode(t.device.features, format, 'write-only'))
     success = false;
   }
   if (usage & GPUTextureUsage.RENDER_ATTACHMENT) {
     if (appliedDimension === '1d') success = false;
-    if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
+    if (
+    isColorTextureFormat(format) &&
+    !isTextureFormatColorRenderable(t.device.features, format))
+
     success = false;
   }
   if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
@@ -1071,7 +1077,7 @@ combine('depthOrArrayLayers', [1, 2]).
 combine('mipLevelCount', [1, 2])
 ).
 fn((t) => {
-  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
   t.skipIfTransientAttachmentNotSupported();
 
   const { format, depthOrArrayLayers, mipLevelCount } = t.params;
@@ -1092,6 +1098,67 @@ fn((t) => {
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
   }, !success);
+});
+
+g.test('usage').
+desc('Test combinations of zero to two usage flags are validated to be valid.').
+params((u) =>
+u.
+combine('usage1', [0, ...kTextureUsages, kSomeBogusTextureUsage]).
+combine('usage2', [0, ...kTextureUsages, kSomeBogusTextureUsage]).
+filter((p) => p.usage1 <= p.usage2)
+).
+fn((t) => {
+  const { usage1, usage2 } = t.params;
+  const usage = usage1 | usage2;
+
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
+  if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+    t.skipIfTransientAttachmentNotSupported();
+  }
+
+  const isValid =
+  usage !== 0 &&
+  (usage & ~kAllTextureUsages) === 0 && (
+  (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) === 0 ||
+  usage === (GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT));
+
+  t.expectGPUError(
+    'validation',
+    () => {
+      t.createTextureTracked({ format: 'rgba8unorm', size: [1, 1], usage });
+    },
+    !isValid
+  );
+});
+
+g.test('new_usages').
+desc(`Valid usages not present in GPUTextureUsage shouldn't be accepted by createTexture().`).
+params((u) =>
+u.
+combine('usage', [
+...kTextureUsages,
+GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT]
+).
+filter((p) => isValidTextureUsageCombination(p.usage))
+).
+fn((t) => {
+  const { usage } = t.params;
+
+  let exposedUsages = 0;
+  for (const v of Object.values(GPUTextureUsage)) {
+    exposedUsages |= v;
+  }
+
+  const success = (usage & exposedUsages) === usage;
+
+  t.expectGPUError(
+    'validation',
+    () => {
+      t.createTextureTracked({ format: 'rgba8unorm', size: [1, 1], usage });
+    },
+    !success
+  );
 });
 
 g.test('viewFormats').
@@ -1115,7 +1182,7 @@ fn((t) => {
   t.skipIfTextureFormatNotSupported(format, viewFormat);
 
   const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
-  const compatible = textureFormatsAreViewCompatible(t.device, format, viewFormat);
+  const compatible = textureFormatsAreViewCompatible(t.device.features, format, viewFormat);
 
   // Test the viewFormat in the list.
   t.expectValidationError(() => {
@@ -1146,4 +1213,57 @@ fn((t) => {
       viewFormats: [viewFormat, viewFormat]
     });
   }, !compatible);
+});
+
+g.test('transient_viewFormats').
+desc(`Test that viewFormats is not allowed with TRANSIENT_ATTACHMENT textures.`).
+params((u) =>
+u
+// Just test rgba8unorm formats as this check doesn't care about what the format is.
+.combineWithParams([
+{ format: 'rgba8unorm', _otherFormat: 'rgba8unorm-srgb' },
+{ format: 'rgba8unorm-srgb', _otherFormat: 'rgba8unorm' }]
+).
+beginSubcases().
+expandWithParams(({ format, _otherFormat }) => [
+// Control cases
+{ useTransient: true, viewFormat: undefined },
+{ useTransient: false, viewFormat: format },
+{ useTransient: false, viewFormat: _otherFormat },
+// Invalid cases
+{ useTransient: true, viewFormat: format },
+{ useTransient: true, viewFormat: _otherFormat }]
+)
+).
+fn((t) => {
+  const { format, viewFormat, useTransient } = t.params;
+  if (viewFormat && !textureFormatsAreViewCompatible(t.device.features, format, viewFormat)) {
+    t.skip(`"${format}" and "${viewFormat}" are not view-compatible`);
+  }
+
+  const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
+
+  const invalid = useTransient && viewFormat !== undefined;
+  let tex;
+  t.expectValidationError(() => {
+    tex = t.createTextureTracked({
+      format,
+      size: [blockWidth, blockHeight],
+      usage:
+      GPUConst.TextureUsage.RENDER_ATTACHMENT | (
+      useTransient ? GPUConst.TextureUsage.TRANSIENT_ATTACHMENT : 0),
+      // Doesn't matter what formats we request, TRANSIENT_ATTACHMENT doesn't allow it.
+      // So we use [format] since that's otherwise ALWAYS valid regardless of format.
+      viewFormats: viewFormat ? [viewFormat] : undefined
+    });
+  }, invalid);
+
+  if (invalid) {
+    // When we reach here the texture should be invalid, so creating a view should be invalid.
+    // But try it anyway just to see what happens - if the browser had a bug above, this could
+    // issue a bad command to the backend API.
+    t.expectValidationError(() => {
+      tex.createView({ format: viewFormat });
+    }, true);
+  }
 });
