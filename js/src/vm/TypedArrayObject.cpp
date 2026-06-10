@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -30,11 +28,11 @@
 #endif
 #include <type_traits>
 
-#include "jsnum.h"
 #include "jstypes.h"
 
 #include "builtin/Array.h"
 #include "builtin/DataViewObject.h"
+#include "builtin/Number.h"
 #include "gc/Barrier.h"
 #include "gc/MaybeRooted.h"
 #include "jit/InlinableNatives.h"
@@ -69,6 +67,7 @@
 #include "vm/Compartment-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/StringType-inl.h"
 
 using namespace js;
 
@@ -4317,11 +4316,6 @@ TypedArrayObject* js::TypedArraySubarrayRecover(JSContext* cx,
   return TypedArraySubarrayWithLength(cx, obj, start, length);
 }
 
-// Byte vector with large enough inline storage to allow constructing small
-// typed arrays without extra heap allocations.
-using ByteVector =
-    js::Vector<uint8_t, FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT>;
-
 static UniqueChars QuoteString(JSContext* cx, char16_t ch) {
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
@@ -5053,13 +5047,143 @@ static auto FromBase64(JSLinearString* string, Alphabet alphabet,
 }
 
 /**
+ * Allocate uint8_t array for base64 decoding, followed by transformation
+ * to TypedArrayObject.
+ */
+class MOZ_NON_PARAM Uint8Buffer {
+  static constexpr size_t InlineLength =
+      FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT;
+
+  uint8_t inlineBuf_[InlineLength];
+  UniquePtr<uint8_t[], JS::FreePolicy> ownedBuf_;
+
+  size_t length_ = 0;
+
+ public:
+  size_t length() { return length_; };
+
+  uint8_t* data() { return ownedBuf_ ? ownedBuf_.get() : inlineBuf_; };
+
+  /**
+   * Allocate uint8_t array for base64 decoding. If the length is small enough
+   * use the inlineBuf.
+   */
+  bool maybeAlloc(JSContext* cx, size_t length);
+
+  /**
+   * Reallocate uint8_t array to a smaller length with some acceptable threshold
+   * to not reallocate. If the inlineBuf is used do not reallocate.
+   */
+  bool maybeRealloc(JSContext* cx, size_t newLength);
+
+  /**
+   * Transform the allocated uint8 array into a TypedArrayObject and return it.
+   * If it does not exist (i.e., the inline array) then create a new
+   * TypedArrayObject and copy the contents of the inlineBuf to it.
+   */
+  TypedArrayObject* toTypedArrayObject(JSContext* cx);
+};
+
+bool Uint8Buffer::maybeAlloc(JSContext* cx, size_t length) {
+  length_ = length;
+  if (length <= InlineLength) {
+    return true;
+  }
+
+  ownedBuf_ =
+      cx->make_pod_arena_array<uint8_t>(js::ArrayBufferContentsArena, length);
+  return !!ownedBuf_;
+}
+
+bool Uint8Buffer::maybeRealloc(JSContext* cx, size_t newLength) {
+  MOZ_ASSERT(newLength <= length_);
+  if (length_ <= InlineLength) {
+    length_ = newLength;
+    return true;
+  }
+  MOZ_ASSERT(ownedBuf_);
+
+  if (newLength <= InlineLength) {
+    std::copy_n(ownedBuf_.get(), newLength, inlineBuf_);
+    ownedBuf_ = nullptr;
+    length_ = newLength;
+    return true;
+  }
+
+  // The initial byte size estimation is based on the complete string length,
+  // so it includes trailing padding and interspersed whitespace characters.
+  // Common base64 variants split lines at 64 characters (RFC 1421, RFC 7468) or
+  // 76 characters (RFC 2045, RFC 9580), which can introduce ~4% whitespace. To
+  // avoid reallocating for these common base64 formats, small over-allocations
+  // are deemed acceptable. We allow up to 6.25% wasted memory instead of 4%,
+  // because the former can easily be computed with a single shift operation.
+  //
+  // Also don't bother shrinking the allocation unless at least 80 bytes will be
+  // saved, which is a somewhat arbitrary number.
+  constexpr size_t minBytesToReclaim = 80;
+
+  size_t overAllocation = length_ - newLength;
+
+  if (overAllocation < minBytesToReclaim || overAllocation <= length_ / 16) {
+    length_ = newLength;
+    return true;
+  }
+
+  uint8_t* oldOwnedBuf = ownedBuf_.release();
+  uint8_t* newOwnedBuf = cx->pod_arena_realloc<uint8_t>(
+      js::ArrayBufferContentsArena, oldOwnedBuf, length_, newLength);
+
+  if (!newOwnedBuf) {
+    js_free(oldOwnedBuf);
+    return false;
+  }
+
+  ownedBuf_ = UniquePtr<uint8_t[], JS::FreePolicy>(newOwnedBuf);
+  length_ = newLength;
+  return true;
+}
+
+TypedArrayObject* Uint8Buffer::toTypedArrayObject(JSContext* cx) {
+  if (!ownedBuf_) {
+    TypedArrayObject* tarray =
+        TypedArrayObjectTemplate<uint8_t>::fromLength(cx, length_);
+    if (!tarray) {
+      return nullptr;
+    }
+
+    auto target = SharedMem<uint8_t*>::unshared(tarray->dataPointerUnshared());
+    auto source = SharedMem<uint8_t*>::unshared(inlineBuf_);
+    UnsharedOps::podCopy(target, source, length_);
+
+    return tarray;
+  }
+
+  auto bufferContents =
+      ArrayBufferObject::BufferContents::createMallocedArrayBufferContentsArena(
+          ownedBuf_.get());
+
+  Rooted<ArrayBufferObject*> buffer(
+      cx, ArrayBufferObject::createForContents(cx, length_, bufferContents));
+  if (!buffer) {
+    return nullptr;
+  }
+
+  // If and only if an ArrayBuffer is successfully created, ownership of
+  // |ownedBuf_| is transferred to the new ArrayBuffer.
+  (void)ownedBuf_.release();
+
+  return TypedArrayObjectTemplate<uint8_t>::fromBuffer(cx, buffer, 0, length_);
+}
+
+/**
  * FromBase64 ( string, alphabet, lastChunkHandling [ , maxLength ] )
  *
  * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64
  */
 static auto FromBase64(JSLinearString* string, Alphabet alphabet,
-                       LastChunkHandling lastChunkHandling, ByteVector& bytes) {
-  auto data = SharedMem<uint8_t*>::unshared(bytes.begin());
+                       LastChunkHandling lastChunkHandling,
+                       Uint8Buffer& bytes) {
+  auto data = SharedMem<uint8_t*>::unshared(bytes.data());
   size_t maxLength = bytes.length();
   return FromBase64<UnsharedOps>(string, alphabet, lastChunkHandling, data,
                                  maxLength);
@@ -5225,8 +5349,8 @@ static bool uint8array_fromBase64(JSContext* cx, unsigned argc, Value* vp) {
                 "string length doesn't exceed maximum typed array length");
 
   // Step 10.
-  ByteVector bytes(cx);
-  if (!bytes.resizeUninitialized(outLength.value())) {
+  Uint8Buffer bytes;
+  if (!bytes.maybeAlloc(cx, outLength.value())) {
     return false;
   }
 
@@ -5246,17 +5370,15 @@ static bool uint8array_fromBase64(JSContext* cx, unsigned argc, Value* vp) {
   // Step 11.
   size_t resultLength = result.written;
 
-  // Step 12.
-  auto* tarray =
-      TypedArrayObjectTemplate<uint8_t>::fromLength(cx, resultLength);
-  if (!tarray) {
+  // Step 12-13.
+  if (!bytes.maybeRealloc(cx, resultLength)) {
     return false;
   }
 
-  // Step 13.
-  auto target = SharedMem<uint8_t*>::unshared(tarray->dataPointerUnshared());
-  auto source = SharedMem<uint8_t*>::unshared(bytes.begin());
-  UnsharedOps::podCopy(target, source, resultLength);
+  TypedArrayObject* tarray = bytes.toTypedArrayObject(cx);
+  if (!tarray) {
+    return false;
+  }
 
   // Step 14.
   args.rval().setObject(*tarray);
@@ -5514,13 +5636,25 @@ static bool uint8array_setFromHex(JSContext* cx, unsigned argc, Value* vp) {
 
 template <typename Ops>
 static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
-                     OmitPadding omitPadding, JSStringBuilder& sb) {
+                     OmitPadding omitPadding, mozilla::Range<Latin1Char> out) {
   const auto& base64Chars = alphabet == Alphabet::Base64
                                 ? Base64::Encode::Base64
                                 : Base64::Encode::Base64Url;
 
   auto encode = [&base64Chars](uint32_t value) {
     return base64Chars[value & 0x3f];
+  };
+
+  auto outPtr = out.begin();
+
+  auto append = [&](char ch) { *outPtr++ = ch; };
+
+  auto appendN = [&]<size_t N>(const char (&s)[N]) {
+    auto* dest = outPtr.get();
+
+    // Increment before writing to assert we're still in range.
+    outPtr += N;
+    std::memcpy(dest, s, N);
   };
 
   // Our implementation directly converts the bytes to their string
@@ -5547,7 +5681,7 @@ static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
             encode(u24 >> 6),
             encode(u24 >> 0),
         };
-        sb.infallibleAppend(chars, sizeof(chars));
+        appendN(chars);
 
         MOZ_ASSERT(toRead >= 3);
         toRead -= 3;
@@ -5576,7 +5710,7 @@ static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
           encode(u24_1 >> 18), encode(u24_1 >> 12),
           encode(u24_1 >> 6),  encode(u24_1 >> 0),
       };
-      sb.infallibleAppend(chars1, sizeof(chars1));
+      appendN(chars1);
 
       char chars2[] = {
           encode(u24_2 >> 18), encode(u24_2 >> 12),
@@ -5585,7 +5719,7 @@ static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
           encode(u24_3 >> 18), encode(u24_3 >> 12),
           encode(u24_3 >> 6),  encode(u24_3 >> 0),
       };
-      sb.infallibleAppend(chars2, sizeof(chars2));
+      appendN(chars2);
     }
     data = data32.template cast<uint8_t*>();
   }
@@ -5604,7 +5738,7 @@ static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
         encode(u24 >> 6),
         encode(u24 >> 0),
     };
-    sb.infallibleAppend(chars, sizeof(chars));
+    appendN(chars);
   }
 
   // Trailing two and one element bytes are optionally padded with '='.
@@ -5615,11 +5749,11 @@ static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
     auto u24 = (uint32_t(byte0) << 16) | (uint32_t(byte1) << 8);
 
     // Encode the uint24 value as base64, optionally including padding.
-    sb.infallibleAppend(encode(u24 >> 18));
-    sb.infallibleAppend(encode(u24 >> 12));
-    sb.infallibleAppend(encode(u24 >> 6));
+    append(encode(u24 >> 18));
+    append(encode(u24 >> 12));
+    append(encode(u24 >> 6));
     if (omitPadding == OmitPadding::No) {
-      sb.infallibleAppend('=');
+      append('=');
     }
   } else if (toRead == 1) {
     // Combine one input byte into a single uint24 value.
@@ -5627,15 +5761,17 @@ static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
     auto u24 = uint32_t(byte0) << 16;
 
     // Encode the uint24 value as base64, optionally including padding.
-    sb.infallibleAppend(encode(u24 >> 18));
-    sb.infallibleAppend(encode(u24 >> 12));
+    append(encode(u24 >> 18));
+    append(encode(u24 >> 12));
     if (omitPadding == OmitPadding::No) {
-      sb.infallibleAppend('=');
-      sb.infallibleAppend('=');
+      append('=');
+      append('=');
     }
   } else {
     MOZ_ASSERT(toRead == 0);
   }
+
+  MOZ_ASSERT(outPtr == out.end(), "all characters were written");
 }
 
 /**
@@ -5692,22 +5828,25 @@ static bool uint8array_toBase64(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  JSStringBuilder sb(cx);
-  if (!sb.reserve(outLength.value())) {
+  StringChars<Latin1Char> chars(cx);
+  if (!chars.maybeAlloc(cx, outLength.value())) {
     return false;
   }
 
   // Steps 9-10.
-  if (tarray->isSharedMemory()) {
-    ToBase64<SharedOps>(tarray, *length, alphabet, omitPadding, sb);
-  } else {
-    ToBase64<UnsharedOps>(tarray, *length, alphabet, omitPadding, sb);
+  {
+    JS::AutoCheckCannotGC nogc;
+    mozilla::Range<Latin1Char> r(chars.data(nogc), outLength.value());
+
+    if (tarray->isSharedMemory()) {
+      ToBase64<SharedOps>(tarray, *length, alphabet, omitPadding, r);
+    } else {
+      ToBase64<UnsharedOps>(tarray, *length, alphabet, omitPadding, r);
+    }
   }
 
-  MOZ_ASSERT(sb.length() == outLength.value(), "all characters were written");
-
   // Step 11.
-  auto* str = sb.finishString();
+  auto* str = chars.toStringDontDeflate<CanGC>(cx, outLength.value());
   if (!str) {
     return false;
   }
@@ -5731,10 +5870,20 @@ static bool uint8array_toBase64(JSContext* cx, unsigned argc, Value* vp) {
 
 template <typename Ops>
 static void ToHex(TypedArrayObject* tarray, size_t length,
-                  JSStringBuilder& sb) {
+                  mozilla::Range<Latin1Char> out) {
   // NB: Lower case hex digits.
   static constexpr char HexDigits[] = "0123456789abcdef";
   static_assert(std::char_traits<char>::length(HexDigits) == 16);
+
+  auto outPtr = out.begin();
+
+  auto appendN = [&]<size_t N>(const char (&s)[N]) {
+    auto* dest = outPtr.get();
+
+    // Increment before writing to assert we're still in range.
+    outPtr += N;
+    std::memcpy(dest, s, N);
+  };
 
   // Process multiple bytes per loop to reduce number of calls to
   // infallibleAppend. Choose four bytes because tested compilers can optimize
@@ -5757,7 +5906,7 @@ static void ToHex(TypedArrayObject* tarray, size_t length,
       chars[i * 2 + 1] = HexDigits[byte & 0xf];
     }
 
-    sb.infallibleAppend(chars, sizeof(chars));
+    appendN(chars);
   }
 
   // Write the remaining characters.
@@ -5768,8 +5917,41 @@ static void ToHex(TypedArrayObject* tarray, size_t length,
     chars[0] = HexDigits[byte >> 4];
     chars[1] = HexDigits[byte & 0xf];
 
-    sb.infallibleAppend(chars, sizeof(chars));
+    appendN(chars);
   }
+
+  MOZ_ASSERT(outPtr == out.end(), "all characters were written");
+}
+
+template <>
+void ToHex<UnsharedOps>(TypedArrayObject* tarray, size_t length,
+                        mozilla::Range<Latin1Char> out) {
+  // Convert to lower case hex digit.
+  //
+  // Doesn't use a lookup table to make it optimizable for the auto-vectorizer.
+  // The auto-vectorizer can't inline through SharedOps, so this code path is
+  // only used for UnsharedOps.
+  //
+  // https://lemire.me/blog/2026/02/02/converting-data-to-hexadecimal-outputs-quickly/
+  auto toLowerHex = [](uint8_t x) -> char {
+    static_assert('a' - '9' == 40);
+    return x + '0' + ((x > 9) * 39);
+  };
+
+  auto outPtr = out.begin();
+
+  // Steps 3 and 5.
+  //
+  // Our implementation directly converts the bytes to their string
+  // representation instead of first collecting them into an intermediate list.
+  auto data = UnsharedOps::extract(tarray).template cast<uint8_t*>();
+  for (size_t index = 0; index < length;) {
+    auto byte = UnsharedOps::load(data + index++);
+    *outPtr++ = toLowerHex(byte >> 4);
+    *outPtr++ = toLowerHex(byte & 0xf);
+  }
+
+  MOZ_ASSERT(outPtr == out.end(), "all characters were written");
 }
 
 /**
@@ -5803,22 +5985,25 @@ static bool uint8array_toHex(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  JSStringBuilder sb(cx);
-  if (!sb.reserve(outLength)) {
+  StringChars<Latin1Char> chars(cx);
+  if (!chars.maybeAlloc(cx, outLength)) {
     return false;
   }
 
   // Steps 3 and 5.
-  if (tarray->isSharedMemory()) {
-    ToHex<SharedOps>(tarray, *length, sb);
-  } else {
-    ToHex<UnsharedOps>(tarray, *length, sb);
+  {
+    JS::AutoCheckCannotGC nogc;
+    mozilla::Range<Latin1Char> r(chars.data(nogc), outLength);
+
+    if (tarray->isSharedMemory()) {
+      ToHex<SharedOps>(tarray, *length, r);
+    } else {
+      ToHex<UnsharedOps>(tarray, *length, r);
+    }
   }
 
-  MOZ_ASSERT(sb.length() == outLength, "all characters were written");
-
   // Step 6.
-  auto* str = sb.finishString();
+  auto* str = chars.toStringDontDeflate<CanGC>(cx, outLength);
   if (!str) {
     return false;
   }
@@ -6133,42 +6318,16 @@ bool TypedArrayObject::getElements(JSContext* cx,
  */
 
 static const JSClassOps TypedArrayClassOps = {
-    nullptr,                                // addProperty
-    nullptr,                                // delProperty
-    nullptr,                                // enumerate
-    nullptr,                                // newEnumerate
-    nullptr,                                // resolve
-    nullptr,                                // mayResolve
-    FixedLengthTypedArrayObject::finalize,  // finalize
-    nullptr,                                // call
-    nullptr,                                // construct
-    ArrayBufferViewObject::trace,           // trace
+    .finalize = FixedLengthTypedArrayObject::finalize,
+    .trace = ArrayBufferViewObject::trace,
 };
 
 static const JSClassOps ResizableTypedArrayClassOps = {
-    nullptr,                       // addProperty
-    nullptr,                       // delProperty
-    nullptr,                       // enumerate
-    nullptr,                       // newEnumerate
-    nullptr,                       // resolve
-    nullptr,                       // mayResolve
-    nullptr,                       // finalize
-    nullptr,                       // call
-    nullptr,                       // construct
-    ArrayBufferViewObject::trace,  // trace
+    .trace = ArrayBufferViewObject::trace,
 };
 
 static const JSClassOps ImmutableTypedArrayClassOps = {
-    nullptr,                       // addProperty
-    nullptr,                       // delProperty
-    nullptr,                       // enumerate
-    nullptr,                       // newEnumerate
-    nullptr,                       // resolve
-    nullptr,                       // mayResolve
-    nullptr,                       // finalize
-    nullptr,                       // call
-    nullptr,                       // construct
-    ArrayBufferViewObject::trace,  // trace
+    .trace = ArrayBufferViewObject::trace,
 };
 
 static const ClassExtension TypedArrayClassExtension = {
@@ -6361,7 +6520,7 @@ Scalar::Type js::TypedArrayConstructorType(const JSFunction* fun) {
 
 bool js::IsBufferSource(JSContext* cx, JSObject* object, bool allowShared,
                         bool allowResizable, SharedMem<uint8_t*>* dataPointer,
-                        size_t* byteLength) {
+                        size_t* byteLength, bool* isShared) {
   if (object->is<TypedArrayObject>()) {
     Rooted<TypedArrayObject*> view(cx, &object->as<TypedArrayObject>());
     if (!allowShared && view->isSharedMemory()) {
@@ -6378,6 +6537,9 @@ bool js::IsBufferSource(JSContext* cx, JSObject* object, bool allowShared,
     }
     *dataPointer = view->dataPointerEither().cast<uint8_t*>();
     *byteLength = view->byteLength().valueOr(0);
+    if (isShared) {
+      *isShared = view->isSharedMemory();
+    }
     return true;
   }
 
@@ -6397,6 +6559,9 @@ bool js::IsBufferSource(JSContext* cx, JSObject* object, bool allowShared,
     }
     *dataPointer = view->dataPointerEither().cast<uint8_t*>();
     *byteLength = view->byteLength().valueOr(0);
+    if (isShared) {
+      *isShared = view->isSharedMemory();
+    }
     return true;
   }
 
@@ -6412,6 +6577,9 @@ bool js::IsBufferSource(JSContext* cx, JSObject* object, bool allowShared,
     }
     *dataPointer = buffer->dataPointerEither();
     *byteLength = buffer->byteLength();
+    if (isShared) {
+      *isShared = false;
+    }
     return true;
   }
 
@@ -6423,6 +6591,9 @@ bool js::IsBufferSource(JSContext* cx, JSObject* object, bool allowShared,
     // This will always be locked and out of line.
     *dataPointer = buffer.dataPointerShared();
     *byteLength = buffer.byteLength();
+    if (isShared) {
+      *isShared = true;
+    }
     return true;
   }
 
@@ -7195,7 +7366,8 @@ bool TypedArrayObject::sort(JSContext* cx, unsigned argc, Value* vp) {
   // If we have a comparator argument, use the JIT trampoline implementation
   // instead. This avoids a performance cliff (especially with large arrays)
   // because C++ => JIT calls are much slower than Trampoline => JIT calls.
-  if (args.hasDefined(0) && jit::IsBaselineInterpreterEnabled()) {
+  if (args.hasDefined(0) && jit::IsBaselineInterpreterEnabled() &&
+      !jit::TooManyActualArguments(args.length())) {
     return CallTrampolineNativeJitCode(
         cx, jit::TrampolineNative::TypedArraySort, args);
   }

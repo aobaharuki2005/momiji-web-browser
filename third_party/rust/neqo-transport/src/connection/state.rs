@@ -9,10 +9,11 @@ use std::{cmp::min, rc::Rc, time::Instant};
 use neqo_common::{Buffer, Encoder};
 
 use crate::{
+    CloseReason, Error,
     frame::{FrameEncoder as _, FrameType},
     packet,
     path::PathRef,
-    recovery, CloseReason, Error,
+    recovery,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -245,5 +246,51 @@ impl StateSignaling {
     /// We just got a stateless reset.  Terminate.
     pub fn reset(&mut self) {
         *self = Self::Reset;
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
+mod tests {
+    use super::{State, StateSignaling};
+    use crate::{CloseReason, Error};
+
+    #[test]
+    fn closing_frame_min_length() {
+        // 1 (type) + 8 (error code) + 8 (frame type) + 2 (reason prefix) + 8 (reason capacity).
+        assert_eq!(super::ClosingFrame::MIN_LENGTH, 1 + 8 + 8 + 2 + 8);
+    }
+
+    fn assert_resets_to_reset(mut ss: StateSignaling) {
+        ss.reset();
+        assert!(matches!(ss, StateSignaling::Reset));
+    }
+
+    #[test]
+    fn state_signaling_reset_transitions() {
+        assert_resets_to_reset(StateSignaling::Idle);
+        assert_resets_to_reset(StateSignaling::HandshakeDone);
+    }
+
+    #[test]
+    fn state_predicates() {
+        let now = test_fixture::now();
+        let err = CloseReason::Transport(Error::None);
+        let closing = State::Closing {
+            error: err.clone(),
+            timeout: now,
+        };
+        let draining = State::Draining {
+            error: err.clone(),
+            timeout: now,
+        };
+        let closed = State::Closed(err);
+
+        assert!(!State::Init.connected() && !State::Init.closed() && !State::Init.closing());
+        assert!(!State::WaitInitial.connected() && !State::Handshaking.connected());
+        assert!(State::Connected.connected() && State::Confirmed.connected());
+        assert!(closing.closing() && closing.closed() && closing.error().is_some());
+        assert!(draining.closing() && draining.closed());
+        assert!(!closed.closing() && closed.closed() && closed.error().is_some());
     }
 }

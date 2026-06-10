@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = शोधा
     .aria-label = शोधा
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = शोध इंजीन जोडा
 newtab-topsites-edit-topsites-header = खास साईट संपादित करा

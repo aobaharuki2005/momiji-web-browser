@@ -8,7 +8,7 @@ let gDNSResolved = false;
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.scotchBonnet.enableOverride", false]],
+    set: [["dom.security.https_first_schemeless", false]],
   });
 
   let observer = () => {
@@ -92,14 +92,18 @@ async function runURLBarSearchTest({
       if (!expectSearch) {
         throw new Error("Must execute a search in search mode");
       }
-      await UrlbarTestUtils.enterSearchMode(aWindow);
+      let engine = UrlbarSearchUtils.getDefaultEngine();
+      await aWindow.gURLBar.setSearchMode(
+        { engineName: engine.name, entry: "other" },
+        aWindow.gBrowser.selectedBrowser
+      );
     }
 
     let expectedURI;
     if (!expectSearch) {
       expectedURI = "http://" + valueToOpen + "/";
     } else {
-      expectedURI = (await Services.search.getDefault()).getSubmission(
+      expectedURI = (await SearchService.getDefault()).getSubmission(
         valueToOpen,
         null,
         "keyword"

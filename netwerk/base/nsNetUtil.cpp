@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,6 +17,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_urlclassifier.h"
@@ -79,6 +78,7 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "nsHttpChannel.h"
 #include "nsIScriptError.h"
 #include "nsISiteSecurityService.h"
 #include "nsHttpHandler.h"
@@ -109,6 +109,7 @@
 #include "mozilla/net/ExtensionProtocolHandler.h"
 #include "mozilla/net/MozNewTabWallpaperProtocolHandler.h"
 #include "mozilla/net/PageThumbProtocolHandler.h"
+#include "mozilla/net/SFV.h"
 #include "mozilla/net/SFVService.h"
 #include "nsICookieService.h"
 #include "nsIXPConnect.h"
@@ -260,8 +261,7 @@ nsresult NS_GetURIWithNewRef(nsIURI* aInput, const nsACString& aRef,
   // Note that aRef contains the hash, but ref doesn't, so need to account for
   // that in the equality check.
   if (NS_FAILED(rv) || (!hasRef && aRef.IsEmpty()) ||
-      (!aRef.IsEmpty() && hasRef &&
-       Substring(aRef.Data() + 1, aRef.Length() - 1) == ref)) {
+      (!aRef.IsEmpty() && hasRef && Substring(aRef, 1) == ref)) {
     nsCOMPtr<nsIURI> uri = aInput;
     uri.forget(aOutput);
     return NS_OK;
@@ -1434,7 +1434,7 @@ class BufferWriter final : public nsIInputStreamCallback {
                                     mInputStream.forget(), GetBufferSize());
       NS_ENSURE_SUCCESS(rv, rv);
 
-      mInputStream = bufferedStream;
+      mInputStream = std::move(bufferedStream);
     }
 
     mAsyncInputStream = do_QueryInterface(mInputStream);
@@ -1639,7 +1639,7 @@ class BufferWriter final : public nsIInputStreamCallback {
 
   // All the members of this class are touched on the owning thread only. The
   // monitor is only used to communicate when there is more data to read.
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor MOZ_ANNOTATED;
 
   nsCOMPtr<nsIInputStream> mInputStream;
   nsCOMPtr<nsIAsyncInputStream> mAsyncInputStream;
@@ -1995,6 +1995,9 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   }
 
   if (scheme.EqualsLiteral("moz-newtab-wallpaper")) {
+    if (!NS_IsMainThread()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
     RefPtr<mozilla::net::MozNewTabWallpaperProtocolHandler> handler =
         mozilla::net::MozNewTabWallpaperProtocolHandler::GetSingleton();
     if (!handler) {
@@ -2240,7 +2243,22 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport) {
     res = loadingPrincipal->CheckMayLoad(uri, dataInherits);
   }
 
-  return NS_FAILED(res);
+  if (NS_FAILED(res)) {
+    return true;
+  }
+
+  if (!StaticPrefs::extensions_web_accessible_workers_deprecated_behavior() &&
+      uri->SchemeIs("moz-extension")) {
+    nsContentPolicyType internalContentType =
+        loadInfo->InternalContentPolicyType();
+
+    if (internalContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+        internalContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER) {
+      return !loadingPrincipal->IsSameOrigin(uri);
+    }
+  }
+
+  return false;
 }
 
 bool NS_IsSafeMethodNav(nsIChannel* aChannel) {
@@ -2385,43 +2403,6 @@ nsresult NS_URIChainHasFlags(nsIURI* uri, uint32_t flags, bool* result) {
   return util->URIChainHasFlags(uri, flags, result);
 }
 
-uint32_t NS_SecurityHashURI(nsIURI* aURI) {
-  nsCOMPtr<nsIURI> baseURI = NS_GetInnermostURI(aURI);
-
-  nsAutoCString scheme;
-  uint32_t schemeHash = 0;
-  if (NS_SUCCEEDED(baseURI->GetScheme(scheme))) {
-    schemeHash = mozilla::HashString(scheme);
-  }
-
-  // TODO figure out how to hash file:// URIs
-  if (scheme.EqualsLiteral("file")) return schemeHash;  // sad face
-
-#if IS_ORIGIN_IS_FULL_SPEC_DEFINED
-  bool hasFlag;
-  if (NS_FAILED(NS_URIChainHasFlags(
-          baseURI, nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &hasFlag)) ||
-      hasFlag) {
-    nsAutoCString spec;
-    uint32_t specHash;
-    nsresult res = baseURI->GetSpec(spec);
-    if (NS_SUCCEEDED(res))
-      specHash = mozilla::HashString(spec);
-    else
-      specHash = static_cast<uint32_t>(res);
-    return specHash;
-  }
-#endif
-
-  nsAutoCString host;
-  uint32_t hostHash = 0;
-  if (NS_SUCCEEDED(baseURI->GetAsciiHost(host))) {
-    hostHash = mozilla::HashString(host);
-  }
-
-  return mozilla::AddToHash(schemeHash, hostHash, NS_GetRealPort(baseURI));
-}
-
 bool NS_SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI,
                             bool aStrictFileOriginPolicy) {
   nsresult rv;
@@ -2467,26 +2448,26 @@ bool NS_SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI,
   }
 #endif
 
-  nsCOMPtr<nsIPrincipal> sourceBlobPrincipal;
-  if (BlobURLProtocolHandler::GetBlobURLPrincipal(
-          sourceBaseURI, getter_AddRefs(sourceBlobPrincipal))) {
-    nsCOMPtr<nsIURI> sourceBlobOwnerURI;
-    auto* basePrin = BasePrincipal::Cast(sourceBlobPrincipal);
-    rv = basePrin->GetURI(getter_AddRefs(sourceBlobOwnerURI));
-    if (NS_SUCCEEDED(rv)) {
-      sourceBaseURI = sourceBlobOwnerURI;
+  if (sourceBaseURI->SchemeIs(BLOBURI_SCHEME)) {
+    // NOTE: OriginAttributes are discarded by GetURI, so can be default.
+    nsCOMPtr<nsIPrincipal> sourceBlobPrincipal;
+    if (!BlobURLProtocolHandler::GetBlobURLPrincipal(
+            sourceBaseURI, OriginAttributes(),
+            getter_AddRefs(sourceBlobPrincipal))) {
+      return false;
     }
+    sourceBaseURI = sourceBlobPrincipal->GetURI();
   }
 
-  nsCOMPtr<nsIPrincipal> targetBlobPrincipal;
-  if (BlobURLProtocolHandler::GetBlobURLPrincipal(
-          targetBaseURI, getter_AddRefs(targetBlobPrincipal))) {
-    nsCOMPtr<nsIURI> targetBlobOwnerURI;
-    auto* basePrin = BasePrincipal::Cast(targetBlobPrincipal);
-    rv = basePrin->GetURI(getter_AddRefs(targetBlobOwnerURI));
-    if (NS_SUCCEEDED(rv)) {
-      targetBaseURI = targetBlobOwnerURI;
+  if (targetBaseURI->SchemeIs(BLOBURI_SCHEME)) {
+    // NOTE: OriginAttributes are discarded by GetURI, so can be default.
+    nsCOMPtr<nsIPrincipal> targetBlobPrincipal;
+    if (!BlobURLProtocolHandler::GetBlobURLPrincipal(
+            targetBaseURI, OriginAttributes(),
+            getter_AddRefs(targetBlobPrincipal))) {
+      return false;
     }
+    targetBaseURI = targetBlobPrincipal->GetURI();
   }
 
   if (!sourceBaseURI || !targetBaseURI) return false;
@@ -2656,27 +2637,8 @@ nsresult NS_LinkRedirectChannels(uint64_t channelId,
 nsILoadInfo::CrossOriginEmbedderPolicy
 NS_GetCrossOriginEmbedderPolicyFromHeader(
     const nsACString& aHeader, bool aIsOriginTrialCoepCredentiallessEnabled) {
-  nsCOMPtr<nsISFVService> sfv = GetSFVService();
-
-  nsCOMPtr<nsISFVItem> item;
-  nsresult rv = sfv->ParseItem(aHeader, getter_AddRefs(item));
-  if (NS_FAILED(rv)) {
-    return nsILoadInfo::EMBEDDER_POLICY_NULL;
-  }
-
-  nsCOMPtr<nsISFVBareItem> value;
-  rv = item->GetValue(getter_AddRefs(value));
-  if (NS_FAILED(rv)) {
-    return nsILoadInfo::EMBEDDER_POLICY_NULL;
-  }
-
-  nsCOMPtr<nsISFVToken> token = do_QueryInterface(value);
-  if (!token) {
-    return nsILoadInfo::EMBEDDER_POLICY_NULL;
-  }
-
   nsAutoCString embedderPolicy;
-  rv = token->GetValue(embedderPolicy);
+  nsresult rv = SFV::ParseItem<SFV::Token>(aHeader, embedderPolicy);
   if (NS_FAILED(rv)) {
     return nsILoadInfo::EMBEDDER_POLICY_NULL;
   }
@@ -2693,43 +2655,15 @@ NS_GetCrossOriginEmbedderPolicyFromHeader(
 }
 
 bool NS_GetForceLoadAtTopFromHeader(const nsACString& aHeader) {
-  nsCOMPtr<nsISFVService> sfv = mozilla::net::GetSFVService();
-
-  nsCOMPtr<nsISFVDictionary> dict;
-  if (NS_FAILED(sfv->ParseDictionary(aHeader, getter_AddRefs(dict)))) {
-    return false;
-  }
-  nsCOMPtr<nsISFVItemOrInnerList> iil;
-  if (NS_FAILED(dict->Get("force-load-at-top"_ns, getter_AddRefs(iil)))) {
+  auto dict = SFV::ParseDict(aHeader);
+  if (!dict.IsValid()) {
     return false;
   }
 
-  nsCOMPtr<nsISFVItem> item(do_QueryInterface(iil));
-  if (!item) {
-    return false;
-  }
-
-  nsCOMPtr<nsISFVBareItem> bareItem;
-  if (NS_FAILED(item->GetValue(getter_AddRefs(bareItem)))) {
-    return false;
-  }
-
-  int32_t type;
-  if (NS_FAILED(bareItem->GetType(&type))) {
-    return false;
-  }
-
-  nsCOMPtr<nsISFVBool> boolItem(do_QueryInterface(bareItem));
-  if (!boolItem) {
-    return false;
-  }
-
-  bool b;
-  if (NS_FAILED(boolItem->GetValue(&b))) {
-    return false;
-  }
-
-  return b;
+  bool value = false;
+  return NS_SUCCEEDED(
+             dict.GetItem<SFV::SFVBool>("force-load-at-top"_ns, value)) &&
+         value;
 }
 
 /** Given the first (disposition) token from a Content-Disposition header,
@@ -3039,7 +2973,7 @@ static bool ShouldSecureUpgradeNoHSTS(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
     AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
 
     nsAutoString localizedMsg;
-    nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
+    nsContentUtils::FormatLocalizedString(PropertiesFile::SECURITY_PROPERTIES,
                                           "MixedContentAutoUpgrade", params,
                                           localizedMsg);
 
@@ -3406,6 +3340,15 @@ bool NS_ShouldClassifyChannel(nsIChannel* aChannel, ClassifyType aType) {
     }
   }
 
+  // Skip auth redirect channels for ETP
+  if (aType == ClassifyType::ETP) {
+    RefPtr<mozilla::net::nsHttpChannel> concreteHttpChannel =
+        do_QueryObject(aChannel);
+    if (concreteHttpChannel && concreteHttpChannel->IsAuthRedirectedChannel()) {
+      return false;
+    }
+  }
+
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   ExtContentPolicyType type = loadInfo->GetExternalContentPolicyType();
 
@@ -3532,7 +3475,7 @@ already_AddRefed<nsIURI> TryChangeProtocol(nsIURI* aURI,
     params.AppendElement(NS_ConvertUTF8toUTF16(newScheme));
     nsContentUtils::ReportToConsole(
         nsIScriptError::warningFlag, "Strict Url Protocol Setter"_ns, nullptr,
-        nsContentUtils::eNECKO_PROPERTIES, "StrictUrlProtocolSetter", params);
+        PropertiesFile::NECKO_PROPERTIES, "StrictUrlProtocolSetter", params);
     return nullptr;
   }
 
@@ -3933,7 +3876,7 @@ static constexpr nsAttrValue::EnumTableEntry kAsAttributeTable[] = {
     {"script", DESTINATION_SCRIPT}, {"style", DESTINATION_STYLE},
     {"track", DESTINATION_TRACK},   {"video", DESTINATION_VIDEO},
     {"fetch", DESTINATION_FETCH},   {"json", DESTINATION_JSON},
-};
+    {"text", DESTINATION_TEXT}};
 
 void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult) {
   DebugOnly<bool> success =
@@ -3967,6 +3910,8 @@ nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue) {
       return nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD;
     case DESTINATION_JSON:
       return nsIContentPolicy::TYPE_JSON;
+    case DESTINATION_TEXT:
+      return nsIContentPolicy::TYPE_TEXT;
   }
   return nsIContentPolicy::TYPE_INVALID;
 }
@@ -3986,7 +3931,8 @@ bool IsScriptLikeOrInvalid(const nsAString& aAs) {
       aAs.LowerCaseEqualsASCII("report") || aAs.LowerCaseEqualsASCII("style") ||
       aAs.LowerCaseEqualsASCII("track") || aAs.LowerCaseEqualsASCII("video") ||
       aAs.LowerCaseEqualsASCII("webidentity") ||
-      aAs.LowerCaseEqualsASCII("xslt") || aAs.LowerCaseEqualsASCII("json"));
+      aAs.LowerCaseEqualsASCII("xslt") || aAs.LowerCaseEqualsASCII("json") ||
+      aAs.LowerCaseEqualsASCII("text"));
 }
 
 bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
@@ -4010,7 +3956,8 @@ bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
     return true;
   }
 
-  if (policyType == nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD) {
+  if (policyType == nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD ||
+      policyType == nsIContentPolicy::TYPE_TEXT) {
     return true;
   }
 
@@ -4049,14 +3996,17 @@ bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
   return false;
 }
 
-void WarnIgnoredPreload(const mozilla::dom::Document& aDoc, nsIURI& aURI) {
+void WarnIgnoredPreload(const mozilla::dom::Document& aDoc, nsIURI* aURI,
+                        const nsAString& aSrcset) {
   AutoTArray<nsString, 1> params;
-  {
-    nsCString uri = nsContentUtils::TruncatedURLForDisplay(&aURI);
+  if (aURI) {
+    nsCString uri = nsContentUtils::TruncatedURLForDisplay(aURI);
     AppendUTF8toUTF16(uri, *params.AppendElement());
+  } else {
+    params.AppendElement(aSrcset);
   }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns, &aDoc,
-                                  nsContentUtils::eDOM_PROPERTIES,
+                                  PropertiesFile::DOM_PROPERTIES,
                                   "PreloadIgnoredInvalidAttr", params);
 }
 
@@ -4070,111 +4020,42 @@ bool NS_ParseUseAsDictionary(const nsACString& aValue, nsACString& aMatch,
   //                     %s"id" /
   //                     %t"type" ; case-sensitive
 
-  nsCOMPtr<nsISFVService> sfv = GetSFVService();
-
-  nsCOMPtr<nsISFVDictionary> parsedHeader;
-  nsresult rv;
-  if (NS_FAILED(
-          rv = sfv->ParseDictionary(aValue, getter_AddRefs(parsedHeader)))) {
+  auto dict = SFV::ParseDict(aValue);
+  if (!dict.IsValid()) {
     return false;
   }
 
-  nsCOMPtr<nsISFVItemOrInnerList> match;
-  rv = parsedHeader->Get("match"_ns, getter_AddRefs(match));
-  if (NS_FAILED(rv)) {
-    return false;  // match is required, fail if not found
+  // match is required
+  if (NS_FAILED(dict.GetItem<SFV::SFVString>("match"_ns, aMatch))) {
+    return false;
   }
-  if (nsCOMPtr<nsISFVItem> listItem = do_QueryInterface(match)) {
-    nsCOMPtr<nsISFVBareItem> value;
-    rv = listItem->GetValue(getter_AddRefs(value));
-    if (NS_FAILED(rv)) {
-      return false;
-    }
-    if (nsCOMPtr<nsISFVString> stringVal = do_QueryInterface(value)) {
-      if (NS_FAILED(stringVal->GetValue(aMatch))) {
-        return false;
-      }
-      if (aMatch.IsEmpty()) {
-        return false;  // match is required, fail if not found
-      }
-    } else {
-      return false;
-    }
-  } else {
+  if (aMatch.IsEmpty()) {
     return false;
   }
 
-  nsCOMPtr<nsISFVItemOrInnerList> matchdest;
-  rv = parsedHeader->Get("match-dest"_ns, getter_AddRefs(matchdest));
-  if (NS_SUCCEEDED(rv)) {
-    if (nsCOMPtr<nsISFVInnerList> innerList = do_QueryInterface(matchdest)) {
-      // Extract the first entry of each inner list, which should contain the
-      // endpoint's URL string
-      nsTArray<RefPtr<nsISFVItem>> items;
-      if (NS_FAILED(innerList->GetItems(items))) {
+  // match-dest is optional
+  auto matchDestList = dict.GetInnerList("match-dest"_ns);
+  if (matchDestList.IsValid()) {
+    size_t len = matchDestList.Length();
+    for (size_t i = 0; i < len; i++) {
+      auto item = matchDestList.GetItemAt(i);
+      if (!item.IsValid()) {
         return false;
       }
-      // Don't check items.IsEmpty() because an empty list is valid
-
-      for (auto& item : items) {
-        nsCOMPtr<nsISFVBareItem> value;
-        if (NS_FAILED(item->GetValue(getter_AddRefs(value)))) {
-          return false;
-        }
-        if (nsCOMPtr<nsISFVString> stringVal = do_QueryInterface(value)) {
-          nsAutoCString string;
-          if (NS_FAILED(stringVal->GetValue(string))) {
-            return false;
-          }
-          aMatchDestItems.AppendElement(string);
-        } else {
-          return false;  // match-dest is an inner list of strings
-        }
+      nsAutoCString string;
+      if (NS_FAILED(item.GetValue<SFV::SFVString>(string))) {
+        return false;
       }
+      aMatchDestItems.AppendElement(string);
     }
   }
 
-  nsCOMPtr<nsISFVItemOrInnerList> matchid;
-  rv = parsedHeader->Get("id"_ns, getter_AddRefs(matchid));
-  if (NS_SUCCEEDED(rv)) {
-    if (nsCOMPtr<nsISFVItem> listItem = do_QueryInterface(matchid)) {
-      nsCOMPtr<nsISFVBareItem> value;
-      rv = listItem->GetValue(getter_AddRefs(value));
-      if (NS_FAILED(rv)) {
-        return false;
-      }
-      if (nsCOMPtr<nsISFVString> stringVal = do_QueryInterface(value)) {
-        if (NS_FAILED(stringVal->GetValue(aMatchId))) {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
+  // id is optional
+  (void)dict.GetItem<SFV::SFVString>("id"_ns, aMatchId);
 
-  nsCOMPtr<nsISFVItemOrInnerList> type;
-  rv = parsedHeader->Get("type"_ns, getter_AddRefs(type));
-  if (NS_SUCCEEDED(rv)) {
-    if (nsCOMPtr<nsISFVItem> listItem = do_QueryInterface(type)) {
-      nsCOMPtr<nsISFVBareItem> value;
-      rv = listItem->GetValue(getter_AddRefs(value));
-      if (NS_FAILED(rv)) {
-        return false;
-      }
-      if (nsCOMPtr<nsISFVToken> tokenVal = do_QueryInterface(value)) {
-        if (NS_FAILED(tokenVal->GetValue(aType))) {
-          return false;
-        }
-        if (!aType.Equals("raw"_ns)) {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else {
+  // type is optional
+  if (NS_SUCCEEDED(dict.GetItem<SFV::Token>("type"_ns, aType))) {
+    if (!aType.Equals("raw"_ns)) {
       return false;
     }
   }
@@ -4222,7 +4103,8 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
   nsAutoCString host;
   aURI->GetHost(host);
   // Ignore test hits.
-  if (host.EqualsLiteral("mochitests") || host.EqualsLiteral("reftest")) {
+  if (host.EqualsLiteral("mochitests") || host.EqualsLiteral("reftest") ||
+      host.EqualsLiteral("testing-common") || host.EqualsLiteral("test")) {
     return;
   }
 
@@ -4273,6 +4155,13 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
   // command line, which is then looked up in both app-specific and toolkit-wide
   // locations.
   if (spec.Find("backgroundtasks") != kNotFound) {
+    return;
+  }
+
+  // SessionStoreFunctions.sys.mjs may be missing at runtime in xpcshell tests:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=2018078#c3
+  if (spec.EqualsLiteral(
+          "resource:///modules/sessionstore/SessionStoreFunctions.sys.mjs")) {
     return;
   }
 
@@ -4363,26 +4252,21 @@ bool IsLocalOrPrivateNetworkAccess(
 
 Result<ActivateStorageAccess, nsresult> ParseActivateStorageAccess(
     const nsACString& aActivateStorageAcess) {
-  nsCOMPtr<nsISFVService> sfv = GetSFVService();
-
   // Parse storage acces values
   //  * Activate-Storage-Access: load
   //  * Activate-Storage-Access: retry; allowed-origin="https://foo.bar"
   //  * Activate-Storage-Access: retry; allowed-origin=*
   // into ActivateStorageAccess struct. See ActivateStorageAccessVariant for
   // documentation on fields
-  nsCOMPtr<nsISFVItem> parsedHeader;
-  MOZ_TRY(sfv->ParseItem(aActivateStorageAcess, getter_AddRefs(parsedHeader)));
-
-  nsCOMPtr<nsISFVBareItem> value;
-  MOZ_TRY(parsedHeader->GetValue(getter_AddRefs(value)));
-
-  nsCOMPtr<nsISFVToken> token = do_QueryInterface(value);
-  if (!token) {
+  auto item = SFV::ParseItemWithParams(aActivateStorageAcess);
+  if (!item.IsValid()) {
     return Err(NS_ERROR_FAILURE);
   }
+
   nsAutoCString tokenValue;
-  token->GetValue(tokenValue);
+  if (NS_FAILED(item.GetValue<SFV::Token>(tokenValue))) {
+    return Err(NS_ERROR_FAILURE);
+  }
 
   if (tokenValue.EqualsLiteral("load")) {
     return ActivateStorageAccess{
@@ -4392,17 +4276,12 @@ Result<ActivateStorageAccess, nsresult> ParseActivateStorageAccess(
   if (!tokenValue.EqualsLiteral("retry")) {
     return Err(NS_ERROR_FAILURE);
   }
-  nsCOMPtr<nsISFVParams> params;
-  MOZ_TRY(parsedHeader->GetParams(getter_AddRefs(params)));
 
-  nsCOMPtr<nsISFVBareItem> item;
-  MOZ_TRY(params->Get("allowed-origin"_ns, getter_AddRefs(item)));
-
-  // Evaluate whether the token value is a wildcard symbol.
-  nsCOMPtr<nsISFVToken> itemToken = do_QueryInterface(item);
-  if (itemToken) {
-    itemToken->GetValue(tokenValue);
-    if (!tokenValue.EqualsLiteral("*")) {
+  // Try to get allowed-origin as a token (wildcard)
+  nsAutoCString paramToken;
+  if (NS_SUCCEEDED(
+          item.GetParam<SFV::Token>("allowed-origin"_ns, paramToken))) {
+    if (!paramToken.EqualsLiteral("*")) {
       return Err(NS_ERROR_FAILURE);
     }
     return ActivateStorageAccess{
@@ -4410,13 +4289,12 @@ Result<ActivateStorageAccess, nsresult> ParseActivateStorageAccess(
     };
   }
 
-  // Evaluate whether the token value is an origin.
-  nsCOMPtr<nsISFVString> itemString = do_QueryInterface(item);
-  if (!itemString) {
+  // Try to get allowed-origin as a string (origin URL)
+  ActivateStorageAccess result{ActivateStorageAccessVariant::RetryOrigin};
+  if (NS_FAILED(
+          item.GetParam<SFV::SFVString>("allowed-origin"_ns, result.origin))) {
     return Err(NS_ERROR_FAILURE);
   }
-  ActivateStorageAccess result{ActivateStorageAccessVariant::RetryOrigin};
-  itemString->GetValue(result.origin);
   return result;
 }
 

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -225,7 +223,7 @@ class InputStreamHolder final : public nsIInputStreamCallback,
 
 // Using this class means you are also passing the lifetime control of your
 // nsIAsyncInputStream, as it will be closed when this class tears down.
-class InputToReadableStreamAlgorithms final
+class InputToReadableStreamAlgorithms
     : public UnderlyingSourceAlgorithmsWrapper,
       public nsIInputStreamCallback,
       public SupportsWeakPtr {
@@ -247,12 +245,8 @@ class InputToReadableStreamAlgorithms final
 
   nsIInputStream* MaybeGetInputStreamIfUnread() override;
 
- private:
-  ~InputToReadableStreamAlgorithms() {
-    if (mInput) {
-      mInput->Shutdown();
-    }
-  }
+ protected:
+  ~InputToReadableStreamAlgorithms();
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void CloseAndReleaseObjects(
       JSContext* aCx, ReadableStream* aStream);

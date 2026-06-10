@@ -10,8 +10,10 @@ use crate::applicable_declarations::{
 use crate::computed_value_flags::ComputedValueFlags;
 use crate::context::{CascadeInputs, QuirksMode};
 use crate::custom_properties::ComputedCustomProperties;
+use crate::custom_properties::{parse_name, SpecifiedValue};
 use crate::derives::*;
-use crate::dom::TElement;
+use crate::device::Device;
+use crate::dom::{TElement, TShadowRoot};
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
 use crate::invalidation::element::invalidation_map::{
@@ -22,17 +24,24 @@ use crate::invalidation::media_queries::{
     EffectiveMediaQueryResults, MediaListKey, ToMediaListKey,
 };
 use crate::invalidation::stylesheets::{RuleChangeKind, StylesheetInvalidationSet};
-use crate::media_queries::Device;
+#[cfg(feature = "gecko")]
+use crate::properties::StyleBuilder;
 use crate::properties::{
     self, AnimationDeclarations, CascadeMode, ComputedValues, FirstLineReparenting,
-    PropertyDeclarationBlock, StyleBuilder,
+    PropertyDeclarationBlock,
 };
 use crate::properties_and_values::registry::{
-    PropertyRegistration, PropertyRegistrationData, ScriptRegistry as CustomPropertyScriptRegistry,
+    PropertyRegistration, ScriptRegistry as CustomPropertyScriptRegistry,
 };
+use crate::properties_and_values::rule::{
+    Descriptors as PropertyDescriptors, Inherits, PropertyRegistrationError, PropertyRuleName,
+};
+use crate::properties_and_values::syntax::Descriptor;
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
-use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
+use crate::rule_tree::{
+    CascadeLevel, CascadeOrigin, RuleCascadeFlags, RuleTree, StrongRuleNode, StyleSource,
+};
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, SelectorMap, SelectorMapEntry};
 use crate::selector_parser::{NonTSPseudoClass, PerPseudoElementMap, PseudoElement, SelectorImpl};
 use crate::shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
@@ -47,17 +56,22 @@ use crate::stylesheets::scope_rule::{
     collect_scope_roots, element_is_outside_of_scope, scope_selector_list_is_trivial,
     ImplicitScopeRoot, ScopeRootCandidate, ScopeSubjectMap, ScopeTarget,
 };
+use crate::stylesheets::UrlExtraData;
 use crate::stylesheets::{
     CounterStyleRule, CssRule, CssRuleRef, EffectiveRulesIterator, FontFaceRule,
     FontFeatureValuesRule, FontPaletteValuesRule, Origin, OriginSet, PagePseudoClassFlags,
     PageRule, PerOrigin, PerOriginIter, PositionTryRule, StylesheetContents, StylesheetInDocument,
+    ViewTransitionRule,
 };
 use crate::stylesheets::{CustomMediaEvaluator, CustomMediaMap};
+#[cfg(feature = "gecko")]
 use crate::values::specified::position::PositionTryFallbacksItem;
 use crate::values::specified::position::PositionTryFallbacksTryTactic;
-use crate::values::{computed, AtomIdent};
+use crate::values::{computed, AtomIdent, Parser, SourceLocation};
 use crate::AllocErr;
+use crate::ArcSlice;
 use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded, WeakAtom};
+use cssparser::ParserInput;
 use dom::{DocumentState, ElementState};
 #[cfg(feature = "gecko")]
 use malloc_size_of::MallocUnconditionalShallowSizeOf;
@@ -763,7 +777,7 @@ struct ContainingRuleState {
     layer_name: LayerName,
     layer_id: LayerId,
     container_condition_id: ContainerConditionId,
-    in_starting_style: bool,
+    cascade_flags: RuleCascadeFlags,
     containing_scope_rule_state: ContainingScopeRuleState,
     ancestor_selector_lists: SmallVec<[SelectorList<SelectorImpl>; 2]>,
     nested_declarations_context: NestedDeclarationsContext,
@@ -775,7 +789,7 @@ impl Default for ContainingRuleState {
             layer_name: LayerName::new_empty(),
             layer_id: LayerId::root(),
             container_condition_id: ContainerConditionId::none(),
-            in_starting_style: false,
+            cascade_flags: RuleCascadeFlags::empty(),
             ancestor_selector_lists: Default::default(),
             containing_scope_rule_state: Default::default(),
             nested_declarations_context: NestedDeclarationsContext::Style,
@@ -788,7 +802,7 @@ struct SavedContainingRuleState {
     layer_name_len: usize,
     layer_id: LayerId,
     container_condition_id: ContainerConditionId,
-    in_starting_style: bool,
+    cascade_flags: RuleCascadeFlags,
     saved_containing_scope_rule_state: SavedContainingScopeRuleState,
     nested_declarations_context: NestedDeclarationsContext,
 }
@@ -800,7 +814,7 @@ impl ContainingRuleState {
             layer_name_len: self.layer_name.0.len(),
             layer_id: self.layer_id,
             container_condition_id: self.container_condition_id,
-            in_starting_style: self.in_starting_style,
+            cascade_flags: self.cascade_flags,
             saved_containing_scope_rule_state: self.containing_scope_rule_state.save(),
             nested_declarations_context: self.nested_declarations_context,
         }
@@ -818,7 +832,7 @@ impl ContainingRuleState {
         self.layer_name.0.truncate(saved.layer_name_len);
         self.layer_id = saved.layer_id;
         self.container_condition_id = saved.container_condition_id;
-        self.in_starting_style = saved.in_starting_style;
+        self.cascade_flags = saved.cascade_flags;
         self.nested_declarations_context = saved.nested_declarations_context;
 
         self.containing_scope_rule_state
@@ -827,6 +841,10 @@ impl ContainingRuleState {
 
     fn scope_is_effective(&self) -> bool {
         self.containing_scope_rule_state.id != ScopeConditionId::none()
+    }
+
+    fn cascade_flags(&self) -> RuleCascadeFlags {
+        self.cascade_flags
     }
 }
 
@@ -879,16 +897,16 @@ impl Stylist {
 
     /// Returns the custom property registration for this property's name.
     /// https://drafts.css-houdini.org/css-properties-values-api-1/#determining-registration
-    pub fn get_custom_property_registration(&self, name: &Atom) -> &PropertyRegistrationData {
+    pub fn get_custom_property_registration(&self, name: &Atom) -> &PropertyDescriptors {
         if let Some(registration) = self.custom_property_script_registry().get(name) {
-            return &registration.data;
+            return &registration.descriptors;
         }
         for (data, _) in self.iter_origins() {
             if let Some(registration) = data.custom_property_registrations.get(name) {
-                return &registration.data;
+                return &registration.descriptors;
             }
         }
-        PropertyRegistrationData::unregistered()
+        PropertyDescriptors::unregistered()
     }
 
     /// Returns custom properties with their registered initial values.
@@ -919,7 +937,7 @@ impl Stylist {
                 let Ok(value) = v.compute_initial_value(&context) else {
                     continue;
                 };
-                let map = if v.inherits() {
+                let map = if v.descriptors.inherits() {
                     &mut initial_values.inherited
                 } else {
                     &mut initial_values.non_inherited
@@ -933,7 +951,7 @@ impl Stylist {
                         let Ok(value) = last_value.compute_initial_value(&context) else {
                             continue;
                         };
-                        let map = if last_value.inherits() {
+                        let map = if last_value.descriptors.inherits() {
                             &mut initial_values.inherited
                         } else {
                             &mut initial_values.non_inherited
@@ -1215,6 +1233,7 @@ impl Stylist {
                 rules: Some(rules),
                 visited_rules: None,
                 flags: Default::default(),
+                included_cascade_flags: RuleCascadeFlags::empty(),
             },
             pseudo,
             guards,
@@ -1345,7 +1364,7 @@ impl Stylist {
         self.cascade_style_and_visited(
             element,
             Some(pseudo),
-            inputs,
+            &inputs,
             guards,
             parent_style,
             parent_style,
@@ -1357,10 +1376,12 @@ impl Stylist {
     }
 
     /// Computes a fallback style lazily given the current and parent styles, and name.
+    #[cfg(feature = "gecko")]
     pub fn resolve_position_try<E>(
         &self,
         style: &ComputedValues,
         guards: &StylesheetGuards,
+        scope: CascadeLevel,
         element: E,
         fallback_item: &PositionTryFallbacksItem,
     ) -> Option<Arc<ComputedValues>>
@@ -1374,6 +1395,7 @@ impl Stylist {
                 // a style_resolver::with_default_parent_styles call, as below.
                 let mut builder =
                     StyleBuilder::for_derived_style(&self.device, Some(self), style, None);
+                builder.rules = style.rules.clone();
                 builder.mutate_position().set_position_area(area);
                 return Some(builder.build());
             },
@@ -1383,7 +1405,7 @@ impl Stylist {
         };
 
         let fallback_rule = if !name_and_try_tactic.ident.is_empty() {
-            Some(self.lookup_position_try(&name_and_try_tactic.ident.0, element)?)
+            Some(self.lookup_position_try(&name_and_try_tactic.ident.0, scope, element)?)
         } else {
             None
         };
@@ -1401,7 +1423,7 @@ impl Stylist {
             let mut important_rules_changed = false;
             if let Some(fallback_block) = fallback_block {
                 let new_rules = self.rule_tree.update_rule_at_level(
-                    CascadeLevel::PositionFallback,
+                    CascadeLevel::new(CascadeOrigin::PositionFallback),
                     LayerOrder::root(),
                     Some(fallback_block.borrow_arc()),
                     rules,
@@ -1424,7 +1446,7 @@ impl Stylist {
                 Some(self.cascade_style_and_visited(
                     Some(element),
                     pseudo.as_ref(),
-                    inputs,
+                    &inputs,
                     guards,
                     parent_style,
                     layout_parent_style,
@@ -1453,7 +1475,7 @@ impl Stylist {
         &self,
         element: Option<E>,
         pseudo: Option<&PseudoElement>,
-        inputs: CascadeInputs,
+        inputs: &CascadeInputs,
         guards: &StylesheetGuards,
         parent_style: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
@@ -1501,6 +1523,7 @@ impl Stylist {
             try_tactic,
             visited_rules,
             inputs.flags,
+            inputs.included_cascade_flags,
             rule_cache,
             rule_cache_conditions,
             element,
@@ -1575,7 +1598,6 @@ impl Stylist {
                 None,
                 &mut selector_caches,
                 VisitedHandlingMode::RelevantLinkVisited,
-                selectors::matching::IncludeStartingStyle::No,
                 self.quirks_mode,
                 needs_selector_flags,
                 MatchingForInvalidation::No,
@@ -1608,6 +1630,7 @@ impl Stylist {
             rules: Some(rules),
             visited_rules,
             flags: matching_context.extra_data.cascade_input_flags,
+            included_cascade_flags: RuleCascadeFlags::empty(),
         })
     }
 
@@ -1691,7 +1714,7 @@ impl Stylist {
         E: TElement,
     {
         let mut cur = element;
-        let mut pseudos = SmallVec::new();
+        let mut pseudos = SmallVec::<[_; 2]>::new();
         if let Some(pseudo) = pseudo_element {
             pseudos.push(pseudo.clone());
         }
@@ -1705,7 +1728,8 @@ impl Stylist {
         RuleCollector::new(
             self,
             element,
-            pseudos,
+            cur,
+            &pseudos,
             style_attribute,
             smil_override,
             animation_declarations,
@@ -1792,20 +1816,50 @@ impl Stylist {
         self.lookup_element_dependent_at_rule(element, |data| data.animations.get(name))
     }
 
+    /// Returns the last @view-transition rule
+    /// <https://drafts.csswg.org/css-view-transitions-2/#resolve-view-transition-rule>
+    #[inline]
+    pub fn last_view_transition_rule(&self) -> Option<&Arc<ViewTransitionRule>> {
+        // Iterate the effective rules sorted by origin and level
+        self.iter_extra_data_origins()
+            .flat_map(|(d, _)| d.view_transitions.iter())
+            .last()
+            .map(|(rule, _)| rule)
+    }
+
     /// Returns the registered `@position-try-rule` animation for the specified name.
     #[inline]
     #[cfg(feature = "gecko")]
     fn lookup_position_try<'a, E>(
         &'a self,
         name: &Atom,
+        scope: CascadeLevel,
         element: E,
     ) -> Option<&'a Arc<Locked<PositionTryRule>>>
     where
         E: TElement + 'a,
     {
-        self.lookup_element_dependent_at_rule(element, |data| {
-            data.extra_data.position_try_rules.get(name)
-        })
+        let mut shadow_root = scope.get_shadow_root_for_scoped(element);
+        // https://drafts.csswg.org/css-shadow/#tree-scoped-name-global
+        // "First search only the tree-scoped names associated with the same root as the tree-scoped reference."
+        while let Some(r) = shadow_root {
+            if let Some(rule) = r
+                .style_data()
+                .map(|data| data.extra_data.position_try_rules.get(name))
+                .flatten()
+            {
+                return Some(rule);
+            }
+            // "If no relevant tree-scoped name is found, and the root is a shadow root, then repeat this search in the root’s host’s node tree (recursively)."
+            shadow_root = r.host().containing_shadow();
+        }
+
+        for (data, _) in self.iter_extra_data_origins() {
+            if let Some(r) = data.position_try_rules.get(name) {
+                return Some(r);
+            }
+        }
+        None
     }
 
     /// Computes the match results of a given element against the set of
@@ -1820,15 +1874,11 @@ impl Stylist {
     where
         E: TElement,
     {
-        // NB: `MatchingMode` doesn't really matter, given we don't share style
-        // between pseudos.
-        let mut matching_context = MatchingContext::new(
-            MatchingMode::Normal,
+        let mut matching_context = MatchingContext::new_for_revalidation(
             bloom,
             selector_caches,
             self.quirks_mode,
             needs_selector_flags,
-            MatchingForInvalidation::No,
         );
 
         // Note that, by the time we're revalidating, we're guaranteed that the
@@ -1956,6 +2006,7 @@ impl Stylist {
                     CascadePriority::new(
                         CascadeLevel::same_tree_author_normal(),
                         LayerOrder::root(),
+                        RuleCascadeFlags::empty(),
                     ),
                 )
             }),
@@ -1967,6 +2018,7 @@ impl Stylist {
                 visited_rules: None,
             },
             Default::default(),
+            RuleCascadeFlags::empty(),
             /* rule_cache = */ None,
             &mut Default::default(),
             /* element = */ None,
@@ -2019,6 +2071,97 @@ impl Stylist {
     }
 }
 
+#[allow(missing_docs)]
+#[repr(u8)]
+pub enum RegisterCustomPropertyResult {
+    SuccessfullyRegistered,
+    InvalidName,
+    AlreadyRegistered,
+    InvalidSyntax,
+    NoInitialValue,
+    InvalidInitialValue,
+    InitialValueNotComputationallyIndependent,
+}
+
+impl Stylist {
+    /// <https://drafts.css-houdini.org/css-properties-values-api-1/#the-registerproperty-function>
+    pub fn register_custom_property(
+        &mut self,
+        url_data: &UrlExtraData,
+        name: &str,
+        syntax: &str,
+        inherits: bool,
+        initial_value: Option<&str>,
+    ) -> RegisterCustomPropertyResult {
+        use RegisterCustomPropertyResult::*;
+
+        // If name is not a custom property name string, throw a SyntaxError and exit this algorithm.
+        let Ok(name) = parse_name(name).map(Atom::from) else {
+            return InvalidName;
+        };
+
+        // If property set already contains an entry with name as its property name (compared
+        // codepoint-wise), throw an InvalidModificationError and exit this algorithm.
+        if self.custom_property_script_registry().get(&name).is_some() {
+            return AlreadyRegistered;
+        }
+        // Attempt to consume a syntax definition from syntax. If it returns failure, throw a
+        // SyntaxError. Otherwise, let syntax definition be the returned syntax definition.
+        let Ok(syntax) = Descriptor::from_str(syntax, /* preserve_specified = */ false) else {
+            return InvalidSyntax;
+        };
+
+        let initial_value = match initial_value {
+            Some(value) => {
+                let mut input = ParserInput::new(value);
+                let parsed = Parser::new(&mut input)
+                    .parse_entirely(|input| {
+                        input.skip_whitespace();
+                        SpecifiedValue::parse(input, None, url_data).map(Arc::new)
+                    })
+                    .ok();
+                if parsed.is_none() {
+                    return InvalidInitialValue;
+                }
+                parsed
+            },
+            None => None,
+        };
+
+        if let Err(error) =
+            PropertyRegistration::validate_initial_value(&syntax, initial_value.as_deref())
+        {
+            return match error {
+                PropertyRegistrationError::InitialValueNotComputationallyIndependent => {
+                    InitialValueNotComputationallyIndependent
+                },
+                PropertyRegistrationError::InvalidInitialValue => InvalidInitialValue,
+                PropertyRegistrationError::NoInitialValue => NoInitialValue,
+            };
+        }
+
+        let property_registration = PropertyRegistration {
+            name: PropertyRuleName(name),
+            descriptors: PropertyDescriptors {
+                syntax: Some(syntax),
+                inherits: Some(if inherits {
+                    Inherits::True
+                } else {
+                    Inherits::False
+                }),
+                initial_value,
+            },
+            url_data: url_data.clone(),
+            source_location: SourceLocation { line: 0, column: 0 },
+        };
+        self.custom_property_script_registry_mut()
+            .register(property_registration);
+        self.rebuild_initial_values_for_custom_properties();
+
+        SuccessfullyRegistered
+    }
+}
+
 /// A vector that is sorted in layer order.
 #[derive(Clone, Debug, Deref, MallocSizeOf)]
 pub struct LayerOrderedVec<T>(Vec<(T, LayerId)>);
@@ -2037,7 +2180,6 @@ impl<T> Default for LayerOrderedMap<T> {
     }
 }
 
-#[cfg(feature = "gecko")]
 impl<T: 'static> LayerOrderedVec<T> {
     fn clear(&mut self) {
         self.0.clear();
@@ -2138,8 +2280,8 @@ impl PageRuleMap {
         pseudos: PagePseudoClassFlags,
     ) {
         let level = match origin {
-            Origin::UserAgent => CascadeLevel::UANormal,
-            Origin::User => CascadeLevel::UserNormal,
+            Origin::UserAgent => CascadeLevel::new(CascadeOrigin::UA),
+            Origin::User => CascadeLevel::new(CascadeOrigin::User),
             Origin::Author => CascadeLevel::same_tree_author_normal(),
         };
         let cascade_data = cascade_data.borrow_for_origin(origin);
@@ -2189,6 +2331,7 @@ impl PageRuleMap {
                 specificity,
                 cascade_data.layer_order_for(data.layer),
                 ScopeProximity::infinity(), // Page rule can't have nested rules anyway.
+                RuleCascadeFlags::empty(),
             ));
         }
     }
@@ -2223,6 +2366,9 @@ pub struct ExtraStyleData {
 
     /// A map of effective page rules.
     pub pages: PageRuleMap,
+
+    /// A list of effective @view-transition rules.
+    pub view_transitions: LayerOrderedVec<Arc<ViewTransitionRule>>,
 }
 
 impl ExtraStyleData {
@@ -2287,12 +2433,17 @@ impl ExtraStyleData {
         Ok(())
     }
 
+    fn add_view_transition(&mut self, rule: &Arc<ViewTransitionRule>, layer: LayerId) {
+        self.view_transitions.push(rule.clone(), layer)
+    }
+
     fn sort_by_layer(&mut self, layers: &[CascadeLayer]) {
         self.font_faces.sort(layers);
         self.font_feature_values.sort(layers);
         self.font_palette_values.sort(layers);
         self.counter_styles.sort(layers);
         self.position_try_rules.sort(layers);
+        self.view_transitions.sort(layers);
     }
 
     fn clear(&mut self) {
@@ -2728,15 +2879,20 @@ impl ContainerConditionId {
 #[derive(Clone, Debug, MallocSizeOf)]
 struct ContainerConditionReference {
     parent: ContainerConditionId,
+    /// Contains the container conditions of a particular rule.
+    ///
+    /// This should only ever be empty for the root rule, which acts as a
+    /// sentinel value.
     #[ignore_malloc_size_of = "Arc"]
-    condition: Option<Arc<ContainerCondition>>,
+    conditions: ArcSlice<ContainerCondition>,
 }
 
 impl ContainerConditionReference {
-    const fn none() -> Self {
+    /// Creates an empty, root container condition reference.
+    fn none() -> Self {
         Self {
             parent: ContainerConditionId::none(),
-            condition: None,
+            conditions: ArcSlice::default(),
         }
     }
 }
@@ -3481,18 +3637,19 @@ impl CascadeData {
     {
         loop {
             let condition_ref = &self.container_conditions[id.0 as usize];
-            let condition = match condition_ref.condition {
-                None => return true,
-                Some(ref c) => c,
-            };
-            let matches = condition
-                .matches(
-                    stylist,
-                    element,
-                    context.extra_data.originating_element_style,
-                    &mut context.extra_data.cascade_input_flags,
-                )
-                .to_bool(/* unknown = */ false);
+            if condition_ref.conditions.is_empty() {
+                return true;
+            }
+            let matches = condition_ref.conditions.iter().any(|condition| {
+                condition
+                    .matches(
+                        stylist,
+                        element,
+                        context.extra_data.originating_element_style,
+                        &mut context.extra_data.cascade_input_flags,
+                    )
+                    .to_bool(/* unknown = */ false)
+            });
             if !matches {
                 return false;
             }
@@ -3599,7 +3756,6 @@ impl CascadeData {
                 order.inc();
             }
         }
-        #[cfg(feature = "gecko")]
         self.extra_data.sort_by_layer(&self.layers);
         self.animations
             .sort_with(&self.layers, compare_keyframes_in_same_layer);
@@ -3696,10 +3852,11 @@ impl CascadeData {
                         .push(ApplicableDeclarationBlock::new(
                             StyleSource::from_declarations(declarations.clone()),
                             self.rules_source_order,
-                            CascadeLevel::UANormal,
+                            CascadeLevel::new(CascadeOrigin::UA),
                             selector.specificity(),
                             LayerOrder::root(),
                             ScopeProximity::infinity(),
+                            RuleCascadeFlags::empty(),
                         ));
                     continue;
                 }
@@ -3712,7 +3869,7 @@ impl CascadeData {
             }
 
             debug_assert!(!pseudo_elements
-                .iter()
+                    .iter()
                 .any(|p| p.is_precomputed() || p.is_unknown_webkit_pseudo_element()));
 
             let selector = match ancestor_selectors {
@@ -3729,7 +3886,7 @@ impl CascadeData {
                 self.rules_source_order,
                 containing_rule_state.layer_id,
                 containing_rule_state.container_condition_id,
-                containing_rule_state.in_starting_style,
+                containing_rule_state.cascade_flags(),
                 containing_rule_state.containing_scope_rule_state.id,
             );
 
@@ -4012,6 +4169,10 @@ impl CascadeData {
                         .add_page(guard, rule, containing_rule_state.layer_id)?;
                     handled = false;
                 },
+                CssRule::ViewTransition(ref rule) => {
+                    self.extra_data
+                        .add_view_transition(rule, containing_rule_state.layer_id);
+                },
                 _ => {
                     handled = false;
                 },
@@ -4030,7 +4191,7 @@ impl CascadeData {
                         guard,
                         &mut effective,
                     );
-                    debug_assert!(children.is_none());
+                    debug_assert!(children.is_empty());
                     debug_assert!(effective);
                 }
                 continue;
@@ -4152,14 +4313,22 @@ impl CascadeData {
                 },
                 CssRule::Container(ref rule) => {
                     let id = ContainerConditionId(self.container_conditions.len() as u16);
-                    self.container_conditions.push(ContainerConditionReference {
+                    let condition = ContainerConditionReference {
                         parent: containing_rule_state.container_condition_id,
-                        condition: Some(rule.condition.clone()),
-                    });
+                        conditions: rule.conditions.0.clone(),
+                    };
+                    self.container_conditions.push(condition);
                     containing_rule_state.container_condition_id = id;
                 },
                 CssRule::StartingStyle(..) => {
-                    containing_rule_state.in_starting_style = true;
+                    containing_rule_state
+                        .cascade_flags
+                        .insert(RuleCascadeFlags::STARTING_STYLE);
+                },
+                CssRule::AppearanceBase(..) => {
+                    containing_rule_state
+                        .cascade_flags
+                        .insert(RuleCascadeFlags::APPEARANCE_BASE);
                 },
                 CssRule::Scope(ref rule) => {
                     containing_rule_state.nested_declarations_context =
@@ -4243,9 +4412,9 @@ impl CascadeData {
                 _ => {},
             }
 
-            if let Some(children) = children {
+            if !children.is_empty() {
                 self.add_rule_list(
-                    children,
+                    children.iter(),
                     device,
                     quirks_mode,
                     stylesheet,
@@ -4404,8 +4573,10 @@ impl CascadeData {
                 | CssRule::FontFeatureValues(..)
                 | CssRule::Scope(..)
                 | CssRule::StartingStyle(..)
+                | CssRule::AppearanceBase(..)
                 | CssRule::CustomMedia(..)
-                | CssRule::PositionTry(..) => {
+                | CssRule::PositionTry(..)
+                | CssRule::ViewTransition(..) => {
                     // Not affected by device changes. @custom-media is handled by the potential
                     // @media rules referencing it being handled.
                     continue;
@@ -4528,7 +4699,6 @@ impl CascadeData {
             .push(ContainerConditionReference::none());
         self.scope_conditions.clear();
         self.scope_conditions.push(ScopeConditionReference::none());
-        #[cfg(feature = "gecko")]
         self.extra_data.clear();
         self.rules_source_order = 0;
         self.num_selectors = 0;
@@ -4711,8 +4881,8 @@ pub struct Rule {
     /// The current @container rule id.
     pub container_condition_id: ContainerConditionId,
 
-    /// True if this rule is inside @starting-style.
-    pub is_starting_style: bool,
+    /// Flags for special cascade behaviors.
+    pub cascade_flags: RuleCascadeFlags,
 
     /// The current @scope rule id.
     pub scope_condition_id: ScopeConditionId,
@@ -4749,6 +4919,7 @@ impl Rule {
             self.specificity(),
             cascade_data.layer_order_for(self.layer_id),
             scope_proximity,
+            self.cascade_flags,
         )
     }
 
@@ -4760,7 +4931,7 @@ impl Rule {
         source_order: u32,
         layer_id: LayerId,
         container_condition_id: ContainerConditionId,
-        is_starting_style: bool,
+        cascade_flags: RuleCascadeFlags,
         scope_condition_id: ScopeConditionId,
     ) -> Self {
         Self {
@@ -4770,7 +4941,7 @@ impl Rule {
             source_order,
             layer_id,
             container_condition_id,
-            is_starting_style,
+            cascade_flags,
             scope_condition_id,
         }
     }

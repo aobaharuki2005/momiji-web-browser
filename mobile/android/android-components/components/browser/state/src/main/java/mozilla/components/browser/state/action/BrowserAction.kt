@@ -22,6 +22,7 @@ import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.SecurityInfo
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabGroup
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
 import mozilla.components.browser.state.state.UndoHistoryState
@@ -234,11 +235,14 @@ sealed class TabListAction : BrowserAction() {
      *
      * @property tabs the [TabSessionState]s to restore.
      * @property selectedTabId the ID of the tab to select.
+     * @property restoreLocation [RestoreLocation] indicating where to restore [tabs].
+     * @property tabPartitions a mapping of IDs to the corresponding [TabPartition].
      */
     data class RestoreAction(
         val tabs: List<RecoverableTab>,
         val selectedTabId: String? = null,
         val restoreLocation: RestoreLocation,
+        val tabPartitions: Map<String, TabPartition> = emptyMap(),
     ) : TabListAction() {
 
         /**
@@ -325,7 +329,7 @@ sealed class TabGroupAction : BrowserAction() {
     data class AddTabsAction(
         val partition: String,
         val group: String,
-        val tabIds: List<String>,
+        val tabIds: Set<String>,
     ) : TabGroupAction()
 
     /**
@@ -351,7 +355,7 @@ sealed class TabGroupAction : BrowserAction() {
     data class RemoveTabsAction(
         val partition: String,
         val group: String,
-        val tabIds: List<String>,
+        val tabIds: Set<String>,
     ) : TabGroupAction()
 }
 
@@ -394,6 +398,17 @@ sealed class LastAccessAction : BrowserAction() {
     data class UpdateLastAccessAction(
         val tabId: String,
         val lastAccess: Long = System.currentTimeMillis(),
+    ) : LastAccessAction()
+
+    /**
+     * Updates the [TabSessionState.lastVisibleAt] timestamp of the tab with the given [tabId].
+     *
+     * @property tabId the ID of the tab to update.
+     * @property lastVisibleAt the timestamp when the tab was last visible to the user.
+     */
+    data class UpdateLastVisibleAtAction(
+        val tabId: String,
+        val lastVisibleAt: Long,
     ) : LastAccessAction()
 
     /**
@@ -1039,6 +1054,15 @@ sealed class TranslationsAction : BrowserAction() {
     ) : TranslationsAction()
 
     /**
+     * Sets whether the translations feature is enabled and should be shown to the user.
+     *
+     * @property isTranslationsEnabled Whether the translations feature is enabled.
+     */
+    data class SetTranslationsEnabledAction(
+        val isTranslationsEnabled: Boolean,
+    ) : TranslationsAction()
+
+    /**
      * Sets whether the device architecture supports translations or not on
      * [BrowserState.translationEngine].
      *
@@ -1305,6 +1329,26 @@ sealed class WebExtensionAction : BrowserAction() {
         val extensionId: String,
         val popupSessionId: String? = null,
         val popupSession: EngineSession? = null,
+    ) : WebExtensionAction()
+
+    /**
+     * Passes url and title necessary for opening options page via [WebExtensionState].
+     * And keeps track of the last instance used to display an extension options page.
+     * optionsPageInstanceId keeps repeated requests distinguishable when the observer
+     * misses the cleared state.
+     */
+    data class UpdateOptionsPageSessionAction(
+        val extensionId: String,
+        val optionsPageInstanceId: String,
+        val optionsPageUrl: String,
+        val extensionTranslatedName: String,
+    ) : WebExtensionAction()
+
+    /**
+     * Clears the state of an options page session.
+     */
+    data class ClearOptionsPageSession(
+        val extensionId: String,
     ) : WebExtensionAction()
 
     /**
@@ -1704,8 +1748,11 @@ sealed class DownloadAction : BrowserAction() {
 
     /**
      * Updates the [BrowserState] to remove the download with the provided [downloadId].
+     * @param downloadId The ID of the download to remove.
+     * @param removeFromDisk If true, forcibly deletes the file from storage. If false, only removes
+     * from history. If null, falls back to the global user preference.
      */
-    data class RemoveDownloadAction(val downloadId: String) : DownloadAction()
+    data class RemoveDownloadAction(val downloadId: String, val removeFromDisk: Boolean? = null) : DownloadAction()
 
     /**
      * Updates the [BrowserState] to remove all downloads.
@@ -1859,8 +1906,18 @@ sealed class SearchAction : BrowserAction() {
         val additionalAvailableSearchEngines: List<SearchEngine>,
         val userSelectedSearchEngineId: String?,
         val userSelectedSearchEngineName: String?,
+        val userSelectedPrivateSearchEngineId: String?,
+        val userSelectedPrivateSearchEngineName: String?,
         val regionDefaultSearchEngineId: String,
         val regionSearchEnginesOrder: List<String>,
+        val searchEnginesConfigurationId: Int?,
+    ) : SearchAction()
+
+    /**
+     * Indicates that a new search engines configuration is available for the application to use.
+     */
+    data class SearchConfigurationAvailabilityChanged(
+        val isNewSearchConfigurationAvailable: Boolean,
     ) : SearchAction()
 
     /**
@@ -1881,6 +1938,21 @@ sealed class SearchAction : BrowserAction() {
         val searchEngineId: String,
         val searchEngineName: String?,
     ) : SearchAction()
+
+    /**
+     * Updates [BrowserState.search] to update [SearchState.userSelectedPrivateSearchEngineId] and
+     * [SearchState.userSelectedPrivateSearchEngineName].
+     */
+    data class SelectPrivateSearchEngineAction(
+        val searchEngineId: String,
+        val searchEngineName: String?,
+    ) : SearchAction()
+
+    /**
+     * Clears the private browsing search engine override, causing it to fall back to the
+     * normal default search engine.
+     */
+    object ClearPrivateSearchEngineAction : SearchAction()
 
     /**
      * Shows a previously hidden, bundled search engine in [SearchState.regionSearchEngines] again

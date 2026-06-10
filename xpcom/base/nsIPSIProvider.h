@@ -1,10 +1,9 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIPSIProvider_h__
-#define nsIPSIProvider_h__
+#ifndef nsIPSIProvider_h_
+#define nsIPSIProvider_h_
 
 #include "nsISupports.h"
 
@@ -21,6 +20,7 @@ class nsIPSIProvider : public nsISupports {
   NS_INLINE_DECL_STATIC_IID(NS_IPSIPROVIDER_IID)
 
   NS_IMETHOD GetCachedPSIInfo(mozilla::PSIInfo& aResult) = 0;
+  virtual void StartNonOOMPSISampling() = 0;
 };
 
-#endif  // nsIPSIProvider_h__
+#endif  // nsIPSIProvider_h_

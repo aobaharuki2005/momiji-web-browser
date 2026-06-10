@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -237,7 +235,7 @@ void RunWatchdog(void* arg) {
         mozilla::AppShutdown::GetShutdownPhaseName(lastPhase));
 
     CrashReporter::SetMinidumpAnalysisAllThreads();
-    MOZ_CRASH_UNSAFE(strdup(msg.BeginReading()));
+    MOZ_CRASH_UNSAFE(strdup(msg.get()));
   }
 }
 
@@ -295,18 +293,28 @@ void nsTerminator::StartWatchdog() {
   int32_t crashAfterMS =
       Preferences::GetInt("toolkit.asyncshutdown.crash_timeout",
                           FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS);
+
+  int32_t additionalWaitBeforeCrashMs =
+      Preferences::GetInt("toolkit.asyncshutdown.crash_timeout_additional_wait",
+                          ADDITIONAL_WAIT_BEFORE_CRASH_MS);
+
   // Ignore negative values
   if (crashAfterMS <= 0) {
     crashAfterMS = FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS;
   }
 
+  // Keep the same guarantee as before, so that crashAfterTicks > 0
+  if (additionalWaitBeforeCrashMs <= 0) {
+    additionalWaitBeforeCrashMs = ADDITIONAL_WAIT_BEFORE_CRASH_MS;
+  }
+
   // Add a little padding, to ensure that we do not crash before
   // AsyncShutdown.
-  if (crashAfterMS > INT32_MAX - ADDITIONAL_WAIT_BEFORE_CRASH_MS) {
+  if (crashAfterMS > INT32_MAX - additionalWaitBeforeCrashMs) {
     // Defend against overflow
     crashAfterMS = INT32_MAX;
   } else {
-    crashAfterMS += ADDITIONAL_WAIT_BEFORE_CRASH_MS;
+    crashAfterMS += additionalWaitBeforeCrashMs;
   }
 
 #ifdef MOZ_VALGRIND
@@ -329,9 +337,8 @@ void nsTerminator::StartWatchdog() {
 #endif
 
   UniquePtr<Options> options(new Options());
-  // crashAfterTicks is guaranteed to be > 0 as
-  // crashAfterMS >= ADDITIONAL_WAIT_BEFORE_CRASH_MS >> HEARTBEAT_INTERVAL_MS
-  options->crashAfterTicks = crashAfterMS / HEARTBEAT_INTERVAL_MS;
+  // Guarantee that crashAfterTicks is non-zero
+  options->crashAfterTicks = std::max(1, crashAfterMS / HEARTBEAT_INTERVAL_MS);
 
   DebugOnly<PRThread*> watchdogThread =
       CreateSystemThread(RunWatchdog, options.release());

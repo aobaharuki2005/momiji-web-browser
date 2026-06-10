@@ -42,7 +42,7 @@ export const BuiltInThemeConfig = new Map([
   [
     "firefox-alpenglow@mozilla.org",
     {
-      version: "1.5.1",
+      version: "1.5.2",
       path: "resource://builtin-themes/alpenglow/",
     },
   ],

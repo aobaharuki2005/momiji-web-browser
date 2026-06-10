@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -99,19 +97,21 @@ void checkAndLogStatementPerformance(sqlite3_stmt* aStatement) {
     return;
   }
 
-  nsAutoCString message("Suboptimal indexes for the SQL statement ");
+#define STORAGE_WARNINGS_URL \
+  "https://firefox-source-docs.mozilla.org/storage/warnings.html"
 #ifdef MOZ_STORAGE_SORTWARNING_SQL_DUMP
-  message.Append('`');
-  message.Append(sql);
-  message.AppendLiteral("` [");
-  message.AppendInt(count);
-  message.AppendLiteral(" sort operation(s)]");
+  NS_WARNING(nsPrintfCString("Suboptimal indexes for the SQL statement `%s` "
+                             "[%d sort operation(s)] (" STORAGE_WARNINGS_URL
+                             ").",
+                             sql, count)
+                 .get());
 #else
-  nsPrintfCString address("0x%p", aStatement);
-  message.Append(address);
+  NS_WARNING(nsPrintfCString("Suboptimal indexes for the SQL statement 0x%p "
+                             "(" STORAGE_WARNINGS_URL ").",
+                             aStatement)
+                 .get());
 #endif
-  message.AppendLiteral(" (http://mzl.la/1FuID0j).");
-  NS_WARNING(message.get());
+#undef STORAGE_WARNINGS_URL
 }
 
 nsIVariant* convertJSValToVariant(JSContext* aCtx, const JS::Value& aValue) {

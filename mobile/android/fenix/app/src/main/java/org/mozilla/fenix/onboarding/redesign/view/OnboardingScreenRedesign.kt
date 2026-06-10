@@ -7,7 +7,6 @@ package org.mozilla.fenix.onboarding.redesign.view
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,27 +23,32 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import mozilla.components.compose.base.PagerIndicator
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.log.logger.Logger
@@ -52,16 +56,10 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
 import org.mozilla.fenix.components.components
-import org.mozilla.fenix.compose.LinkTextState
-import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
-import org.mozilla.fenix.onboarding.notification.NotificationMainImage
-import org.mozilla.fenix.onboarding.redesign.view.defaultbrowser.SetToDefaultMainImage
-import org.mozilla.fenix.onboarding.redesign.view.sync.SyncMainImage
 import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingToolbarAction
 import org.mozilla.fenix.onboarding.store.OnboardingStore
-import org.mozilla.fenix.onboarding.view.Caption
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.onboarding.view.OnboardingPageUiData
 import org.mozilla.fenix.onboarding.view.OnboardingTermsOfService
@@ -69,34 +67,14 @@ import org.mozilla.fenix.onboarding.view.OnboardingTermsOfServiceEventHandler
 import org.mozilla.fenix.onboarding.view.ToolbarOption
 import org.mozilla.fenix.onboarding.view.ToolbarOptionType
 import org.mozilla.fenix.onboarding.view.mapToOnboardingPageState
-import org.mozilla.fenix.onboarding.widget.SetSearchWidgetMainImage
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.isLargeScreenSize
 
 /**
  * The small device max height. The value comes from [org.mozilla.fenix.ext.isTallWindow].
  */
-private val SMALL_SCREEN_MAX_HEIGHT = 480.dp
+private val SMALL_SCREEN_MAX_HEIGHT = 570.dp
 private val logger: Logger = Logger("OnboardingScreenRedesign")
-
-/**
- * The colors used for the gradient background.
- */
-private object GradientColors {
-    val nonDarkMode = listOf(
-        Color(0xFFF5C1BD), // light pink (top)
-        Color(0xFFED8043), // orange
-        Color(0xFFEB691D), // deeper orange-red
-        Color(0xFFE00B1D), // strong red (bottom)
-    )
-
-    val darkMode = listOf(
-        Color(0xFF9B7AE0), // soft violet (top)
-        Color(0xFF7B4FC9), // medium purple
-        Color(0xFF4A289A), // deep purple
-        Color(0xFF2E1468), // darkest purple (bottom)
-    )
-}
 
 /**
  * A screen for displaying onboarding.
@@ -118,9 +96,12 @@ private object GradientColors {
  * @param onMarketingOptInToggle callback for when the user toggles the opt-in checkbox
  * @param onMarketingDataContinueClick callback for when the user clicks the continue button on the
  * marketing data opt out screen.
+ * @param onMarketingDataSkipClick callback for when the user clicks the skip button on the
+ * marketing data opt out screen.
  * @param onFinish Invoked when the onboarding is completed.
  * @param onImpression Invoked when a page in the pager is displayed.
  * @param currentIndex callback for when the current horizontal pager page changes
+ * @param onNavigateToNextPage callback for when the user navigates to the next page in onboarding.
  */
 @Composable
 @Suppress("LongParameterList", "LongMethod")
@@ -140,9 +121,11 @@ fun OnboardingScreenRedesign(
     onMarketingDataLearnMoreClick: () -> Unit,
     onMarketingOptInToggle: (optIn: Boolean) -> Unit,
     onMarketingDataContinueClick: (allowMarketingDataCollection: Boolean) -> Unit,
+    onMarketingDataSkipClick: () -> Unit,
     onFinish: (pageType: OnboardingPageUiData) -> Unit,
     onImpression: (pageType: OnboardingPageUiData) -> Unit,
     currentIndex: (index: Int) -> Unit,
+    onNavigateToNextPage: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { pagesToDisplay.size })
@@ -150,12 +133,18 @@ fun OnboardingScreenRedesign(
         .observeAsComposableState { it.account != null }
     val widgetPinnedFlow: StateFlow<Boolean> = WidgetPinnedState.isPinned
     val isWidgetPinnedState by widgetPinnedFlow.collectAsState()
+    val isSetToDefault by components.appStore.observeAsComposableState { it.isDefaultBrowser }
+    var lastSettledPage by remember { mutableIntStateOf(pagerState.settledPage) }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
             .collect { page ->
+                if (page > lastSettledPage) {
+                    onNavigateToNextPage()
+                }
                 currentIndex(page)
+                lastSettledPage = page
             }
     }
 
@@ -177,22 +166,14 @@ fun OnboardingScreenRedesign(
 
     val hasScrolledToNextPage = remember { mutableStateOf(false) }
 
-    LaunchedEffect(isSignedIn.value, isWidgetPinnedState) {
-        val scrollToNextCardFromSignIn = isSignedIn.value?.let {
-            scrollToNextCardFromSignIn(
-                pagesToDisplay,
-                pagerState.currentPage,
-                it,
-            )
-        } ?: false
-
-        val scrollToNextCardFromAddWidget = scrollToNextCardFromAddWidget(
-            pagesToDisplay,
-            pagerState.currentPage,
-            isWidgetPinnedState,
+    LaunchedEffect(isSignedIn.value, isWidgetPinnedState, isSetToDefault) {
+        val scrollToNextCard = shouldLaunchEffectScrollToNextPage(
+            isSignedIn = isSignedIn,
+            isWidgetPinnedState = isWidgetPinnedState,
+            isSetToDefault = isSetToDefault,
+            pagesToDisplay = pagesToDisplay,
+            pagerState = pagerState,
         )
-
-        val scrollToNextCard = scrollToNextCardFromSignIn || scrollToNextCardFromAddWidget
 
         if (scrollToNextCard && !hasScrolledToNextPage.value) {
             scrollToNextPageOrDismiss()
@@ -210,28 +191,31 @@ fun OnboardingScreenRedesign(
         pagesToDisplay = pagesToDisplay,
         pagerState = pagerState,
         onMakeFirefoxDefaultClick = {
-            scrollToNextPageOrDismiss()
-            onMakeFirefoxDefaultClick()
+            setToDefaultClick(
+                isSetToDefault = isSetToDefault,
+                scrollToNextPageOrDismiss = scrollToNextPageOrDismiss,
+                onMakeFirefoxDefaultClick = onMakeFirefoxDefaultClick,
+            )
         },
         onMakeFirefoxDefaultSkipClick = {
-            scrollToNextPageOrDismiss()
             onSkipDefaultClick()
+            scrollToNextPageOrDismiss()
         },
         onSignInButtonClick = {
             onSignInButtonClick()
             scrollToNextPageOrDismiss()
         },
         onSignInSkipClick = {
-            scrollToNextPageOrDismiss()
             onSkipSignInClick()
+            scrollToNextPageOrDismiss()
         },
         onNotificationPermissionButtonClick = {
-            scrollToNextPageOrDismiss()
             onNotificationPermissionButtonClick()
+            scrollToNextPageOrDismiss()
         },
         onNotificationPermissionSkipClick = {
-            scrollToNextPageOrDismiss()
             onSkipNotificationClick()
+            scrollToNextPageOrDismiss()
         },
         onAddFirefoxWidgetClick = {
             if (isWidgetPinnedState) {
@@ -241,17 +225,17 @@ fun OnboardingScreenRedesign(
             }
         },
         onSkipFirefoxWidgetClick = {
-            scrollToNextPageOrDismiss()
             onSkipFirefoxWidgetClick()
+            scrollToNextPageOrDismiss()
         },
         onCustomizeToolbarButtonClick = {
-            scrollToNextPageOrDismiss()
             onCustomizeToolbarClick()
+            scrollToNextPageOrDismiss()
         },
         termsOfServiceEventHandler = termsOfServiceEventHandler,
         onAgreeAndConfirmTermsOfService = {
-            scrollToNextPageOrDismiss()
             termsOfServiceEventHandler.onAcceptTermsButtonClicked()
+            scrollToNextPageOrDismiss()
         },
         onMarketingDataLearnMoreClick = onMarketingDataLearnMoreClick,
         onMarketingOptInToggle = onMarketingOptInToggle,
@@ -259,8 +243,57 @@ fun OnboardingScreenRedesign(
             onMarketingDataContinueClick(allowMarketingDataCollection)
             scrollToNextPageOrDismiss()
         },
+        onMarketingDataSkipClick = {
+            onMarketingDataSkipClick()
+            scrollToNextPageOrDismiss()
+        },
         onboardingStore = onboardingStore,
     )
+}
+
+private fun setToDefaultClick(
+    isSetToDefault: Boolean,
+    scrollToNextPageOrDismiss: () -> Unit,
+    onMakeFirefoxDefaultClick: () -> Unit,
+) {
+    if (isSetToDefault) {
+        scrollToNextPageOrDismiss()
+    } else {
+        onMakeFirefoxDefaultClick()
+    }
+}
+
+private fun shouldLaunchEffectScrollToNextPage(
+    isSignedIn: State<Boolean?>,
+    isWidgetPinnedState: Boolean,
+    isSetToDefault: Boolean,
+    pagesToDisplay: List<OnboardingPageUiData>,
+    pagerState: PagerState,
+): Boolean {
+    val scrollToNextCardFromSignIn = isSignedIn.value?.let {
+        scrollToNextCardFromSignIn(
+            pagesToDisplay,
+            pagerState.currentPage,
+            it,
+        )
+    } ?: false
+
+    val scrollToNextCardFromAddWidget = scrollToNextCardFromAddWidget(
+        pagesToDisplay,
+        pagerState.currentPage,
+        isWidgetPinnedState,
+    )
+
+    val scrollToNextCardFromSetToDefault = scrollToNextCardFromSetToDefault(
+        pagesToDisplay,
+        pagerState.currentPage,
+        isSetToDefault,
+    )
+
+    val scrollToNextCard =
+        scrollToNextCardFromSignIn || scrollToNextCardFromAddWidget || scrollToNextCardFromSetToDefault
+
+    return scrollToNextCard
 }
 
 private fun scrollToNextCardFromAddWidget(
@@ -285,6 +318,17 @@ private fun scrollToNextCardFromSignIn(
     return isSignedIn && currentPageIsSignInPage
 }
 
+private fun scrollToNextCardFromSetToDefault(
+    pagesToDisplay: List<OnboardingPageUiData>,
+    currentPageIndex: Int,
+    isSetToDefault: Boolean,
+): Boolean {
+    val indexOfSetToDefaultPage =
+        pagesToDisplay.indexOfFirst { it.type == OnboardingPageUiData.Type.DEFAULT_BROWSER }
+    val currentPageIsSetToDefaultPage = currentPageIndex == indexOfSetToDefaultPage
+    return isSetToDefault && currentPageIsSetToDefaultPage
+}
+
 @Composable
 @Suppress("LongParameterList")
 private fun OnboardingContent(
@@ -305,40 +349,36 @@ private fun OnboardingContent(
     onMarketingOptInToggle: (optIn: Boolean) -> Unit,
     onMarketingDataLearnMoreClick: () -> Unit,
     onMarketingDataContinueClick: (allowMarketingDataCollection: Boolean) -> Unit,
+    onMarketingDataSkipClick: () -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val boxWithConstraintsScope = this
-        val isSmallPhoneScreen = boxWithConstraintsScope.maxHeight <= SMALL_SCREEN_MAX_HEIGHT
-
-        val isLargeScreen = LocalContext.current.isLargeScreenSize()
-        val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-        val pagerWidth = pageContentWidth(boxWithConstraintsScope, isLargeScreen, isSmallPhoneScreen, isLandscape)
-        val pagerHeight = pageContentHeight(boxWithConstraintsScope, isLargeScreen, isSmallPhoneScreen, isLandscape)
-
-        val pagePeekWidth = ((maxWidth - pagerWidth) / 2).coerceAtLeast(8.dp)
-        val paddingValue = if (!isLargeScreen && isLandscape) 0.dp else pagePeekWidth
-
-        if (!isNonLargeScreenLandscape(isLargeScreen, isLandscape)) {
-            GradientBackground()
-        }
+        val layout = getOnboardingLayout(this)
+        OnboardingBackground(
+            isVisible = !isNonLargeScreenLandscape(
+                isLargeScreen = layout.isLarge,
+                isLandscape = layout.isLandscape,
+            ),
+            isSolidBackground = layout.isSmall,
+        )
 
         Column(
-            modifier = Modifier.systemBarsPadding(),
             verticalArrangement = Arrangement.Center,
+            modifier = Modifier.systemBarsPadding(),
         ) {
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f)).takeIf { !layout.isSmall }
 
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(pagerHeight),
+                    .run {
+                        if (layout.isSmall) fillMaxSize() else height(layout.pagerHeight)
+                    },
                 userScrollEnabled = pagerState.currentPage != 0, // Disable scroll for the Terms of Use card.
-                contentPadding = PaddingValues(horizontal = paddingValue),
+                contentPadding = layout.contentPadding,
                 pageSize = PageSize.Fill,
                 beyondViewportPageCount = 2,
-                pageSpacing = pageSpacing(isLargeScreen, isSmallPhoneScreen, pagePeekWidth),
+                pageSpacing = pageSpacing(layout.isLarge, layout.isSmall, layout.pagePeekWidth),
                 key = { pagesToDisplay[it].type },
                 overscrollEffect = null,
             ) { pageIndex ->
@@ -357,6 +397,8 @@ private fun OnboardingContent(
                     onAddFirefoxWidgetSkipClick = onSkipFirefoxWidgetClick,
                     onCustomizeToolbarButtonClick = onCustomizeToolbarButtonClick,
                     onTermsOfServiceButtonClick = onAgreeAndConfirmTermsOfService,
+                    shouldShowElevation = !layout.isSmall,
+                    isSmallDevice = layout.isSmall,
                 )
 
                 OnboardingPageForType(
@@ -367,18 +409,21 @@ private fun OnboardingContent(
                     onMarketingDataLearnMoreClick = onMarketingDataLearnMoreClick,
                     onMarketingOptInToggle = onMarketingOptInToggle,
                     onMarketingDataContinueClick = onMarketingDataContinueClick,
+                    onMarketingDataSkipClick = onMarketingDataSkipClick,
                 )
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f)).takeIf { !layout.isSmall }
 
-            if (!isSmallPhoneScreen) {
+            if (!layout.isSmall) {
                 PagerIndicator(
                     pagerState = pagerState,
-                    leaveTrail = true,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 16.dp),
+                    activeColor = MaterialTheme.colorScheme.onPrimary,
+                    inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    leaveTrail = false,
                 )
             }
         }
@@ -386,13 +431,22 @@ private fun OnboardingContent(
 }
 
 @Composable
-private fun GradientBackground() {
-    val colors = if (isSystemInDarkTheme()) GradientColors.darkMode else GradientColors.nonDarkMode
+private fun OnboardingBackground(isVisible: Boolean, isSolidBackground: Boolean) {
+    if (!isVisible) return
+
+    val backgroundModifier = if (isSolidBackground) {
+        Modifier.background(color = MaterialTheme.colorScheme.surface)
+    } else {
+        Modifier.paint(
+            painter = painterResource(R.drawable.nova_onboarding_background),
+            contentScale = ContentScale.Crop,
+        )
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(brush = Brush.verticalGradient(colors = colors)),
+            .then(backgroundModifier),
     )
 }
 
@@ -405,27 +459,14 @@ private fun OnboardingPageForType(
     onMarketingDataLearnMoreClick: () -> Unit,
     onMarketingOptInToggle: (optIn: Boolean) -> Unit,
     onMarketingDataContinueClick: (allowMarketingDataCollection: Boolean) -> Unit,
+    onMarketingDataSkipClick: () -> Unit,
 ) {
     when (type) {
-        OnboardingPageUiData.Type.DEFAULT_BROWSER -> OnboardingPageRedesign(
-            pageState = state,
-            mainImage = { SetToDefaultMainImage() },
-        )
-
-        OnboardingPageUiData.Type.SYNC_SIGN_IN -> OnboardingPageRedesign(
-            pageState = state,
-            mainImage = { SyncMainImage() },
-        )
-
-        OnboardingPageUiData.Type.ADD_SEARCH_WIDGET -> OnboardingPageRedesign(
-            pageState = state,
-            mainImage = { SetSearchWidgetMainImage() },
-        )
-
-        OnboardingPageUiData.Type.NOTIFICATION_PERMISSION -> OnboardingPageRedesign(
-            pageState = state,
-            mainImage = { NotificationMainImage() },
-        )
+        OnboardingPageUiData.Type.DEFAULT_BROWSER,
+        OnboardingPageUiData.Type.SYNC_SIGN_IN,
+        OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
+        OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
+            -> OnboardingPageRedesign(state)
 
         OnboardingPageUiData.Type.TOOLBAR_PLACEMENT -> {
             val context = LocalContext.current
@@ -451,6 +492,7 @@ private fun OnboardingPageForType(
             onMarketingDataLearnMoreClick = onMarketingDataLearnMoreClick,
             onMarketingOptInToggle = onMarketingOptInToggle,
             onMarketingDataContinueClick = onMarketingDataContinueClick,
+            onMarketingDataSkipClick = onMarketingDataSkipClick,
         )
 
         OnboardingPageUiData.Type.TERMS_OF_SERVICE -> TermsOfServiceOnboardingPageRedesign(
@@ -464,6 +506,45 @@ private fun OnboardingPageForType(
             logger.error("Unsupported page type: $type used for onboarding redesign.")
         }
     }
+}
+
+@Composable
+private fun getOnboardingLayout(scope: BoxWithConstraintsScope): OnboardingLayout {
+    val context = LocalContext.current
+    val config = LocalConfiguration.current
+    val isSmall = scope.maxHeight <= SMALL_SCREEN_MAX_HEIGHT
+    val isLarge = context.isLargeScreenSize()
+    val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val pagerWidth = pageContentWidth(
+        scope = scope,
+        isLandscape = isLandscape,
+        isSmallScreen = isSmall,
+        isLargeScreen = isLarge,
+    )
+    val pagerHeight = pageContentHeight(
+        scope = scope,
+        isLargeScreen = isLarge,
+        isSmallScreen = isSmall,
+        isLandscape = isLandscape,
+    )
+
+    val peek = ((scope.maxWidth - pagerWidth) / 2).coerceAtLeast(8.dp)
+
+    val padding = when {
+        isSmall && !isLandscape -> PaddingValues(0.dp)
+        !isLarge && isLandscape -> PaddingValues(0.dp)
+        else -> PaddingValues(horizontal = peek)
+    }
+
+    return OnboardingLayout(
+        pagerHeight = pagerHeight,
+        contentPadding = padding,
+        pagePeekWidth = peek,
+        isSmall = isSmall,
+        isLarge = isLarge,
+        isLandscape = isLandscape,
+    )
 }
 
 private object PageContentLayout {
@@ -550,8 +631,20 @@ private fun minWidth(
 private fun isNonLargeScreenLandscape(isLargeScreen: Boolean, isLandscape: Boolean) =
     (isLandscape && !isLargeScreen)
 
-private fun pageSpacing(isLargeScreen: Boolean, isSmallScreen: Boolean, pagePeekWidth: Dp) =
-    if (isLargeScreen || isSmallScreen) pagePeekWidth else 8.dp
+private fun pageSpacing(isLargeScreen: Boolean, isSmallScreen: Boolean, pagePeekWidth: Dp) = when {
+    isLargeScreen -> pagePeekWidth
+    isSmallScreen -> 0.dp
+    else -> 8.dp
+}
+
+private data class OnboardingLayout(
+    val pagerHeight: Dp,
+    val contentPadding: PaddingValues,
+    val pagePeekWidth: Dp,
+    val isSmall: Boolean,
+    val isLarge: Boolean,
+    val isLandscape: Boolean,
+)
 
 // *** Code below used for previews only *** //
 
@@ -577,6 +670,7 @@ private fun OnboardingScreenPreview() {
             onMarketingDataLearnMoreClick = {},
             onMarketingOptInToggle = {},
             onMarketingDataContinueClick = {},
+            onMarketingDataSkipClick = {},
             onNotificationPermissionButtonClick = {},
             onNotificationPermissionSkipClick = {},
         )
@@ -585,8 +679,8 @@ private fun OnboardingScreenPreview() {
 
 @Composable
 private fun defaultPreviewPages() = listOf(
-    touPageUIData(),
     defaultBrowserPageUiData(),
+    touPageUIData(),
     syncPageUiData(),
     toolbarPlacementPageUiData(),
 )
@@ -594,24 +688,22 @@ private fun defaultPreviewPages() = listOf(
 @Composable
 private fun touPageUIData() = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.TERMS_OF_SERVICE,
-    title = stringResource(id = R.string.onboarding_redesign_tou_title),
+    title = stringResource(id = R.string.onboarding_welcome_to_firefox),
     description = "",
     termsOfService = OnboardingTermsOfService(
-        subheaderOneText = stringResource(id = R.string.onboarding_redesign_tou_subheader_one),
-        subheaderTwoText = stringResource(id = R.string.onboarding_redesign_tou_subheader_two),
-        subheaderThreeText = stringResource(id = R.string.onboarding_redesign_tou_subheader_three),
-        lineOneText = stringResource(id = R.string.onboarding_redesign_tou_body_one),
-        lineOneLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_one_link_text),
+        subheaderOneText = stringResource(id = R.string.nova_onboarding_tou_subtitle),
+        lineOneText = stringResource(id = R.string.nova_onboarding_tou_body_line_1),
+        lineOneLinkText = stringResource(id = R.string.nova_onboarding_tou_body_line_1_link_text),
         lineOneLinkUrl = "URL",
-        lineTwoText = stringResource(id = R.string.onboarding_redesign_tou_body_two),
-        lineTwoLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_two_link_text),
+        lineTwoText = stringResource(id = R.string.nova_onboarding_tou_body_line_2),
+        lineTwoLinkText = stringResource(id = R.string.nova_onboarding_tou_body_line_2_link_text),
         lineTwoLinkUrl = "URL",
-        lineThreeText = stringResource(id = R.string.onboarding_redesign_tou_body_three),
-        lineThreeLinkText = stringResource(id = R.string.onboarding_redesign_tou_body_three_link_text),
+        lineThreeText = stringResource(id = R.string.nova_onboarding_tou_body_line_3),
+        lineThreeLinkText = stringResource(id = R.string.nova_onboarding_tou_body_line_3_link_text),
     ),
-    imageRes = R.drawable.ic_firefox,
+    imageRes = R.drawable.nova_onboarding_tou,
     primaryButtonLabel = stringResource(
-        id = R.string.onboarding_redesign_tou_agree_and_continue_button_label,
+        id = R.string.nova_onboarding_continue_button,
     ),
 )
 
@@ -619,47 +711,39 @@ private fun touPageUIData() = OnboardingPageUiData(
 private fun defaultBrowserPageUiData() = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
     imageRes = R.drawable.ic_onboarding_welcome,
-    title = stringResource(R.string.onboarding_redesign_set_default_browser_title),
-    description = stringResource(R.string.onboarding_redesign_set_default_browser_body),
-    primaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_positive_button),
-    secondaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_negative_button),
+    title = stringResource(R.string.nova_onboarding_set_to_default_title_2),
+    description = stringResource(R.string.nova_onboarding_set_to_default_subtitle),
+    primaryButtonLabel = stringResource(R.string.nova_onboarding_set_to_default_button),
+    secondaryButtonLabel = stringResource(R.string.nova_onboarding_negative_button),
 )
 
 @Composable
 private fun syncPageUiData() = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
     imageRes = R.drawable.ic_onboarding_sync,
-    title = stringResource(R.string.juno_onboarding_sign_in_title_2),
-    description = stringResource(R.string.juno_onboarding_sign_in_description_3),
-    primaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_positive_button),
-    secondaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_negative_button),
-    privacyCaption = Caption(
-        text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-        linkTextState = LinkTextState(
-            text = stringResource(R.string.juno_onboarding_privacy_notice_text),
-            url = "",
-            onClick = {},
-        ),
-    ),
+    title = stringResource(R.string.nova_onboarding_sync_title),
+    description = stringResource(R.string.nova_onboarding_sync_subtitle),
+    primaryButtonLabel = stringResource(R.string.nova_onboarding_sync_button),
+    secondaryButtonLabel = stringResource(R.string.nova_onboarding_negative_button),
 )
 
 @Composable
 private fun toolbarPlacementPageUiData() = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.TOOLBAR_PLACEMENT,
     imageRes = R.drawable.ic_onboarding_customize_toolbar,
-    title = stringResource(R.string.onboarding_customize_toolbar_title),
-    description = stringResource(R.string.onboarding_customize_toolbar_description),
-    primaryButtonLabel = stringResource(R.string.onboarding_save_and_start_button),
+    title = stringResource(R.string.nova_onboarding_toolbar_selection_title),
+    description = "", // Unused in redesign
+    primaryButtonLabel = stringResource(R.string.nova_onboarding_continue_button),
     toolbarOptions = listOf(
         ToolbarOption(
             toolbarType = ToolbarOptionType.TOOLBAR_TOP,
             imageRes = R.drawable.ic_onboarding_top_toolbar,
-            label = stringResource(R.string.onboarding_customize_toolbar_top_option),
+            label = stringResource(R.string.nova_onboarding_toolbar_selection_top_label),
         ),
         ToolbarOption(
             toolbarType = ToolbarOptionType.TOOLBAR_BOTTOM,
             imageRes = R.drawable.ic_onboarding_bottom_toolbar,
-            label = stringResource(R.string.onboarding_customize_toolbar_bottom_option),
+            label = stringResource(R.string.nova_onboarding_toolbar_selection_bottom_label),
         ),
     ),
 )

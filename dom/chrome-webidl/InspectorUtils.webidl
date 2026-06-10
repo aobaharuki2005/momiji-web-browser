@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -32,6 +31,7 @@ namespace InspectorUtils {
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
   sequence<PropertyPref> getCSSPropertyPrefs();
   [Throws] sequence<DOMString> getCSSValuesForProperty(UTF8String property);
+  sequence<DOMString> getCSSWideKeywords();
   UTF8String rgbToColorName(octet r, octet g, octet b);
   InspectorNearestColor rgbToNearestColorName(float r, float g, float b);
   sequence<float> rgbToHsv(float r, float g, float b);
@@ -147,6 +147,23 @@ namespace InspectorUtils {
   // Returns a set of GRID_* flags based on whether the element is a grid
   // container or not.
   unsigned short getGridContainerType(Element aElement);
+
+  // Given a DOM element, return the anchor named `anchorName`, or the default
+  // anchor otherwise.
+  InspectorAnchorElement? getAnchorFor(Element element, optional DOMString? anchorName = null);
+  // Given a DOM element, return a list of valid anchor anchor names.
+  sequence<DOMString> getAnchorNamesFor(Element element);
+};
+
+enum InspectorAnchorType {
+  "explicit",
+  "popover",
+  "pseudo-element",
+};
+
+dictionary InspectorAnchorElement {
+  required Element element;
+  required InspectorAnchorType type;
 };
 
 enum DeclarationOrigin {

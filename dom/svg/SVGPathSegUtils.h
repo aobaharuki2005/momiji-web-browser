@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,10 +38,10 @@ using StylePathCommand =
  * store/provide information about the start of the current subpath and the
  * last path segment (if any).
  */
-struct SVGPathTraversalState {
+struct MOZ_STACK_CLASS SVGPathTraversalState {
   using Point = gfx::Point;
 
-  enum TraversalMode { eUpdateAll, eUpdateOnlyStartAndCurrentPos };
+  enum class TraversalMode { UpdateAll, UpdateOnlyStartAndCurrentPos };
 
   SVGPathTraversalState()
       : start(0.0, 0.0),
@@ -51,9 +49,11 @@ struct SVGPathTraversalState {
         cp1(0.0, 0.0),
         cp2(0.0, 0.0),
         length(0.0),
-        mode(eUpdateAll) {}
+        mode(TraversalMode::UpdateAll) {}
 
-  bool ShouldUpdateLengthAndControlPoints() { return mode == eUpdateAll; }
+  bool ShouldUpdateLengthAndControlPoints() const {
+    return mode == TraversalMode::UpdateAll;
+  }
 
   Point start;  // start point of current sub path (reset each moveto)
 

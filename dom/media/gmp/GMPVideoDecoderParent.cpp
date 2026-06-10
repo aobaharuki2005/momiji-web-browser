@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -36,7 +35,6 @@ GMPVideoDecoderParent::GMPVideoDecoderParent(GMPContentParent* aPlugin)
       mIsAwaitingDrainComplete(false),
       mPlugin(aPlugin),
       mCallback(nullptr),
-      mVideoHost(this),
       mPluginId(aPlugin->GetPluginId()),
       mPluginType(aPlugin->GetPluginType()),
       mFrameCount(0) {
@@ -48,8 +46,6 @@ GMPVideoDecoderParent::~GMPVideoDecoderParent() = default;
 bool GMPVideoDecoderParent::MgrIsOnOwningThread() const {
   return !mPlugin || mPlugin->GMPEventTarget()->IsOnCurrentThread();
 }
-
-GMPVideoHostImpl& GMPVideoDecoderParent::Host() { return mVideoHost; }
 
 // Note: may be called via Terminated()
 void GMPVideoDecoderParent::Close() {
@@ -132,12 +128,10 @@ nsresult GMPVideoDecoderParent::Decode(
   }
 
   if (mDecodedShmemSize > 0) {
-    if (GMPSharedMemManager* memMgr = mVideoHost.SharedMemMgr()) {
-      ipc::Shmem outputShmem;
-      if (memMgr->MgrTakeShmem(GMPSharedMemClass::Decoded, mDecodedShmemSize,
-                               &outputShmem)) {
-        (void)SendGiveShmem(std::move(outputShmem));
-      }
+    ipc::Shmem outputShmem;
+    if (MgrTakeShmem(GMPSharedMemClass::Decoded, mDecodedShmemSize,
+                     &outputShmem)) {
+      (void)SendGiveShmem(std::move(outputShmem));
     }
   }
 
@@ -279,7 +273,7 @@ void GMPVideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
     mPlugin->VideoDecoderDestroyed(this);
     mPlugin = nullptr;
   }
-  mVideoHost.ActorDestroyed();
+  MgrPurgeShmems();
   MaybeDisconnect(aWhy == AbnormalShutdown);
 }
 
@@ -318,12 +312,7 @@ bool GMPVideoDecoderParent::HandleDecoded(
 
 mozilla::ipc::IPCResult GMPVideoDecoderParent::RecvReturnShmem(
     ipc::Shmem&& aInputShmem) {
-  if (GMPSharedMemManager* memMgr = mVideoHost.SharedMemMgr()) {
-    memMgr->MgrGiveShmem(GMPSharedMemClass::Encoded, std::move(aInputShmem));
-  } else {
-    DeallocShmem(aInputShmem);
-  }
-
+  MgrGiveShmem(GMPSharedMemClass::Encoded, std::move(aInputShmem));
   return IPC_OK();
 }
 
@@ -331,7 +320,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderParent::RecvDecodedShmem(
     const GMPVideoi420FrameData& aDecodedFrame, ipc::Shmem&& aDecodedShmem) {
   if (HandleDecoded(aDecodedFrame, aDecodedShmem.Size<uint8_t>())) {
     auto* f = new GMPVideoi420FrameImpl(aDecodedFrame, std::move(aDecodedShmem),
-                                        &mVideoHost);
+                                        this);
     mCallback->Decoded(f);
   } else {
     DeallocShmem(aDecodedShmem);
@@ -345,7 +334,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderParent::RecvDecodedData(
   if (HandleDecoded(aDecodedFrame, aDecodedArray.Length())) {
     mDecodedShmemSize = std::max(mDecodedShmemSize, aDecodedArray.Length());
     auto* f = new GMPVideoi420FrameImpl(aDecodedFrame, std::move(aDecodedArray),
-                                        &mVideoHost);
+                                        this);
     mCallback->Decoded(f);
   }
 

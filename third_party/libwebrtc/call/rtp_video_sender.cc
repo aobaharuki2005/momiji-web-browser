@@ -17,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -24,7 +25,6 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
-#include "api/array_view.h"
 #include "api/call/bitrate_allocation.h"
 #include "api/crypto/crypto_options.h"
 #include "api/environment/environment.h"
@@ -292,7 +292,7 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
 
     configuration.need_rtp_packet_infos = rtp_config.lntf.enabled;
 
-    auto rtp_rtcp = std::make_unique<ModuleRtpRtcpImpl2>(env, configuration);
+    auto rtp_rtcp = ModuleRtpRtcpImpl2::CreateSendModule(env, configuration);
     rtp_rtcp->SetSendingStatus(false);
     rtp_rtcp->SetSendingMediaStatus(false);
     rtp_rtcp->SetRTCPStatus(RtcpMode::kCompound);
@@ -333,14 +333,6 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   return rtp_streams;
 }
 
-std::optional<VideoCodecType> GetVideoCodecType(const RtpConfig& config,
-                                                size_t simulcast_index) {
-  auto stream_config = config.GetStreamConfig(simulcast_index);
-  if (stream_config.raw_payload) {
-    return std::nullopt;
-  }
-  return PayloadStringToCodecType(stream_config.payload_name);
-}
 bool TransportSeqNumExtensionConfigured(const RtpConfig& config) {
   return absl::c_any_of(config.extensions, [](const RtpExtension& ext) {
     return ext.uri == RtpExtension::kTransportSequenceNumberUri;
@@ -355,7 +347,7 @@ bool TransportSeqNumExtensionConfigured(const RtpConfig& config) {
 bool IsFirstFrameOfACodedVideoSequence(
     const EncodedImage& encoded_image,
     const CodecSpecificInfo* codec_specific_info) {
-  if (encoded_image._frameType != VideoFrameType::kVideoFrameKey) {
+  if (!encoded_image.IsKey()) {
     return false;
   }
 
@@ -448,7 +440,7 @@ RtpVideoSender::RtpVideoSender(
       state = &it->second;
       shared_frame_id_ = std::max(shared_frame_id_, state->shared_frame_id);
     }
-    params_.push_back(RtpPayloadParams(ssrc, state, env.field_trials()));
+    params_.push_back(RtpPayloadParams(env, ssrc, state));
   }
 
   // RTP/RTCP initialization.
@@ -560,7 +552,7 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     const EncodedImage& encoded_image,
     const CodecSpecificInfo* codec_specific_info) {
   fec_controller_->UpdateWithEncodedData(encoded_image.size(),
-                                         encoded_image._frameType);
+                                         encoded_image.frame_type());
   MutexLock lock(&mutex_);
   RTC_DCHECK(!rtp_streams_.empty());
   if (!active_)
@@ -581,7 +573,7 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   if (!rtp_streams_[simulcast_index].rtp_rtcp->OnSendingRtpFrame(
           encoded_image.RtpTimestamp(), encoded_image.capture_time_ms_,
           rtp_config_.GetStreamConfig(simulcast_index).payload_type,
-          encoded_image._frameType == VideoFrameType::kVideoFrameKey)) {
+          encoded_image.IsKey())) {
     // The payload router could be active but this module isn't sending.
     return Result(Result::ERROR_SEND_FAILED);
   }
@@ -621,19 +613,20 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   bool send_result =
       rtp_streams_[simulcast_index].sender_video->SendEncodedImage(
           rtp_config_.GetStreamConfig(simulcast_index).payload_type,
-          GetVideoCodecType(rtp_config_, simulcast_index), rtp_timestamp,
-          encoded_image,
+          PayloadStringToCodecType(
+              rtp_config_.GetStreamConfig(simulcast_index).payload_name),
+          rtp_timestamp, encoded_image,
           params_[simulcast_index].GetRtpVideoHeader(
               encoded_image, codec_specific_info, frame_id),
           expected_retransmission_time, csrcs_);
   if (frame_count_observer_) {
     FrameCounts& counts = frame_counts_[simulcast_index];
-    if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
+    if (encoded_image.IsKey()) {
       ++counts.key_frames;
-    } else if (encoded_image._frameType == VideoFrameType::kVideoFrameDelta) {
+    } else if (encoded_image.IsDelta()) {
       ++counts.delta_frames;
     } else {
-      RTC_DCHECK(encoded_image._frameType == VideoFrameType::kEmptyFrame);
+      RTC_DCHECK(encoded_image.frame_type() == VideoFrameType::kEmptyFrame);
     }
     frame_count_observer_->FrameCountUpdated(
         counts, rtp_config_.ssrcs[simulcast_index]);
@@ -643,6 +636,10 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
 
   return Result(Result::OK, rtp_timestamp);
 }
+
+void RtpVideoSender::OnFrameDropped(uint32_t /*rtp_timestamp*/,
+                                    int /*spatial_id*/,
+                                    bool /*is_end_of_temporal_unit*/) {}
 
 void RtpVideoSender::OnBitrateAllocationUpdated(
     const VideoBitrateAllocation& bitrate) {
@@ -699,6 +696,11 @@ void RtpVideoSender::OnVideoLayersAllocationUpdated(
     transport_queue_.PostTask(
         SafeTask(safety_.flag(), [this, sending = std::move(sending)] {
           RTC_DCHECK_RUN_ON(&transport_checker_);
+          // It's possible for another task to be scheduled on the transport
+          // checker ahead of this call that makes the sender not active.
+          if (!IsActive()) {
+            return;
+          }
           RTC_CHECK_EQ(sending.size(), rtp_streams_.size());
           for (size_t i = 0; i < sending.size(); ++i) {
             SetModuleIsActive(sending[i], *rtp_streams_[i].rtp_rtcp);
@@ -723,7 +725,7 @@ DataRate RtpVideoSender::GetPostEncodeOverhead() const {
   return post_encode_overhead;
 }
 
-void RtpVideoSender::DeliverRtcp(ArrayView<const uint8_t> packet) {
+void RtpVideoSender::DeliverRtcp(std::span<const uint8_t> packet) {
   // Runs on a network thread.
   for (const RtpStreamSender& stream : rtp_streams_)
     stream.rtp_rtcp->IncomingRtcpPacket(packet);
@@ -924,7 +926,7 @@ uint32_t RtpVideoSender::GetProtectionBitrateBps() const {
 
 std::vector<RtpSequenceNumberMap::Info> RtpVideoSender::GetSentRtpPacketInfos(
     uint32_t ssrc,
-    ArrayView<const uint16_t> sequence_numbers) const {
+    std::span<const uint16_t> sequence_numbers) const {
   for (const auto& rtp_stream : rtp_streams_) {
     if (ssrc == rtp_stream.rtp_rtcp->SSRC()) {
       return rtp_stream.rtp_rtcp->GetSentRtpPacketInfos(sequence_numbers);
@@ -1019,7 +1021,7 @@ void RtpVideoSender::OnPacketFeedbackVector(
       // clean up anyway.
       continue;
     }
-    ArrayView<const uint16_t> rtp_sequence_numbers(kv.second);
+    std::span<const uint16_t> rtp_sequence_numbers(kv.second);
     it->second->OnPacketsAcknowledged(rtp_sequence_numbers);
   }
 }
@@ -1031,7 +1033,7 @@ void RtpVideoSender::SetEncodingData(size_t width,
                                    rtp_config_.max_packet_size);
 }
 
-void RtpVideoSender::SetCsrcs(ArrayView<const uint32_t> csrcs) {
+void RtpVideoSender::SetCsrcs(std::span<const uint32_t> csrcs) {
   MutexLock lock(&mutex_);
   csrcs_.assign(csrcs.begin(),
                 csrcs.begin() + std::min<size_t>(csrcs.size(), kRtpCsrcSize));

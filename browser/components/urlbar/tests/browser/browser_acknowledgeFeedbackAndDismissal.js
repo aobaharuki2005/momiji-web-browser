@@ -48,7 +48,8 @@ add_setup(async function () {
   });
 
   gTestProvider.commandCount = {};
-  UrlbarProvidersManager.registerProvider(gTestProvider);
+  let providersManager = ProvidersManager.getInstanceForSap("urlbar");
+  providersManager.registerProvider(gTestProvider);
 
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -61,7 +62,7 @@ add_setup(async function () {
   ]);
 
   registerCleanupFunction(() => {
-    UrlbarProvidersManager.unregisterProvider(gTestProvider);
+    providersManager.unregisterProvider(gTestProvider);
   });
 });
 
@@ -453,7 +454,7 @@ async function checkRowLabel(resultIndex, expectedLabel) {
   if (expectedLabel) {
     Assert.equal(
       before.content,
-      "attr(label)",
+      `"${expectedLabel}"`,
       "::before content should use the row label"
     );
     Assert.equal(

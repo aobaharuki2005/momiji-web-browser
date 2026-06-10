@@ -8,7 +8,7 @@ async function test_back_button(x, y) {
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, firstLocation);
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function () {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     // Mark the first entry as having been interacted with.
     content.document.notifyUserGestureActivation();
     content.history.pushState("page2", "page2", "page2");

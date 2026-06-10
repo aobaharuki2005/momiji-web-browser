@@ -46,6 +46,5 @@ dependencies {
     implementation libs.androidx.annotation
     implementation libs.androidx.appcompat
     implementation libs.androidx.constraintlayout
-    implementation libs.androidx.preferences
-    implementation libs.google.material
+    implementation libs.androidx.preference
 }

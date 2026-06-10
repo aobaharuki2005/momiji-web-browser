@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.components.menu
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
@@ -14,23 +12,14 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
-import mozilla.components.support.ktx.android.util.dpToPx
-import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 
-@OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(AndroidJUnit4::class)
 class WebExtensionsMenuBindingTest {
     private val testDispatcher = StandardTestDispatcher()
 
@@ -65,7 +54,11 @@ class WebExtensionsMenuBindingTest {
                 ),
             )
 
-            menuStore = spy(MenuStore(MenuState()))
+            val captureActionsMiddleware = CaptureActionsMiddleware<MenuState, MenuAction>()
+            menuStore = MenuStore(
+                initialState = MenuState(),
+                middleware = listOf(captureActionsMiddleware),
+            )
             browserStore = BrowserStore(
                 BrowserState(
                     tabs = listOf(
@@ -84,97 +77,67 @@ class WebExtensionsMenuBindingTest {
                 browserStore = browserStore,
                 customTabId = null,
                 menuStore = menuStore,
-                iconSize = 24.dpToPx(testContext.resources.displayMetrics),
+                iconSize = 24,
                 onDismiss = {},
                 mainDispatcher = testDispatcher,
             )
             binding.start()
             testDispatcher.scheduler.advanceUntilIdle()
 
-            val browserItemsUpdateCaptor = argumentCaptor<MenuAction.UpdateWebExtensionBrowserMenuItems>()
-
-            verify(menuStore).dispatch(browserItemsUpdateCaptor.capture())
-            assertEquals(
-                browserItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].label,
-                "overridden_browser_action_title",
-            )
-            assertTrue(browserItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].enabled == true)
-            assertEquals(browserItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].badgeText, "")
-            assertEquals(browserItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].badgeTextColor, 0)
-            assertEquals(browserItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].badgeBackgroundColor, 0)
+            captureActionsMiddleware.assertLastAction(MenuAction.UpdateWebExtensionBrowserMenuItems::class) {
+                assertEquals(
+                    it.webExtensionBrowserMenuItem[0].label,
+                    "overridden_browser_action_title",
+                )
+                assertTrue(it.webExtensionBrowserMenuItem[0].enabled == true)
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeText, "")
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeTextColor, 0)
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeBackgroundColor, 0)
+            }
         }
 
     @Test
-    fun `WHEN all web extensions are disabled THEN show disabled extensions onboarding`() =
+    fun `GIVEN a web extension is updated WHEN its action has an empty name THEN update browser web extension menu items with the extension name`() =
         runTest {
+            val extensionName = "extensionName"
+
+            val defaultBrowserAction =
+                createWebExtensionBrowserAction("default_browser_action_title")
+
+            val overriddenBrowserAction =
+                createWebExtensionBrowserAction("")
+
             val extensions: Map<String, WebExtensionState> = mapOf(
                 "id" to WebExtensionState(
                     id = "id",
                     url = "url",
-                    name = "name",
-                    enabled = false,
-                ),
-            )
-
-            menuStore = spy(MenuStore(MenuState()))
-            browserStore = BrowserStore(
-                BrowserState(
-                    tabs = listOf(
-                        createTab(
-                            url = "https://www.example.org",
-                            id = "tab1",
-                            extensions = extensions,
-                        ),
-                    ),
-                    selectedTabId = "tab1",
-                    extensions = extensions,
-                ),
-            )
-
-            val binding = WebExtensionsMenuBinding(
-                browserStore = browserStore,
-                customTabId = null,
-                menuStore = menuStore,
-                iconSize = 24.dpToPx(testContext.resources.displayMetrics),
-                onDismiss = {},
-                mainDispatcher = testDispatcher,
-            )
-            binding.start()
-            testDispatcher.scheduler.advanceUntilIdle()
-
-            val showDisabledExtensionsOnboardingCaptor = argumentCaptor<MenuAction.UpdateShowDisabledExtensionsOnboarding>()
-
-            verify(menuStore).dispatch(showDisabledExtensionsOnboardingCaptor.capture())
-
-            assertTrue(showDisabledExtensionsOnboardingCaptor.value.showDisabledExtensionsOnboarding)
-        }
-
-    @Test
-    fun `WHEN only one web extension is disabled THEN not show disabled extensions onboarding`() =
-        runTest {
-            val extensions: Map<String, WebExtensionState> = mapOf(
-                "id" to WebExtensionState(
-                    id = "id",
-                    url = "url",
-                    name = "name",
-                    enabled = false,
-                ),
-                "id2" to WebExtensionState(
-                    id = "id2",
-                    url = "url2",
-                    name = "name2",
+                    name = extensionName,
                     enabled = true,
+                    browserAction = defaultBrowserAction,
+                ),
+            )
+            val overriddenExtensions: Map<String, WebExtensionState> = mapOf(
+                "id" to WebExtensionState(
+                    id = "id",
+                    url = "url",
+                    name = extensionName,
+                    enabled = true,
+                    browserAction = overriddenBrowserAction,
                 ),
             )
 
-            menuStore = spy(MenuStore(MenuState()))
+            val captureActionsMiddleware = CaptureActionsMiddleware<MenuState, MenuAction>()
+            menuStore = MenuStore(
+                initialState = MenuState(),
+                middleware = listOf(captureActionsMiddleware),
+            )
             browserStore = BrowserStore(
                 BrowserState(
                     tabs = listOf(
                         createTab(
                             url = "https://www.example.org",
                             id = "tab1",
-                            extensions = extensions,
+                            extensions = overriddenExtensions,
                         ),
                     ),
                     selectedTabId = "tab1",
@@ -186,18 +149,23 @@ class WebExtensionsMenuBindingTest {
                 browserStore = browserStore,
                 customTabId = null,
                 menuStore = menuStore,
-                iconSize = 24.dpToPx(testContext.resources.displayMetrics),
+                iconSize = 24,
                 onDismiss = {},
                 mainDispatcher = testDispatcher,
             )
             binding.start()
             testDispatcher.scheduler.advanceUntilIdle()
 
-            val showDisabledExtensionsOnboardingCaptor = argumentCaptor<MenuAction.UpdateShowDisabledExtensionsOnboarding>()
-
-            verify(menuStore).dispatch(showDisabledExtensionsOnboardingCaptor.capture())
-
-            assertFalse(showDisabledExtensionsOnboardingCaptor.value.showDisabledExtensionsOnboarding)
+            captureActionsMiddleware.assertLastAction(MenuAction.UpdateWebExtensionBrowserMenuItems::class) {
+                assertEquals(
+                    extensionName,
+                    it.webExtensionBrowserMenuItem[0].label,
+                )
+                assertTrue(it.webExtensionBrowserMenuItem[0].enabled == true)
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeText, "")
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeTextColor, 0)
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeBackgroundColor, 0)
+            }
         }
 
     @Test
@@ -226,7 +194,11 @@ class WebExtensionsMenuBindingTest {
                 ),
             )
 
-            menuStore = spy(MenuStore(MenuState()))
+            val captureActionsMiddleware = CaptureActionsMiddleware<MenuState, MenuAction>()
+            menuStore = MenuStore(
+                initialState = MenuState(),
+                middleware = listOf(captureActionsMiddleware),
+            )
             browserStore = BrowserStore(
                 BrowserState(
                     tabs = listOf(
@@ -245,24 +217,23 @@ class WebExtensionsMenuBindingTest {
                 browserStore = browserStore,
                 customTabId = null,
                 menuStore = menuStore,
-                iconSize = 24.dpToPx(testContext.resources.displayMetrics),
+                iconSize = 24,
                 onDismiss = {},
                 mainDispatcher = testDispatcher,
             )
             binding.start()
             testDispatcher.scheduler.advanceUntilIdle()
 
-            val pageItemsUpdateCaptor = argumentCaptor<MenuAction.UpdateWebExtensionBrowserMenuItems>()
-
-            verify(menuStore).dispatch(pageItemsUpdateCaptor.capture())
-            assertEquals(
-                pageItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].label,
-                "overridden_page_action_title",
-            )
-            assertTrue(pageItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].enabled == true)
-            assertEquals(pageItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].badgeText, "")
-            assertEquals(pageItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].badgeTextColor, 0)
-            assertEquals(pageItemsUpdateCaptor.value.webExtensionBrowserMenuItem[0].badgeBackgroundColor, 0)
+            captureActionsMiddleware.assertLastAction(MenuAction.UpdateWebExtensionBrowserMenuItems::class) {
+                assertEquals(
+                    it.webExtensionBrowserMenuItem[0].label,
+                    "overridden_page_action_title",
+                )
+                assertTrue(it.webExtensionBrowserMenuItem[0].enabled == true)
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeText, "")
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeTextColor, 0)
+                assertEquals(it.webExtensionBrowserMenuItem[0].badgeBackgroundColor, 0)
+            }
         }
 
     @Test
@@ -281,7 +252,11 @@ class WebExtensionsMenuBindingTest {
                 ),
             )
 
-            menuStore = spy(MenuStore(MenuState()))
+            val captureActionsMiddleware = CaptureActionsMiddleware<MenuState, MenuAction>()
+            menuStore = MenuStore(
+                initialState = MenuState(),
+                middleware = listOf(captureActionsMiddleware),
+            )
             browserStore = BrowserStore(
                 BrowserState(
                     tabs = listOf(
@@ -300,28 +275,23 @@ class WebExtensionsMenuBindingTest {
                 browserStore = browserStore,
                 customTabId = null,
                 menuStore = menuStore,
-                iconSize = 24.dpToPx(testContext.resources.displayMetrics),
+                iconSize = 24,
                 onDismiss = {},
                 mainDispatcher = testDispatcher,
             )
             binding.start()
             testDispatcher.scheduler.advanceUntilIdle()
 
-            val pageItemsUpdateCaptor =
-                argumentCaptor<MenuAction.UpdateWebExtensionBrowserMenuItems>()
-
-            verify(menuStore).dispatch(pageItemsUpdateCaptor.capture())
-
-            assertTrue(
-                pageItemsUpdateCaptor.value.webExtensionBrowserMenuItem.isEmpty(),
-            )
+            captureActionsMiddleware.assertLastAction(MenuAction.UpdateWebExtensionBrowserMenuItems::class) {
+                assertTrue(it.webExtensionBrowserMenuItem.isEmpty())
+            }
         }
 
     private fun createWebExtensionPageAction(title: String, enabled: Boolean = true) =
         WebExtensionPageAction(
             title = title,
             enabled = enabled,
-            loadIcon = mock(),
+            loadIcon = { null },
             badgeText = "",
             badgeTextColor = 0,
             badgeBackgroundColor = 0,
@@ -331,7 +301,7 @@ class WebExtensionsMenuBindingTest {
     private fun createWebExtensionBrowserAction(title: String) = WebExtensionBrowserAction(
         title,
         enabled = true,
-        loadIcon = mock(),
+        loadIcon = { null },
         badgeText = "",
         badgeTextColor = 0,
         badgeBackgroundColor = 0,

@@ -2,7 +2,6 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   DiscoveryStreamFeed: "resource://newtab/lib/DiscoveryStreamFeed.sys.mjs",
-
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
@@ -71,11 +70,10 @@ async function clearHistoryAndBookmarks() {
  * not necessarily have had all its javascript/render logic executed.
  */
 async function waitForPreloaded(browser) {
-  let [readyState, location] = await ContentTask.spawn(browser, null, () => [
-    content.document.readyState,
-    content.document.location.href,
-  ]);
-  if (readyState !== "complete" || location === "about:blank") {
+  if (
+    browser.webProgress.isLoadingDocument ||
+    browser.currentURI?.spec === "about:blank"
+  ) {
     await BrowserTestUtils.browserLoaded(browser);
   }
 }
@@ -207,19 +205,19 @@ function test_newtab(testInfo, browserURL = "about:newtab") {
     // Add shared helpers to the content process
     SpecialPowers.spawn(browser, [], addContentHelpers);
 
-    // Wait for React to render something
-    await BrowserTestUtils.waitForCondition(
-      () =>
-        SpecialPowers.spawn(
-          browser,
-          [],
-          () => content.document.getElementById("root").children.length
-        ),
-      "Should render activity stream content"
-    );
-
     // Chain together before -> contentTask -> after data passing
     try {
+      // Wait for React to render something
+      await BrowserTestUtils.waitForCondition(
+        () =>
+          SpecialPowers.spawn(
+            browser,
+            [],
+            () => content.document.getElementById("root")?.children.length
+          ),
+        "Should render activity stream content"
+      );
+
       let contentArg = await before({ pushPrefs: scopedPushPrefs, tab });
       let contentResult = await SpecialPowers.spawn(
         browser,

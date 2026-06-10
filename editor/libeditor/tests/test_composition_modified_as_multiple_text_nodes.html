@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test for bug 2018817</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const editingHost = document.querySelector("[contenteditable]");
+  editingHost.focus();
+  getSelection().collapse(editingHost.firstChild, "AB".length);
+  synthesizeCompositionChange({
+    composition: {
+      string: "CDEFG",
+      clauses: [
+        { length: 5, attr: COMPOSITION_ATTR_RAW_CLAUSE },
+      ],
+    },
+    caret: { start: 5, length: 0 },
+  });
+  editingHost.firstChild.splitText(4); // ABCD|EFG
+  editingHost.insertBefore(document.createTextNode("12345"), editingHost.lastChild); // ABCD|12345|EFG
+  synthesizeCompositionChange({
+    composition: {
+      string: "X",
+      clauses: [
+        { length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE },
+      ],
+    },
+    caret: { start: 1, length: 0 },
+  });
+  is(
+    editingHost.innerHTML,
+    "ABCD12345EFG".replace("CD123", "X"),
+    "The original composition string range should be replaced with the new composition string"
+  );
+  synthesizeComposition({ type: "compositioncommitasis" });
+  is(
+    editingHost.innerHTML,
+    "ABCD12345EFG".replace("CD123", "X"),
+    "The composition should be committed as-is"
+  );
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body>
+<div contenteditable>AB</div>
+</body>
+</html>

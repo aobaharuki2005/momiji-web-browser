@@ -96,12 +96,18 @@ support-files = [
   "file_favicon_svg.html",
   "file_favicon.svg"
 ]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 2019466
+]
 
 ["browser_icon_discovery.js"]
 
 ["browser_invalid_href_fallback.js"]
 https_first_disabled = true
 support-files = ["file_invalid_href.html"]
+
+["browser_favicon_pdf.js"]
+support-files = ["blank.pdf"]
 
 ["browser_missing_favicon.js"]
 support-files = ["blank.html"]

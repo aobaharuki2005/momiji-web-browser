@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CleanupManager: "resource://normandy/lib/CleanupManager.sys.mjs",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   FeatureManifest: "resource://nimbus/FeatureManifest.sys.mjs",
+  FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
   NimbusMigrations: "resource://nimbus/lib/Migrations.sys.mjs",
   NimbusTelemetry: "resource://nimbus/lib/Telemetry.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -37,16 +38,20 @@ const CRASHREPORTER_ENABLED =
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
-const UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
-const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
+const Prefs = Object.freeze({
+  AI_FEATURES_ENABLED: "browser.ai.control.default",
+  ROLLOUTS_ENABLED: "nimbus.rollouts.enabled",
+  TELEMETRY_ENABLED: "datareporting.healthreport.uploadEnabled",
+  STUDIES_ENABLED: "app.shield.optoutstudies.enabled",
+  COLLECTION_ID: "messaging-system.rsexperimentloader.collection_id",
+  NIMBUS_PROFILE_ID: "nimbus.profileId",
+});
 
-const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
-const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "COLLECTION_ID",
-  COLLECTION_ID_PREF,
-  COLLECTION_ID_FALLBACK
+  Prefs.COLLECTION_ID,
+  "nimbus-desktop-experiments"
 );
 
 function parseJSON(value) {
@@ -76,8 +81,6 @@ const experimentBranchAccessor = {
     return target[prop];
   },
 };
-
-const NIMBUS_PROFILE_ID_PREF = "nimbus.profileId";
 
 /**
  * Metadata about an enrollment.
@@ -119,8 +122,12 @@ export const EnrollmentType = Object.freeze({
 export const ExperimentAPI = new (class {
   /**
    * Whether or not the ExperimentAPI has been initialized.
+   * Returns the in-flight or settled init() promise, or null if init has not been
+   * called. Is truthy once init has been kicked off.
+   *
+   * @type {Promise<void> | null}
    */
-  #initialized = false;
+  #initializedPromise = null;
 
   /**
    * The current ExperimentManager.
@@ -148,28 +155,52 @@ export const ExperimentAPI = new (class {
    */
   #prefValues = {
     /**
+     * Whether or not AI features are enabled.
+     *
+     * @see {@link Prefs.AI_FEATURES_ENABLED}
+     */
+    aiFeaturesEnabled: "blocked",
+
+    /**
+     * Whether or not rollouts are enabled.
+     *
+     * @see {@link Prefs.ROLLOUTS_ENABLED}
+     */
+    rolloutsEnabled: false,
+
+    /**
      * Whether or not opt-out studies are enabled.
      *
-     * @see {@link STUDIES_OPT_OUT_PREF}
+     * @see {@link Prefs.STUDIES_ENABLED}
      */
     studiesEnabled: false,
 
     /**
      * Whether or not telemetry is enabled.
      *
-     * @see {@link UPLOAD_ENABLED_PREF}
+     * @see {@link Prefs.TELEMETRY_ENABLED}
      */
     telemetryEnabled: false,
   };
 
+  /**
+   * Whether or not studies are enabled.
+   *
+   * @see {@link studiesEnabled}
+   */
   #studiesEnabled = false;
+
+  /**
+   * @type {FirstStartupTimestamps | null }
+   */
+  #firstStartupTimestamps = null;
 
   constructor() {
     if (IS_MAIN_PROCESS) {
       // Ensure that the profile ID is cached in a pref.
-      if (Services.prefs.prefHasUserValue(NIMBUS_PROFILE_ID_PREF)) {
+      if (Services.prefs.prefHasUserValue(Prefs.NIMBUS_PROFILE_ID)) {
         this.#cachedProfileId = Services.prefs.getStringPref(
-          NIMBUS_PROFILE_ID_PREF
+          Prefs.NIMBUS_PROFILE_ID
         );
       } else {
         this.#cachedProfileId = Services.uuid
@@ -177,13 +208,13 @@ export const ExperimentAPI = new (class {
           .toString()
           .slice(1, -1);
         Services.prefs.setStringPref(
-          NIMBUS_PROFILE_ID_PREF,
+          Prefs.NIMBUS_PROFILE_ID,
           this.#cachedProfileId
         );
       }
     }
 
-    this._onStudiesEnabledChanged = this._onStudiesEnabledChanged.bind(this);
+    this._onEnabledPrefChange = this._onEnabledPrefChange.bind(this);
     this._annotateCrashReport = this._annotateCrashReport.bind(this);
     this._removeCrashReportAnnotator =
       this._removeCrashReportAnnotator.bind(this);
@@ -194,14 +225,20 @@ export const ExperimentAPI = new (class {
   }
 
   /**
-   * The topic that is notified when either the studies enabled pref or the
-   * telemetry enabled pref changes.
+   * The topic that is notified when the Nimbus enabled state changes.
    *
    * Consumers can listen for notifications on this topic to react to
    * Nimbus being enabled or disabled.
    */
   get STUDIES_ENABLED_CHANGED() {
     return "nimbus:studies-enabled-changed";
+  }
+
+  /**
+   * The topic that is notified when Nimbus updates enrollmments.
+   */
+  get ENROLLMENTS_UPDATED() {
+    return "nimbus:enrollments-updated";
   }
 
   /**
@@ -219,21 +256,29 @@ export const ExperimentAPI = new (class {
    *        Force the RemoteSettingsExperimentLoader to trigger a RemoteSettings
    *        sync before updating recipes for the first time.
    *
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    *          Whether or not the ExperimentAPI was initialized.
    */
   async init({ extraContext, forceSync = false } = {}) {
-    if (this.#initialized) {
-      return false;
+    if (this.#initializedPromise) {
+      // Either init has already finished, or it is in flight. Either way,
+      // chain off the promise so we only return once init is actually complete.
+      return this.#initializedPromise.then(() => false);
     }
 
-    this.#initialized = true;
+    await (this.#initializedPromise = this.#init({ extraContext, forceSync }));
+    return true;
+  }
+
+  async #init({ extraContext, forceSync }) {
+    if (lazy.FirstStartup.state === lazy.FirstStartup.IN_PROGRESS) {
+      this.#firstStartupTimestamps = {};
+    }
 
     // Compute the enabled state and cache it. It is possible for the enabled
     // state to change during ExperimentAPI initialization, but we do not
     // register our observers until the end of this function.
     this.#computeEnabled();
-    const studiesEnabled = this.studiesEnabled;
 
     try {
       await lazy.NimbusMigrations.applyMigrations(
@@ -247,6 +292,8 @@ export const ExperimentAPI = new (class {
         e
       );
     }
+
+    this.#computeEnabled();
 
     try {
       await this.manager.store.init();
@@ -265,10 +312,18 @@ export const ExperimentAPI = new (class {
       );
     }
 
+    if (this.#firstStartupTimestamps) {
+      this.#firstStartupTimestamps.storeInitEnd = ChromeUtils.now();
+    }
+
     try {
       await this.manager.onStartup(extraContext);
     } catch (e) {
       lazy.log.error("Failed to initialize ExperimentManager:", e);
+    }
+
+    if (this.#firstStartupTimestamps) {
+      this.#firstStartupTimestamps.managerInitEnd = ChromeUtils.now();
     }
 
     try {
@@ -290,6 +345,10 @@ export const ExperimentAPI = new (class {
       );
     }
 
+    if (this.#firstStartupTimestamps) {
+      this.#firstStartupTimestamps.loaderInitEnd = ChromeUtils.now();
+    }
+
     if (CRASHREPORTER_ENABLED) {
       this.manager.store.on("update", this._annotateCrashReport);
       this._annotateCrashReport();
@@ -300,21 +359,32 @@ export const ExperimentAPI = new (class {
     }
 
     Services.prefs.addObserver(
-      STUDIES_OPT_OUT_PREF,
-      this._onStudiesEnabledChanged
+      Prefs.ROLLOUTS_ENABLED,
+      this._onEnabledPrefChange
     );
     Services.prefs.addObserver(
-      UPLOAD_ENABLED_PREF,
-      this._onStudiesEnabledChanged
+      Prefs.STUDIES_ENABLED,
+      this._onEnabledPrefChange
+    );
+    Services.prefs.addObserver(
+      Prefs.TELEMETRY_ENABLED,
+      this._onEnabledPrefChange
+    );
+    Services.prefs.addObserver(
+      Prefs.AI_FEATURES_ENABLED,
+      this._onEnabledPrefChange
     );
 
     // If Nimbus was disabled between the start of this function and registering
     // the pref observers we have not handled it yet.
-    if (studiesEnabled !== this.studiesEnabled) {
-      await this._onStudiesEnabledChanged();
-    }
+    //
+    // If the enabled state hasn't actually changed, calling this function is a
+    // no-op.
+    await this._onEnabledPrefChange();
 
-    return true;
+    if (this.#firstStartupTimestamps) {
+      this.#firstStartupTimestamps.nimbusInitEnd = ChromeUtils.now();
+    }
   }
 
   /**
@@ -368,25 +438,37 @@ export const ExperimentAPI = new (class {
     this.#experimentManager = null;
 
     Services.prefs.removeObserver(
-      STUDIES_OPT_OUT_PREF,
-      this._onStudiesEnabledChanged
+      Prefs.ROLLOUTS_ENABLED,
+      this._onEnabledPrefChange
     );
     Services.prefs.removeObserver(
-      UPLOAD_ENABLED_PREF,
-      this._onStudiesEnabledChanged
+      Prefs.STUDIES_ENABLED,
+      this._onEnabledPrefChange
+    );
+    Services.prefs.removeObserver(
+      Prefs.TELEMETRY_ENABLED,
+      this._onEnabledPrefChange
     );
 
-    this.#initialized = false;
+    this.#initializedPromise = null;
   }
 
   #computeEnabled() {
+    this.#prefValues.rolloutsEnabled = Services.prefs.getBoolPref(
+      Prefs.ROLLOUTS_ENABLED,
+      false
+    );
     this.#prefValues.studiesEnabled = Services.prefs.getBoolPref(
-      STUDIES_OPT_OUT_PREF,
+      Prefs.STUDIES_ENABLED,
       false
     );
     this.#prefValues.telemetryEnabled = Services.prefs.getBoolPref(
-      UPLOAD_ENABLED_PREF,
+      Prefs.TELEMETRY_ENABLED,
       false
+    );
+
+    this.#prefValues.aiFeaturesEnabled = Services.prefs.getStringPref(
+      Prefs.AI_FEATURES_ENABLED
     );
 
     this.#studiesEnabled =
@@ -396,15 +478,26 @@ export const ExperimentAPI = new (class {
   }
 
   get enabled() {
-    return this.studiesEnabled || this.labsEnabled;
+    return this.labsEnabled || this.rolloutsEnabled || this.studiesEnabled;
   }
 
   get labsEnabled() {
     return Services.policies.isAllowed("FirefoxLabs");
   }
 
+  get rolloutsEnabled() {
+    return (
+      this.#prefValues.rolloutsEnabled &&
+      Services.policies.isAllowed("NimbusRollouts")
+    );
+  }
+
   get studiesEnabled() {
     return this.#studiesEnabled;
+  }
+
+  get aiFeaturesEnabled() {
+    return this.#prefValues.aiFeaturesEnabled === "available";
   }
 
   /**
@@ -467,39 +560,51 @@ export const ExperimentAPI = new (class {
   }
 
   _removeCrashReportAnnotator() {
-    if (this.#initialized) {
+    if (this.#initializedPromise) {
       this.#experimentManager?.store.off("update", this._annotateCrashReport);
     }
   }
 
-  async _onStudiesEnabledChanged(_topic, _subject, prefName) {
-    const studiesPreviouslyEnabled = this.studiesEnabled;
-
-    switch (prefName) {
-      case STUDIES_OPT_OUT_PREF:
-      case UPLOAD_ENABLED_PREF:
-        this.#computeEnabled();
-        break;
-
-      default:
-        return;
-    }
-
-    if (!this.#initialized) {
+  /**
+   * Handle a pref change that may result in Nimbus being enabled or disabled.
+   */
+  async _onEnabledPrefChange() {
+    if (!this.#initializedPromise) {
       return;
     }
 
-    if (studiesPreviouslyEnabled !== this.studiesEnabled) {
+    const studiesPreviouslyEnabled = this.studiesEnabled;
+    const rolloutsPreviouslyEnabled = this.rolloutsEnabled;
+    const aiFeaturesPreviouslyEnabled = this.aiFeaturesEnabled;
+
+    this.#computeEnabled();
+
+    const studiesEnabledChanged =
+      studiesPreviouslyEnabled !== this.studiesEnabled;
+    const rolloutsEnabledChanged =
+      rolloutsPreviouslyEnabled !== this.rolloutsEnabled;
+    const aiFeaturesEnabledChanged =
+      aiFeaturesPreviouslyEnabled !== this.aiFeaturesEnabled;
+
+    if (studiesEnabledChanged || rolloutsEnabledChanged) {
       if (!this.studiesEnabled) {
         this.manager._handleStudiesOptOut();
       }
 
+      if (!this.rolloutsEnabled) {
+        this.manager._handleRolloutsOptOut();
+      }
+
       // Labs is disabled only by policy, so it cannot be disabled at runtime.
       // Thus we only need to notify the RemoteSettingsExperimentLoader when
-      // studies become enabled or disabled.
+      // studies or rollouts become enabled or disabled.
       await this._rsLoader.onEnabledPrefChange();
 
       Services.obs.notifyObservers(null, this.STUDIES_ENABLED_CHANGED);
+    }
+
+    if (aiFeaturesEnabledChanged) {
+      await this._rsLoader.updateRecipes("ai-features-changed");
     }
   }
 
@@ -588,6 +693,39 @@ export const ExperimentAPI = new (class {
    */
   async optInToExperiment(options) {
     return this._rsLoader._optInToExperiment(options);
+  }
+
+  /**
+   * @typedef {object} FirstStartupTimestamps
+   *
+   * All properties are timestamps in milliseconds, as reported by
+   * `ChromeUtils.now`.
+   *
+   * @property {number | undefined} storeInitEnd
+   * The time that the ExperimentStore finished initializing.
+   *
+   * @property {number | undefined} managerInitEnd
+   * The time that the ExperimentManager finished initialization.
+   *
+   * @property {number | undefined} loaderInitEnd
+   * The time that the RemoteSettingsExperimentLoader finished
+   * initialization.
+   *
+   * @property {number | undefined} nimbusInitEnd
+   * The time that Nimbus became fully initialized.
+   */
+
+  /**
+   * Return the first startup timestamps.
+   *
+   * The timestamps will be cleared.
+   *
+   * @returns {FirstStartupTimestamps | null} The timestamps, if any.
+   */
+  getAndClearFirstStartupTimestamps() {
+    const timestamps = this.#firstStartupTimestamps;
+    this.#firstStartupTimestamps = null;
+    return timestamps;
   }
 })();
 

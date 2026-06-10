@@ -16,17 +16,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,30 +38,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.state.createTab
+import kotlinx.coroutines.flow.map
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.searchbar.TopSearchBar
-import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.toShortUrl
-import org.mozilla.fenix.tabstray.TabSearchAction
-import org.mozilla.fenix.tabstray.TabsTrayAction
-import org.mozilla.fenix.tabstray.TabsTrayState
-import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.ext.toDisplayTitle
+import org.mozilla.fenix.tabstray.TabsTrayTestTag
+import org.mozilla.fenix.tabstray.TabsTrayTestTag.TAB_SEARCH_BACK_BUTTON
+import org.mozilla.fenix.tabstray.data.TabsTrayItem
+import org.mozilla.fenix.tabstray.data.createTab
+import org.mozilla.fenix.tabstray.redux.action.TabSearchAction
+import org.mozilla.fenix.tabstray.redux.action.TabsTrayAction
 import org.mozilla.fenix.tabstray.redux.middleware.TabSearchMiddleware
 import org.mozilla.fenix.tabstray.redux.state.TabSearchState
+import org.mozilla.fenix.tabstray.redux.state.TabsTrayState
+import org.mozilla.fenix.tabstray.redux.store.TabsTrayStore
 import org.mozilla.fenix.tabstray.ui.tabitems.BasicTabListItem
 import org.mozilla.fenix.tabstray.ui.tabpage.EmptyTabPage
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -79,7 +84,8 @@ private val SearchResultsPadding = 16.dp
 fun TabSearchScreen(
     store: TabsTrayStore,
 ) {
-    val state by store.observeAsState(store.state.tabSearchState) { it.tabSearchState }
+    val state by remember { store.stateFlow.map { it.tabSearchState } }
+        .collectAsState(initial = store.state.tabSearchState)
     val searchBarState = rememberSearchBarState()
     var expanded by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -88,6 +94,7 @@ fun TabSearchScreen(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+
     Scaffold(
         topBar = {
             TopSearchBar(
@@ -110,14 +117,19 @@ fun TabSearchScreen(
                 leadingIcon = {
                     IconButton(
                         onClick = {
+                            expanded = false
+                            focusManager.clearFocus(force = true)
+                            keyboardController?.hide()
                             store.dispatch(TabsTrayAction.NavigateBackInvoked)
                         },
+                        contentDescription = stringResource(
+                            id = R.string.tab_manager_search_bar_back_content_description,
+                        ),
+                        modifier = Modifier.testTag(TAB_SEARCH_BACK_BUTTON),
                     ) {
                         Icon(
                             painter = painterResource(id = iconsR.drawable.mozac_ic_back_24),
-                            contentDescription = stringResource(
-                                id = R.string.tab_manager_search_bar_back_content_description,
-                            ),
+                            contentDescription = null,
                         )
                     }
                 },
@@ -136,8 +148,10 @@ fun TabSearchScreen(
             } else {
                 TabSearchResults(
                     searchResults = state.searchResults,
+                    query = state.query,
                     modifier = Modifier
                         .padding(horizontal = SearchResultsPadding),
+                    onSearchResultClicked = { store.dispatch(TabSearchAction.SearchResultClicked(it)) },
                 )
             }
         }
@@ -148,17 +162,29 @@ fun TabSearchScreen(
  * Composable for the tab search screen results.
  *
  * @param searchResults List of search results.
+ * @param query The current search query the user has entered.
  * @param modifier The [Modifier] to be applied.
+ * @param onSearchResultClicked Invoked when a search result item is clicked.
  */
 @Composable
 private fun TabSearchResults(
-    searchResults: List<TabSessionState>,
+    searchResults: List<TabsTrayItem>,
+    query: String,
     modifier: Modifier = Modifier,
+    onSearchResultClicked: (TabsTrayItem) -> Unit,
 ) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(query) {
+        if (listState.firstVisibleItemIndex != 0 || listState.firstVisibleItemScrollOffset != 0) {
+            listState.scrollToItem(0)
+        }
+    }
+
     val lastIndex = searchResults.lastIndex
-    val maxWidth = FirefoxTheme.layout.size.containerMaxWidth
 
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(vertical = SearchResultsPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -166,13 +192,7 @@ private fun TabSearchResults(
         itemsIndexed(
             items = searchResults,
             key = { _, tab -> tab.id },
-        ) { index, tab ->
-            val tabUrl = tab.content.url.toShortUrl()
-            val faviconPainter = tab.content.icon?.run {
-                prepareToDraw()
-                BitmapPainter(asImageBitmap())
-            }
-
+        ) { index, tabItem ->
             val itemShape = when {
                 lastIndex == 0 ->
                     RoundedCornerShape(SearchResultsCornerRadius)
@@ -190,26 +210,47 @@ private fun TabSearchResults(
                     RoundedCornerShape(0.dp)
             }
 
-            BasicTabListItem(
-                title = tab.toDisplayTitle(),
-                url = tabUrl,
-                modifier = Modifier
-                    .clip(itemShape)
-                    .widthIn(max = maxWidth)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLowest),
-                faviconPainter = faviconPainter,
-                onClick = {
-                    // TODO (Bug 2005595): Handle search result clicks
-                },
-            )
+            when (tabItem) {
+                is TabsTrayItem.Tab -> TabItemSearchResult(
+                    tab = tabItem,
+                    shape = itemShape,
+                    onSearchResultClicked = onSearchResultClicked,
+                )
+                is TabsTrayItem.TabGroup -> {}
+            }
 
             if (index < lastIndex) {
                 HorizontalDivider(
-                    modifier = Modifier.widthIn(max = maxWidth),
+                    modifier = Modifier.widthIn(max = FirefoxTheme.layout.size.containerMaxWidth),
                 )
             }
         }
     }
+}
+
+@Composable
+private fun TabItemSearchResult(
+    tab: TabsTrayItem.Tab,
+    shape: Shape,
+    onSearchResultClicked: (TabsTrayItem) -> Unit,
+) {
+    val tabUrl = tab.url.toShortUrl()
+    val faviconPainter = tab.icon?.run {
+        prepareToDraw()
+        BitmapPainter(asImageBitmap())
+    }
+
+    BasicTabListItem(
+        title = tab.title,
+        url = tabUrl,
+        modifier = Modifier
+            .clip(shape)
+            .widthIn(max = FirefoxTheme.layout.size.containerMaxWidth)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .testTag(tag = TabsTrayTestTag.TAB_ITEM_ROOT),
+        faviconPainter = faviconPainter,
+        onClick = { onSearchResultClicked(tab) },
+    )
 }
 
 /**
@@ -270,9 +311,7 @@ private class TabSearchParameterProvider : PreviewParameterProvider<TabsTrayStat
 
     private val manySearchResults = buildList {
         repeat(4) { index ->
-            searchResults.forEach { tab ->
-                add(tab.copy(id = "${tab.id}-$index"))
-            }
+            searchResults.forEach { tab -> add(tab.copy(id = "${tab.id}-$index")) }
         }
     }
 

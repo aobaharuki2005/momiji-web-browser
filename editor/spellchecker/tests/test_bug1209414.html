@@ -43,9 +43,8 @@ let { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.importESModu
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
   script = SpecialPowers.loadChromeScript(function() {
-    /* eslint-env mozilla/chrome-script */
     var chromeWin = actorParent.rootFrameLoader
-                    .ownerElement.ownerGlobal.browsingContext.topChromeWindow;
+                    .ownerElement.documentGlobal.browsingContext.topChromeWindow;
     var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     contextMenu.addEventListener("popupshown",
                                  () => sendAsyncMessage("popupshown"));

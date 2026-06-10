@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -51,7 +49,6 @@ class CompositorWidget;
 
 namespace layers {
 class CompositorBridgeParent;
-class DisplayItemCache;
 class WebRenderBridgeParent;
 class RenderRootStateManager;
 class StackingContextHelper;
@@ -126,7 +123,6 @@ class TransactionBuilder final {
   void SetDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id,
                       wr::BuiltDisplayListDescriptor dl_descriptor,
                       wr::Vec<uint8_t>& dl_items_data,
-                      wr::Vec<uint8_t>& dl_cache_data,
                       wr::Vec<uint8_t>& dl_spatial_tree);
 
   void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
@@ -254,12 +250,12 @@ class WebRenderAPI final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderAPI);
 
  public:
-  /// This can be called on the compositor thread only.
-  static already_AddRefed<WebRenderAPI> Create(
-      layers::CompositorBridgeParent* aBridge,
-      RefPtr<widget::CompositorWidget>&& aWidget,
-      const wr::WrWindowId& aWindowId, LayoutDeviceIntSize aSize,
-      layers::WindowKind aWindowKind, nsACString& aError);
+  using CreatePromise = MozPromise<RefPtr<WebRenderAPI>, nsCString, true>;
+  // Dispatches a task to the Renderer thread to create the WebRenderAPI.
+  static RefPtr<CreatePromise> Create(
+      RefPtr<layers::CompositorBridgeParent> aBridge,
+      RefPtr<widget::CompositorWidget> aWidget, const wr::WrWindowId& aWindowId,
+      LayoutDeviceIntSize aSize, layers::WindowKind aWindowKind);
 
   already_AddRefed<WebRenderAPI> Clone();
 
@@ -282,7 +278,6 @@ class WebRenderAPI final {
                 const Range<uint8_t>& aBuffer, bool* aNeedsYFlip);
 
   void ClearAllCaches();
-  void EnableNativeCompositor(bool aEnable);
   void SetBatchingLookback(uint32_t aCount);
   void SetBool(wr::BoolParameter, bool value);
   void SetInt(wr::IntParameter, int32_t value);
@@ -315,7 +310,7 @@ class WebRenderAPI final {
 
   void Capture();
 
-  void StartCaptureSequence(const nsACString& aPath, uint32_t aFlags);
+  void StartCaptureSequence(uint32_t aFlags);
   void StopCaptureSequence();
 
   void BeginRecording(const TimeStamp& aRecordingStart,
@@ -326,6 +321,16 @@ class WebRenderAPI final {
 
   RefPtr<EndRecordingPromise> EndRecording();
 
+#ifdef MOZ_WIDGET_ANDROID
+  using ScreenPixelsPromise =
+      MozPromise<RefPtr<layers::AndroidHardwareBuffer>, nsresult, true>;
+  // Queues a task to the render thread to capture screen pixels for the next
+  // rendered frame. Returns a promise that resolves once the pixels are
+  // captured.
+  RefPtr<ScreenPixelsPromise> RequestScreenPixels(gfx::IntRect aSourceRect,
+                                                  gfx::IntSize aDestSize);
+#endif
+
   layers::RemoteTextureInfoList* GetPendingRemoteTextureInfoList();
   layers::AsyncImagePipelineOps* GetPendingAsyncImagePipelineOps(
       TransactionBuilder& aTxn);
@@ -334,6 +339,8 @@ class WebRenderAPI final {
   void FlushPendingWrTransactionEventsWithWait();
 
   wr::WebRenderAPI* GetRootAPI();
+
+  bool CheckAndClearDidRasterize();
 
  protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
@@ -594,7 +601,7 @@ class DisplayListBuilder final {
              const Maybe<usize>& aEnd);
   void DumpSerializedDisplayList();
 
-  void Begin(layers::DisplayItemCache* aCache = nullptr);
+  void Begin();
   void End(wr::BuiltDisplayList& aOutDisplayList);
   void End(layers::DisplayListData& aOutTransaction);
 
@@ -614,27 +621,28 @@ class DisplayListBuilder final {
   wr::WrClipId DefineRectClip(Maybe<wr::WrSpatialId> aSpace,
                               wr::LayoutRect aClipRect);
 
-  wr::WrSpatialId DefineStickyFrame(
-      const ActiveScrolledRoot* aStickyAsr,
-      Maybe<wr::WrSpatialId> aParentSpatialId,
-      const wr::LayoutRect& aContentRect, const float* aTopMargin,
-      const float* aRightMargin, const float* aBottomMargin,
-      const float* aLeftMargin, const StickyOffsetBounds& aVerticalBounds,
-      const StickyOffsetBounds& aHorizontalBounds,
-      const wr::LayoutVector2D& aAppliedOffset, wr::SpatialTreeItemKey aKey,
-      const WrAnimationProperty* aAnimation);
+  wr::WrSpatialId DefineStickyFrame(const ActiveScrolledRoot* aStickyAsr,
+                                    Maybe<wr::WrSpatialId> aParentSpatialId,
+                                    const wr::LayoutRect& aContentRect,
+                                    const float* aTopMargin,
+                                    const float* aRightMargin,
+                                    const float* aBottomMargin,
+                                    const float* aLeftMargin,
+                                    const StickyOffsetBounds& aVerticalBounds,
+                                    const StickyOffsetBounds& aHorizontalBounds,
+                                    const wr::LayoutVector2D& aAppliedOffset,
+                                    const WrAnimationProperty* aAnimation);
 
-  Maybe<wr::WrSpatialId> GetScrollIdForDefinedScrollLayer(
-      layers::ScrollableLayerGuid::ViewID aViewId) const;
-  Maybe<wr::WrSpatialId> GetSpatialIdForDefinedStickyLayer(
+  Maybe<wr::WrSpatialId> GetSpatialIdForDefinedLayer(
       const ActiveScrolledRoot* aASR) const;
+
   wr::WrSpatialId DefineScrollLayer(
+      const ActiveScrolledRoot* aAsr,
       const layers::ScrollableLayerGuid::ViewID& aViewId,
       const Maybe<wr::WrSpatialId>& aParent, const wr::LayoutRect& aContentRect,
       const wr::LayoutRect& aClipRect, const wr::LayoutVector2D& aScrollOffset,
       wr::APZScrollGeneration aScrollOffsetGeneration,
-      wr::HasScrollLinkedEffect aHasScrollLinkedEffect,
-      wr::SpatialTreeItemKey aKey);
+      wr::HasScrollLinkedEffect aHasScrollLinkedEffect);
 
   void PushRect(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                 bool aIsBackfaceVisible, bool aForceAntiAliasing,
@@ -798,34 +806,10 @@ class DisplayListBuilder final {
                      const wr::ColorF& aColor, const float& aBlurRadius,
                      const float& aSpreadRadius,
                      const wr::BorderRadius& aBorderRadius,
+                     const wr::BorderRadius& aShadowRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
   void PushDebug(uint32_t aVal);
-
-  /**
-   * Notifies the DisplayListBuilder that it can group together WR display items
-   * that are pushed until |CancelGroup()| or |FinishGroup()| call.
-   */
-  void StartGroup(nsPaintedDisplayItem* aItem);
-
-  /**
-   * Cancels grouping of the display items and discards all the display items
-   * pushed between the |StartGroup()| and |CancelGroup()| calls.
-   */
-  void CancelGroup(const bool aDiscard = false);
-
-  /**
-   * Finishes the display item group. The group is stored in WebRender backend,
-   * and can be reused with |ReuseItem()|, if the Gecko display item is reused.
-   */
-  void FinishGroup();
-
-  /**
-   * Try to reuse the previously created WebRender display items for the given
-   * Gecko display item |aItem|.
-   * Returns true if the items were reused, otherwise returns false.
-   */
-  bool ReuseItem(nsPaintedDisplayItem* aItem);
 
   uint64_t CurrentClipChainId() const {
     return mCurrentSpaceAndClipChain.clip_chain;
@@ -861,10 +845,6 @@ class DisplayListBuilder final {
   // Try to avoid using this when possible.
   wr::WrState* Raw() { return mWrState; }
 
-  void SetClipChainLeaf(const Maybe<wr::LayoutRect>& aClipRect) {
-    mClipChainLeaf = aClipRect;
-  }
-
   // Used for opacity flattening. When we flatten away an opacity item,
   // we push the opacity value onto the builder.
   // Descendant items should pull the inherited opacity during
@@ -881,8 +861,6 @@ class DisplayListBuilder final {
   void SetInheritedClipChain(const DisplayItemClipChain* aClipChain) {
     mInheritedClipChain = aClipChain;
   }
-
-  layers::DisplayItemCache* GetDisplayItemCache() { return mDisplayItemCache; }
 
   // A chain of RAII objects, each holding a (ASR, ViewID, SideBits) tuple of
   // data. The topmost object is pointed to by the mActiveFixedPosTracker
@@ -907,43 +885,14 @@ class DisplayListBuilder final {
   };
 
  protected:
-  wr::LayoutRect MergeClipLeaf(const wr::LayoutRect& aClip) {
-    if (mClipChainLeaf) {
-      return wr::IntersectLayoutRect(*mClipChainLeaf, aClip);
-    }
-    return aClip;
-  }
-
-  // See the implementation of PushShadow for details on these methods.
-  void SuspendClipLeafMerging();
-  void ResumeClipLeafMerging();
-
   wr::WrState* mWrState;
 
-  // Track each scroll id that we encountered. We use this structure to
-  // ensure that we don't define a particular scroll layer multiple times,
-  // as that results in undefined behaviour in WR.
-  std::unordered_map<layers::ScrollableLayerGuid::ViewID, wr::WrSpatialId>
-      mScrollIds;
-
   // Track spatial ids that we've created corresponding to ActiveScrolledRoot
-  // objects. Currently only used for sticky ASRs.
-  // FIXME(follow-up to bug 1730749): Use this for scroll ASRs as well,
-  // replacing mScrollIds.
+  // objects. Used for both scroll and sticky ASRs
   std::unordered_map<const ActiveScrolledRoot*, wr::WrSpatialId>
       mASRToSpatialIdMap;
 
   wr::WrSpaceAndClipChain mCurrentSpaceAndClipChain;
-
-  // Contains the current leaf of the clip chain to be merged with the
-  // display item's clip rect when pushing an item. May be set to Nothing() if
-  // there is no clip rect to merge with.
-  Maybe<wr::LayoutRect> mClipChainLeaf;
-
-  // Versions of the above that are on hold while SuspendClipLeafMerging is on
-  // (see the implementation of PushShadow for details).
-  Maybe<wr::WrSpaceAndClipChain> mSuspendedSpaceAndClipChain;
-  Maybe<wr::LayoutRect> mSuspendedClipChainLeaf;
 
   RefPtr<layout::TextDrawTarget> mCachedTextDT;
   mozilla::UniquePtr<gfxContext> mCachedContext;
@@ -953,8 +902,6 @@ class DisplayListBuilder final {
   wr::PipelineId mPipelineId;
   layers::WebRenderBackend mBackend;
 
-  layers::DisplayItemCache* mDisplayItemCache;
-  Maybe<uint16_t> mCurrentCacheSlot;
   float mInheritedOpacity = 1.0f;
   const DisplayItemClipChain* mInheritedClipChain = nullptr;
 
@@ -989,9 +936,9 @@ class MOZ_RAII SpaceAndClipChainHelper final {
     mBuilder.mCurrentSpaceAndClipChain = mOldSpaceAndClipChain;
   }
 
- private:
   SpaceAndClipChainHelper(const SpaceAndClipChainHelper&) = delete;
 
+ private:
   DisplayListBuilder& mBuilder;
   wr::WrSpaceAndClipChain mOldSpaceAndClipChain;
 };

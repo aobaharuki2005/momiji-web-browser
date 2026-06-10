@@ -1,0 +1,3 @@
+[submodule "ff-patch"]
+	path = ff-patch
+	url = ./ff-patch

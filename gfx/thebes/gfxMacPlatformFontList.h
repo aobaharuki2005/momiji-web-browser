@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,7 +10,7 @@
 #include "CoreTextFontList.h"
 
 class gfxMacPlatformFontList final : public CoreTextFontList {
- public:
+public:
   static gfxMacPlatformFontList* PlatformFontList() {
     return static_cast<gfxMacPlatformFontList*>(
         gfxPlatformFontList::PlatformFontList());
@@ -24,6 +23,13 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
                                nsACString& aSystemFontName,
                                gfxFontStyle& aFontStyle);
 
+   // Values for the entryType field in FontFamilyListEntry records passed
+  // from chrome to content process.
+  enum FontFamilyEntryType {
+    kStandardFontFamily = 0,          // a standard installed font family
+    kTextSizeSystemFontFamily = 1,    // name of 'system' font at text sizes
+    kDisplaySizeSystemFontFamily = 2  // 'system' font at display sizes
+  };
  protected:
   bool DeprecatedFamilyIsAvailable(const nsACString& aName) override;
   FontVisibility GetVisibilityForFamily(const nsACString& aName) const override;
@@ -34,9 +40,15 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
   gfxMacPlatformFontList();
   virtual ~gfxMacPlatformFontList() = default;
 
+  nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  void InitSharedFontListForPlatform() MOZ_REQUIRES(mLock) override;
+
   // Special-case font faces treated as font families (set via prefs)
   void InitSingleFaceList() MOZ_REQUIRES(mLock) override;
   void InitAliasesForSingleFaceList() MOZ_REQUIRES(mLock) override;
+
+  // initialize system fonts
+  void InitSystemFontNames() MOZ_REQUIRES(mLock);
 
   nsTArray<nsCString> mSingleFaceFonts;
 };

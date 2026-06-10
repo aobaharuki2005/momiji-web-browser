@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -174,7 +172,7 @@ class FetchBody : public FetchBodyBase, public AbortFollower {
   already_AddRefed<ReadableStream> GetBody(JSContext* aCx, ErrorResult& aRv);
   void GetMimeType(nsACString& aMimeType, nsACString& aMixedCaseMimeType);
 
-  const nsACString& BodyBlobURISpec() const;
+  BlobImpl* BodyBlobImpl() const;
 
   const nsAString& BodyLocalPath() const;
 
@@ -226,13 +224,13 @@ class FetchBody : public FetchBodyBase, public AbortFollower {
                                         ErrorResult& aRv);
 
  protected:
-  nsCOMPtr<nsIGlobalObject> mOwner;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // This is the Reader used to retrieve data from the body. This needs to be
   // traversed by subclasses.
   RefPtr<FetchStreamReader> mFetchStreamReader;
 
-  explicit FetchBody(nsIGlobalObject* aOwner);
+  explicit FetchBody(nsIGlobalObject* aGlobal);
 
   virtual ~FetchBody();
 
@@ -267,7 +265,7 @@ class EmptyBody final : public FetchBody<EmptyBody> {
       AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
       const nsACString& aMixedCaseMimeType, ErrorResult& aRv);
 
-  nsIGlobalObject* GetParentObject() const { return mOwner; }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   AbortSignalImpl* GetSignalImpl() const override { return mAbortSignalImpl; }
   AbortSignalImpl* GetSignalImplToConsumeBody() const final { return nullptr; }
@@ -283,9 +281,9 @@ class EmptyBody final : public FetchBody<EmptyBody> {
 
   void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr);
 
-  using FetchBody::BodyBlobURISpec;
+  using FetchBody::BodyBlobImpl;
 
-  const nsACString& BodyBlobURISpec() const { return EmptyCString(); }
+  BlobImpl* BodyBlobImpl() const { return nullptr; }
 
   using FetchBody::BodyLocalPath;
 

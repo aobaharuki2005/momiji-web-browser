@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,6 +52,10 @@ constexpr inline std::array<ElemT, 1 + sizeof...(More)> make_array(
 #  include "mozilla/ProfilerLabels.h"
 #endif
 
+#if defined(MOZ_WIDGET_COCOA)
+#  include "nsCocoaFeatures.h"
+#endif
+
 namespace mozilla {
 
 namespace gl {
@@ -82,6 +84,7 @@ enum class GLFeature {
   blend_minmax,
   clear_buffers,
   copy_buffer,
+  copy_image,
   depth_clamp,
   depth_texture,
   draw_buffers,
@@ -176,6 +179,7 @@ enum class GLRenderer {
   Tegra,
   AndroidEmulator,
   GalliumLlvmpipe,
+  IntelHD3000,
   MicrosoftBasicRenderDriver,
   SamsungXclipse,
   Other
@@ -286,6 +290,13 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   GLRenderer Renderer() const { return mRenderer; }
   bool IsMesa() const { return mIsMesa; }
 
+  const nsCString& VendorString() const { return mVendorString; }
+  const nsCString& RendererString() const { return mRendererString; }
+  const nsCString& VersionString() const { return mVersionString; }
+  const nsTArray<nsCString>& ExtensionStrings() const {
+    return mExtensionStrings;
+  }
+
   bool IsContextLost() const { return mContextLost; }
 
   bool CheckContextLost() const {
@@ -341,6 +352,11 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   GLRenderer mRenderer = GLRenderer::Other;
   bool mIsMesa = false;
 
+  nsCString mVendorString;
+  nsCString mRendererString;
+  nsCString mVersionString;
+  nsTArray<nsCString> mExtensionStrings;
+
   // -----------------------------------------------------------------------------
   // Extensions management
   /**
@@ -380,6 +396,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     ARB_color_buffer_float,
     ARB_compatibility,
     ARB_copy_buffer,
+    ARB_copy_image,
     ARB_depth_clamp,
     ARB_depth_texture,
     ARB_draw_buffers,
@@ -512,11 +529,11 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
  protected:
   void MarkExtensionUnsupported(GLExtensions aKnownExtension) {
-    mAvailableExtensions[aKnownExtension] = 0;
+    mAvailableExtensions[aKnownExtension] = false;
   }
 
   void MarkExtensionSupported(GLExtensions aKnownExtension) {
-    mAvailableExtensions[aKnownExtension] = 1;
+    mAvailableExtensions[aKnownExtension] = true;
   }
 
   std::bitset<Extensions_Max> mAvailableExtensions;
@@ -2435,7 +2452,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   // Extension ARB_sync (GL)
  public:
   GLsync fFenceSync(GLenum condition, GLbitfield flags) {
-    GLsync ret = 0;
+    GLsync ret = nullptr;
     BEFORE_GL_CALL;
     ASSERT_SYMBOL_PRESENT(fFenceSync);
     ret = mSymbols.fFenceSync(condition, flags);
@@ -3095,6 +3112,20 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     ASSERT_SYMBOL_PRESENT(fCopyBufferSubData);
     mSymbols.fCopyBufferSubData(readtarget, writetarget, readoffset,
                                 writeoffset, size);
+    AFTER_GL_CALL;
+  }
+
+  // Core GL & Extension ARB_copy_image
+ public:
+  void fCopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel,
+                         GLint srcX, GLint srcY, GLint srcZ, GLuint dstName,
+                         GLenum dstTarget, GLint dstLevel, GLint dstX,
+                         GLint dstY, GLint dstZ, GLsizei srcWidth,
+                         GLsizei srcHeight, GLsizei srcDepth) {
+    BEFORE_GL_CALL;
+    mSymbols.fCopyImageSubData(srcName, srcTarget, srcLevel, srcX, srcY, srcZ,
+                               dstName, dstTarget, dstLevel, dstX, dstY, dstZ,
+                               srcWidth, srcHeight, srcDepth);
     AFTER_GL_CALL;
   }
 
@@ -4072,15 +4103,15 @@ bool MarkBitfieldByString(const nsACString& str,
 }
 
 template <size_t N>
-void MarkBitfieldByStrings(const std::vector<nsCString>& strList,
-                           bool dumpStrings,
+void MarkBitfieldByStrings(Span<const nsCString> strList, bool dumpStrings,
                            const char* const (&markStrList)[N],
                            std::bitset<N>* const out_markList) {
   for (auto itr = strList.begin(); itr != strList.end(); ++itr) {
     const nsACString& str = *itr;
     const bool wasMarked = MarkBitfieldByString(str, markStrList, out_markList);
     if (dumpStrings)
-      printf_stderr("  %s%s\n", str.BeginReading(), wasMarked ? "(*)" : "");
+      printf_stderr("  %s%s\n", PromiseFlatCString(str).get(),
+                    wasMarked ? "(*)" : "");
   }
 }
 

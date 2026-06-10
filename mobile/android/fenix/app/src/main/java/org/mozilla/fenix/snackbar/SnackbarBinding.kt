@@ -20,9 +20,10 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.accounts.push.SendTabUseCases
-import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.helpers.AbstractBinding
+import mozilla.components.support.utils.DefaultDownloadFileUtils
+import mozilla.components.support.utils.DownloadFileUtils
 import mozilla.components.ui.widgets.SnackbarDelegate
 import org.mozilla.fenix.GleanMetrics.SentFromFirefox
 import org.mozilla.fenix.R
@@ -40,6 +41,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
+import org.mozilla.fenix.settings.downloads.DownloadLocationManager
 import org.mozilla.fenix.utils.getSnackbarTimeout
 
 /**
@@ -54,6 +56,7 @@ import org.mozilla.fenix.utils.getSnackbarTimeout
  * @param sendTabUseCases [SendTabUseCases] used to send tabs to other devices.
  * @param customTabSessionId Optional custom tab session ID if navigating from a custom tab or null
  * if the selected session should be used.
+ * @param downloadFileUtils [DownloadFileUtils] used for file-related operations in download snackbars.
  * @param ioDispatcher The [CoroutineDispatcher] used for background operations executed when
  * the user starts a snackbar action.
  * @param mainDispatcher The [CoroutineDispatcher] on which the state observation and updates will occur.
@@ -69,6 +72,12 @@ class SnackbarBinding(
     private val tabsUseCases: TabsUseCases,
     private val sendTabUseCases: SendTabUseCases?,
     private val customTabSessionId: String?,
+    private val downloadFileUtils: DownloadFileUtils = DefaultDownloadFileUtils(
+        context = context,
+        downloadLocation = {
+            DownloadLocationManager(context).defaultLocation
+        },
+    ),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : AbstractBinding<AppState>(appStore, mainDispatcher) {
@@ -82,6 +91,15 @@ class SnackbarBinding(
             .distinctUntilChanged()
             .collect { state ->
                 when (state) {
+                    is SnackbarState.ShowSnackbar -> {
+                        snackbarDelegate.show(
+                            text = state.title,
+                            duration = state.duration,
+                        )
+
+                        appStore.dispatch(SnackbarAction.SnackbarShown)
+                    }
+
                     is SnackbarState.BookmarkAdded -> {
                         showBookmarkAddedSnackbarFor(state)
                     }
@@ -307,12 +325,10 @@ class SnackbarBinding(
                             duration = context.getSnackbarTimeout(hasAction = true).value.toInt(),
                             action = context.getString(R.string.download_completed_snackbar_action_open),
                         ) {
-                            val fileWasOpened = AbstractFetchDownloadService.openFile(
-                                applicationContext = context.applicationContext,
-                                packageName = context.applicationContext.packageName,
-                                downloadFileName = state.downloadState.fileName,
-                                downloadFilePath = state.downloadState.filePath,
-                                downloadContentType = state.downloadState.contentType,
+                            val fileWasOpened = downloadFileUtils.openFile(
+                                fileName = state.downloadState.fileName,
+                                directoryPath = state.downloadState.directoryPath,
+                                contentType = state.downloadState.contentType,
                             )
 
                             if (!fileWasOpened) {

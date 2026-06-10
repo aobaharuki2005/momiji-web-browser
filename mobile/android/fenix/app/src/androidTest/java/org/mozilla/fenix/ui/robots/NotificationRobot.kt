@@ -10,9 +10,11 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import androidx.test.uiautomator.Until
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
@@ -81,16 +83,13 @@ class NotificationRobot {
     }
 
     fun verifyPrivateTabsNotification() {
-        when (Build.VERSION.SDK_INT) {
-            // For API 34 the notification is slightly different
-            Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
-                    verifySystemNotificationExists(getStringResource(R.string.notification_erase_title_android_14))
-                    verifySystemNotificationExists(getStringResource(R.string.notification_erase_text_android_14))
-                }
-            else -> {
-                    verifySystemNotificationExists("$appName (Private)")
-                    verifySystemNotificationExists("Close private tabs")
-                }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // For API 34+ the notification is slightly different
+            verifySystemNotificationExists(getStringResource(R.string.notification_erase_title_android_14))
+            verifySystemNotificationExists(getStringResource(R.string.notification_erase_text_android_14))
+        } else {
+            verifySystemNotificationExists("$appName (Private)")
+            verifySystemNotificationExists("Close private tabs")
         }
     }
 
@@ -264,10 +263,11 @@ class NotificationRobot {
 
     fun clickNotification(notificationMessage: String) {
         Log.i(TAG, "clickNotification: Waiting for $waitingTime ms for $notificationMessage notification to exist")
-        mDevice.findObject(UiSelector().text(notificationMessage)).waitForExists(waitingTime)
+        val notification = mDevice.wait(Until.findObject(By.text(notificationMessage)), waitingTime)
+            ?: throw AssertionError("Notification \"$notificationMessage\" not found after $waitingTime ms")
         Log.i(TAG, "clickNotification: Waited for $waitingTime ms for $notificationMessage notification to exist")
         Log.i(TAG, "clickNotification: Trying to click the $notificationMessage notification and wait for $waitingTimeShort ms for a new window")
-        mDevice.findObject(UiSelector().text(notificationMessage)).clickAndWaitForNewWindow(waitingTimeShort)
+        notification.clickAndWait(Until.newWindow(), waitingTimeShort)
         Log.i(TAG, "clickNotification: Clicked the $notificationMessage notification and waited for $waitingTimeShort ms for a new window")
     }
 
@@ -306,17 +306,12 @@ fun notificationShade(interact: NotificationRobot.() -> Unit): NotificationRobot
 }
 
 private fun closePrivateTabsNotification(): UiObject {
-    lateinit var privateTabsNotification: UiObject
-
-    when (Build.VERSION.SDK_INT) {
-        // For API 34 the notification is slightly different
-        Build.VERSION_CODES.UPSIDE_DOWN_CAKE ->
-            privateTabsNotification = mDevice.findObject(UiSelector().text(getStringResource(R.string.notification_erase_title_android_14)))
-        else ->
-            privateTabsNotification = mDevice.findObject(UiSelector().text("Close private tabs"))
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        // For API 34+ the notification is slightly different
+        mDevice.findObject(UiSelector().text(getStringResource(R.string.notification_erase_title_android_14)))
+    } else {
+        mDevice.findObject(UiSelector().text("Close private tabs"))
     }
-
-    return privateTabsNotification
 }
 
 private fun downloadSystemNotificationButton(action: String) =

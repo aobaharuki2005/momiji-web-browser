@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -13,10 +11,10 @@
 #include <stddef.h>  // for ptrdiff_t
 #include <stdint.h>  // for uint32_t, UINT32_MAX, SIZE_MAX, int32_t
 
-#include "jsnum.h"             // for ToNumber
 #include "NamespaceImports.h"  // for CallArgs, RootedValue
 
 #include "builtin/Array.h"         // for NewDenseEmptyArray
+#include "builtin/Number.h"        // for ToNumber
 #include "debugger/Debugger.h"     // for DebuggerScriptReferent, Debugger
 #include "debugger/DebugScript.h"  // for DebugScript
 #include "debugger/Source.h"       // for DebuggerSource
@@ -64,16 +62,7 @@ using mozilla::Maybe;
 using mozilla::Some;
 
 const JSClassOps DebuggerScript::classOps_ = {
-    nullptr,                          // addProperty
-    nullptr,                          // delProperty
-    nullptr,                          // enumerate
-    nullptr,                          // newEnumerate
-    nullptr,                          // resolve
-    nullptr,                          // mayResolve
-    nullptr,                          // finalize
-    nullptr,                          // call
-    nullptr,                          // construct
-    CallTraceMethod<DebuggerScript>,  // trace
+    .trace = CallTraceMethod<DebuggerScript>,
 };
 
 const JSClass DebuggerScript::class_ = {
@@ -1218,6 +1207,11 @@ class FlowGraphSummary {
     // or Entry::Column_HasMultipleEdge.
 
     uint32_t prevLineno = script->lineno();
+    if (prevLineno == Entry::Line_HasNoEdge) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_BAD_LINE_NUMBER);
+      return false;
+    }
     uint32_t prevColumn = 1;
     JSOp prevOp = JSOp::Nop;
     for (BytecodeRangeWithPosition r(cx, script, SkipPrologueOps::Yes);
@@ -1243,6 +1237,15 @@ class FlowGraphSummary {
       if (r.frontIsEntryPoint()) {
         lineno = r.frontLineNumber();
         column = r.frontColumnNumber().oneOriginValue();
+        if (lineno == Entry::Line_HasNoEdge) {
+          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                    JSMSG_BAD_LINE_NUMBER);
+          return false;
+        }
+        // NOTE: The column data types cannot represent Column_HasMultipleEdge,
+        //       and also the column number is limited in the frontend.
+        //       See GeneralTokenStreamChars::computeColumn.
+        MOZ_ASSERT(column != Entry::Column_HasMultipleEdge);
       }
 
       if (IsJumpOpcode(op)) {

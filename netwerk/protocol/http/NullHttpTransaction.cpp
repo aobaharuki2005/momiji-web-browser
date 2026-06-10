@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,6 +7,7 @@
 
 #include "mozilla/net/NeckoChannelParams.h"  // For HttpActivityArgs.
 #include "mozilla/Components.h"
+#include "nsAHttpConnection.h"
 #include "nsHttp.h"
 #include "NullHttpTransaction.h"
 #include "nsHttpHandler.h"
@@ -25,7 +24,7 @@ NS_IMPL_ISUPPORTS(NullHttpTransaction, NullHttpTransaction,
 
 NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo* ci,
                                          nsIInterfaceRequestor* callbacks,
-                                         uint32_t caps)
+                                         uint32_t caps, bool reportActivity)
     : mStatus(NS_OK),
       mCaps(caps | NS_HTTP_ALLOW_KEEPALIVE),
       mRequestHead(nullptr),
@@ -33,6 +32,10 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo* ci,
       mClaimed(false),
       mCallbacks(callbacks),
       mConnectionInfo(ci) {
+  if (!reportActivity) {
+    return;
+  }
+
   nsresult rv;
   mActivityDistributor =
       mozilla::components::HttpActivityDistributor::Service(&rv);

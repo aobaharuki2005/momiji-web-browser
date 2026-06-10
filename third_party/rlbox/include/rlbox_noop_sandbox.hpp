@@ -21,9 +21,33 @@ struct rlbox_noop_sandbox_thread_data
 };
 
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-
+#  ifdef XP_DARWIN
+#  include <AvailabilityMacros.h>
+#  endif
 rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data();
-#  define RLBOX_NOOP_SANDBOX_STATIC_VARIABLES()                                \
+#  if !defined(MAC_OS_X_VERSION_10_7) || \
+    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
+//10.6 tls implementation
+#    define RLBOX_NOOP_SANDBOX_STATIC_VARIABLES()                                      \
+      static pthread_key_t lckey_noop;                                                 \
+      static pthread_once_t lckey_noop_once = PTHREAD_ONCE_INIT;                       \
+      static void make_key(void) {                                                     \
+          pthread_key_create(&lckey_noop, NULL);                                       \
+      }                                                                                \
+      namespace rlbox {                                                                \
+        rlbox_noop_sandbox_thread_data *get_rlbox_noop_sandbox_thread_info(void) {     \
+            pthread_once(&lckey_noop_once, make_key);                                  \
+            rlbox_noop_sandbox_thread_data *config = (rlbox_noop_sandbox_thread_data*) \
+                                                     pthread_getspecific(lckey_noop);  \
+            if (!config) {                                                             \
+                config = new rlbox_noop_sandbox_thread_data();                         \
+                pthread_setspecific(lckey_noop, config);                               \
+            }                                                                          \
+            return config;                                                             \
+        }                                                                              \
+      }
+#  else
+#   define RLBOX_NOOP_SANDBOX_STATIC_VARIABLES()                                \
     thread_local rlbox::rlbox_noop_sandbox_thread_data                         \
       rlbox_noop_sandbox_thread_info{ 0, 0 };                                  \
     namespace rlbox {                                                          \
@@ -33,9 +57,8 @@ rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data();
       }                                                                        \
     }                                                                          \
     static_assert(true, "Enforce semi-colon")
-
+#  endif
 #endif
-
 /**
  * @brief Class that implements the null sandbox. This sandbox doesn't actually
  * provide any isolation and only serves as a stepping stone towards migrating

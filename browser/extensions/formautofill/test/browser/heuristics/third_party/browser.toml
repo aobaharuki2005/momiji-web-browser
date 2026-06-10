@@ -10,14 +10,8 @@ support-files = [
 ["browser_BestBuy.js"]
 
 ["browser_CDW.js"]
-skip-if = [
-  "true", # Bug 1939626
-]
 
 ["browser_CostCo.js"]
-skip-if = [
-  "true", # Bug 2008281
-]
 
 ["browser_DirectAsda.js"]
 

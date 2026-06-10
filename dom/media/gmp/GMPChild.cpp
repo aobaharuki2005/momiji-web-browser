@@ -1,9 +1,10 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPChild.h"
+
+#include <algorithm>
 
 #include "ChildProfilerController.h"
 #include "ChromiumCDMAdapter.h"
@@ -28,7 +29,6 @@
 #include "GMPVideoHost.h"
 #include "gmp-video-decode.h"
 #include "gmp-video-encode.h"
-#include "mozilla/Algorithm.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/TextUtils.h"
@@ -51,6 +51,7 @@
 
 #  include "WinUtils.h"
 #  include "mozilla/Services.h"
+#  include "mozilla/StaticPrefs_dom.h"
 #  include "mozilla/WinDllServices.h"
 #  include "nsIObserverService.h"
 #else
@@ -72,6 +73,7 @@ namespace gmp {
 
 GMPChild::GMPChild()
     : mGMPMessageLoop(MessageLoop::current()), mGMPLoader(nullptr) {
+  MOZ_ASSERT(NS_IsMainThread());
   GMP_CHILD_LOG_DEBUG("GMPChild ctor");
   nsDebugImpl::SetMultiprocessMode("GMP");
 }
@@ -183,9 +185,10 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
   };
   constexpr static bool (*IsASCII)(const char16_t*) =
       IsAsciiNullTerminated<char16_t>;
-  static_assert(AllOf(std::begin(whitelist), std::end(whitelist), IsASCII),
-                "Items in the whitelist must not contain non-ASCII "
-                "characters!");
+  static_assert(
+      std::all_of(std::begin(whitelist), std::end(whitelist), IsASCII),
+      "Items in the whitelist must not contain non-ASCII "
+      "characters!");
 
   nsTArray<nsCString> libs;
   SplitAt(", ", aLibs, libs);
@@ -463,46 +466,39 @@ GMPChild::MakeCDMHostVerificationPaths(const nsACString& aPluginLibPath) {
   paths.AppendElement(
       std::make_pair(nsCString(aPluginLibPath), aPluginLibPath + ".sig"_ns));
 
-  // Plugin-container binary path.
+  // Current process binary path.
   // Note: clang won't let us initialize an nsString from a wstring, so we
   // need to go through UTF8 to get to an nsString.
-  const std::string pluginContainer =
+  const std::string currentProcessBinary =
       WideToUTF8(CommandLine::ForCurrentProcess()->program());
   nsString str;
 
-  CopyUTF8toUTF16(nsDependentCString(pluginContainer.c_str()), str);
+  CopyUTF8toUTF16(nsDependentCString(currentProcessBinary.c_str()), str);
   nsCOMPtr<nsIFile> path;
   if (NS_FAILED(NS_NewLocalFile(str, getter_AddRefs(path))) ||
       !AppendHostPath(path, paths)) {
-    // Without successfully determining plugin-container's path, we can't
-    // determine libxul's or Firefox's. So give up.
+    // Without successfully determining our path, we can't determine libxul's or
+    // Firefox's. So give up.
     return paths;
   }
 
 #if defined(XP_WIN)
-  // On Windows on ARM64, we should also append the x86 plugin-container's
-  // xul.dll.
-  const bool isWindowsOnARM64 =
-      IsFileLeafEqualToASCII(GetParentFile(path), "i686");
-  if (isWindowsOnARM64) {
-    nsCOMPtr<nsIFile> x86XulPath =
-        AppendFile(GetParentFile(path), XUL_LIB_FILE);
-    if (!AppendHostPath(x86XulPath, paths)) {
-      return paths;
-    }
-  }
+  bool addFirefoxBinaryPath = !StaticPrefs::dom_ipc_alwaysUseParentBinary();
+#else
+  bool addFirefoxBinaryPath = true;
 #endif
 
   // Firefox application binary path.
   nsCOMPtr<nsIFile> appDir = GetFirefoxAppPath(path);
-  path = AppendFile(CloneFile(appDir), FIREFOX_FILE);
-  if (!AppendHostPath(path, paths)) {
-    return paths;
+  if (addFirefoxBinaryPath) {
+    path = AppendFile(CloneFile(appDir), FIREFOX_FILE);
+    if (!AppendHostPath(path, paths)) {
+      return paths;
+    }
   }
 
   // Libxul path. Note: re-using 'appDir' var here, as we assume libxul is in
   // the same directory as Firefox executable.
-  appDir->GetPath(str);
   path = AppendFile(CloneFile(appDir), XUL_LIB_FILE);
   if (!AppendHostPath(path, paths)) {
     return paths;
@@ -593,8 +589,6 @@ void GMPChild::ActorDestroy(ActorDestroyReason aWhy) {
     mGMPLoader->Shutdown();
   }
 
-  ShutdownPlatformAPI();
-
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Abnormal shutdown of GMP process!");
     ProcessChild::QuickExit();
@@ -634,45 +628,26 @@ void GMPChild::ProcessingError(Result aCode, const char* aReason) {
   }
 }
 
-PGMPTimerChild* GMPChild::AllocPGMPTimerChild() {
-  return new GMPTimerChild(this);
-}
-
-bool GMPChild::DeallocPGMPTimerChild(PGMPTimerChild* aActor) {
-  MOZ_ASSERT(mTimerChild == static_cast<GMPTimerChild*>(aActor));
-  mTimerChild = nullptr;
-  return true;
-}
-
 GMPTimerChild* GMPChild::GetGMPTimers() {
-  if (!mTimerChild) {
-    PGMPTimerChild* sc = SendPGMPTimerConstructor();
-    if (!sc) {
-      return nullptr;
-    }
-    mTimerChild = static_cast<GMPTimerChild*>(sc);
+  if (auto* timer = SingleManagedOrNull(ManagedPGMPTimerChild())) {
+    return static_cast<GMPTimerChild*>(timer);
   }
-  return mTimerChild;
-}
-
-PGMPStorageChild* GMPChild::AllocPGMPStorageChild() {
-  return new GMPStorageChild(this);
-}
-
-bool GMPChild::DeallocPGMPStorageChild(PGMPStorageChild* aActor) {
-  mStorage = nullptr;
-  return true;
+  auto timerChild = MakeRefPtr<GMPTimerChild>(this);
+  if (!SendPGMPTimerConstructor(timerChild)) {
+    return nullptr;
+  }
+  return timerChild.get();
 }
 
 GMPStorageChild* GMPChild::GetGMPStorage() {
-  if (!mStorage) {
-    PGMPStorageChild* sc = SendPGMPStorageConstructor();
-    if (!sc) {
-      return nullptr;
-    }
-    mStorage = static_cast<GMPStorageChild*>(sc);
+  if (auto* storage = SingleManagedOrNull(ManagedPGMPStorageChild())) {
+    return static_cast<GMPStorageChild*>(storage);
   }
-  return mStorage;
+  auto storageChild = MakeRefPtr<GMPStorageChild>(this);
+  if (!SendPGMPStorageConstructor(storageChild)) {
+    return nullptr;
+  }
+  return storageChild.get();
 }
 
 mozilla::ipc::IPCResult GMPChild::RecvCrashPluginNow() {
@@ -736,7 +711,7 @@ mozilla::ipc::IPCResult GMPChild::RecvPreferenceUpdate(const Pref& aPref) {
 
 mozilla::ipc::IPCResult GMPChild::RecvShutdown(ShutdownResolver&& aResolver) {
   if (!mProfilerController) {
-    aResolver(""_ns);
+    aResolver(ProfileAndAdditionalInformation{});
     return IPC_OK();
   }
 
@@ -762,10 +737,11 @@ mozilla::ipc::IPCResult GMPChild::RecvShutdown(ShutdownResolver&& aResolver) {
         nsPrintfCString("*Profile from pid %u bigger (%zu) than IPC max (%zu)",
                         unsigned(profiler_current_process_id().ToNumber()), len,
                         size_t(IPC::Channel::kMaximumMessageSize));
+    shutdownProfileAndAdditionalInformation.mAdditionalInformation.reset();
   }
   // Send the shutdown profile to the parent process through our own
   // message channel, which we know will survive for long enough.
-  aResolver(shutdownProfileAndAdditionalInformation.mProfile);
+  aResolver(std::move(shutdownProfileAndAdditionalInformation));
   CrashReporter::RecordAnnotationCString(
       CrashReporter::Annotation::ProfilerChildShutdownPhase,
       isProfiling ? "Profiling - SendShutdownProfile (resolved)"

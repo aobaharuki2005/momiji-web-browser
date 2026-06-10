@@ -237,7 +237,7 @@
   <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
   <string name="add_custom_autocomplete_label">Dodaj poveznicu u automatsko ispunjavanje</string>
   <!-- Preference category for settings about cookies and site data -->
-  <string name="preference_category_cookies">Kolačići i podatci stranica</string>
+  <string name="preference_category_cookies">Kolačići i podaci stranica</string>
   <!-- Preference category for settings about data choices -->
   <string name="preference_category_data_choices">Izbori podataka</string>
   <!-- Title of the screen for removing custom autocomplete URLs. -->
@@ -249,7 +249,7 @@
   <!-- Label for the "custom autocomplete URL" input field -->
   <string name="preference_autocomplete_add_title">URL za dodati</string>
   <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
-  <string name="preference_autocomplete_add_hint">Zalijepi ili unesi URL</string>
+  <string name="preference_autocomplete_add_hint">Umetni ili upiši URL</string>
   <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
   <string name="preference_autocomplete_add_example2">Primjer: mozilla.org</string>
   <!-- To be removed once the new hint has been translated -->
@@ -562,6 +562,8 @@
   <string name="tabs_tray_action_erase">Obriši povijest pretraživanja</string>
   <!-- Label for the option in the Focus "tabs tray" to clos the other tabs except the current tab. -->
   <string name="tabs_tray_action_erase_other">Zatvori ostale kartice</string>
+  <!-- Label for the option in the Focus "tabs tray" to add a new tab. -->
+  <string name="tabs_tray_action_add_new_tab">Dodaj novu karticu</string>
   <!--
     If the user decides to open the current page in another browser and if Firefox is not installed then we show this
     item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play).
@@ -582,6 +584,21 @@
   <string name="security_popup_security_verified">Potvrdio: %1$s</string>
   <!-- Content Description of Security Icon in toolbar -->
   <string name="site_security_icon_content_description">Sigurnost stranice</string>
+  <!--
+    %1$s will be replaced with the organization for which the certificate
+    used by the site was issued. For example, the certificate in use by
+    the site https://eidas.ec.europa.eu/ was issued to "The European
+    Commission".
+  -->
+  <string name="qualified_identity">Certifikat izdan za %1$s</string>
+  <!--
+    The European Union eIDAS Regulation specifies a type of certificate
+    called a "qualified website authentication certificate" (QWAC) and
+    requires that browsers identify and indicate such certificates. This
+    text was paraphrased from ETSI TS 119 411-5 V2.1.1 section 6.3 and
+    indicates that the website uses a QWAC.
+  -->
+  <string name="qualified_text">Kvalificirano prema Uredbi (EU) 2024/1183.</string>
   <string name="preference_autocomplete_duplicate_url_error">URL već postoji</string>
   <!-- Label for the Find in page button -->
   <string name="find_in_page">Pronađi na stranici</string>

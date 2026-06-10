@@ -1,19 +1,17 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef DOM_MEDIA_PACER_H_
+#define DOM_MEDIA_PACER_H_
 
 #include "MediaEventSource.h"
 #include "MediaTimer.h"
 #include "nsDeque.h"
 
-#ifndef DOM_MEDIA_PACER_H_
-#  define DOM_MEDIA_PACER_H_
-
 extern mozilla::LazyLogModule gMediaPipelineLog;
-#  define LOG(level, msg, ...) \
-    MOZ_LOG(gMediaPipelineLog, level, (msg, ##__VA_ARGS__))
+#define LOG(level, msg, ...) \
+  MOZ_LOG(gMediaPipelineLog, level, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
 
@@ -174,9 +172,9 @@ class Pacer {
  public:
   const nsCOMPtr<nsISerialEventTarget> mTarget;
 
-#  ifdef MOZ_LOGGING
+#ifdef MOZ_LOGGING
   const TimeStamp mStart = TimeStamp::Now();
-#  endif
+#endif
 
  protected:
   struct QueueItem {
@@ -218,6 +216,6 @@ class Pacer {
 
 }  // namespace mozilla
 
-#  undef LOG
+#undef LOG
 
-#endif
+#endif  // DOM_MEDIA_PACER_H_

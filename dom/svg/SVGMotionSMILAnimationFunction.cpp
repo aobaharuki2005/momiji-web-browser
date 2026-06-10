@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,24 +22,17 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
-SVGMotionSMILAnimationFunction::SVGMotionSMILAnimationFunction()
-    : mRotateType(eRotateType_Explicit),
-      mRotateAngle(0.0f),
-      mPathSourceType(ePathSourceType_None),
-      mIsPathStale(true)  // Try to initialize path on first GetValues call
-{}
-
 void SVGMotionSMILAnimationFunction::MarkStaleIfAttributeAffectsPath(
     nsAtom* aAttribute) {
   bool isAffected;
   if (aAttribute == nsGkAtoms::path) {
-    isAffected = (mPathSourceType <= ePathSourceType_PathAttr);
+    isAffected = (mPathSourceType <= PathSourceType::PathAttr);
   } else if (aAttribute == nsGkAtoms::values) {
-    isAffected = (mPathSourceType <= ePathSourceType_ValuesAttr);
+    isAffected = (mPathSourceType <= PathSourceType::ValuesAttr);
   } else if (aAttribute == nsGkAtoms::from || aAttribute == nsGkAtoms::to) {
-    isAffected = (mPathSourceType <= ePathSourceType_ToAttr);
+    isAffected = (mPathSourceType <= PathSourceType::ToAttr);
   } else if (aAttribute == nsGkAtoms::by) {
-    isAffected = (mPathSourceType <= ePathSourceType_ByAttr);
+    isAffected = (mPathSourceType <= PathSourceType::ByAttr);
   } else {
     MOZ_ASSERT_UNREACHABLE(
         "Should only call this method for path-describing "
@@ -108,7 +99,7 @@ SMILAnimationFunction::SMILCalcMode
 SVGMotionSMILAnimationFunction::GetCalcMode() const {
   const nsAttrValue* value = GetAttr(nsGkAtoms::calcMode);
   if (!value) {
-    return CALC_PACED;  // animateMotion defaults to calcMode="paced"
+    return SMILCalcMode::Paced;  // animateMotion defaults to calcMode="paced"
   }
 
   return SMILCalcMode(value->GetEnumValue());
@@ -150,7 +141,7 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
   bool success = false;
   if (HasAttr(nsGkAtoms::values)) {
     // Generate path based on our values array
-    mPathSourceType = ePathSourceType_ValuesAttr;
+    mPathSourceType = PathSourceType::ValuesAttr;
     nsAttrValueOrString valuesVal(GetAttr(nsGkAtoms::values));
     SVGMotionSMILPathUtils::MotionValueParser parser(&pathGenerator,
                                                      &mPathVertices);
@@ -181,11 +172,11 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
     if (success) {
       double dist;
       if (HasAttr(nsGkAtoms::to)) {
-        mPathSourceType = ePathSourceType_ToAttr;
+        mPathSourceType = PathSourceType::ToAttr;
         nsAttrValueOrString toVal(GetAttr(nsGkAtoms::to));
         success = pathGenerator.LineToAbsolute(toVal.String(), dist);
       } else {  // HasAttr(nsGkAtoms::by)
-        mPathSourceType = ePathSourceType_ByAttr;
+        mPathSourceType = PathSourceType::ByAttr;
         nsAttrValueOrString byVal(GetAttr(nsGkAtoms::by));
         success = pathGenerator.LineToRelative(byVal.String(), dist);
       }
@@ -206,7 +197,7 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
 
 void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromMpathElem(
     SVGMPathElement* aMpathElem) {
-  mPathSourceType = ePathSourceType_Mpath;
+  mPathSourceType = PathSourceType::Mpath;
 
   // Use the shape that's the target of our chosen <mpath> child.
   SVGGeometryElement* shape = aMpathElem->GetReferencedPath();
@@ -229,7 +220,7 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromMpathElem(
 
 void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr() {
   nsString pathSpec(nsAttrValueOrString(GetAttr(nsGkAtoms::path)).String());
-  mPathSourceType = ePathSourceType_PathAttr;
+  mPathSourceType = PathSourceType::PathAttr;
 
   // Generate Path from |path| attr
   SVGPathData path{NS_ConvertUTF16toUTF8(pathSpec)};
@@ -256,7 +247,7 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVertices(
   // Clear stale data
   mPath = nullptr;
   mPathVertices.Clear();
-  mPathSourceType = ePathSourceType_None;
+  mPathSourceType = PathSourceType::None;
 
   // Do we have a mpath child? if so, it trumps everything. Otherwise, we look
   // through our list of path-defining attributes, in order of priority.
@@ -345,7 +336,7 @@ void SVGMotionSMILAnimationFunction::CheckKeyPoints() {
   if (!HasAttr(nsGkAtoms::keyPoints)) return;
 
   // attribute is ignored for calcMode="paced" (even if it's got errors)
-  if (GetCalcMode() == CALC_PACED) {
+  if (GetCalcMode() == SMILCalcMode::Paced) {
     SetKeyPointsErrorFlag(false);
     return;
   }
@@ -391,11 +382,11 @@ nsresult SVGMotionSMILAnimationFunction::SetRotate(const nsAString& aRotate,
 
   aResult.SetTo(aRotate);
   if (aRotate.EqualsLiteral("auto")) {
-    mRotateType = eRotateType_Auto;
+    mRotateType = RotateType::Auto;
   } else if (aRotate.EqualsLiteral("auto-reverse")) {
-    mRotateType = eRotateType_AutoReverse;
+    mRotateType = RotateType::AutoReverse;
   } else {
-    mRotateType = eRotateType_Explicit;
+    mRotateType = RotateType::Explicit;
 
     uint16_t angleUnit;
     if (!SVGAnimatedOrient::GetValueFromString(aRotate, mRotateAngle,
@@ -416,7 +407,7 @@ nsresult SVGMotionSMILAnimationFunction::SetRotate(const nsAString& aRotate,
 
 void SVGMotionSMILAnimationFunction::UnsetRotate() {
   mRotateAngle = 0.0f;  // default value
-  mRotateType = eRotateType_Explicit;
+  mRotateType = RotateType::Explicit;
   mHasChanged = true;
 }
 

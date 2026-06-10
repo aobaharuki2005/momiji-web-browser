@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -171,6 +170,8 @@ struct PaintState {
   }
 };
 
+constexpr uint32_t kPaintRecursionLimit = 256;
+
 DeviceColor PaintState::GetColor(uint16_t aPaletteIndex, float aAlpha) const {
   sRGBColor color;
   if (aPaletteIndex < mNumColors) {
@@ -184,11 +185,13 @@ DeviceColor PaintState::GetColor(uint16_t aPaletteIndex, float aAlpha) const {
   return ToDeviceColor(color);
 }
 
-static bool DispatchPaint(const PaintState& aState, uint32_t aOffset,
+static bool DispatchPaint(const PaintState& aState, uint32_t aDepth,
+                          uint32_t aOffset,
                           const Rect* aBounds /* may be nullptr if unknown */);
 static UniquePtr<Pattern> DispatchMakePattern(const PaintState& aState,
                                               uint32_t aOffset);
-static Rect DispatchGetBounds(const PaintState& aState, uint32_t aOffset);
+static Rect DispatchGetBounds(const PaintState& aState, uint32_t aDepth,
+                              uint32_t aOffset);
 static Matrix DispatchGetMatrix(const PaintState& aState, uint32_t aOffset);
 
 // Variation-data types
@@ -728,7 +731,7 @@ struct PaintColrLayers {
   uint8_t numLayers;
   uint32 firstLayerIndex;
 
-  bool Paint(const PaintState& aState, uint32_t aOffset,
+  bool Paint(const PaintState& aState, uint32_t aDepth, uint32_t aOffset,
              const Rect* aBounds) const {
     MOZ_ASSERT(format == kFormat);
     IF_CYCLE_RETURN(true);
@@ -741,7 +744,7 @@ struct PaintColrLayers {
     }
     const auto* paintOffsets = layerList->paintOffsets() + firstLayerIndex;
     for (uint32_t i = 0; i < numLayers; i++) {
-      if (!DispatchPaint(aState,
+      if (!DispatchPaint(aState, aDepth,
                          aState.mHeader.v1->layerListOffset + paintOffsets[i],
                          aBounds)) {
         return false;
@@ -750,7 +753,8 @@ struct PaintColrLayers {
     return true;
   }
 
-  Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
+  Rect GetBoundingRect(const PaintState& aState, uint32_t aDepth,
+                       uint32_t aOffset) const {
     MOZ_ASSERT(format == kFormat);
     IF_CYCLE_RETURN(Rect());
     const auto* layerList = aState.mHeader.v1->layerList();
@@ -764,14 +768,15 @@ struct PaintColrLayers {
     const auto* paintOffsets = layerList->paintOffsets() + firstLayerIndex;
     for (uint32_t i = 0; i < numLayers; i++) {
       result = result.Union(DispatchGetBounds(
-          aState, aState.mHeader.v1->layerListOffset + paintOffsets[i]));
+          aState, aDepth,
+          aState.mHeader.v1->layerListOffset + paintOffsets[i]));
     }
     return result;
   }
 };
 
 struct PaintPatternBase {
-  bool Paint(const PaintState& aState, uint32_t aOffset,
+  bool Paint(const PaintState& aState, uint32_t aDepth, uint32_t aOffset,
              const Rect* aBounds) const {
     Matrix m = aState.mDrawTarget->GetTransform();
     if (m.Invert()) {
@@ -785,7 +790,8 @@ struct PaintPatternBase {
     return false;
   }
 
-  Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
+  Rect GetBoundingRect(const PaintState& aState, uint32_t aDepth,
+                       uint32_t aOffset) const {
     return Rect();
   }
 };
@@ -1280,7 +1286,7 @@ struct PaintGlyph {
   Offset24 paintOffset;
   uint16 glyphID;
 
-  bool Paint(const PaintState& aState, uint32_t aOffset,
+  bool Paint(const PaintState& aState, uint32_t aDepth, uint32_t aOffset,
              const Rect* aBounds) const {
     MOZ_ASSERT(format == kFormat);
     if (!paintOffset) {
@@ -1308,12 +1314,13 @@ struct PaintGlyph {
     }
     RefPtr<Path> path = GetPathForGlyphs(aState, buffer);
     aState.mDrawTarget->PushClip(path);
-    bool ok = DispatchPaint(aState, aOffset + paintOffset, aBounds);
+    bool ok = DispatchPaint(aState, aDepth, aOffset + paintOffset, aBounds);
     aState.mDrawTarget->PopClip();
     return ok;
   }
 
-  Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
+  Rect GetBoundingRect(const PaintState& aState, uint32_t aDepth,
+                       uint32_t aOffset) const {
     MOZ_ASSERT(format == kFormat);
     Glyph g{uint16_t(glyphID), Point()};
     GlyphBuffer buffer{&g, 1};
@@ -1339,7 +1346,7 @@ struct PaintColrGlyph {
 
   // Factored out as a helper because this is also used by the top-level
   // PaintGlyphGraph function.
-  static bool DoPaint(const PaintState& aState,
+  static bool DoPaint(const PaintState& aState, uint32_t aDepth,
                       const BaseGlyphPaintRecord* aBaseGlyphPaint,
                       uint32_t aGlyphId, const Rect* aBounds) {
     AutoPopClips clips(aState.mDrawTarget);
@@ -1354,20 +1361,22 @@ struct PaintColrGlyph {
       }
     }
     return DispatchPaint(
-        aState,
+        aState, aDepth,
         aState.mHeader.v1->baseGlyphListOffset + aBaseGlyphPaint->paintOffset,
         aBounds);
   }
 
-  bool Paint(const PaintState& aState, uint32_t aOffset,
+  bool Paint(const PaintState& aState, uint32_t aDepth, uint32_t aOffset,
              const Rect* aBounds) const {
     MOZ_ASSERT(format == kFormat);
     IF_CYCLE_RETURN(true);
     const auto* base = aState.mHeader.v1->GetBaseGlyphPaint(glyphID);
-    return base ? DoPaint(aState, base, uint16_t(glyphID), aBounds) : false;
+    return base ? DoPaint(aState, aDepth, base, uint16_t(glyphID), aBounds)
+                : false;
   }
 
-  Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
+  Rect GetBoundingRect(const PaintState& aState, uint32_t aDepth,
+                       uint32_t aOffset) const {
     IF_CYCLE_RETURN(Rect());
     if (const auto* clipList = aState.mHeader.v1->clipList()) {
       if (const auto* clip = clipList->GetClip(uint16_t(glyphID))) {
@@ -1377,7 +1386,8 @@ struct PaintColrGlyph {
     if (const auto* base =
             aState.mHeader.v1->GetBaseGlyphPaint(uint16_t(glyphID))) {
       return DispatchGetBounds(
-          aState, aState.mHeader.v1->baseGlyphListOffset + base->paintOffset);
+          aState, aDepth,
+          aState.mHeader.v1->baseGlyphListOffset + base->paintOffset);
     }
     return Rect();
   }
@@ -1418,21 +1428,22 @@ struct PaintTransformBase {
   uint8_t format;
   Offset24 paintOffset;
 
-  bool Paint(const PaintState& aState, uint32_t aOffset,
+  bool Paint(const PaintState& aState, uint32_t aDepth, uint32_t aOffset,
              const Rect* aBounds) const {
     if (!paintOffset) {
       return true;
     }
     AutoRestoreTransform saveTransform(aState.mDrawTarget);
     aState.mDrawTarget->ConcatTransform(DispatchGetMatrix(aState, aOffset));
-    return DispatchPaint(aState, aOffset + paintOffset, aBounds);
+    return DispatchPaint(aState, aDepth, aOffset + paintOffset, aBounds);
   }
 
-  Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
+  Rect GetBoundingRect(const PaintState& aState, uint32_t aDepth,
+                       uint32_t aOffset) const {
     if (!paintOffset) {
       return Rect();
     }
-    Rect bounds = DispatchGetBounds(aState, aOffset + paintOffset);
+    Rect bounds = DispatchGetBounds(aState, aDepth, aOffset + paintOffset);
     bounds = DispatchGetMatrix(aState, aOffset).TransformBounds(bounds);
     return bounds;
   }
@@ -1755,7 +1766,7 @@ struct PaintComposite {
     COMPOSITE_HSL_LUMINOSITY = 27
   };
 
-  bool Paint(const PaintState& aState, uint32_t aOffset,
+  bool Paint(const PaintState& aState, uint32_t aDepth, uint32_t aOffset,
              const Rect* aBounds) const {
     MOZ_ASSERT(format == kFormat);
     if (!backdropPaintOffset || !sourcePaintOffset) {
@@ -1827,16 +1838,18 @@ struct PaintComposite {
       return true;
     }
     if (compositeMode == COMPOSITE_SRC) {
-      return DispatchPaint(aState, aOffset + sourcePaintOffset, aBounds);
+      return DispatchPaint(aState, aDepth, aOffset + sourcePaintOffset,
+                           aBounds);
     }
     if (compositeMode == COMPOSITE_DEST) {
-      return DispatchPaint(aState, aOffset + backdropPaintOffset, aBounds);
+      return DispatchPaint(aState, aDepth, aOffset + backdropPaintOffset,
+                           aBounds);
     }
 
     // We need bounds for the temporary surfaces; so if we didn't have
     // explicitly-provided bounds from a clipList entry for the top-level
     // glyph, then we need to determine the bounding rect here.
-    Rect bounds = aBounds ? *aBounds : GetBoundingRect(aState, aOffset);
+    Rect bounds = aBounds ? *aBounds : GetBoundingRect(aState, aDepth, aOffset);
     if (bounds.IsEmpty()) {
       return true;
     }
@@ -1863,7 +1876,7 @@ struct PaintComposite {
     }
     backdrop->SetTransform(Matrix::Translation(-bounds.TopLeft()));
     state.mDrawTarget = backdrop;
-    if (!DispatchPaint(state, aOffset + backdropPaintOffset, &bounds)) {
+    if (!DispatchPaint(state, aDepth, aOffset + backdropPaintOffset, &bounds)) {
       return false;
     }
 
@@ -1875,7 +1888,7 @@ struct PaintComposite {
     }
     source->SetTransform(Matrix::Translation(-bounds.TopLeft()));
     state.mDrawTarget = source;
-    if (!DispatchPaint(state, aOffset + sourcePaintOffset, &bounds)) {
+    if (!DispatchPaint(state, aDepth, aOffset + sourcePaintOffset, &bounds)) {
       return false;
     }
 
@@ -1894,15 +1907,16 @@ struct PaintComposite {
     return true;
   }
 
-  Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
+  Rect GetBoundingRect(const PaintState& aState, uint32_t aDepth,
+                       uint32_t aOffset) const {
     if (!backdropPaintOffset || !sourcePaintOffset) {
       return Rect();
     }
     // For now, just return the maximal bounds that could result; this could be
     // smarter, returning just one of the rects or their intersection when
     // appropriate for the composite mode in effect.
-    return DispatchGetBounds(aState, aOffset + backdropPaintOffset)
-        .Union(DispatchGetBounds(aState, aOffset + sourcePaintOffset));
+    return DispatchGetBounds(aState, aDepth, aOffset + backdropPaintOffset)
+        .Union(DispatchGetBounds(aState, aDepth, aOffset + sourcePaintOffset));
   }
 };
 
@@ -1935,9 +1949,13 @@ const BaseGlyphPaintRecord* COLRv1Header::GetBaseGlyphPaint(
   DO_CASE(PaintVar##T)
 
 // Process paint table at aOffset from start of COLRv1 table.
-static bool DispatchPaint(const PaintState& aState, uint32_t aOffset,
-                          const Rect* aBounds) {
+static bool DispatchPaint(const PaintState& aState, uint32_t aDepth,
+                          uint32_t aOffset, const Rect* aBounds) {
   if (aOffset >= aState.mCOLRLength) {
+    return false;
+  }
+
+  if (aDepth > kPaintRecursionLimit) {
     return false;
   }
 
@@ -1945,11 +1963,11 @@ static bool DispatchPaint(const PaintState& aState, uint32_t aOffset,
   // All paint table formats start with an 8-bit 'format' field.
   uint8_t format = uint8_t(*paint);
 
-#define DO_CASE(T)                                                         \
-  case T::kFormat:                                                         \
-    return aOffset + sizeof(T) <= aState.mCOLRLength                       \
-               ? reinterpret_cast<const T*>(paint)->Paint(aState, aOffset, \
-                                                          aBounds)         \
+#define DO_CASE(T)                                                            \
+  case T::kFormat:                                                            \
+    return aOffset + sizeof(T) <= aState.mCOLRLength                          \
+               ? reinterpret_cast<const T*>(paint)->Paint(aState, aDepth + 1, \
+                                                          aOffset, aBounds)   \
                : false
 
   switch (format) {
@@ -2048,8 +2066,13 @@ static Matrix DispatchGetMatrix(const PaintState& aState, uint32_t aOffset) {
   return Matrix();
 }
 
-static Rect DispatchGetBounds(const PaintState& aState, uint32_t aOffset) {
+static Rect DispatchGetBounds(const PaintState& aState, uint32_t aDepth,
+                              uint32_t aOffset) {
   if (aOffset >= aState.mCOLRLength) {
+    return Rect();
+  }
+
+  if (aDepth > kPaintRecursionLimit) {
     return Rect();
   }
 
@@ -2057,11 +2080,11 @@ static Rect DispatchGetBounds(const PaintState& aState, uint32_t aOffset) {
   // All paint table formats start with an 8-bit 'format' field.
   uint8_t format = uint8_t(*paint);
 
-#define DO_CASE(T)                                                           \
-  case T::kFormat:                                                           \
-    return aOffset + sizeof(T) <= aState.mCOLRLength                         \
-               ? reinterpret_cast<const T*>(paint)->GetBoundingRect(aState,  \
-                                                                    aOffset) \
+#define DO_CASE(T)                                                   \
+  case T::kFormat:                                                   \
+    return aOffset + sizeof(T) <= aState.mCOLRLength                 \
+               ? reinterpret_cast<const T*>(paint)->GetBoundingRect( \
+                     aState, aDepth + 1, aOffset)                    \
                : Rect();
 
   switch (format) {
@@ -2312,7 +2335,7 @@ bool ItemVariationData::Validate(const COLRv1Header* aHeader,
   uint32_t deltaSetSize =
       (uint16_t(regionIndexCount) + uint16_t(wordDeltaCount)) << longWords;
   if (reinterpret_cast<const char*>(deltaSets()) +
-          uint16_t(itemCount) * deltaSetSize >
+          uint64_t(uint16_t(itemCount)) * deltaSetSize >
       reinterpret_cast<const char*>(aHeader) + aLength) {
     return false;
   }
@@ -2529,7 +2552,7 @@ bool COLRFonts::PaintGlyphGraph(
   AutoRestoreTransform saveTransform(aDrawTarget);
   aDrawTarget->ConcatTransform(Matrix::Translation(aPoint));
   return PaintColrGlyph::DoPaint(
-      state, reinterpret_cast<const BaseGlyphPaintRecord*>(aPaintGraph),
+      state, 0, reinterpret_cast<const BaseGlyphPaintRecord*>(aPaintGraph),
       aGlyphId, nullptr);
 }
 
@@ -2568,7 +2591,7 @@ Rect COLRFonts::GetColorGlyphBounds(hb_blob_t* aCOLR, hb_font_t* aFont,
   const auto* base = state.mHeader.v1->GetBaseGlyphPaint(aGlyphId);
   if (base) {
     return DispatchGetBounds(
-        state, state.mHeader.v1->baseGlyphListOffset + base->paintOffset);
+        state, 0, state.mHeader.v1->baseGlyphListOffset + base->paintOffset);
   }
   return Rect();
 }

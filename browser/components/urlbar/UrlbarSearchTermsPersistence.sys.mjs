@@ -7,7 +7,10 @@ const lazy = {};
 import { UrlbarUtils } from "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ConfigSearchEngine:
+    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
 });
 
 /**
@@ -141,7 +144,7 @@ class _UrlbarSearchTermsPersistence {
    *   or the default engine hasn't been initialized.
    */
   getSearchTerm(uri) {
-    if (!Services.search.hasSuccessfullyInitialized || !uri?.spec) {
+    if (!lazy.SearchService.hasSuccessfullyInitialized || !uri?.spec) {
       return "";
     }
 
@@ -156,17 +159,17 @@ class _UrlbarSearchTermsPersistence {
     // understand changes to params.
     let provider = this.#getProviderInfoForURL(uri.spec);
     if (provider) {
-      let result = Services.search.parseSubmissionURL(uri.spec);
+      let result = lazy.SearchService.parseSubmissionURL(uri.spec);
       if (
-        !result.engine?.isConfigEngine ||
+        !(result.engine instanceof lazy.ConfigSearchEngine) ||
         !this.isDefaultPage(uri, provider)
       ) {
         return "";
       }
       searchTerm = result.terms;
     } else {
-      let result = Services.search.parseSubmissionURL(uri.spec);
-      if (!result.engine?.isConfigEngine) {
+      let result = lazy.SearchService.parseSubmissionURL(uri.spec);
+      if (!(result.engine instanceof lazy.ConfigSearchEngine)) {
         return "";
       }
       searchTerm = result.engine.searchTermFromResult(uri);
@@ -398,16 +401,16 @@ class _UrlbarSearchTermsPersistence {
    */
   #searchModeForUrl(url) {
     // If there's no default engine, no engines are available.
-    if (!Services.search.defaultEngine) {
+    if (!lazy.SearchService.defaultEngine) {
       return null;
     }
-    let result = Services.search.parseSubmissionURL(url);
-    if (!result.engine?.isConfigEngine) {
+    let result = lazy.SearchService.parseSubmissionURL(url);
+    if (!(result.engine instanceof lazy.ConfigSearchEngine)) {
       return null;
     }
     return {
       engineName: result.engine.name,
-      isDefaultEngine: result.engine === Services.search.defaultEngine,
+      isDefaultEngine: result.engine === lazy.SearchService.defaultEngine,
     };
   }
 

@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -18,10 +16,10 @@
 #include <string_view>
 #include <utility>
 
-#include "jsdate.h"
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
+#include "builtin/Date.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/SharedIntlData.h"
@@ -61,7 +59,7 @@ using namespace js;
 using namespace js::temporal;
 
 void js::temporal::TimeZoneValue::trace(JSTracer* trc) {
-  TraceNullableRoot(trc, &object_, "TimeZoneValue::object");
+  TraceRoot(trc, &object_, "TimeZoneValue::object");
 }
 
 /**
@@ -1064,7 +1062,8 @@ bool js::temporal::DisambiguatePossibleEpochNanoseconds(
                "subtracting nanoseconds is at most one day");
 
     // Step 16.c.
-    auto earlierDate = BalanceISODate(isoDateTime.date, earlierTime.days);
+    auto earlierDate = BalanceISODate(isoDateTime.date,
+                                      static_cast<int32_t>(earlierTime.days));
 
     // Step 16.d.
     auto earlierDateTime = ISODateTime{earlierDate, earlierTime.time};
@@ -1094,7 +1093,8 @@ bool js::temporal::DisambiguatePossibleEpochNanoseconds(
              "adding nanoseconds is at most one day");
 
   // Step 20.
-  auto laterDate = BalanceISODate(isoDateTime.date, laterTime.days);
+  auto laterDate =
+      BalanceISODate(isoDateTime.date, static_cast<int32_t>(laterTime.days));
 
   // Step 21.
   auto laterDateTime = ISODateTime{laterDate, laterTime.time};
@@ -1192,16 +1192,7 @@ void js::temporal::TimeZoneObject::finalize(JS::GCContext* gcx, JSObject* obj) {
 }
 
 const JSClassOps TimeZoneObject::classOps_ = {
-    nullptr,                   // addProperty
-    nullptr,                   // delProperty
-    nullptr,                   // enumerate
-    nullptr,                   // newEnumerate
-    nullptr,                   // resolve
-    nullptr,                   // mayResolve
-    TimeZoneObject::finalize,  // finalize
-    nullptr,                   // call
-    nullptr,                   // construct
-    nullptr,                   // trace
+    .finalize = TimeZoneObject::finalize,
 };
 
 const JSClass TimeZoneObject::class_ = {

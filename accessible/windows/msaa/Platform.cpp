@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -63,6 +61,7 @@ static void UpdateSystemCaretFor(Accessible* aAccessible) {
 }
 
 void a11y::PlatformInit() {
+  Compatibility::Init();
   nsWinUtils::MaybeStartWindowEmulation();
   ia2AccessibleText::InitTextChangeData();
 }
@@ -169,6 +168,13 @@ void a11y::PlatformSelectionEvent(Accessible* aTarget, Accessible*,
                                   uint32_t aType) {
   MsaaAccessible::FireWinEvent(aTarget, aType);
   uiaRawElmProvider::RaiseUiaEventForGeckoEvent(aTarget, aType);
+}
+
+void a11y::PlatformAnnouncementEvent(Accessible* aTarget,
+                                     const nsAString& aAnnouncement,
+                                     uint16_t aPriority) {
+  uiaRawElmProvider::RaiseUiaNotificationEvent(aTarget, aAnnouncement,
+                                               aPriority);
 }
 
 static bool GetInstantiatorExecutable(const DWORD aPid,
@@ -306,6 +312,10 @@ bool a11y::GetInstantiator(nsIFile** aOutInstantiator) {
   }
 
   return NS_SUCCEEDED(gInstantiator->Clone(aOutInstantiator));
+}
+
+void a11y::GetHumanReadableInstantiatorStr(nsAString& aResult) {
+  a11y::Compatibility::GetHumanReadableConsumersStr(aResult);
 }
 
 uint64_t a11y::GetCacheDomainsForKnownClients(uint64_t aCacheDomains) {

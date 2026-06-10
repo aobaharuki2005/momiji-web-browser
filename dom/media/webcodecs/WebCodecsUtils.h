@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,7 +33,7 @@ class VideoDecoderConfigInternal;
 #define WEBCODECS_MARKER(codecType, desc, options, markerType, ...)    \
   do {                                                                 \
     if (profiler_is_collecting_markers()) {                            \
-      nsFmtCString marker(FMT_STRING("{}{}"), codecType, desc);        \
+      nsFmtCString marker("{}{}", codecType, desc);                    \
       PROFILER_MARKER(                                                 \
           ProfilerString8View::WrapNullTerminatedString(marker.get()), \
           MEDIA_RT, options, markerType, __VA_ARGS__);                 \

@@ -128,13 +128,13 @@ impl TryFrom<SerialId> for RawId {
 
 /// Identify an object by the pointer returned by `Arc::as_ptr`.
 ///
-/// This is used for tracing.
+/// This is used for tracing. See [IDs and tracing](crate::hub#ids-and-tracing).
 #[allow(dead_code)]
 #[cfg(feature = "serde")]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum PointerId<T: Marker> {
     // The only variant forces RON to not ignore "Id"
-    PointerId(usize, #[serde(skip)] PhantomData<T>),
+    PointerId(core::num::NonZeroUsize, #[serde(skip)] PhantomData<T>),
 }
 
 #[cfg(feature = "serde")]
@@ -177,7 +177,10 @@ impl<T: crate::storage::StorageItem> From<&alloc::sync::Arc<T>> for PointerId<T:
         // data, not to the `ArcInner`. The `ArcInner` stores the reference
         // counts before the data, so the machine code for this conversion has
         // to add an offset to the pointer.
-        PointerId::PointerId(alloc::sync::Arc::as_ptr(arc) as usize, PhantomData)
+        PointerId::PointerId(
+            core::num::NonZeroUsize::new(alloc::sync::Arc::as_ptr(arc) as usize).unwrap(),
+            PhantomData,
+        )
     }
 }
 

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,16 +11,15 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ReflowInput.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/dom/HTMLLegendElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsBlockFrame.h"
-#include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
-#include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
@@ -83,7 +80,8 @@ nsRect nsFieldSetFrame::VisualBorderRectRelativeToSelf() const {
 
 nsContainerFrame* nsFieldSetFrame::GetInner() const {
   for (nsIFrame* child : mFrames) {
-    if (child->Style()->GetPseudoType() == PseudoStyleType::fieldsetContent) {
+    if (child->Style()->GetPseudoType() ==
+        PseudoStyleType::MozFieldsetContent) {
       return static_cast<nsContainerFrame*>(child);
     }
   }
@@ -92,7 +90,8 @@ nsContainerFrame* nsFieldSetFrame::GetInner() const {
 
 nsIFrame* nsFieldSetFrame::GetLegend() const {
   for (nsIFrame* child : mFrames) {
-    if (child->Style()->GetPseudoType() != PseudoStyleType::fieldsetContent) {
+    if (child->Style()->GetPseudoType() !=
+        PseudoStyleType::MozFieldsetContent) {
       return child;
     }
   }
@@ -231,7 +230,6 @@ void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aLists);
-    DisplayPushedAbsoluteFrames(aBuilder, aLists);
   }
 
   nsDisplayListCollection contentDisplayItems(aBuilder);
@@ -250,6 +248,11 @@ void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
     BuildDisplayListForChild(aBuilder, legend, set);
   }
+
+  if (GetPrevInFlow() || GetNextInFlow()) {
+    DisplayAbsoluteFramesNotBuiltByPlaceholder(aBuilder, aLists);
+  }
+
   // Put the inner frame's display items on the master list. Note that this
   // moves its border/background display items to our BorderBackground() list,
   // which isn't really correct, but it's OK because the inner frame is

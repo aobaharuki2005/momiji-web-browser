@@ -1,4 +1,3 @@
-/* -*- Mode: rust; rust-indent-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,6 +23,8 @@ use xpcom::{AtomicRefcnt, RefCounted, RefPtr};
 
 extern crate uuid;
 use std::{fmt::Write as _, marker::PhantomData, ops, ptr, str};
+
+use core::ffi::c_void;
 
 use uuid::Uuid;
 
@@ -420,9 +421,15 @@ pub extern "C" fn mozurl_set_fragment(url: &mut MozURL, fragment: &nsACString) -
 }
 
 #[no_mangle]
-pub extern "C" fn mozurl_sizeof(url: &MozURL) -> usize {
+pub extern "C" fn mozurl_sizeof(
+    url: &MozURL,
+    size_of_op: unsafe extern "C" fn(ptr: *const c_void) -> usize,
+) -> usize {
     debug_assert_mut!(url);
-    size_of::<MozURL>() + url.as_str().len()
+    unsafe {
+        size_of_op(url as *const _ as *const c_void)
+            + size_of_op(url.as_str().as_ptr() as *const c_void)
+    }
 }
 
 #[no_mangle]

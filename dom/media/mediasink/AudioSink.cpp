@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -522,9 +520,14 @@ void AudioSink::NotifyAudioNeeded() {
       SINK_LOG("Sample time %" PRId64 " > frames parsed %" PRId64,
                sampleTime.value(), mFramesParsed);
 
-      missingFrames = std::min<int64_t>(
-          std::min<int64_t>(INT32_MAX, missingFrames.value()),
-          SampleToFrame(mProcessedSPSCQueue->AvailableWrite()));
+      // Convert available output frames to input frames to correctly bound the
+      // silence buffer size when input and output sample rates differ.
+      int64_t inputFramesAvail = static_cast<int64_t>(SampleToFrame(
+                                     mProcessedSPSCQueue->AvailableWrite())) *
+                                 data->mRate / mOutputRate;
+      missingFrames =
+          std::min<int64_t>(std::min<int64_t>(INT32_MAX, missingFrames.value()),
+                            inputFramesAvail);
       mFramesParsed += missingFrames.value();
 
       SINK_LOG("Gap in the audio input, push %" PRId64 " frames of silence",

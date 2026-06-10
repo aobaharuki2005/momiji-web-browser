@@ -152,7 +152,7 @@ add_task(async function testHTTPSSVC() {
   Assert.equal(
     answer[1].values[3].QueryInterface(Ci.nsISVCParamIPv6Hint).ipv6Hint[1]
       .address,
-    "fe80::794f:6d2c:3d5e:7836",
+    "2001:db8::1",
     "got correct answer"
   );
   Assert.equal(

@@ -3,6 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 task-defaults:
+    worker-type:
+        by-test-platform:
+            windows11.*-(32|64).*-asan/.*: win11-64-25h2-large
+            windows11.*aarch64.*/.*: win11-a64-25h2
+            windows11.*/.*: win11-64-25h2
+            default: default
     suite:
         category: xpcshell
         name: xpcshell
@@ -34,6 +40,7 @@ task-defaults:
                     - unittests/win_unittest.py
         requires-signed-builds:
             by-test-platform:
+                macosx.*-artifact/.*: false
                 macosx1500.*: true
                 windows.*-asan/opt: false    # No XPCShell on ASAN yet
                 windows.*-mingwclang/.*: false
@@ -47,7 +54,6 @@ xpcshell:
         - conditioned_profile
         - no-fission
         - msix
-        - geckoview-no-fission-no-ship
         - inc-origin-init
     instance-size:
         by-variant:
@@ -60,9 +66,9 @@ xpcshell:
         by-variant:
             conditioned_profile:
                 by-test-platform:
+                    .*-artifact.*: []
                     .*-asan.*: []
                     .*-ccov.*: []
-                    linux1804-64.*/opt: ['trunk']
                     linux2404-64.*/opt: ['trunk']
                     windows11-64.*/opt: ['trunk']
                     default: []
@@ -70,18 +76,12 @@ xpcshell:
                 by-test-platform:
                     android-em.*/debug-isolated-process: []
                     android.*: built-projects
-                    linux1804-64.*: ['mozilla-central']
                     linux2404-64.*: ['mozilla-central']
                     default: []
             msix:
                 by-test-platform:
                     windows11-64-24h2(-shippable)?/opt: built-projects
                     windows11-64-24h2/debug: built-projects
-                    default: []
-            geckoview-no-fission-no-ship:
-                by-test-platform:
-                    android-em.*/debug-isolated-process: []
-                    android-em.*: built-projects
                     default: []
             inc-origin-init: []
             default:
@@ -90,22 +90,19 @@ xpcshell:
                     .*-wayland.*: []
                     windows.*-asan/opt: []  # No XPCShell on ASAN yet
                     default: built-projects
-    chunks:
-        by-variant:
-            inc-origin-init: dynamic
-            default:
-                by-test-platform:
-                    .*-asan.*/opt: 4
-                    .*-ccov.*: 8
-                    .*-tsan(-qr)?/opt: 10
-                    android-em-14.*/debug: 16
-                    android-em-14.*/opt: 8
-                    android.*/debug: 10
-                    android.*/opt: 5
-                    macosx.*: 2
-                    linux1804-64.*/opt: 2
-                    linux2404-64.*/opt: 2
-                    default: 4
+    chunks: dynamic
+    default-chunks:
+        by-test-platform:
+            .*-asan.*/opt: 4
+            .*-ccov.*: 8
+            .*-tsan(-qr)?/opt: 10
+            android-em-14.*/debug: 16
+            android-em-14.*/opt: 8
+            android.*/debug: 10
+            android.*/opt: 5
+            macosx.*: 2
+            linux2404-64.*/opt: 2
+            default: 4
     timeoutfactor:
         by-test-platform:
             android-em-14.*: 2
@@ -118,8 +115,8 @@ xpcshell:
             macosx1470-64/debug: 6
             macosx1470-64.*/opt: 4
             windows.*/debug: 2
-            windows11-64-24h2-asan/opt: 2
-            windows11-64-24h2-ccov/opt: 3
+            windows11-64-(24h2|25h2)-asan/opt: 2
+            windows11-64-(24h2|25h2)-ccov/opt: 3
             default: 1
     max-run-time:
         by-variant:
@@ -147,12 +144,6 @@ xpcshell:
     fetches:
         toolchain:
             by-test-platform:
-                linux1804.*:
-                    - linux64-node
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                    - linux-python-dbusmock
-                    - linux64-1804-dbus-python
                 linux2204.*:
                     - linux64-node
                     - linux64-minidump-stackwalk

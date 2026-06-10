@@ -127,7 +127,7 @@ export var TabCrashHandler = {
               [];
             for (let browserItem of browsers) {
               let browser = subframeCrashItem.get(browserItem);
-              if (browser.isConnected && !browser.ownerGlobal.closed) {
+              if (browser.isConnected && !browser.documentGlobal.closed) {
                 this.showSubFrameNotification(browser, childID, dumpID);
               }
             }
@@ -395,7 +395,7 @@ export var TabCrashHandler = {
       }
     };
 
-    gBrowser.ownerGlobal.MozXULElement.insertFTLIfNeeded(
+    gBrowser.documentGlobal.MozXULElement.insertFTLIfNeeded(
       "browser/contentCrash.ftl"
     );
 
@@ -666,7 +666,7 @@ export var TabCrashHandler = {
   onAboutTabCrashedLoad(browser) {
     this._crashedTabCount++;
 
-    let window = browser.ownerGlobal;
+    let window = browser.documentGlobal;
 
     // Reset the zoom for the tabcrashed page.
     window.ZoomManager.setZoomForBrowser(browser, 1);
@@ -792,15 +792,16 @@ export var UnsubmittedCrashHandler = {
       maxLogLevel: this.prefs.getStringPref("loglevel", "Error"),
     });
 
+    lazy.RemoteSettingsCrashPull.start(
+      this.showRequestedSubmissionsNotification.bind(this)
+    );
+
     // UnsubmittedCrashHandler can be initialized but still be disabled.
     // This is intentional, as this makes simulating UnsubmittedCrashHandler's
     // reactions to browser startup and shutdown easier in test automation.
     //
     // UnsubmittedCrashHandler, when initialized but not enabled, is inert.
     if (this.enabled) {
-      lazy.RemoteSettingsCrashPull.start(
-        this.showRequestedSubmissionsNotification.bind(this)
-      );
       if (this.prefs.prefHasUserValue("suppressUntilDate")) {
         if (this.prefs.getCharPref("suppressUntilDate") > this.dateString()) {
           // We'll be suppressing any notifications until after suppressedDate,
@@ -834,11 +835,11 @@ export var UnsubmittedCrashHandler = {
       this._checkTimeout = null;
     }
 
+    lazy.RemoteSettingsCrashPull.stop();
+
     if (!this.enabled) {
       return;
     }
-
-    lazy.RemoteSettingsCrashPull.stop();
 
     if (this.suppressed) {
       this.suppressed = false;
@@ -1213,7 +1214,7 @@ export var UnsubmittedCrashHandler = {
         label: {
           "l10n-id": requestedByDevs
             ? "requested-crash-reports-message-new"
-            : "pending-crash-reports-message",
+            : "pending-crash-reports-message-new",
           "l10n-args": { reportCount: reportIDs.length },
         },
         image: TABCRASHED_ICON_URI,

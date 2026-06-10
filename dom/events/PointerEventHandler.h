@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -123,8 +121,8 @@ struct PointerInfo final {
     // FIXME: DragEvent may not be initialized with the proper state.  So,
     // ignore the details of drag events for now.
     if (aMouseOrPointerEvent.mClass != eDragEventClass) {
-      mLastTiltX = aMouseOrPointerEvent.tiltX;
-      mLastTiltY = aMouseOrPointerEvent.tiltY;
+      mLastTiltX = aMouseOrPointerEvent.ComputeTiltX();
+      mLastTiltY = aMouseOrPointerEvent.ComputeTiltY();
       mLastButtons = aMouseOrPointerEvent.mButtons;
       mLastPressure = aMouseOrPointerEvent.mPressure;
     }
@@ -378,6 +376,21 @@ class PointerEventHandler final {
   [[nodiscard]] static Maybe<uint32_t> GetLastPointerId() {
     return sLastPointerId;
   }
+
+  /**
+   * If the static last-mouse state was set by a PresShell that has since been
+   * torn down (typically due to a same-tab navigation), rebind ownership to
+   * aRootPresShell and return the recorded pointerId. The caller can then
+   * use this to seed its own per-PresShell tracking so a synthetic mouse
+   * move can be dispatched against the cached position (bug 2038491).
+   *
+   * Returns Nothing() if there is no usable state, or if another live
+   * PresShell still owns the state (e.g. a popup): in that case the
+   * caller should leave the state alone.
+   */
+  [[nodiscard]] static Maybe<uint32_t> TryClaimOrphanedLastMouseInfo(
+      PresShell& aRootPresShell);
+
   /**
    * Retrun true if aPointerId is the last pointerId.
    */
@@ -397,7 +410,8 @@ class PointerEventHandler final {
   static void CheckPointerCaptureState(WidgetPointerEvent* aEvent);
 
   // Implicitly get and release capture of current pointer for touch.
-  static void ImplicitlyCapturePointer(nsIFrame* aFrame, WidgetEvent* aEvent);
+  static void ImplicitlyCapturePointer(nsIFrame* aFrame,
+                                       const WidgetEvent& aEvent);
   MOZ_CAN_RUN_SCRIPT
   static void ImplicitlyReleasePointerCapture(WidgetEvent* aEvent);
   MOZ_CAN_RUN_SCRIPT static void MaybeImplicitlyReleasePointerCapture(
@@ -479,7 +493,8 @@ class PointerEventHandler final {
    * content preventDefault on pointerdown
    */
   static void PostHandlePointerEventsPreventDefault(
-      WidgetPointerEvent* aPointerEvent, WidgetGUIEvent* aMouseOrTouchEvent);
+      PresShell* aPresShell, WidgetPointerEvent* aPointerEvent,
+      WidgetGUIEvent* aMouseOrTouchEvent);
 
   /**
    * Dispatch a pointer event for aMouseOrTouchEvent to aEventTargetContent.
@@ -659,6 +674,17 @@ class PointerEventHandler final {
 
   // Stores the last mouse info setter.
   static StaticRefPtr<nsIWeakReference> sLastMousePresShell;
+
+  // Weak reference to the widget that received the event recorded in
+  // sLastMouseInfo. Used to gate the orphaned-state claim in
+  // TryClaimOrphanedLastMouseInfo to a PresShell on the same top-level window
+  // as the one that originally recorded the state.
+  static StaticRefPtr<nsIWeakReference> sLastMouseWidget;
+
+  // pointerId of the last real mouse event that updated sLastMouseInfo.
+  // Distinct from sLastPointerId, which tracks the last pointerId of any
+  // kind (including touch).
+  static Maybe<uint32_t> sLastMousePointerId;
 
   // Stores the last pointerId which has not left from all documents managed in
   // this process.

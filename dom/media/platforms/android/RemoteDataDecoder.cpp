@@ -428,10 +428,9 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
       return;
     }
 
-    InputInfo inputInfo;
-    ok = mInputInfos.Find(presentationTimeUs, inputInfo);
+    Maybe<InputInfo> inputInfo = mInputInfos.Take(presentationTimeUs);
     bool isEOS = !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-    if (!ok && !isEOS) {
+    if (!inputInfo && !isEOS) {
       LOG("No corresponding input");
       // Ignore output with no corresponding input.
       return;
@@ -439,7 +438,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
 
     LOG("flags=%" PRIx32 " size=%" PRIi32 " presentationTimeUs=%" PRIi64, flags,
         size, presentationTimeUs);
-    if (ok && (size > 0 || presentationTimeUs >= 0)) {
+    if (inputInfo && (size > 0 || presentationTimeUs >= 0)) {
       bool forceBT709ColorSpace = false;
       // On certain devices SMPTE 432 color primaries are rendered incorrectly,
       // so we force BT709 to be used instead.
@@ -468,16 +467,16 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
       }
 
       RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
-          mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
+          mSurfaceHandle, inputInfo->mImageSize, false /* NOT continuous */,
           gl::OriginPos::BottomLeft, mConfig.HasAlpha(), forceBT709ColorSpace,
           /* aTransformOverride */ Nothing());
       img->AsSurfaceTextureImage()->RegisterSetCurrentCallback(
           std::move(releaseSample));
 
       RefPtr<VideoData> v = VideoData::CreateFromImage(
-          inputInfo.mDisplaySize, offset,
+          inputInfo->mDisplaySize, offset,
           TimeUnit::FromMicroseconds(presentationTimeUs),
-          TimeUnit::FromMicroseconds(inputInfo.mDurationUs), img.forget(),
+          TimeUnit::FromMicroseconds(inputInfo->mDurationUs), img.forget(),
           !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME),
           TimeUnit::FromMicroseconds(presentationTimeUs));
 
@@ -839,8 +838,13 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
         LOG("OOM while allocating temporary output buffer");
         return;
       }
-      jni::ByteBuffer::LocalRef dest = jni::ByteBuffer::New(audio.get(), size);
-      aBuffer->WriteToByteBuffer(dest, offset, size);
+      nsresult rv = aBuffer->NativeCopy(reinterpret_cast<jlong>(audio.get()),
+                                        offset, size);
+      if (NS_FAILED(rv)) {
+        LOG("Fail to copy audio buffer");
+        Error(MediaResult(rv, __func__));
+        return;
+      }
       AlignedFloatBuffer converted = audio.Inflate();
 
       TimeUnit pts = TimeUnit::FromMicroseconds(presentationTimeUs);

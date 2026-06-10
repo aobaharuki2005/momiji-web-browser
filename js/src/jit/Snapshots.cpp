@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -51,7 +49,7 @@ using namespace js::jit;
 //
 // Snapshot header:
 //
-//   [vwu] bits ((n+1)-31]: recover instruction offset
+//   [vwu] bits ((n+1),63]: recover instruction offset
 //         bits [0,n): bailout kind (n = SNAPSHOT_BAILOUTKIND_BITS)
 //
 // Snapshot body, repeated "frame count" times, from oldest frame to newest
@@ -154,6 +152,9 @@ using namespace js::jit;
 //           register/stack-offset correspond to the low 32-bits, and the
 //           second correspond to the high 32-bits.
 //
+//         INT64_INT32_STACK  [STACK_OFFSET]: (64-bit platform)
+//           Unpacked Int64 value stored in int32_t. Payload is stored at an
+//           offset on the stack.
 
 const RValueAllocation::Layout& RValueAllocation::layoutFromMode(Mode mode) {
   switch (mode) {
@@ -306,6 +307,12 @@ const RValueAllocation::Layout& RValueAllocation::layoutFromMode(Mode mode) {
     case INT64_STACK: {
       static const RValueAllocation::Layout layout = {
           PAYLOAD_STACK_OFFSET, PAYLOAD_NONE, "unpacked int64"};
+      return layout;
+    }
+
+    case INT64_INT32_STACK: {
+      static const RValueAllocation::Layout layout = {
+          PAYLOAD_STACK_OFFSET, PAYLOAD_NONE, "unpacked int64 (int32)"};
       return layout;
     }
 #endif
@@ -497,12 +504,12 @@ SnapshotReader::SnapshotReader(const uint8_t* snapshots, uint32_t offset,
 }
 
 #define COMPUTE_SHIFT_AFTER_(name) (name##_BITS + name##_SHIFT)
-#define COMPUTE_MASK_(name) ((uint32_t(1 << name##_BITS) - 1) << name##_SHIFT)
+#define COMPUTE_MASK_(name) (((uint64_t(1) << name##_BITS) - 1) << name##_SHIFT)
 
 // Details of snapshot header packing.
 static const uint32_t SNAPSHOT_BAILOUTKIND_SHIFT = 0;
 static const uint32_t SNAPSHOT_BAILOUTKIND_BITS = 6;
-static const uint32_t SNAPSHOT_BAILOUTKIND_MASK =
+static const uint64_t SNAPSHOT_BAILOUTKIND_MASK =
     COMPUTE_MASK_(SNAPSHOT_BAILOUTKIND);
 
 static_assert((1 << SNAPSHOT_BAILOUTKIND_BITS) - 1 >=
@@ -511,14 +518,14 @@ static_assert((1 << SNAPSHOT_BAILOUTKIND_BITS) - 1 >=
 
 static const uint32_t SNAPSHOT_ROFFSET_SHIFT =
     COMPUTE_SHIFT_AFTER_(SNAPSHOT_BAILOUTKIND);
-static const uint32_t SNAPSHOT_ROFFSET_BITS = 32 - SNAPSHOT_ROFFSET_SHIFT;
-static const uint32_t SNAPSHOT_ROFFSET_MASK = COMPUTE_MASK_(SNAPSHOT_ROFFSET);
+static const uint32_t SNAPSHOT_ROFFSET_BITS = 64 - SNAPSHOT_ROFFSET_SHIFT;
+static const uint64_t SNAPSHOT_ROFFSET_MASK = COMPUTE_MASK_(SNAPSHOT_ROFFSET);
 
 #undef COMPUTE_MASK_
 #undef COMPUTE_SHIFT_AFTER_
 
 void SnapshotReader::readSnapshotHeader() {
-  uint32_t bits = reader_.readUnsigned();
+  uint64_t bits = reader_.readUnsigned64();
 
   bailoutKind_ = BailoutKind((bits & SNAPSHOT_BAILOUTKIND_MASK) >>
                              SNAPSHOT_BAILOUTKIND_SHIFT);
@@ -544,14 +551,14 @@ void SnapshotReader::readTrackSnapshot() {
 void SnapshotReader::spewBailingFrom() const {
 #  ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_IonBailouts)) {
-    JitSpewHeader(JitSpew_IonBailouts);
-    Fprinter& out = JitSpewPrinter();
-    out.printf(" bailing from bytecode: %s, MIR: ", CodeName(JSOp(pcOpcode_)));
-    MDefinition::PrintOpcodeName(out, MDefinition::Opcode(mirOpcode_));
-    out.printf(" [%u], LIR: ", mirId_);
-    LInstruction::printName(out, LInstruction::Opcode(lirOpcode_));
-    out.printf(" [%u]", lirId_);
-    out.printf("\n");
+    AutoJitSpewMessage msg(
+        JitSpew_IonBailouts,
+        " bailing from bytecode: %s, MIR: ", CodeName(JSOp(pcOpcode_)));
+    MDefinition::PrintOpcodeName(msg.printer(),
+                                 MDefinition::Opcode(mirOpcode_));
+    msg.append(" [%u], LIR: ", mirId_);
+    LInstruction::printName(msg.printer(), LInstruction::Opcode(lirOpcode_));
+    msg.append(" [%u]", lirId_);
   }
 #  endif
 }
@@ -626,15 +633,15 @@ SnapshotOffset SnapshotWriter::startSnapshot(RecoverOffset recoverOffset,
   allocWritten_ = 0;
 
   JitSpew(JitSpew_IonSnapshots,
-          "starting snapshot with recover offset %u, bailout kind %u",
+          "starting snapshot with recover offset %" PRIu64 ", bailout kind %u",
           recoverOffset, uint32_t(kind));
 
-  MOZ_ASSERT(uint32_t(kind) < (1 << SNAPSHOT_BAILOUTKIND_BITS));
-  MOZ_ASSERT(recoverOffset < (1 << SNAPSHOT_ROFFSET_BITS));
-  uint32_t bits = (uint32_t(kind) << SNAPSHOT_BAILOUTKIND_SHIFT) |
+  MOZ_ASSERT(uint64_t(kind) < (uint64_t(1) << SNAPSHOT_BAILOUTKIND_BITS));
+  MOZ_ASSERT(recoverOffset < (RecoverOffset(1) << SNAPSHOT_ROFFSET_BITS));
+  uint64_t bits = (uint64_t(kind) << SNAPSHOT_BAILOUTKIND_SHIFT) |
                   (recoverOffset << SNAPSHOT_ROFFSET_SHIFT);
 
-  writer_.writeUnsigned(bits);
+  writer_.writeUnsigned64(bits);
   return lastStart_;
 }
 
@@ -666,11 +673,9 @@ bool SnapshotWriter::add(const RValueAllocation& alloc) {
 
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_IonSnapshots)) {
-    JitSpewHeader(JitSpew_IonSnapshots);
-    Fprinter& out = JitSpewPrinter();
-    out.printf("    slot %u (%u): ", allocWritten_, offset);
-    alloc.dump(out);
-    out.printf("\n");
+    AutoJitSpewMessage msg(JitSpew_IonSnapshots,
+                           "    slot %u (%u): ", allocWritten_, offset);
+    alloc.dump(msg.printer());
   }
 #endif
 

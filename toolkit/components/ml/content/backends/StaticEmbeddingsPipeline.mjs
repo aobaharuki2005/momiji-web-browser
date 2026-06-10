@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-check
-
 /**
  * @import { PipelineOptions } from "chrome://global/content/ml/EngineProcess.sys.mjs"
  * @import { BackendError } from "./Pipeline.mjs"
  * @import { MLEngineWorker } from "../MLEngine.worker.mjs"
+ * @import { TypedArray } from "../../ml.d.ts"
  * @import { EmbeddingDType, EmbeddingRequest, EmbeddingResponse, PreTrainedTokenizer } from "./StaticEmbeddingsPipeline.d.ts"
  */
 
@@ -93,6 +92,11 @@ export class StaticEmbeddingsPipeline {
   #getFloat;
 
   /**
+   * @type {TypedArray}
+   */
+  embeddings;
+
+  /**
    * @param {PreTrainedTokenizer} tokenizer
    * @param {ArrayBuffer} npyData
    * @param {EmbeddingDType} dtype
@@ -120,6 +124,8 @@ export class StaticEmbeddingsPipeline {
       );
     }
 
+    this.embeddings = embeddings;
+
     switch (dtype) {
       case lazy.QuantizationLevel.FP32:
       case lazy.QuantizationLevel.FP16:
@@ -135,9 +141,6 @@ export class StaticEmbeddingsPipeline {
       default:
         throw new Error("Unsupported dtype: " + dtype);
     }
-
-    /** @type {ArrayBufferLike} */
-    this.embeddings = embeddings;
   }
 
   /**
@@ -158,6 +161,25 @@ export class StaticEmbeddingsPipeline {
       staticEmbeddingsOptions,
     } = pipelineOptions;
 
+    if (!staticEmbeddingsOptions) {
+      throw new Error("No staticEmbeddingsOptions were provided.");
+    }
+    if (!modelId) {
+      throw new Error("No modelId was provided.");
+    }
+    if (!modelRevision) {
+      throw new Error("No modelRevision was provided.");
+    }
+    if (!modelHubUrlTemplate) {
+      throw new Error("No modelHubUrlTemplate was provided.");
+    }
+    if (!modelHubRootUrl) {
+      throw new Error("No modelHubRootUrl was provided.");
+    }
+    if (!backend) {
+      throw new Error("No backend was provided.");
+    }
+
     // These are the options that are specific to this engine.
     const { subfolder, dtype, dimensions, compression, mockedValues } =
       staticEmbeddingsOptions;
@@ -173,7 +195,7 @@ export class StaticEmbeddingsPipeline {
      * @param {string} fileName
      * @returns {Promise<Response | MockedResponse>}
      */
-    async function getResponse(fileName) {
+    const getResponse = async fileName => {
       const url = lazy.createFileUrl({
         file: fileName,
         model: modelId,
@@ -195,15 +217,22 @@ export class StaticEmbeddingsPipeline {
       }
       const modelFile = await worker.getModelFile({ url });
       const filePath = modelFile.ok[2];
+      const opfsStart = ChromeUtils.now();
       const fileHandle = await lazy.OPFS.getFileHandle(filePath);
       const file = await fileHandle.getFile();
+      ChromeUtils.addProfilerMarker(
+        "MLEngine:OPFS",
+        { startTime: opfsStart },
+        `Retrieved model file from OPFS`
+      );
+
       let stream = file.stream();
       if (compression) {
         const decompressionStream = new DecompressionStream("zstd");
         stream = stream.pipeThrough(decompressionStream);
       }
       return new Response(stream);
-    }
+    };
 
     const [tokenizerJsonResponse, npyDataResponse] = await Promise.all(
       files.map(getResponse)
@@ -334,8 +363,14 @@ export class StaticEmbeddingsPipeline {
         // is lower.
         const embedding = new Float32Array(this.#dimensions);
 
+        let tokenizeStart = ChromeUtils.now();
         /** @type {number[]} */
         const tokenIds = this.#tokenizer.encode(text);
+        ChromeUtils.addProfilerMarker(
+          "MLEngine:StaticEmbeddings",
+          { startTime: tokenizeStart },
+          `Tokenized text: ${tokenIds.length} tokens`
+        );
         tokenCount += tokenIds.length;
 
         // Sum up the embeddings.
@@ -375,15 +410,15 @@ export class StaticEmbeddingsPipeline {
     };
 
     ChromeUtils.addProfilerMarker(
-      "StaticEmbeddingsPipeline",
-      beforeResponse,
-      `Processed ${sequenceCount} sequences with ${tokenCount} tokens.`
+      "MLEngine:StaticEmbeddings",
+      { startTime: beforeResponse },
+      `Processing ${sequenceCount} sequences with ${tokenCount} tokens`
     );
 
     if (this.#initializeStart) {
       ChromeUtils.addProfilerMarker(
-        "StaticEmbeddingsPipeline",
-        this.#initializeStart,
+        "MLEngine:StaticEmbeddings",
+        { startTime: this.#initializeStart },
         "Time to first response"
       );
       this.#initializeStart = null;

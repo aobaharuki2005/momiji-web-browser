@@ -447,18 +447,7 @@ export class NetworkResponseListener {
       this.#httpActivity,
       this.#decodedCertificateCache
     );
-    let isRacing = false;
-    try {
-      const channel = this.#httpActivity.channel;
-      if (channel instanceof Ci.nsICacheInfoChannel) {
-        isRacing = channel.isRacing();
-      }
-    } catch (err) {
-      // See the following bug for more details:
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1582589
-    }
-
-    this.#httpActivity.owner.addSecurityInfo(info, isRacing);
+    this.#httpActivity.owner.addSecurityInfo(info);
   }
 
   /**
@@ -588,7 +577,19 @@ export class NetworkResponseListener {
     }
 
     response.bodySize = this.#bodySize;
-    response.size = this.#receivedBodySize;
+
+    try {
+      response.size = lazy.NetworkUtils.isRedirect(
+        this.#httpActivity.channel.responseStatus
+      )
+        ? 0
+        : this.#receivedBodySize;
+    } catch (e) {
+      // this.#httpActivity.channel.responseStatus is likely to throw
+      // NS_ERROR_NOT_AVAILABLE if the response has not been received.
+      response.size = 0;
+    }
+
     response.headersSize = this.#httpActivity.headersSize;
     response.transferredSize = this.#bodySize + this.#httpActivity.headersSize;
 

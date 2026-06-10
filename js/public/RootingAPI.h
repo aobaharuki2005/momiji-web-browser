@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -161,7 +159,7 @@ JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(JS_DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
 // be used with Heap<>.
 
 namespace gc {
-struct Cell;
+class Cell;
 } /* namespace gc */
 
 // Important: Return a reference so passing a Rooted<T>, etc. to
@@ -1305,9 +1303,6 @@ class RootedTuple {
  public:
   template <typename RootingContext>
   explicit RootedTuple(const RootingContext& cx) : fields(cx) {}
-  template <typename RootingContext>
-  explicit RootedTuple(const RootingContext& cx, const Fs&... fs)
-      : fields(cx, fs...) {}
 };
 
 // Reference to a field in a RootedTuple. This is a drop-in replacement for an
@@ -1335,8 +1330,10 @@ class RootedTuple {
 template <typename T, size_t N /* = SIZE_MAX */>
 class MOZ_RAII RootedField : public js::RootedOperations<T, RootedField<T, N>> {
   T* ptr;
-  friend class Handle<T>;
-  friend class MutableHandle<T>;
+  template <typename U>
+  friend class Handle;
+  template <typename U>
+  friend class MutableHandle;
 
 #ifdef DEBUG
   bool* inUseFlag = nullptr;
@@ -1355,6 +1352,7 @@ class MOZ_RAII RootedField : public js::RootedOperations<T, RootedField<T, N>> {
       static_assert(std::is_same_v<T, std::tuple_element_t<N, Tuple>>);
       ptr = &std::get<N>(rootedTuple.fields.get());
     }
+    *ptr = SafelyInitialized<T>::create();
 #ifdef DEBUG
     size_t index = N;
     if constexpr (N == SIZE_MAX) {
@@ -1595,7 +1593,7 @@ class PersistentRooted : public detail::RootedTraits<T>::PersistentBase,
  public:
   using ElementType = T;
 
-  PersistentRooted() : ptr(SafelyInitialized<T>::create()) {}
+  constexpr PersistentRooted() : ptr(SafelyInitialized<T>::create()) {}
 
   template <
       typename RootHolder,

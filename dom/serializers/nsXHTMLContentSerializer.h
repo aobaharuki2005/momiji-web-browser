@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,8 +8,8 @@
  * string that could be parsed into more or less the original DOM.
  */
 
-#ifndef nsXHTMLContentSerializer_h__
-#define nsXHTMLContentSerializer_h__
+#ifndef nsXHTMLContentSerializer_h_
+#define nsXHTMLContentSerializer_h_
 
 #include "nsString.h"
 #include "nsTArray.h"

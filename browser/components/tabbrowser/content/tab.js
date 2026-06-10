@@ -35,9 +35,6 @@
                 pack="center"
                 flex="1">
             <label class="tab-text tab-label" role="presentation"/>
-            <hbox class="tab-secondary-label">
-              <label class="tab-icon-sound-label tab-icon-sound-pip-label" data-l10n-id="browser-tab-audio-pip" role="presentation"/>
-            </hbox>
           </vbox>
           <image class="tab-note-icon" role="presentation"/>
           <image class="tab-close-button close-icon" role="button" data-l10n-id="tabbrowser-close-tabs-button" data-l10n-args='{"tabCount": 1}' keyNav="false"/>
@@ -63,6 +60,7 @@
 
       this._hover = false;
       this._selectedOnFirstMouseDown = false;
+      this._noteIconHover = false;
 
       /**
        * Describes how the tab ended up in this mute state. May be any of:
@@ -102,8 +100,6 @@
           "pinned,selected=visuallyselected,labeldirection",
         ".tab-label":
           "text=label,accesskey,fadein,pinned,selected=visuallyselected,attention",
-        ".tab-label-container .tab-secondary-label":
-          "pinned,blocked,selected=visuallyselected,pictureinpicture",
         ".tab-close-button": "fadein,pinned,selected=visuallyselected",
       };
     }
@@ -324,7 +320,7 @@
      */
     get lastSeenActive() {
       const isForegroundWindow =
-        this.ownerGlobal ==
+        this.documentGlobal ==
         BrowserWindowTracker.getTopWindow({ allowPopups: true });
       // the timestamp for the selected tab in the active window is always now
       if (isForegroundWindow && this.selected) {
@@ -381,6 +377,14 @@
 
     get closeButton() {
       return this.querySelector(".tab-close-button");
+    }
+
+    get noteIcon() {
+      return this.querySelector(".tab-note-icon");
+    }
+
+    get noteIconOverlay() {
+      return this.querySelector(".tab-note-icon-overlay");
     }
 
     get group() {
@@ -444,6 +448,28 @@
         : this;
       gBrowser.warmupTab(tabToWarm);
 
+      if (this.hasTabNote) {
+        const noteIcon = this.noteIcon;
+        const noteIconOverlay = this.noteIconOverlay;
+        const isOverNoteIcon =
+          (noteIcon && noteIcon.contains(event.target)) ||
+          (noteIconOverlay && noteIconOverlay.contains(event.target));
+
+        if (isOverNoteIcon && !this._noteIconHover) {
+          this._noteIconHover = true;
+          this.dispatchEvent(
+            new CustomEvent("TabNoteIconHoverStart", {
+              bubbles: true,
+              detail: {
+                noteIconElement: noteIcon?.contains(event.target)
+                  ? noteIcon
+                  : noteIconOverlay,
+              },
+            })
+          );
+        }
+      }
+
       // If the previous target wasn't part of this tab then this is a mouseenter event.
       if (!this.contains(event.relatedTarget)) {
         this._mouseenter();
@@ -451,6 +477,24 @@
     }
 
     on_mouseout(event) {
+      if (this._noteIconHover) {
+        const noteIcon = this.noteIcon;
+        const noteIconOverlay = this.noteIconOverlay;
+        const stillOverNoteIcon =
+          (noteIcon && noteIcon.contains(event.relatedTarget)) ||
+          (noteIconOverlay && noteIconOverlay.contains(event.relatedTarget));
+
+        if (!stillOverNoteIcon) {
+          this._noteIconHover = false;
+          this.dispatchEvent(
+            new CustomEvent("TabNoteIconHoverEnd", {
+              bubbles: true,
+              detail: { returningToTab: this.contains(event.relatedTarget) },
+            })
+          );
+        }
+      }
+
       // If the new target is not part of this tab then this is a mouseleave event.
       if (!this.contains(event.relatedTarget)) {
         this._mouseleave();
@@ -521,6 +565,11 @@
             gBrowser.addToMultiSelectedTabs(this);
             gBrowser.lastMultiSelectedTab = this;
           }
+        } else if (
+          event.altKey &&
+          Services.prefs.getBoolPref("browser.tabs.splitView.enabled", false)
+        ) {
+          eventMaySelectTab = false;
         } else if (!this.selected && this.multiselected) {
           gBrowser.lockClearMultiSelectionOnce();
         }
@@ -545,6 +594,27 @@
 
     on_click(event) {
       if (event.button != 0) {
+        return;
+      }
+
+      if (event.altKey) {
+        if (
+          !event.target.classList.contains("tab-close-button") &&
+          !event.target.classList.contains("tab-icon-overlay") &&
+          !event.target.classList.contains("tab-audio-button") &&
+          !this.selected &&
+          !gBrowser.selectedTab.hidden &&
+          Services.prefs.getBoolPref("browser.tabs.splitView.enabled", false) &&
+          !this.splitview &&
+          !gBrowser.selectedTab.splitview &&
+          !this.pinned &&
+          !gBrowser.selectedTab.pinned
+        ) {
+          gBrowser.addTabSplitView([gBrowser.selectedTab, this], {
+            insertBefore: gBrowser.selectedTab,
+            trigger: "alt_click",
+          });
+        }
         return;
       }
 

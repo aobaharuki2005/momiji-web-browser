@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -211,6 +209,7 @@ void ChannelWrapper::ClearCachedAttributes() {
   ChannelWrapper_Binding::ClearCachedStatusLineValue(this);
   ChannelWrapper_Binding::ClearCachedUrlClassificationValue(this);
   if (!mFiredErrorEvent) {
+    mActivityError.Truncate();
     ChannelWrapper_Binding::ClearCachedErrorStringValue(this);
   }
 
@@ -458,7 +457,7 @@ already_AddRefed<nsILoadContext> ChannelWrapper::GetLoadContext() const {
     // NS_QueryNotificationCallbacks to get LoadContext of the channel.
     RefPtr<BrowsingContext> bc;
     nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
-    loadInfo->GetWorkerAssociatedBrowsingContext(getter_AddRefs(bc));
+    loadInfo->GetAssociatedBrowsingContext(getter_AddRefs(bc));
     if (bc) {
       ctxt = bc.forget();
       return ctxt.forget();
@@ -656,7 +655,9 @@ bool ChannelWrapper::Matches(
 
     // The third parameter (aCheckRestricted) is false because we already check
     // restricted URLs below as part of CanModify().
-    if (!aExtension->CanAccessURI(urlInfo, false, false, true)) {
+    // The fourth parameter (aAllowFilePermission, default false) does not
+    // matter because file:-channels are never wrapped by ChannelWrapper.
+    if (!aExtension->CanAccessURI(urlInfo, false, false)) {
       return false;
     }
 
@@ -669,9 +670,10 @@ bool ChannelWrapper::Matches(
       }
 
       auto origin = DocumentURLInfo();
-      // Extensions with the file:-permission may observe requests from file:
-      // origins, because such documents can already be modified by content
-      // scripts anyway.
+      // The fourth parameter (aAllowFilePermission) is true instead of gated
+      // on aExtension->FileSchemeAllowed(), because we want extensions to have
+      // the ability to block http(s) requests from file origins (bug 1621935),
+      // without the user being required to grant access to all local files.
       if (origin && !aExtension->CanAccessURI(*origin, false, false, true)) {
         return false;
       }
@@ -685,7 +687,7 @@ bool ChannelWrapper::Matches(
 }
 
 int64_t NormalizeFrameID(nsILoadInfo* aLoadInfo, uint64_t bcID) {
-  RefPtr<BrowsingContext> bc = aLoadInfo->GetWorkerAssociatedBrowsingContext();
+  RefPtr<BrowsingContext> bc = aLoadInfo->GetAssociatedBrowsingContext();
   if (!bc) {
     bc = aLoadInfo->GetBrowsingContext();
   }
@@ -699,7 +701,7 @@ int64_t NormalizeFrameID(nsILoadInfo* aLoadInfo, uint64_t bcID) {
 uint64_t ChannelWrapper::BrowsingContextId(nsILoadInfo* aLoadInfo) const {
   auto frameID = aLoadInfo->GetFrameBrowsingContextID();
   if (!frameID) {
-    frameID = aLoadInfo->GetWorkerAssociatedBrowsingContextID();
+    frameID = aLoadInfo->GetAssociatedBrowsingContextID();
   }
   if (!frameID) {
     frameID = aLoadInfo->GetBrowsingContextID();
@@ -716,7 +718,7 @@ int64_t ChannelWrapper::FrameId() const {
 
 int64_t ChannelWrapper::ParentFrameId() const {
   if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
-    RefPtr<BrowsingContext> bc = loadInfo->GetWorkerAssociatedBrowsingContext();
+    RefPtr<BrowsingContext> bc = loadInfo->GetAssociatedBrowsingContext();
     if (!bc) {
       bc = loadInfo->GetBrowsingContext();
     }
@@ -825,7 +827,9 @@ already_AddRefed<nsITraceableChannel> ChannelWrapper::GetTraceableChannel(
     // the duration of the request. We need to revalidate FinalURLInfo() in
     // case it changed, e.g. due to a redirect or permission change.
     if (!HaveChannel() ||
-        !aAddon.CanAccessURI(FinalURLInfo(), false, true, true)) {
+        // The fourth parameter (aAllowFilePermission, default false) does not
+        // matter because file:-channels are never wrapped by ChannelWrapper.
+        !aAddon.CanAccessURI(FinalURLInfo())) {
       return nullptr;
     }
 
@@ -893,6 +897,7 @@ MozContentPolicyType GetContentPolicyType(ExtContentPolicyType aType) {
       return MozContentPolicyType::Speculative;
     case ExtContentPolicy::TYPE_JSON:
       return MozContentPolicyType::Json;
+    case ExtContentPolicy::TYPE_TEXT:
     case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
     case ExtContentPolicy::TYPE_INVALID:
     case ExtContentPolicy::TYPE_OTHER:
@@ -1113,6 +1118,8 @@ void ChannelWrapper::GetErrorString(nsString& aRetVal) const {
       nsAutoCString name;
       GetErrorName(status, name);
       AppendUTF8toUTF16(name, aRetVal);
+    } else if (!mActivityError.IsEmpty()) {
+      aRetVal = mActivityError;
     } else {
       aRetVal.SetIsVoid(true);
     }
@@ -1121,17 +1128,55 @@ void ChannelWrapper::GetErrorString(nsString& aRetVal) const {
   }
 }
 
+void ChannelWrapper::FireErrorEvent() {
+  MOZ_ASSERT(!mFiredErrorEvent);
+  mFiredErrorEvent = true;
+  ChannelWrapper_Binding::ClearCachedErrorStringValue(this);
+  FireEvent(u"error"_ns);
+}
+
 void ChannelWrapper::ErrorCheck() {
-  if (!mFiredErrorEvent) {
-    nsAutoString error;
-    GetErrorString(error);
-    if (error.Length()) {
-      mChannelEntry = nullptr;
-      mFiredErrorEvent = true;
-      ChannelWrapper_Binding::ClearCachedErrorStringValue(this);
-      FireEvent(u"error"_ns);
-    }
+  if (mFiredErrorEvent) {
+    return;
   }
+  nsAutoString error;
+  GetErrorString(error);
+  if (error.Length()) {
+    mChannelEntry = nullptr;
+    FireErrorEvent();
+  }
+}
+
+void ChannelWrapper::ActivityErrorFallbackCheck() {
+  if (mFiredErrorEvent) {
+    return;
+  }
+
+  // Only needed when onErrorOccurred listeners are registered, which add an
+  // "error" DOM event listener on this wrapper.
+  if (!HasListenersFor(nsGkAtoms::onerror)) {
+    return;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChan = MaybeHttpChannel();
+  if (!httpChan) {
+    return;
+  }
+
+  // If response headers were received, there is no activity-based error.
+  uint32_t responseStatus;
+  if (NS_SUCCEEDED(httpChan->GetResponseStatus(&responseStatus))) {
+    return;
+  }
+
+  // Edge case: the HTTP transaction completed without response headers and
+  // without a channel error status. Fire a synthetic error so that extensions
+  // with onErrorOccurred listeners are notified. The error name is generic
+  // because the phase-specific names (e.g. NS_ERROR_NET_ON_RESOLVING) that the
+  // former JS activity observer produced are only available from HTTP activity
+  // events, observing which is what this code exists to avoid.
+  mActivityError.AssignLiteral("NS_ERROR_NET_ON_RECEIVING_FROM");
+  FireErrorEvent();
 }
 
 /*****************************************************************************
@@ -1164,7 +1209,8 @@ ChannelWrapper::RequestListener::OnStartRequest(nsIRequest* request) {
   mChannelWrapper->ErrorCheck();
   mChannelWrapper->FireEvent(u"start"_ns);
 
-  return mOrigStreamListener->OnStartRequest(request);
+  nsCOMPtr<nsIStreamListener> origStreamListener = mOrigStreamListener;
+  return origStreamListener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP
@@ -1174,9 +1220,11 @@ ChannelWrapper::RequestListener::OnStopRequest(nsIRequest* request,
 
   mChannelWrapper->mChannelEntry = nullptr;
   mChannelWrapper->ErrorCheck();
+  mChannelWrapper->ActivityErrorFallbackCheck();
   mChannelWrapper->FireEvent(u"stop"_ns);
 
-  return mOrigStreamListener->OnStopRequest(request, aStatus);
+  nsCOMPtr<nsIStreamListener> origStreamListener = mOrigStreamListener;
+  return origStreamListener->OnStopRequest(request, aStatus);
 }
 
 NS_IMETHODIMP
@@ -1185,8 +1233,9 @@ ChannelWrapper::RequestListener::OnDataAvailable(nsIRequest* request,
                                                  uint64_t sourceOffset,
                                                  uint32_t count) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
-  return mOrigStreamListener->OnDataAvailable(request, inStr, sourceOffset,
-                                              count);
+  nsCOMPtr<nsIStreamListener> origStreamListener = mOrigStreamListener;
+  return origStreamListener->OnDataAvailable(request, inStr, sourceOffset,
+                                             count);
 }
 
 NS_IMETHODIMP

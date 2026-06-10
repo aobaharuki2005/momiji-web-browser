@@ -42,8 +42,8 @@ export const LoginTestUtils = {
   /**
    * Erases all the data stored by the Login Manager service.
    */
-  clearData() {
-    Services.logins.removeAllUserFacingLogins();
+  async clearData() {
+    await Services.logins.removeAllUserFacingLoginsAsync();
     for (let origin of Services.logins.getAllDisabledHosts()) {
       Services.logins.setLoginSavingEnabled(origin, true);
     }
@@ -71,7 +71,7 @@ export const LoginTestUtils = {
    * Removes a login from the store
    */
   async removeLogin(login) {
-    return Services.logins.removeLogin(login);
+    return Services.logins.removeLoginAsync(login);
   },
 
   async modifyLogin(oldLogin, newLogin) {
@@ -516,10 +516,9 @@ LoginTestUtils.primaryPassword = {
       newPW = "";
     }
     try {
-      let pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
-        Ci.nsIPK11TokenDB
+      let token = Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(
+        Ci.nsIPKCS11Token
       );
-      let token = pk11db.getInternalKeyToken();
       if (token.needsUserInit) {
         dump("MP initialized to " + newPW + "\n");
         token.initPassword(newPW);

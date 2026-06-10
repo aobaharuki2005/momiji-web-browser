@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
@@ -86,11 +84,10 @@ TaskbarProgress::SetPrimaryWindow(mozIDOMWindowProxy* aWindow) {
 
   // Only nsWindows have a native window, HeadlessWidgets do not.  Stop here if
   // the window does not have one.
-  if (!widget->GetNativeData(NS_NATIVE_WINDOW)) {
+  mPrimaryWindow = nsWindow::FromWidget(widget);
+  if (!mPrimaryWindow) {
     return NS_OK;
   }
-
-  mPrimaryWindow = static_cast<nsWindow*>(widget.get());
 
   // Clear our current progress.  We get a forced update from the
   // DownloadsTaskbar after returning from this function - zeroing out our

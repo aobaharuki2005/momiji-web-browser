@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,7 +33,7 @@ using camera::CamerasChild;
 using camera::GetChildAndCall;
 using dom::MediaSourceEnum;
 
-CubebDeviceEnumerator* GetEnumerator() {
+already_AddRefed<CubebDeviceEnumerator> GetEnumerator() {
   return CubebDeviceEnumerator::GetInstance();
 }
 
@@ -46,12 +44,13 @@ MediaEngineWebRTC::MediaEngineWebRTC() {
       &CamerasChild::ConnectDeviceListChangeListener<MediaEngineWebRTC>,
       &mCameraListChangeListener, AbstractThread::MainThread(), this,
       &MediaEngineWebRTC::DeviceListChanged);
+  RefPtr<CubebDeviceEnumerator> enumerator = GetEnumerator();
   mMicrophoneListChangeListener =
-      GetEnumerator()->OnAudioInputDeviceListChange().Connect(
+      enumerator->OnAudioInputDeviceListChange().Connect(
           AbstractThread::MainThread(), this,
           &MediaEngineWebRTC::DeviceListChanged);
   mSpeakerListChangeListener =
-      GetEnumerator()->OnAudioOutputDeviceListChange().Connect(
+      enumerator->OnAudioOutputDeviceListChange().Connect(
           AbstractThread::MainThread(), this,
           &MediaEngineWebRTC::DeviceListChanged);
 }
@@ -163,8 +162,9 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
+  RefPtr<CubebDeviceEnumerator> enumerator = GetEnumerator();
   RefPtr<const AudioDeviceSet> devices =
-      GetEnumerator()->EnumerateAudioInputDevices();
+      enumerator->EnumerateAudioInputDevices();
 
   DebugOnly<bool> foundPreferredDevice = false;
 
@@ -208,8 +208,9 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
+  RefPtr<CubebDeviceEnumerator> enumerator = GetEnumerator();
   RefPtr<const AudioDeviceSet> devices =
-      GetEnumerator()->EnumerateAudioOutputDevices();
+      enumerator->EnumerateAudioOutputDevices();
 
 #ifndef XP_WIN
   DebugOnly<bool> preferredDeviceFound = false;

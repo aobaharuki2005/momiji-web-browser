@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -49,6 +47,8 @@ using namespace dom;
 Maybe<int32_t> PointerEventHandler::sSpoofedPointerId;
 StaticAutoPtr<PointerInfo> PointerEventHandler::sLastMouseInfo;
 StaticRefPtr<nsIWeakReference> PointerEventHandler::sLastMousePresShell;
+StaticRefPtr<nsIWeakReference> PointerEventHandler::sLastMouseWidget;
+Maybe<uint32_t> PointerEventHandler::sLastMousePointerId;
 Maybe<uint32_t> PointerEventHandler::sLastPointerId;
 
 // Keeps a map between pointerId and element that currently capturing pointer
@@ -141,6 +141,8 @@ void PointerEventHandler::ReleaseStatics() {
   }
   sLastMouseInfo = nullptr;
   sLastMousePresShell = nullptr;
+  sLastMouseWidget = nullptr;
+  sLastMousePointerId.reset();
 }
 
 /* static */
@@ -258,6 +260,8 @@ void PointerEventHandler::RecordMouseState(
     sLastMouseInfo = new PointerInfo();
   }
   sLastMousePresShell = do_GetWeakReference(&aRootPresShell);
+  sLastMouseWidget = do_GetWeakReference(aMouseEvent.mWidget.get());
+  sLastMousePointerId = Some(aMouseEvent.pointerId);
   sLastMouseInfo->mLastRefPointInRootDoc =
       aRootPresShell.GetEventLocation(aMouseEvent);
   sLastMouseInfo->mLastTargetGuid =
@@ -311,6 +315,7 @@ void PointerEventHandler::ClearMouseState(PresShell& aRootPresShell,
   sLastMouseInfo->mInputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   sLastMouseInfo->mIsSynthesizedForTests =
       aMouseEvent.mFlags.mIsSynthesizedForTests;
+  sLastMousePointerId.reset();
   MOZ_LOG_DEBUG_ONLY(gLogMouseLocation, LogLevel::Info,
                      ("[ps=%p]got %s on widget:%p, mouse location is cleared "
                       "(pointerId=%u, source=%s)\n",
@@ -346,13 +351,15 @@ void PointerEventHandler::UpdatePointerActiveState(WidgetMouseEvent* aEvent,
         }
       }
 
-      // Do not update the last pointerId with eMouseEnterIntoWidget because it
-      // may be dispatched by widget when it receives a native event which is
-      // not required, e.g., when the pointer is not moved actually.  Let's
-      // update sLastPointerId with the following ePointerMove, etc which should
-      // be dispatched immediately. Note that anyway EventStateManager does not
-      // handle eMouseEnterIntoWidget directly, it expects that new event is
-      // coming.
+      // Update sLastPointerId so that the synthesized eMouseMove which
+      // PresShell schedules in response to eMouseEnterIntoWidget can pass the
+      // IsLastPointerId check in EventStateManager::UpdateCursor. Without this,
+      // a fullscreen window swap (or any other widget-level event that fires
+      // eMouseExitFromWidget followed by eMouseEnterIntoWidget while the
+      // pointer hasn't actually moved) clears sLastPointerId and never
+      // restores it, leaving the cursor stuck in whatever state it had before
+      // the swap until the next real pointer event (bug 2031413).
+      UpdateLastPointerId(aEvent->pointerId, aEvent->mMessage);
 
       // In this case we have to know information about available mouse pointers
       InsertOrUpdateActivePointer(
@@ -613,6 +620,41 @@ const PointerInfo* PointerEventHandler::GetLastMouseInfo(
 }
 
 /* static */
+Maybe<uint32_t> PointerEventHandler::TryClaimOrphanedLastMouseInfo(
+    PresShell& aRootPresShell) {
+  MOZ_ASSERT(aRootPresShell.IsRoot());
+  if (!sLastMouseInfo || !sLastMouseInfo->HasLastState() ||
+      !sLastMousePointerId) {
+    return Nothing();
+  }
+  // If another live PresShell still owns the state, leave it alone.
+  if (sLastMousePresShell) {
+    const RefPtr<PresShell> previousOwner =
+        do_QueryReferent(sLastMousePresShell);
+    if (previousOwner) {
+      return Nothing();
+    }
+  }
+  // The previous owner has been torn down. PresShell::IsRoot() only means
+  // root of the in-process presContext tree, so the previous owner could
+  // have been on a different top-level window than aRootPresShell. Only
+  // claim the state if the widget that recorded it is the same as
+  // aRootPresShell's widget; otherwise the cached coordinates would land
+  // in the wrong window's root-frame space.
+  if (!sLastMouseWidget) {
+    return Nothing();
+  }
+  const nsCOMPtr<nsIWidget> previousWidget = do_QueryReferent(sLastMouseWidget);
+  if (!previousWidget || previousWidget != aRootPresShell.GetOwnWidget()) {
+    return Nothing();
+  }
+  // Rebind ownership to the new PresShell so subsequent calls to
+  // GetLastMouseInfo(this) work.
+  sLastMousePresShell = do_GetWeakReference(&aRootPresShell);
+  return sLastMousePointerId;
+}
+
+/* static */
 void PointerEventHandler::MaybeProcessPointerCapture(WidgetGUIEvent* aEvent) {
   switch (aEvent->mClass) {
     case eMouseEventClass:
@@ -637,7 +679,8 @@ void PointerEventHandler::ProcessPointerCaptureForMouse(
   if (!info || info->mPendingElement == info->mOverrideElement) {
     return;
   }
-  WidgetPointerEvent localEvent(*aEvent);
+  WidgetPointerEvent localEvent =
+      WidgetPointerEvent::MakeCopyFromMouseEvent(*aEvent);
   InitPointerEventFromMouse(&localEvent, aEvent, eVoidEvent);
   CheckPointerCaptureState(&localEvent);
 }
@@ -778,23 +821,20 @@ void PointerEventHandler::SynthesizeMoveToDispatchBoundaryEvents(
 
 /* static */
 void PointerEventHandler::ImplicitlyCapturePointer(nsIFrame* aFrame,
-                                                   WidgetEvent* aEvent) {
-  MOZ_ASSERT(aEvent->mMessage == ePointerDown);
+                                                   const WidgetEvent& aEvent) {
+  MOZ_ASSERT(aEvent.mMessage == ePointerDown);
   if (!aFrame || !IsPointerEventImplicitCaptureForTouchEnabled()) {
     return;
   }
-  WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+  const WidgetPointerEvent* pointerEvent = aEvent.AsPointerEvent();
   NS_WARNING_ASSERTION(pointerEvent,
                        "Call ImplicitlyCapturePointer with non-pointer event");
   if (!pointerEvent->mFromTouchEvent) {
     // We only implicitly capture the pointer for touch device.
     return;
   }
-  nsIContent* target = aFrame->GetContentForEvent(aEvent);
-  while (target && !target->IsElement()) {
-    target = target->GetParent();
-  }
-  if (NS_WARN_IF(!target)) {
+  nsIContent* target = aFrame->GetEventTargetContent(aEvent);
+  if (NS_WARN_IF(!target) || NS_WARN_IF(!target->IsElement())) {
     return;
   }
   RequestPointerCaptureById(pointerEvent->pointerId, target->AsElement());
@@ -947,7 +987,10 @@ void PointerEventHandler::PreHandlePointerEventsPreventDefault(
 
 /* static */
 void PointerEventHandler::PostHandlePointerEventsPreventDefault(
-    WidgetPointerEvent* aPointerEvent, WidgetGUIEvent* aMouseOrTouchEvent) {
+    PresShell* aPresShell, WidgetPointerEvent* aPointerEvent,
+    WidgetGUIEvent* aMouseOrTouchEvent) {
+  MOZ_ASSERT(aPresShell);
+
   if (!aPointerEvent->mIsPrimary || aPointerEvent->mMessage != ePointerDown ||
       !aPointerEvent->DefaultPreventedByContent()) {
     return;
@@ -956,10 +999,12 @@ void PointerEventHandler::PostHandlePointerEventsPreventDefault(
   if (!sActivePointersIds->Get(aPointerEvent->pointerId, &pointerInfo) ||
       !pointerInfo) {
     // We already added the PointerInfo for active pointer when
-    // PresShell::HandleEvent handling pointerdown event.
-#ifdef DEBUG
-    MOZ_CRASH("Got ePointerDown w/o active pointer info!!");
-#endif  // #ifdef DEBUG
+    // PresShell::HandleEvent handling pointerdown event. However, PreShell can
+    // be destroyed during handling of the pointerdown event, which causes the
+    // PointerInfo to be removed.
+    MOZ_ASSERT(aPresShell->IsDestroying(),
+               "If we got ePointerDown w/o active pointer info, the PresShell "
+               "should be destroying!!");
     return;
   }
   // PreventDefault only applied for active pointers.
@@ -1018,9 +1063,9 @@ void PointerEventHandler::InitPointerEventFromTouch(
   aPointerEvent.mModifiers = aTouchEvent.mModifiers;
   aPointerEvent.mWidth = aTouch.RadiusX(CallerType::System);
   aPointerEvent.mHeight = aTouch.RadiusY(CallerType::System);
-  aPointerEvent.tiltX = aTouch.tiltX;
-  aPointerEvent.tiltY = aTouch.tiltY;
+  aPointerEvent.mTilt = aTouch.mTilt;
   aPointerEvent.twist = aTouch.twist;
+  aPointerEvent.mAngle = aTouch.mAngle;
   aPointerEvent.mTimeStamp = aTouchEvent.mTimeStamp;
   aPointerEvent.mFlags = aTouchEvent.mFlags;
   aPointerEvent.mButton = button;
@@ -1039,6 +1084,7 @@ void PointerEventHandler::InitCoalescedEventFromPointerEvent(
 
   aCoalescedEvent.mTimeStamp = aSourceEvent.mTimeStamp;
   aCoalescedEvent.mRefPoint = aSourceEvent.mRefPoint;
+  aCoalescedEvent.mLastRefPoint = aSourceEvent.mLastRefPoint;
   aCoalescedEvent.mModifiers = aSourceEvent.mModifiers;
 
   // WidgetMouseEventBase
@@ -1112,7 +1158,8 @@ nsresult PointerEventHandler::DispatchPointerEventWithTarget(
     pointerEvent.emplace(aPointerEventMessage,
                          *aMouseOrPointerEvent.AsPointerEvent());
   } else {
-    pointerEvent.emplace(aMouseOrPointerEvent);
+    pointerEvent.emplace(
+        WidgetPointerEvent::MakeCopyFromMouseEvent(aMouseOrPointerEvent));
     PointerEventHandler::InitPointerEventFromMouse(
         pointerEvent.ptr(), &aMouseOrPointerEvent, ePointerCancel);
   }
@@ -1150,9 +1197,9 @@ nsresult PointerEventHandler::DispatchPointerEventWithTarget(
   if (targetWeakFrame) {
     MOZ_ASSERT_IF(
         targetContent,
-        targetContent == targetWeakFrame->GetContentForEvent(&aPointerEvent));
+        targetContent == targetWeakFrame->GetEventTargetContent(aPointerEvent));
     if (!targetContent) {
-      targetContent = targetWeakFrame->GetContentForEvent(&aPointerEvent);
+      targetContent = targetWeakFrame->GetEventTargetContent(aPointerEvent);
       if (NS_WARN_IF(!targetContent)) {
         return NS_ERROR_FAILURE;
       }
@@ -1307,7 +1354,8 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
       }
     }
 #endif  // #ifdef DEBUG
-    WidgetPointerEvent event(*mouseEvent);
+    WidgetPointerEvent event =
+        WidgetPointerEvent::MakeCopyFromMouseEvent(*mouseEvent);
     InitPointerEventFromMouse(&event, mouseEvent, pointerMessage);
     event.convertToPointer = mouseEvent->convertToPointer = false;
     RefPtr<PresShell> shell(aShell);
@@ -1322,7 +1370,7 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
     // corresponding mouse event.
     shell->HandleEventWithTarget(&event, aEventTargetFrame, aEventTargetContent,
                                  aStatus, true, aMouseOrTouchEventTarget);
-    PostHandlePointerEventsPreventDefault(&event, aMouseOrTouchEvent);
+    PostHandlePointerEventsPreventDefault(shell, &event, aMouseOrTouchEvent);
     // If pointer capture is released, we need to synthesize eMouseMove to
     // dispatch mouse boundary events later.
     mouseEvent->mSynthesizeMoveAfterDispatch |=
@@ -1379,7 +1427,8 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
         PreHandlePointerEventsPreventDefault(&event, aMouseOrTouchEvent);
         shell->HandleEventWithTarget(&event, frame, content, aStatus, true,
                                      aMouseOrTouchEventTarget);
-        PostHandlePointerEventsPreventDefault(&event, aMouseOrTouchEvent);
+        PostHandlePointerEventsPreventDefault(shell, &event,
+                                              aMouseOrTouchEvent);
       } else {
         // We didn't hit test for other touch events. Spec doesn't mention that
         // all pointer events should be dispatched to the same target as their
@@ -1391,7 +1440,8 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
         PreHandlePointerEventsPreventDefault(&event, aMouseOrTouchEvent);
         shell->HandleEvent(aEventTargetFrame, &event, aDontRetargetEvents,
                            aStatus);
-        PostHandlePointerEventsPreventDefault(&event, aMouseOrTouchEvent);
+        PostHandlePointerEventsPreventDefault(shell, &event,
+                                              aMouseOrTouchEvent);
       }
     }
   }
@@ -1436,7 +1486,9 @@ void PointerEventHandler::NotifyDestroyPresContext(
       ReleasePointerCapturingElementAtLastPointerUp();
     }
   }
-  // Clean up active pointer info
+  // Clean up active pointer info.
+  // XXX: This was added primarily for touch input. Could this cause any
+  // web-compat issue for mouse input in edge cases?
   for (auto iter = sActivePointersIds->Iter(); !iter.Done(); iter.Next()) {
     PointerInfo* data = iter.UserData();
     MOZ_ASSERT(data, "how could we have a null PointerInfo here?");
@@ -1553,8 +1605,6 @@ void PointerEventHandler::MaybeCacheSpoofedPointerID(uint16_t aInputSource,
 
 void PointerEventHandler::UpdateLastPointerId(uint32_t aPointerId,
                                               EventMessage aEventMessage) {
-  MOZ_ASSERT(aEventMessage != eMouseEnterIntoWidget);
-
   if (sLastPointerId && *sLastPointerId == aPointerId) {
     return;
   }

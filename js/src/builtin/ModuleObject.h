@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -66,7 +64,8 @@ class ImportAttribute {
 
 using ImportAttributeVector = GCVector<ImportAttribute, 0, SystemAllocPolicy>;
 
-enum class ImportPhase : uint8_t { Evaluation, Limit };
+// https://tc39.es/proposal-source-phase-imports/#sec-modulerequest-record
+enum class ImportPhase : uint8_t { Source, Evaluation, Limit };
 
 class ModuleRequestObject : public NativeObject {
  public:
@@ -214,8 +213,8 @@ class IndirectBindingMap {
       return;
     }
 
-    for (auto r = map_->all(); !r.empty(); r.popFront()) {
-      func(r.front().key());
+    for (auto iter = map_->iter(); !iter.done(); iter.next()) {
+      func(iter.get().key());
     }
   }
 
@@ -310,6 +309,14 @@ class ModuleNamespaceObject : public ProxyObject {
   static const ProxyHandler proxyHandler;
 };
 
+#ifdef ENABLE_SOURCE_PHASE_IMPORTS
+// https://tc39.es/proposal-source-phase-imports/#sec-properties-of-the-%abstractmodulesource%-intrinsic-object
+class AbstractModuleSourceObject : public NativeObject {
+ public:
+  static const JSClass class_;
+};
+#endif
+
 // Value types of [[Status]] in a Cyclic Module Record
 // https://tc39.es/ecma262/#table-cyclic-module-fields
 enum class ModuleStatus : int8_t {
@@ -395,6 +402,13 @@ class ModuleObject : public NativeObject {
     CyclicModuleFieldsSlot,
     // `SyntheticModuleFields` if a synthetic module. Otherwise `undefined`.
     SyntheticModuleFieldsSlot,
+#ifdef DEBUG
+    PreloadSlot,
+#endif
+#ifdef ENABLE_SOURCE_PHASE_IMPORTS
+    // Module Source object for source phase imports. Otherwise `undefined`.
+    ModuleSourceSlot,
+#endif
     SlotCount
   };
 
@@ -409,6 +423,10 @@ class ModuleObject : public NativeObject {
 
   // Initialize the slots on this object that are dependent on the script.
   void initScriptSlots(HandleScript script);
+#ifdef ENABLE_SOURCE_PHASE_IMPORTS
+  void initModuleSourceSlot(HandleObject moduleSource);
+  void initScriptSourceObject(ScriptSourceObject* sso);
+#endif
 
   void setInitialEnvironment(
       Handle<ModuleEnvironmentObject*> initialEnvironment);
@@ -430,6 +448,10 @@ class ModuleObject : public NativeObject {
   ModuleEnvironmentObject& initialEnvironment() const;
   ModuleEnvironmentObject* environment() const;
   ModuleNamespaceObject* namespace_();
+#ifdef ENABLE_SOURCE_PHASE_IMPORTS
+  JSObject* moduleSource() const;
+  bool isSourcePhaseModule() const { return moduleSource() != nullptr; }
+#endif
   ModuleStatus status() const;
   mozilla::Maybe<uint32_t> maybeDfsAncestorIndex() const;
   uint32_t dfsAncestorIndex() const;
@@ -467,6 +489,7 @@ class ModuleObject : public NativeObject {
   AsyncEvaluationOrder const& asyncEvaluationOrder() const;
   void setCycleRoot(ModuleObject* cycleRoot);
   ModuleObject* getCycleRoot() const;
+  bool hasCycleRoot() const;
   bool hasCyclicModuleFields() const;
   bool hasSyntheticModuleFields() const;
   LoadedModuleMap& loadedModules();
@@ -497,9 +520,17 @@ class ModuleObject : public NativeObject {
   static bool createSyntheticEnvironment(JSContext* cx,
                                          Handle<ModuleObject*> self,
                                          JS::HandleVector<Value> values);
+#ifdef ENABLE_SOURCE_PHASE_IMPORTS
+  static bool createWasmEnvironment(JSContext* cx, Handle<ModuleObject*> self);
+#endif
 
   void initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
                       Handle<ListObject*> asyncParentModules);
+
+#ifdef DEBUG
+  void setPreload(bool isPreload);
+  bool isPreload() const;
+#endif
 
  private:
   static const JSClassOps classOps_;
@@ -515,7 +546,7 @@ class ModuleObject : public NativeObject {
 };
 
 using VisitedModuleSet =
-    GCHashSet<HeapPtr<ModuleObject*>, DefaultHasher<HeapPtr<ModuleObject*>>,
+    GCHashSet<HeapPtr<JSObject*>, StableCellHasher<HeapPtr<JSObject*>>,
               SystemAllocPolicy>;
 
 // The fields of a GraphLoadingState Record, as described in:
@@ -583,7 +614,8 @@ class GraphLoadingStateRecordObject : public NativeObject {
 JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
-                                   HandleValue specifier, HandleValue options);
+                                   HandleValue specifier, HandleValue options,
+                                   ImportPhase phase);
 
 }  // namespace js
 

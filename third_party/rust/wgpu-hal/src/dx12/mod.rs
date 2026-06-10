@@ -78,6 +78,7 @@ mod conv;
 mod dcomp;
 mod descriptor;
 mod device;
+mod device_creation;
 mod instance;
 mod pipeline_desc;
 mod sampler;
@@ -87,7 +88,7 @@ mod types;
 mod view;
 
 use alloc::{borrow::ToOwned as _, string::String, sync::Arc, vec::Vec};
-use core::{ffi, fmt, mem, ops::Deref};
+use core::{ffi, fmt, mem, ops::Deref, sync::atomic::AtomicU64};
 
 use arrayvec::ArrayVec;
 use hashbrown::HashMap;
@@ -266,7 +267,54 @@ impl D3D12Lib {
 
         result__.ok_or(crate::DeviceError::Unexpected).map(Some)
     }
+
+    /// Calls D3D12GetInterface to obtain a COM interface by CLSID and IID.
+    ///
+    /// This is used by the Independent Devices API to obtain `ID3D12SDKConfiguration1`.
+    fn get_interface<T: Interface>(
+        &self,
+        clsid: &windows_core::GUID,
+    ) -> Result<T, GetInterfaceError> {
+        // Calls windows::Win32::Graphics::Direct3D12::D3D12GetInterface on d3d12.dll
+        type Fun = extern "system" fn(
+            rclsid: *const windows_core::GUID,
+            riid: *const windows_core::GUID,
+            ppvdebug: *mut *mut ffi::c_void,
+        ) -> windows_core::HRESULT;
+        let func: libloading::Symbol<Fun> =
+            unsafe { self.lib.get(c"D3D12GetInterface".to_bytes()) }
+                .map_err(|_| GetInterfaceError::GetProcAddress)?;
+
+        let mut result__: Option<T> = None;
+
+        let res = (func)(clsid, &T::IID, <*mut _>::cast(&mut result__));
+
+        if res.is_err() {
+            return Err(GetInterfaceError::D3D12GetInterface(res));
+        }
+
+        result__.ok_or(GetInterfaceError::RetIsNull)
+    }
 }
+
+#[derive(Clone, Copy, Debug)]
+pub(super) enum GetInterfaceError {
+    GetProcAddress,
+    D3D12GetInterface(windows_core::HRESULT),
+    RetIsNull,
+}
+
+impl fmt::Display for GetInterfaceError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::GetProcAddress => write!(f, "D3D12GetInterface not found in d3d12.dll"),
+            Self::D3D12GetInterface(hr) => write!(f, "D3D12GetInterface failed: {hr}"),
+            Self::RetIsNull => write!(f, "D3D12GetInterface returned null"),
+        }
+    }
+}
+
+impl core::error::Error for GetInterfaceError {}
 
 #[derive(Debug)]
 pub(super) struct DxgiLib {
@@ -461,11 +509,20 @@ crate::impl_dyn_resource!(
 
 // Limited by D3D12's root signature size of 64. Each element takes 1 or 2 entries.
 const MAX_ROOT_ELEMENTS: usize = 64;
+/// See comment in [`Adapter::expose`].
+/// You must change the math in the comment before you update this value.
+const MAX_IMMEDIATE_SIZE: u32 = 128;
+const MAX_IMMEDIATES: usize = MAX_IMMEDIATE_SIZE as usize / 4;
 const ZERO_BUFFER_SIZE: wgt::BufferAddress = 256 << 10;
 
 pub struct Instance {
     factory: DxgiFactory,
     factory_media: Option<Dxgi::IDXGIFactoryMedia>,
+    // `device_factory` must be dropped before `library` because the COM
+    // object's Release call goes through the d3d12.dll vtable.  If
+    // `library` (which unloads d3d12.dll) is dropped first the Release
+    // segfaults.
+    device_factory: Arc<device_creation::DeviceFactory>,
     library: Arc<D3D12Lib>,
     dcomp_lib: Arc<DCompLib>,
     supports_allow_tearing: bool,
@@ -712,6 +769,7 @@ pub struct Device {
     compiler_container: Arc<shader_compilation::CompilerContainer>,
     shader_cache: Mutex<ShaderCache>,
     counters: Arc<wgt::HalCounters>,
+    limits: wgt::Limits,
 }
 
 impl Drop for Device {
@@ -734,11 +792,52 @@ unsafe impl Sync for Device {}
 pub struct Queue {
     raw: Direct3D12::ID3D12CommandQueue,
     temp_lists: Mutex<Vec<Option<Direct3D12::ID3D12CommandList>>>,
+    idle_fence: Direct3D12::ID3D12Fence,
+    idle_event: Event,
+    idle_fence_value: AtomicU64,
+    pending_waits: Mutex<Vec<(Direct3D12::ID3D12Fence, u64)>>,
+    pending_signals: Mutex<Vec<(Direct3D12::ID3D12Fence, u64)>>,
 }
 
 impl Queue {
     pub fn as_raw(&self) -> &Direct3D12::ID3D12CommandQueue {
         &self.raw
+    }
+
+    /// Stage a `ID3D12CommandQueue::Wait(fence, value)` for the next
+    /// [`crate::Queue::submit`]. The wait is enqueued before the
+    /// submit's command lists, so subsequent GPU work observes the
+    /// foreign signal at `value`.
+    pub fn add_wait_fence(&self, fence: Direct3D12::ID3D12Fence, value: u64) {
+        self.pending_waits.lock().push((fence, value));
+    }
+
+    /// Remove `fence` from the pending wait list if it is still present.
+    /// Returns `true` if it was found and removed.
+    pub fn remove_wait_fence(&self, fence: &Direct3D12::ID3D12Fence) -> bool {
+        let target = fence.as_raw();
+        let mut waits = self.pending_waits.lock();
+        let before = waits.len();
+        waits.retain(|(f, _)| f.as_raw() != target);
+        waits.len() != before
+    }
+
+    /// Stage a `ID3D12CommandQueue::Signal(fence, value)` for the next
+    /// [`crate::Queue::submit`]. The signal is enqueued after the
+    /// submit's command lists complete, so a foreign API waiting on
+    /// `(fence, value)` observes the wgpu work as done.
+    pub fn add_signal_fence(&self, fence: Direct3D12::ID3D12Fence, value: u64) {
+        self.pending_signals.lock().push((fence, value));
+    }
+
+    /// Remove `fence` from the pending signal list if it is still present.
+    /// Returns `true` if it was found and removed.
+    pub fn remove_signal_fence(&self, fence: &Direct3D12::ID3D12Fence) -> bool {
+        let target = fence.as_raw();
+        let mut signals = self.pending_signals.lock();
+        let before = signals.len();
+        signals.retain(|(f, _)| f.as_raw() != target);
+        signals.len() != before
     }
 }
 
@@ -764,31 +863,51 @@ struct PassResolve {
     format: Dxgi::Common::DXGI_FORMAT,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+struct SpecialConstants {
+    /// The first vertex in an indirect draw call, _or_ the `x` of a compute dispatch.
+    first_vertex_or_x: i32,
+    /// The first instance in an indirect draw call, _or_ the `y` of a compute dispatch.
+    first_instance_or_y: u32,
+    /// Unused in an indirect draw call, _or_ the `z` of a compute dispatch.
+    unused_or_z: u32,
+}
+
+impl SpecialConstants {
+    fn from_indirect_draw_call_params(first_vertex: i32, first_instance: u32) -> Self {
+        Self {
+            first_vertex_or_x: first_vertex,
+            first_instance_or_y: first_instance,
+            unused_or_z: 0,
+        }
+    }
+
+    fn from_compute_dispatch_params(workgroup_count: [u32; 3]) -> Self {
+        Self {
+            first_vertex_or_x: workgroup_count[0] as i32,
+            first_instance_or_y: workgroup_count[1],
+            unused_or_z: workgroup_count[2],
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 enum RootElement {
     Empty,
-    Constant,
-    SpecialConstantBuffer {
-        /// The first vertex in an indirect draw call, _or_ the `x` of a compute dispatch.
-        first_vertex: i32,
-        /// The first instance in an indirect draw call, _or_ the `y` of a compute dispatch.
-        first_instance: u32,
-        /// Unused in an indirect draw call, _or_ the `z` of a compute dispatch.
-        other: u32,
-    },
-    /// Descriptor table.
-    Table(Direct3D12::D3D12_GPU_DESCRIPTOR_HANDLE),
-    /// Descriptor for an uniform buffer that has dynamic offset.
+    Immediates,
+    SpecialConstants(SpecialConstants),
+    DescriptorTable(Direct3D12::D3D12_GPU_DESCRIPTOR_HANDLE),
+    /// Descriptor table referring to the entire sampler heap.
+    SamplerHeapDescriptorTable,
+    /// Root descriptor for a uniform buffer binding that has a dynamic offset.
     DynamicUniformBuffer {
         address: Direct3D12::D3D12_GPU_DESCRIPTOR_HANDLE,
     },
-    /// Descriptor table referring to the entire sampler heap.
-    SamplerHeap,
-    /// Root constants for dynamic offsets.
+    /// Root constants for storage buffer bindings with dynamic offsets.
     ///
     /// start..end is the range of values in [`PassState::dynamic_storage_buffer_offsets`]
     /// that will be used to update the root constants.
-    DynamicOffsetsBuffer {
+    DynamicStorageBufferOffsets {
         start: usize,
         end: usize,
     },
@@ -806,7 +925,7 @@ struct PassState {
     resolves: ArrayVec<PassResolve, { crate::MAX_COLOR_ATTACHMENTS }>,
     layout: PipelineLayoutShared,
     root_elements: [RootElement; MAX_ROOT_ELEMENTS],
-    constant_data: [u32; MAX_ROOT_ELEMENTS],
+    immediates: [u32; MAX_IMMEDIATES],
     dynamic_storage_buffer_offsets: Vec<u32>,
     dirty_root_elements: u64,
     vertex_buffers: [Direct3D12::D3D12_VERTEX_BUFFER_VIEW; crate::MAX_VERTEX_BUFFERS],
@@ -814,10 +933,8 @@ struct PassState {
     kind: PassKind,
 }
 
-#[test]
-fn test_dirty_mask() {
-    assert_eq!(MAX_ROOT_ELEMENTS, u64::BITS as usize);
-}
+// `root_elements` size must match `dirty_root_elements` bit size
+const _: () = assert!(MAX_ROOT_ELEMENTS == u64::BITS as usize);
 
 impl PassState {
     fn new() -> Self {
@@ -828,11 +945,11 @@ impl PassState {
                 signature: None,
                 total_root_elements: 0,
                 special_constants: None,
-                root_constant_info: None,
+                immediates_info: None,
                 sampler_heap_root_index: None,
             },
             root_elements: [RootElement::Empty; MAX_ROOT_ELEMENTS],
-            constant_data: [0; MAX_ROOT_ELEMENTS],
+            immediates: [0; MAX_IMMEDIATES],
             dynamic_storage_buffer_offsets: Vec::new(),
             dirty_root_elements: 0,
             vertex_buffers: [Default::default(); crate::MAX_VERTEX_BUFFERS],
@@ -903,6 +1020,12 @@ pub struct Buffer {
     allocation: suballocation::Allocation,
 }
 
+impl Buffer {
+    pub unsafe fn raw_resource(&self) -> &Direct3D12::ID3D12Resource {
+        &self.resource
+    }
+}
+
 unsafe impl Send for Buffer {}
 unsafe impl Sync for Buffer {}
 
@@ -966,8 +1089,11 @@ impl Texture {
 
     fn calc_subresource_for_copy(&self, base: &crate::TextureCopyBase) -> u32 {
         let plane = match base.aspect {
-            crate::FormatAspects::COLOR | crate::FormatAspects::DEPTH => 0,
-            crate::FormatAspects::STENCIL => 1,
+            crate::FormatAspects::COLOR
+            | crate::FormatAspects::DEPTH
+            | crate::FormatAspects::PLANE_0 => 0,
+            crate::FormatAspects::STENCIL | crate::FormatAspects::PLANE_1 => 1,
+            crate::FormatAspects::PLANE_2 => 2,
             _ => unreachable!(),
         };
         self.calc_subresource(base.mip_level, base.array_layer, plane)
@@ -1002,8 +1128,8 @@ pub struct Sampler {
 
 impl crate::DynSampler for Sampler {}
 
-unsafe impl Send for Sampler {}
-unsafe impl Sync for Sampler {}
+#[cfg(send_sync)]
+static_assertions::assert_impl_all!(Sampler: Send, Sync);
 
 #[derive(Debug)]
 pub struct QuerySet {
@@ -1082,9 +1208,9 @@ struct BindGroupInfo {
 }
 
 #[derive(Debug, Clone)]
-struct RootConstantInfo {
+struct ImmediatesInfo {
     root_index: RootIndex,
-    range: core::ops::Range<u32>,
+    size: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -1098,7 +1224,7 @@ struct PipelineLayoutShared {
     signature: Option<Direct3D12::ID3D12RootSignature>,
     total_root_elements: RootIndex,
     special_constants: Option<PipelineLayoutSpecialConstants>,
-    root_constant_info: Option<RootConstantInfo>,
+    immediates_info: Option<ImmediatesInfo>,
     sampler_heap_root_index: Option<RootIndex>,
 }
 
@@ -1119,7 +1245,7 @@ pub struct PipelineLayout {
     shared: PipelineLayoutShared,
     // Storing for each associated bind group, which tables we created
     // in the root signature. This is required for binding descriptor sets.
-    bind_group_infos: ArrayVec<BindGroupInfo, { crate::MAX_BIND_GROUPS }>,
+    bind_group_infos: [Option<BindGroupInfo>; crate::MAX_BIND_GROUPS],
     naga_options: naga::back::hlsl::Options,
 }
 
@@ -1497,7 +1623,7 @@ impl crate::Surface for Surface {
         &self,
         timeout: Option<core::time::Duration>,
         _fence: &Fence,
-    ) -> Result<Option<crate::AcquiredSurfaceTexture<Api>>, crate::SurfaceError> {
+    ) -> Result<crate::AcquiredSurfaceTexture<Api>, crate::SurfaceError> {
         let mut swapchain = self.swap_chain.write();
         let sc = swapchain.as_mut().unwrap();
 
@@ -1525,10 +1651,10 @@ impl crate::Surface for Surface {
                 sc.format.theoretical_memory_footprint(sc.size),
             ),
         };
-        Ok(Some(crate::AcquiredSurfaceTexture {
+        Ok(crate::AcquiredSurfaceTexture {
             texture,
             suboptimal: false,
-        }))
+        })
     }
     unsafe fn discard_texture(&self, _texture: Texture) {
         let mut swapchain = self.swap_chain.write();
@@ -1544,12 +1670,23 @@ impl crate::Queue for Queue {
         &self,
         command_buffers: &[&CommandBuffer],
         _surface_textures: &[&Texture],
-        (signal_fence, signal_value): (&mut Fence, crate::FenceValue),
+        (signal_fence, signal_value): (&Fence, crate::FenceValue),
     ) -> Result<(), crate::DeviceError> {
         let mut temp_lists = self.temp_lists.lock();
         temp_lists.clear();
         for cmd_buf in command_buffers {
             temp_lists.push(Some(cmd_buf.raw.clone().into()));
+        }
+
+        // Drain caller-staged waits before ExecuteCommandLists so the
+        // GPU queue blocks on each foreign signal before running our
+        // command lists. D3D12 queue commands are FIFO - Wait calls
+        // here gate everything submitted after them.
+        {
+            let mut waits = self.pending_waits.lock();
+            for (fence, value) in waits.drain(..) {
+                unsafe { self.raw.Wait(&fence, value) }.into_device_result("Wait pending fence")?;
+            }
         }
 
         {
@@ -1559,6 +1696,16 @@ impl crate::Queue for Queue {
 
         unsafe { self.raw.Signal(&signal_fence.raw, signal_value) }
             .into_device_result("Signal fence")?;
+
+        // Drain caller-staged signals after our own Signal so each
+        // additional fence value publishes once the submit completes.
+        {
+            let mut signals = self.pending_signals.lock();
+            for (fence, value) in signals.drain(..) {
+                unsafe { self.raw.Signal(&fence, value) }
+                    .into_device_result("Signal pending fence")?;
+            }
+        }
 
         // Note the lack of synchronization here between the main Direct queue
         // and the dedicated presentation queue. This is automatically handled
@@ -1597,19 +1744,31 @@ impl crate::Queue for Queue {
         let frequency = unsafe { self.raw.GetTimestampFrequency() }.expect("GetTimestampFrequency");
         (1_000_000_000.0 / frequency as f64) as f32
     }
+
+    unsafe fn wait_for_idle(&self) -> Result<(), crate::DeviceError> {
+        let value = self
+            .idle_fence_value
+            .fetch_add(1, core::sync::atomic::Ordering::Relaxed)
+            + 1;
+        unsafe { self.raw.Signal(&self.idle_fence, value) }
+            .into_device_result("Signal idle fence")?;
+        unsafe {
+            self.idle_fence
+                .SetEventOnCompletion(value, self.idle_event.0)
+        }
+        .into_device_result("SetEventOnCompletion")?;
+        unsafe { Threading::WaitForSingleObject(self.idle_event.0, Threading::INFINITE) };
+        Ok(())
+    }
 }
 #[derive(Debug)]
 pub struct DxilPassthroughShader {
     pub shader: Vec<u8>,
-    pub entry_point: String,
-    pub num_workgroups: (u32, u32, u32),
 }
 
 #[derive(Debug)]
 pub struct HlslPassthroughShader {
     pub shader: String,
-    pub entry_point: String,
-    pub num_workgroups: (u32, u32, u32),
 }
 
 #[derive(Debug)]
@@ -1621,24 +1780,24 @@ pub enum ShaderModuleSource {
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FeatureLevel {
-    _11_0,
-    _11_1,
-    _12_0,
-    _12_1,
-    _12_2,
+    V11_0,
+    V11_1,
+    V12_0,
+    V12_1,
+    V12_2,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ShaderModel {
-    _5_1,
-    _6_0,
-    _6_1,
-    _6_2,
-    _6_3,
-    _6_4,
-    _6_5,
-    _6_6,
-    _6_7,
-    _6_8,
-    _6_9,
+    V5_1,
+    V6_0,
+    V6_1,
+    V6_2,
+    V6_3,
+    V6_4,
+    V6_5,
+    V6_6,
+    V6_7,
+    V6_8,
+    V6_9,
 }

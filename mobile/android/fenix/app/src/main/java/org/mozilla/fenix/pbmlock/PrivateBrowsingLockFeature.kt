@@ -17,7 +17,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -102,6 +104,7 @@ class PrivateBrowsingLockFeature(
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
     private val storage: PrivateBrowsingLockStorage,
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
 ) : DefaultLifecycleObserver {
     private var browserStoreScope: CoroutineScope? = null
     private var appStoreScope: CoroutineScope? = null
@@ -140,13 +143,13 @@ class PrivateBrowsingLockFeature(
         isLocked: Boolean,
     ) {
         if (isFeatureEnabled) {
-            start(isLocked)
+            activate(isLocked)
         } else {
-            stop()
+            deactivate()
         }
     }
 
-    private fun start(isLocked: Boolean) {
+    private fun activate(isLocked: Boolean) {
         observePrivateTabsClosure()
         observeOpenInFirefoxRequest()
 
@@ -157,7 +160,7 @@ class PrivateBrowsingLockFeature(
         )
     }
 
-    private fun stop() {
+    private fun deactivate() {
         browserStoreScope?.cancel()
         browserStoreScope = null
 
@@ -172,7 +175,7 @@ class PrivateBrowsingLockFeature(
     }
 
     private fun observePrivateTabsClosure() {
-        browserStoreScope = browserStore.flowScoped { flow ->
+        browserStoreScope = browserStore.flowScoped(dispatcher = mainDispatcher) { flow ->
             flow
                 .map { it.privateTabs.size }
                 .distinctUntilChanged()
@@ -188,8 +191,17 @@ class PrivateBrowsingLockFeature(
         }
     }
 
+    // The code below is handling a specific use-case. When users want to open a private custom tab
+    // in the browser via "Open in Firefox" button, while already having open private tabs in the
+    // browser, we should not ask them to unlock the tab when we open it in the browser. On the
+    // technical level it means that we should avoid locking private mode if there was a request to
+    // open the custom tab in firefox. [AppState.openInFirefoxRequested] is the global parameter
+    // that the app is using for responding to such a request. [OpenInFirefoxBinding] handles the
+    // request by launching a new task and killing the custom tab, which means that by the time the
+    // custom tab activity is closing, the app state has already been reset.
+    // Hence, we observe the app store to record the request locally.
     private fun observeOpenInFirefoxRequest() {
-        appStoreScope = appStore.flowScoped { flow ->
+        appStoreScope = appStore.flowScoped(dispatcher = mainDispatcher) { flow ->
             flow.map { it.openInFirefoxRequested }
                 .distinctUntilChanged()
                 .filter { it }
@@ -200,7 +212,10 @@ class PrivateBrowsingLockFeature(
     override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
 
-        // We nee to reset the flag here.
+        // We want to persist the request only within a single "user session" - between 'onStart'
+        // and 'onStop' calls. 'onStart' and 'onResume' calls are significantly different within
+        // this feature, because system dialogs (like permission requests) will trigger the
+        // 'onPause' lifecycle event, but not the 'onStop'.
         openInFirefoxRequested = false
     }
 

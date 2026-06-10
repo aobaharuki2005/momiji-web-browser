@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -112,31 +110,6 @@ inline gfx::SurfaceFormat ImageFormatToSurfaceFormat(ImageFormat aFormat) {
     default:
       return gfx::SurfaceFormat::UNKNOWN;
   }
-}
-
-// This extra piece of data is used to differentiate when spatial nodes that are
-// created by Gecko that have the same mFrame and PerFrameKey. This currently
-// only occurs with sticky display list items that are also zoomable, which
-// results in Gecko creating both a sticky spatial node, and then a property
-// animated reference frame for APZ
-enum class SpatialKeyKind : uint32_t {
-  Transform,
-  Perspective,
-  Scroll,
-  Sticky,
-  ImagePipeline,
-  APZ,
-  ViewTransition,
-};
-
-// Construct a unique, persistent spatial key based on the frame tree pointer,
-// per-frame key and a spatial key kind. For now, this covers all the ways Gecko
-// creates spatial nodes. In future, we may need to be more clever with the
-// SpatialKeyKind.
-inline wr::SpatialTreeItemKey SpatialKey(uint64_t aFrame, uint32_t aPerFrameKey,
-                                         SpatialKeyKind aKind) {
-  return wr::SpatialTreeItemKey{
-      aFrame, uint64_t(aPerFrameKey) | (uint64_t(aKind) << 32)};
 }
 
 struct ImageDescriptor : public wr::WrImageDescriptor {
@@ -512,18 +485,23 @@ static inline wr::BorderRadius ToBorderRadius(
       LayoutDeviceSize::FromUnknownSize(aRadii.BottomRight()));
 }
 
+static inline wr::BorderRadius ToBorderRadius(const nsRectCornerRadii& aRadii,
+                                              int32_t aAppUnitsPerDevPixel) {
+  return ToBorderRadius(
+      LayoutDeviceSize::FromAppUnits(aRadii.TopLeft(), aAppUnitsPerDevPixel),
+      LayoutDeviceSize::FromAppUnits(aRadii.TopRight(), aAppUnitsPerDevPixel),
+      LayoutDeviceSize::FromAppUnits(aRadii.BottomLeft(), aAppUnitsPerDevPixel),
+      LayoutDeviceSize::FromAppUnits(aRadii.BottomRight(),
+                                     aAppUnitsPerDevPixel));
+}
+
 static inline wr::ComplexClipRegion ToComplexClipRegion(
     const nsRect& aRect, const nsRectCornerRadii& aRadii,
     int32_t aAppUnitsPerDevPixel) {
   wr::ComplexClipRegion ret;
   ret.rect =
       ToLayoutRect(LayoutDeviceRect::FromAppUnits(aRect, aAppUnitsPerDevPixel));
-  ret.radii = ToBorderRadius(
-      LayoutDeviceSize::FromAppUnits(aRadii.TopLeft(), aAppUnitsPerDevPixel),
-      LayoutDeviceSize::FromAppUnits(aRadii.TopRight(), aAppUnitsPerDevPixel),
-      LayoutDeviceSize::FromAppUnits(aRadii.BottomLeft(), aAppUnitsPerDevPixel),
-      LayoutDeviceSize::FromAppUnits(aRadii.BottomRight(),
-                                     aAppUnitsPerDevPixel));
+  ret.radii = ToBorderRadius(aRadii, aAppUnitsPerDevPixel);
   ret.mode = ClipMode::Clip;
   return ret;
 }
@@ -774,7 +752,6 @@ struct ByteBuffer {
 
 struct BuiltDisplayList {
   wr::VecU8 dl_items;
-  wr::VecU8 dl_cache;
   wr::VecU8 dl_spatial_tree;
   wr::BuiltDisplayListDescriptor dl_desc;
 };
@@ -843,6 +820,14 @@ static inline wr::YuvRangedColorSpace ToWrYuvRangedColorSpace(
     case gfx::YUVRangedColorSpace::BT2020_Narrow:
       return wr::YuvRangedColorSpace::Rec2020Narrow;
     case gfx::YUVRangedColorSpace::BT2020_Full:
+      return wr::YuvRangedColorSpace::Rec2020Full;
+    case gfx::YUVRangedColorSpace::BT2100_HLG_Narrow:
+      return wr::YuvRangedColorSpace::Rec2020Narrow;
+    case gfx::YUVRangedColorSpace::BT2100_HLG_Full:
+      return wr::YuvRangedColorSpace::Rec2020Full;
+    case gfx::YUVRangedColorSpace::BT2100_PQ_Narrow:
+      return wr::YuvRangedColorSpace::Rec2020Narrow;
+    case gfx::YUVRangedColorSpace::BT2100_PQ_Full:
       return wr::YuvRangedColorSpace::Rec2020Full;
     case gfx::YUVRangedColorSpace::GbrIdentity:
       break;

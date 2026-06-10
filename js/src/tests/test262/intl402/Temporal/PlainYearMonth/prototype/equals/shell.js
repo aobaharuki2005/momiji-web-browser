@@ -69,11 +69,11 @@ var TemporalHelpers = {
       { era: "am" },
     ],
     ethiopic: [
-      { era: "aa", aliases: ["mundi"] },
-      { era: "am", aliases: ["incar"] },
+      { era: "aa" },
+      { era: "am" },
     ],
     ethioaa: [
-      { era: "aa", aliases: ["mundi"] },
+      { era: "aa" },
     ],
     gregory: [
       { era: "bce", aliases: ["bc"] },
@@ -85,15 +85,7 @@ var TemporalHelpers = {
     indian: [
       { era: "shaka" },
     ],
-    islamic: [
-      { era: "ah" },
-      { era: "bh" },
-    ],
     "islamic-civil": [
-      { era: "bh" },
-      { era: "ah" },
-    ],
-    "islamic-rgsa": [
       { era: "bh" },
       { era: "ah" },
     ],
@@ -118,8 +110,8 @@ var TemporalHelpers = {
       { era: "ap" },
     ],
     roc: [
-      { era: "roc", aliases: ["minguo"] },
-      { era: "broc", aliases: ["before-roc", "minguo-qian"] },
+      { era: "roc" },
+      { era: "broc" },
     ],
   },
 
@@ -261,6 +253,25 @@ var TemporalHelpers = {
     assert.sameValue(datetime.millisecond, millisecond, `${prefix}millisecond result:`);
     assert.sameValue(datetime.microsecond, microsecond, `${prefix}microsecond result:`);
     assert.sameValue(datetime.nanosecond, nanosecond, `${prefix}nanosecond result:`);
+  },
+
+  /*
+   * assertPlainDatesEqual(actual, expected[, description]):
+   *
+   * Shorthand for asserting that two Temporal.PlainDates are of the correct
+   * type, equal according to their equals() methods, and additionally that
+   * their calendar internal slots are the same value.
+   */
+  assertPlainDatesEqual(actual, expected, description = "") {
+    const prefix = description ? `${description}: ` : "";
+    assert(expected instanceof Temporal.PlainDate, `${prefix}expected value should be a Temporal.PlainDate`);
+    assert(actual instanceof Temporal.PlainDate, `${prefix}instanceof`);
+    assert(actual.equals(expected), `${prefix}equals method`);
+    assert.sameValue(
+      actual.calendarId,
+      expected.calendarId,
+      `${prefix}calendar same value:`
+    );
   },
 
   /*

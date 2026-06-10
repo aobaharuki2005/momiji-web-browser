@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -47,6 +46,10 @@ class WidevineBuffer : public CDMBuffer {
  public:
   explicit WidevineBuffer(size_t aSize);
   ~WidevineBuffer() override;
+
+  WidevineBuffer(const WidevineBuffer&) = delete;
+  void operator=(const WidevineBuffer&) = delete;
+
   void Destroy() override;
   uint32_t Capacity() const override;
   uint8_t* Data() override;
@@ -61,8 +64,6 @@ class WidevineBuffer : public CDMBuffer {
 
  private:
   nsTArray<uint8_t> mBuffer;
-  WidevineBuffer(const WidevineBuffer&);
-  void operator=(const WidevineBuffer&);
 };
 
 class WidevineDecryptedBlock : public cdm::DecryptedBlock {

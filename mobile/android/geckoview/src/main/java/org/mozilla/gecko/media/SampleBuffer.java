@@ -82,6 +82,24 @@ public final class SampleBuffer implements Parcelable {
   private static native void nativeWriteToDirectBuffer(
       long src, ByteBuffer dest, int offset, int size);
 
+  @WrapForJNI(exceptionMode = "nsresult")
+  public void nativeCopy(final long dest, final int offset, final int size) throws IOException {
+    if (mSharedMem == null || !mSharedMem.isValid()) {
+      throw new IOException("Invalid state.");
+    }
+    if (offset + size > mSharedMem.getSize()) {
+      throw new IOException("Out-of-bound: buffer too small.");
+    }
+    try {
+      final long src = mSharedMem.getPointer() + offset;
+      nativeMemcpy(dest, src, size);
+    } catch (final NullPointerException e) {
+      throw new IOException(e);
+    }
+  }
+
+  private static native void nativeMemcpy(long dest, long src, int size);
+
   public void dispose() {
     if (mSharedMem != null) {
       mSharedMem.dispose();

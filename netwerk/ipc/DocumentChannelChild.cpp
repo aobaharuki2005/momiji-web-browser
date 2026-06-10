@@ -1,6 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -166,7 +163,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
   mIsPending = true;
   mWasOpened = true;
-  mListener = listener;
+  mListener = std::move(listener);
 
   return NS_OK;
 }
@@ -214,8 +211,7 @@ IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
           ExtContentPolicy::TYPE_DOCUMENT &&
       shell) {
     MOZ_ASSERT(shell->GetBrowsingContext()->IsTop());
-    if (mozilla::SessionHistoryInParent() &&
-        shell->GetBrowsingContext()->IsInBFCache()) {
+    if (shell->GetBrowsingContext()->IsInBFCache()) {
       DisconnectChildListeners(aStatus, aLoadGroupStatus);
     } else {
       // Tell the DocShell which channel to cancel if it enters the BFCache.

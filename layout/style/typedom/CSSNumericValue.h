@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -22,7 +20,10 @@ class nsISupports;
 
 namespace mozilla {
 
+struct CSSPropertyId;
 class ErrorResult;
+struct StyleNumericValue;
+struct StyleNumericValueResult;
 
 namespace dom {
 
@@ -32,9 +33,28 @@ class Sequence;
 
 class CSSNumericValue : public CSSStyleValue {
  public:
+  enum class NumericValueType {
+    Uninitialized,  // TODO: Remove once the implementation is complete.
+    UnitValue,
+    MathSum,
+  };
+
   explicit CSSNumericValue(nsCOMPtr<nsISupports> aParent);
 
-  CSSNumericValue(nsCOMPtr<nsISupports> aParent, ValueType aValueType);
+  CSSNumericValue(nsCOMPtr<nsISupports> aParent,
+                  NumericValueType aNumericValueType);
+
+  // https://drafts.css-houdini.org/css-typed-om-1/#rectify-a-numberish-value
+  static RefPtr<CSSNumericValue> Create(nsCOMPtr<nsISupports> aParent,
+                                        const CSSNumberish& aNumberish);
+
+  // https://drafts.css-houdini.org/css-typed-om-1/#rectify-a-numberish-value
+  static RefPtr<CSSNumericValue> Create(
+      nsCOMPtr<nsISupports> aParent,
+      const OwningCSSNumberish& aOwningNumberish);
+
+  static RefPtr<CSSNumericValue> Create(nsCOMPtr<nsISupports> aParent,
+                                        const StyleNumericValue& aNumericValue);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -61,21 +81,51 @@ class CSSNumericValue : public CSSStyleValue {
 
   bool Equals(const Sequence<OwningCSSNumberish>& aValue);
 
-  already_AddRefed<CSSUnitValue> To(const nsACString& aUnit, ErrorResult& aRv);
+  // https://drafts.css-houdini.org/css-typed-om-1/#dom-cssnumericvalue-to
+  already_AddRefed<CSSUnitValue> To(const nsACString& aUnit,
+                                    ErrorResult& aRv) const;
 
   already_AddRefed<CSSMathSum> ToSum(const Sequence<nsCString>& aUnits,
-                                     ErrorResult& aRv);
+                                     ErrorResult& aRv) const;
 
   void Type(CSSNumericType& aRetVal);
 
+  // https://drafts.css-houdini.org/css-typed-om-1/#dom-cssnumericvalue-parse
   static already_AddRefed<CSSNumericValue> Parse(const GlobalObject& aGlobal,
                                                  const nsACString& aCssText,
                                                  ErrorResult& aRv);
 
   // end of CSSNumbericValue Web IDL declarations
 
+  NumericValueType GetNumericValueType() const { return mNumericValueType; }
+
+  bool IsCSSUnitValue() const;
+
+  // Defined in CSSUnitValue.cpp
+  const CSSUnitValue& GetAsCSSUnitValue() const;
+
+  // Defined in CSSUnitValue.cpp
+  CSSUnitValue& GetAsCSSUnitValue();
+
+  bool IsCSSMathSum() const;
+
+  // Defined in CSSMathSum.cpp
+  const CSSMathSum& GetAsCSSMathSum() const;
+
+  // Defined in CSSMathSum.cpp
+  CSSMathSum& GetAsCSSMathSum();
+
+  void ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
+                             nsACString& aDest) const;
+
+  // TODO: This can be changed to return StyleNumericValue directly once the
+  // Unitialized type is removed.
+  StyleNumericValueResult ToStyleNumericValue() const;
+
  protected:
   virtual ~CSSNumericValue() = default;
+
+  const NumericValueType mNumericValueType;
 };
 
 }  // namespace dom

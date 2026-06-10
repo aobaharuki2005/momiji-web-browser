@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +9,6 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/css/Loader.h"
@@ -86,18 +83,7 @@ nsresult NS_NewXMLContentSink(nsIXMLContentSink** aResult, Document* aDoc,
   return NS_OK;
 }
 
-nsXMLContentSink::nsXMLContentSink()
-    : mState(eXMLContentSinkState_InProlog),
-      mTextLength(0),
-      mNotifyLevel(0),
-      mPrettyPrintXML(true),
-      mPrettyPrintHasSpecialRoot(0),
-      mPrettyPrintHasFactoredElements(0),
-      mPrettyPrinting(0),
-      mPreventScriptExecution(0) {
-  PodArrayZero(mText);
-}
-
+nsXMLContentSink::nsXMLContentSink() = default;
 nsXMLContentSink::~nsXMLContentSink() = default;
 
 nsresult nsXMLContentSink::Init(Document* aDoc, nsIURI* aURI,
@@ -628,9 +614,9 @@ nsresult nsXMLContentSink::CloseElement(nsIContent* aContent) {
     // Always check the clock in nsContentSink right after a script
     StopDeflecting();
 
-    // Flush any previously parsed elements before executing a script, in order
-    // to prevent a script that adds a mutation observer from observing that
-    // script element being adding to the tree.
+    // Flush any previously parsed elements before executing a script, in
+    // order to prevent a script that adds a mutation observer from observing
+    // that script element being adding to the tree.
     FlushTags();
 
     // https://html.spec.whatwg.org/#parsing-xhtml-documents
@@ -649,25 +635,23 @@ nsresult nsXMLContentSink::CloseElement(nsIContent* aContent) {
     if (mParser && !mParser->IsParserEnabled()) {
       block = true;
     }
-
     return block ? NS_ERROR_HTMLPARSER_BLOCK : NS_OK;
   }
 
-  nsresult rv = NS_OK;
   if (auto* linkStyle = LinkStyle::FromNode(*aContent)) {
     auto updateOrError = linkStyle->EnableUpdatesAndUpdateStyleSheet(
         mRunsToCompletion ? nullptr : this);
     if (updateOrError.isErr()) {
-      rv = updateOrError.unwrapErr();
-    } else if (updateOrError.unwrap().ShouldBlock() && !mRunsToCompletion) {
+      return updateOrError.unwrapErr();
+    }
+    if (updateOrError.unwrap().ShouldBlock() && !mRunsToCompletion) {
       ++mPendingSheetCount;
       if (mScriptLoader) {
         mScriptLoader->AddParserBlockingScriptExecutionBlocker();
       }
     }
   }
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsXMLContentSink::AddContentAsLeaf(nsIContent* aContent) {
@@ -746,10 +730,11 @@ nsresult nsXMLContentSink::MaybeProcessXSLTLink(
     ProcessingInstruction* aProcessingInstruction, const nsAString& aHref,
     bool aAlternate, const nsAString& aTitle, const nsAString& aType,
     const nsAString& aMedia, const nsAString& aReferrerPolicy, bool* aWasXSLT) {
-  bool wasXSLT = aType.LowerCaseEqualsLiteral(TEXT_XSL) ||
-                 aType.LowerCaseEqualsLiteral(APPLICATION_XSLT_XML) ||
-                 aType.LowerCaseEqualsLiteral(TEXT_XML) ||
-                 aType.LowerCaseEqualsLiteral(APPLICATION_XML);
+  bool wasXSLT = StaticPrefs::dom_xslt_enabled() &&
+                 (aType.LowerCaseEqualsLiteral(TEXT_XSL) ||
+                  aType.LowerCaseEqualsLiteral(APPLICATION_XSLT_XML) ||
+                  aType.LowerCaseEqualsLiteral(TEXT_XML) ||
+                  aType.LowerCaseEqualsLiteral(APPLICATION_XML));
 
   if (aWasXSLT) {
     *aWasXSLT = wasXSLT;
@@ -812,7 +797,7 @@ nsISupports* nsXMLContentSink::GetTarget() { return ToSupports(mDocument); }
 nsresult nsXMLContentSink::FlushText(bool aReleaseTextNode) {
   nsresult rv = NS_OK;
 
-  if (mTextLength != 0) {
+  if (!mText.IsEmpty()) {
     if (mLastTextNode) {
       bool notify = HaveNotifiedForCurrentContent();
       // We could probably always increase mInNotification here since
@@ -821,12 +806,12 @@ nsresult nsXMLContentSink::FlushText(bool aReleaseTextNode) {
       if (notify) {
         ++mInNotification;
       }
-      rv = mLastTextNode->AppendText(mText, mTextLength, notify);
+      rv = mLastTextNode->AppendText(mText.Elements(), mText.Length(), notify);
       if (notify) {
         --mInNotification;
       }
 
-      mTextLength = 0;
+      mText.ClearAndRetainStorage();
     } else {
       RefPtr<nsTextNode> textContent =
           new (mNodeInfoManager) nsTextNode(mNodeInfoManager);
@@ -834,8 +819,8 @@ nsresult nsXMLContentSink::FlushText(bool aReleaseTextNode) {
       mLastTextNode = textContent;
 
       // Set the text in the text node
-      textContent->SetText(mText, mTextLength, false);
-      mTextLength = 0;
+      textContent->SetText(mText.Elements(), mText.Length(), false);
+      mText.ClearAndRetainStorage();
 
       // Add text to its parent
       rv = AddContentAsLeaf(textContent);
@@ -988,7 +973,7 @@ nsXMLContentSink::HandleStartElement(const char16_t* aName,
 nsresult nsXMLContentSink::HandleStartElement(
     const char16_t* aName, const char16_t** aAtts, uint32_t aAttsCount,
     uint32_t aLineNumber, uint32_t aColumnNumber, bool aInterruptable) {
-  MOZ_ASSERT(aAttsCount % 2 == 0, "incorrect aAttsCount");
+  MOZ_RELEASE_ASSERT(aAttsCount % 2 == 0, "incorrect aAttsCount");
   // Adjust aAttsCount so it's the actual number of attributes
   aAttsCount /= 2;
 
@@ -1065,7 +1050,7 @@ nsresult nsXMLContentSink::HandleStartElement(
   if (!mXSLTProcessor) {
     if (content == mDocElement) {
       nsContentUtils::AddScriptRunner(
-          new nsDocElementCreatedNotificationRunner(mDocument));
+          MakeAndAddRef<nsDocElementCreatedNotificationRunner>(mDocument));
 
       if (aInterruptable && NS_SUCCEEDED(result) && mParser &&
           !mParser->IsParserEnabled()) {
@@ -1192,7 +1177,7 @@ nsXMLContentSink::HandleCDataSection(const char16_t* aData, uint32_t aLength) {
   // XSLT doesn't differentiate between text and cdata and wants adjacent
   // textnodes merged, so add as text.
   if (mXSLTProcessor) {
-    return AddText(aData, aLength);
+    return AddText(Span(aData, aLength));
   }
 
   FlushText();
@@ -1243,7 +1228,7 @@ nsresult nsXMLContentSink::HandleCharacterData(const char16_t* aData,
   nsresult rv = NS_OK;
   if (aData && mState != eXMLContentSinkState_InProlog &&
       mState != eXMLContentSinkState_InEpilog) {
-    rv = AddText(aData, aLength);
+    rv = AddText(Span(aData, aLength));
   }
   return aInterruptable && NS_SUCCEEDED(rv) ? DidProcessATokenImpl() : rv;
 }
@@ -1365,10 +1350,8 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   }
   mDocElement = nullptr;
 
-  // Clear any buffered-up text we have.  It's enough to set the length to 0.
-  // The buffer itself is allocated when we're created and deleted in our
-  // destructor, so don't mess with it.
-  mTextLength = 0;
+  // Clear any buffered-up text we have.
+  mText.ClearAndRetainStorage();
 
   if (mXSLTProcessor) {
     // Get rid of the XSLT processor.
@@ -1446,29 +1429,23 @@ nsresult nsXMLContentSink::AddAttributes(const char16_t** aAtts,
   return NS_OK;
 }
 
-#define NS_ACCUMULATION_BUFFER_SIZE 4096
-
-nsresult nsXMLContentSink::AddText(const char16_t* aText, int32_t aLength) {
+nsresult nsXMLContentSink::AddText(mozilla::Span<const char16_t> aNewText) {
   // Copy data from string into our buffer; flush buffer when it fills up.
-  int32_t offset = 0;
-  while (0 != aLength) {
-    int32_t amount = NS_ACCUMULATION_BUFFER_SIZE - mTextLength;
-    if (0 == amount) {
+  while (!aNewText.IsEmpty()) {
+    size_t spaceRemaining = mText.Capacity() - mText.Length();
+    if (spaceRemaining == 0) {
       nsresult rv = FlushText(false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      MOZ_ASSERT(mTextLength == 0);
-      amount = NS_ACCUMULATION_BUFFER_SIZE;
+      MOZ_ASSERT(mText.IsEmpty());
+      spaceRemaining = mText.Capacity();
     }
 
-    if (amount > aLength) {
-      amount = aLength;
-    }
-    memcpy(&mText[mTextLength], &aText[offset], sizeof(char16_t) * amount);
-    mTextLength += amount;
-    offset += amount;
-    aLength -= amount;
+    size_t numCharsToCopy = std::min(spaceRemaining, aNewText.Length());
+    const auto [newText1, newText2] = aNewText.SplitAt(numCharsToCopy);
+    mText.AppendElements(newText1);
+    aNewText = newText2;
   }
 
   return NS_OK;

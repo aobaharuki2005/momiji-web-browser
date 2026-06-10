@@ -86,7 +86,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "StyleSheetsManager",
-  "resource://devtools/server/actors/utils/stylesheets-manager.js",
+  "resource://devtools/server/actors/stylesheets/stylesheets-manager.js",
   true
 );
 loader.lazyRequireGetter(
@@ -414,7 +414,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
       });
       Object.defineProperty(this, "window", {
         value: this.window,
-        configurable: false,
+        configurable: true,
         writable: false,
       });
       Object.defineProperty(this, "chromeEventHandler", {
@@ -805,6 +805,17 @@ class WindowGlobalTargetActor extends BaseTargetActor {
       return;
     }
     this.destroying = true;
+
+    // In case the window already navigated to another origin,
+    // which is possibly in another process, nullify window
+    // as most, if not all attributes would throw.
+    if (Cu.isRemoteProxy(this.window)) {
+      Object.defineProperty(this, "window", {
+        value: null,
+        configurable: true,
+        writable: false,
+      });
+    }
 
     // Force flushing pending resources if the actor isn't already destroyed.
     // This helps notify the client about pending resources on navigation.
@@ -1442,6 +1453,14 @@ class WindowGlobalTargetActor extends BaseTargetActor {
       this.emit("use-simple-highlighters-updated");
     }
 
+    if (
+      this.isRootActor &&
+      typeof options.animationsPlayBackRateMultiplier !== "undefined"
+    ) {
+      this.browsingContext.animationsPlayBackRateMultiplier =
+        options.animationsPlayBackRateMultiplier;
+    }
+
     if (!this.isTopLevelTarget) {
       // Following DevTools target options should only apply to the top target and be
       // propagated through the window global tree via the platform.
@@ -1478,6 +1497,10 @@ class WindowGlobalTargetActor extends BaseTargetActor {
    * state when closing the toolbox.
    */
   _restoreTargetConfiguration() {
+    if (!this.browsingContext) {
+      return;
+    }
+
     if (this._restoreFocus && this.browsingContext?.isActive && this.window) {
       try {
         this.window.focus();
@@ -1487,6 +1510,10 @@ class WindowGlobalTargetActor extends BaseTargetActor {
           throw e;
         }
       }
+    }
+
+    if (this.isRootActor && !this.browsingContext.isDiscarded) {
+      this.browsingContext.animationsPlayBackRateMultiplier = 1;
     }
   }
 

@@ -10,7 +10,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
 });
@@ -67,7 +67,7 @@ export class UrlbarProviderClipboard extends UrlbarProvider {
       return false;
     }
     textFromClipboard =
-      controller.input.sanitizeTextFromClipboard(textFromClipboard);
+      UrlbarUtils.sanitizeTextFromClipboard(textFromClipboard);
     const validUrl = this.#validUrl(textFromClipboard);
     if (!validUrl) {
       return false;

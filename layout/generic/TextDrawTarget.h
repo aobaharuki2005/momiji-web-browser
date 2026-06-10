@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -244,6 +242,22 @@ class TextDrawTarget : public DrawTarget {
     auto rect = wr::ToLayoutRect(aRect);
     auto color = wr::ToColorF(aColor);
     mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, false, false, color);
+  }
+
+  void AppendSelectionRoundRect(const LayoutDeviceRect& aRect,
+                                const DeviceColor& aColor,
+                                const nsRectCornerRadii& aRadii,
+                                int32_t aAppUnitsPerDevPixel) {
+    auto rect = wr::ToLayoutRect(aRect);
+    auto color = wr::ToColorF(aColor);
+    wr::BorderSide side = {color, wr::BorderStyle::Solid};
+    const wr::BorderSide sides[4] = {side, side, side, side};
+    float h = aRect.width * 0.6f;
+    float v = aRect.height * 0.6f;
+    wr::LayoutSideOffsets widths = {v, h, v, h};
+    auto wrRadius = wr::ToBorderRadius(aRadii, aAppUnitsPerDevPixel);
+    mBuilder.PushBorder(rect, ClipRect(), mBackfaceVisible, widths, {sides, 4},
+                        wrRadius);
   }
 
   // This function is basically designed to slide into the decoration drawing

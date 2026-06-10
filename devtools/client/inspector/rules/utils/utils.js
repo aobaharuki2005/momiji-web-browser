@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  VIEW_NODE_ATTR_TYPE,
   VIEW_NODE_CSS_QUERY_CONTAINER,
   VIEW_NODE_CSS_SELECTOR_WARNINGS,
   VIEW_NODE_FONT_TYPE,
@@ -137,16 +138,31 @@ function getNodeInfo(node, elementStyle) {
   ) {
     type = VIEW_NODE_INACTIVE_CSS;
     value = declaration.getInactiveCssData();
-  } else if (node.closest(".container-query-declaration")) {
+  } else if (node.closest(".container-condition")) {
     type = VIEW_NODE_CSS_QUERY_CONTAINER;
-    const containerQueryEl = node.closest(".container-query");
     value = {
-      ancestorIndex: containerQueryEl.getAttribute("data-ancestor-index"),
+      ancestorIndex: node
+        .closest("[data-ancestor-index]")
+        .getAttribute("data-ancestor-index"),
+      conditionIndex: node
+        .closest("[data-condition-index]")
+        .getAttribute("data-condition-index"),
       rule,
     };
   } else if (node.classList.contains("ruleview-selector-warnings")) {
     type = VIEW_NODE_CSS_SELECTOR_WARNINGS;
     value = node.getAttribute("data-selector-warning-kind").split(",");
+  } else if (
+    // The attribute can be set either on different elements (.inspector-attr-param,
+    // .inspector-attr-name, …), so only check for the attribute existence
+    node.closest("[data-attribute]")
+  ) {
+    type = VIEW_NODE_ATTR_TYPE;
+    value = {
+      attribute: node
+        .closest("[data-attribute]")
+        .getAttribute("data-attribute"),
+    };
   } else if (declaration && classList.contains("inspector-shapeswatch")) {
     type = VIEW_NODE_SHAPE_SWATCH;
     value = {

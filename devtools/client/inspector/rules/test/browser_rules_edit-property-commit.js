@@ -60,7 +60,7 @@ add_task(async function () {
 });
 
 async function runTestData(view, { value, commitKey, modifiers, expected }) {
-  const idRuleEditor = getRuleViewRuleEditor(view, 1);
+  const idRuleEditor = getRuleViewRuleEditorAt(view, 1);
   const propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing the inplace editor field");

@@ -26,6 +26,14 @@ urlbar:
           user started the search action from. The possible values are: `urlbar`
           , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
         type: string
+      location:
+        description: >
+          Which input was used: fullpage, sidebar, or urlbar.
+        type: string
+      window_mode:
+        description: >
+          The window mode: classic, private, or smartwindow.
+        type: string
       interaction:
         description: >
           How the user started the search action. The possible values are:
@@ -84,8 +92,8 @@ urlbar:
           group names are: `heuristic`, `adaptive_history`, `search_history`,
           `search_suggest`, `search_suggest_rich`, `trending_search`,
           `trending_search_rich`, `top_pick`, `top_site`, `remote_tab`,
-          `addon`, `general`, `suggest`, `about_page`, `suggested_index`, and
-          `restrict_keyword`.
+          `addon`, `general`, `suggest`, `about_page`, `suggested_index`,
+          `restrict_keyword`, `ai`.
           If the group did not fall into any of these,
           this will be `unknown` and a bug should be filed to investigate it.
         type: string
@@ -96,8 +104,10 @@ urlbar:
           possible types are:
           `action`,
           `addon`,
+          `ai_chat`,
           `autofill_about`,
-          `autofill_adaptive`,
+          `autofill_adaptive_origin`,
+          `autofill_adaptive_url`,
           `autofill_origin`,
           `autofill_unknown`,
           `autofill_url`,
@@ -111,6 +121,7 @@ urlbar:
           `history`,
           `history_adaptive`,
           `history_adaptive_serp`,
+          `history_autofill_fallback_origin`,
           `history_semantic`,
           `history_semantic_serp`,
           `history_serp`,
@@ -177,16 +188,36 @@ urlbar:
           queried.
           The possible values are: `history`, `none`.
         type: string
+      chat_id: &chat_id
+        description: >
+          UUID for this smart window session. Unique identifier for each chat
+          conversation. Only set when sap is `smartbar`.
+        type: string
+      intent: &intent
+        description: >
+          What was the detected intent for the request: navigate, search,
+          chat, or empty string. Only set when sap is `smartbar`.
+        type: string
+      model: &model
+        description: >
+          Model selected by the user. Only set when sap is `smartbar`.
+        type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1917992
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2003067
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800414#c2
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1917992
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2003067
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_sensitivity:
       - interaction
     notification_emails:
@@ -202,6 +233,14 @@ urlbar:
           `sap` is the meaning of `search access point`. It records where the
           user started the search action from. The possible values are: `urlbar`
           , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
+        type: string
+      location:
+        description: >
+          Which input was used: fullpage, sidebar, or urlbar.
+        type: string
+      window_mode:
+        description: >
+          The window mode: classic, private, or smartwindow.
         type: string
       interaction:
         description: >
@@ -299,10 +338,17 @@ urlbar:
         description: >
           The view time threshold for bounce detection, in seconds.
         type: quantity
+      chat_id: *chat_id
+      intent: *intent
+      model: *model
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1959741
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1959741
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_sensitivity:
       - interaction
     notification_emails:
@@ -323,6 +369,14 @@ urlbar:
           `sap` is the meaning of `search access point`. It records where the
           user started the search action from. The possible values are: `urlbar`
           , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
+        type: string
+      location:
+        description: >
+          Which input was used: fullpage, sidebar, or urlbar.
+        type: string
+      window_mode:
+        description: >
+          The window mode: classic, private, or smartwindow.
         type: string
       interaction:
         description: >
@@ -392,10 +446,17 @@ urlbar:
           `suggest`
           More values may be added in the future.
         type: string
+      chat_id: *chat_id
+      intent: *intent
+      model: *model
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1960836
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1960836
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_sensitivity:
       - interaction
     notification_emails:
@@ -411,6 +472,14 @@ urlbar:
           `sap` is the meaning of `search access point`. It records where the
           user started the search action from. The possible values are: `urlbar`
           , `handoff`, `urlbar_newtab`, `urlbar_addonpage`, and `searchbar`.
+        type: string
+      location:
+        description: >
+          Which input was used: fullpage, sidebar, or urlbar.
+        type: string
+      window_mode:
+        description: >
+          The window mode: classic, private, or smartwindow.
         type: string
       interaction:
         description: >
@@ -468,8 +537,10 @@ urlbar:
           not occur and indicates a bug. The possible types are:
           `action`,
           `addon`,
+          `ai_chat`,
           `autofill_about`,
-          `autofill_adaptive`,
+          `autofill_adaptive_origin`,
+          `autofill_adaptive_url`,
           `autofill_origin`,
           `autofill_unknown`,
           `autofill_url`,
@@ -484,6 +555,7 @@ urlbar:
           `history`,
           `history_adaptive`,
           `history_adaptive_serp`,
+          `history_autofill_fallback_origin`,
           `history_semantic`,
           `history_semantic_serp`,
           `history_serp`,
@@ -567,6 +639,7 @@ urlbar:
       engagement_type:
         description: >
           Records how the user selected the result. The possible values are:
+          `ask_button`,
           `click`,
           `dismiss`,
           `drop_go`,
@@ -575,11 +648,12 @@ urlbar:
           `help`,
           `inaccurate_location`,
           `manage`,
+          `navigate_button`,
           `not_interested`,
           `not_now`,
-          `not_relevant`,
           `opt_in`,
           `paste_go`,
+          `search_button`,
           `show_less_frequently`
         type: string
       groups:
@@ -591,7 +665,7 @@ urlbar:
           `search_suggest`, `search_suggest_rich`, `trending_search`,
           `trending_search_rich`, `top_pick`, `top_site`, `recent_search`,
           `remote_tab`, `addon`, `general`, `suggest`, `about_page`,
-          `suggested_index`, and `restrict_keyword`.
+          `suggested_index`, `restrict_keyword`, `ai`.
           If the group did not fall into any of these, this will be `unknown`
           and a bug should be filed to investigate it. If engagement_type is
           `drop_go` or `paste_go`, this  will be empty string because no results
@@ -604,8 +678,10 @@ urlbar:
           possible types are:
           `action`,
           `addon`,
+          `ai_chat`,
           `autofill_about`,
-          `autofill_adaptive`,
+          `autofill_adaptive_origin`,
+          `autofill_adaptive_url`,
           `autofill_origin`,
           `autofill_unknown`,
           `autofill_url`,
@@ -619,6 +695,7 @@ urlbar:
           `history`,
           `history_adaptive`,
           `history_adaptive_serp`,
+          `history_autofill_fallback_origin`,
           `history_semantic`,
           `history_semantic_serp`,
           `history_serp`,
@@ -685,14 +762,25 @@ urlbar:
           queried.
           The possible values are: `history`, `none`.
         type: string
+      chat_id: *chat_id
+      intent: *intent
+      model: *model
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2003067
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2008925
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1805717#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1842247#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2003067
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2008925
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2009615
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2027637
     data_sensitivity:
       - interaction
     notification_emails:
@@ -734,6 +822,12 @@ urlbar:
           and the search suggestion was not present, then `terminal` will be
           "false,true,false".
         type: string
+      sap:
+        type: string
+        description: >
+          The search access point. It records where the exposure happened.
+          The possible values are: `urlbar`, `handoff`, `urlbar_newtab`,
+          `urlbar_addonpage`, and `searchbar`.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1819766
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1918299
@@ -770,6 +864,12 @@ urlbar:
           urlbar session. If true, the session ended with them. If false, the
           result and keyword were matched at some point during the session but
           the session did not end with them.
+      sap:
+        type: string
+        description: >
+          The search access point. It records where the exposure happened.
+          The possible values are: `urlbar`, `handoff`, `urlbar_newtab`,
+          `urlbar_addonpage`, and `searchbar`.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1881875
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1915507
@@ -793,6 +893,7 @@ urlbar:
       Corresponds to the value of the `browser.urlbar.maxRichResults` pref.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2014318
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
     data_sensitivity:
@@ -802,6 +903,7 @@ urlbar:
     expires: never
     send_in_pings:
       - events
+      - metrics
 
   pref_suggest_all:
     lifetime: application
@@ -812,6 +914,7 @@ urlbar:
       `browser.urlbar.suggest.quicksuggest.all` pref.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1995574
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2014318
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1995574
     data_sensitivity:
@@ -821,6 +924,7 @@ urlbar:
     expires: never
     send_in_pings:
       - events
+      - metrics
 
   pref_suggest_online_available:
     lifetime: application
@@ -833,6 +937,7 @@ urlbar:
       Suggest introduced in 146 with Terms of Use and OHTTP.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2014318
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
     data_sensitivity:
@@ -842,6 +947,7 @@ urlbar:
     expires: never
     send_in_pings:
       - events
+      - metrics
 
   pref_suggest_online_enabled:
     lifetime: application
@@ -855,6 +961,7 @@ urlbar:
       Suggest introduced in 146 with Terms of Use and OHTTP.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2014318
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
     data_sensitivity:
@@ -864,6 +971,7 @@ urlbar:
     expires: never
     send_in_pings:
       - events
+      - metrics
 
   pref_suggest_sponsored:
     lifetime: application
@@ -875,6 +983,7 @@ urlbar:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1849726
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2014318
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
     data_sensitivity:
@@ -884,6 +993,7 @@ urlbar:
     expires: never
     send_in_pings:
       - events
+      - metrics
 
   pref_suggest_topsites:
     lifetime: application
@@ -893,6 +1003,7 @@ urlbar:
       Corresponds to the value of the `browser.urlbar.suggest.topsites` pref.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2014318
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
     data_sensitivity:
@@ -902,6 +1013,7 @@ urlbar:
     expires: never
     send_in_pings:
       - events
+      - metrics
 
   autofill_deletion:
     type: counter
@@ -1320,7 +1432,7 @@ suggest_relevance:
     notification_emails:
       - disco-team@mozilla.com
       - najiang@mozilla.com
-    expires: 153
+    expires: 160
     data_sensitivity:
       - technical
   outcome:
@@ -1340,7 +1452,7 @@ suggest_relevance:
     notification_emails:
       - disco-team@mozilla.com
       - najiang@mozilla.com
-    expires: 153
+    expires: 160
     data_sensitivity:
       - technical
 
@@ -1501,6 +1613,50 @@ urlbar.unifiedsearchbutton:
       - fx-search-telemetry@mozilla.com
     expires: never
     telemetry_mirror: URLBAR_UNIFIEDSEARCHBUTTON_PICKED
+
+urlbar.autofill:
+  reintegration:
+    type: labeled_counter
+    description: >
+      Counts how many times a blocked autofill result was reintegrated
+      (unblocked) because the user picked the same URL as a non-autofill
+      history result.
+    labels:
+      - origin
+      - url
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2019719
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2019719
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  reintegration_after_backspace:
+    type: labeled_timing_distribution
+    description: >
+      Time elapsed between a backspace-induced autofill block and the user
+      re-integrating the same destination by picking it as a non-autofill
+      history result in the same session. Only samples re-integrations of
+      blocks that were set via consecutive backspaces on an autofilled
+      value, blocks set via the result menu Dismiss action do not
+      contribute samples. Labeled by whether the cleared block was at the
+      origin or page-URL level.
+    time_unit: millisecond
+    labels:
+      - origin
+      - url
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037177
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2037177
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    data_sensitivity:
+      - interaction
 
 urlbar.merino:
   latency_by_response_status:

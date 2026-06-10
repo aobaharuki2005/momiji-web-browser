@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,8 +7,8 @@
  * for internal use
  */
 
-#ifndef nsICSSDeclaration_h__
-#define nsICSSDeclaration_h__
+#ifndef nsICSSDeclaration_h_
+#define nsICSSDeclaration_h_
 
 /**
  * This interface provides access to methods analogous to those of
@@ -127,4 +125,4 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
   uint32_t Length() override;                                                  \
   mozilla::css::Rule* GetParentRule() override;
 
-#endif  // nsICSSDeclaration_h__
+#endif  // nsICSSDeclaration_h_

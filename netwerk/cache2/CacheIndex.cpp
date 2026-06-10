@@ -25,7 +25,7 @@
 #define kMinUnwrittenChanges 300
 #define kMinDumpInterval 20000  // in milliseconds
 #define kMaxBufSize 16384
-#define kIndexVersion 0x0000000A
+#define kIndexVersion 0x0000000B
 #define kUpdateIndexStartDelay 50000  // in milliseconds
 #define kTelemetryReportBytesLimit (2U * 1024U * 1024U * 1024U)  // 2GB
 
@@ -853,14 +853,14 @@ nsresult CacheIndex::RemoveEntry(const SHA1Sum::Hash* aHash,
   // error out - async since removal happens on MainThread.
 
   // TODO XXX There may be a hole here where a dictionary entry can get
-  // referenced for a request before RemoveDictionaryFor can run, but after
+  // referenced for a request before RemoveDictionaryOMT can run, but after
   // the entry is removed here.
 
   // Note: we don't want to (re)clear dictionaries when the
   // CacheFileContextEvictor purges entries; they've already been cleared
   // via CacheIndex::EvictByContext synchronously
   if (aClearDictionary) {
-    DictionaryCache::RemoveDictionaryFor(aKey);
+    DictionaryCache::RemoveDictionaryOMT(aKey);
   }
 
   StaticMutexAutoLock lock(sLock);
@@ -1361,6 +1361,21 @@ nsresult CacheIndex::GetEntryForEviction(EvictionSortedSnapshot& aSnapshot,
 
     if (IsForcedValidEntry(&hash)) {
       continue;
+    }
+
+    // Skip entries with active (non-doomed) file handles. These are
+    // currently being read from or written to. Evicting them would doom
+    // the in-progress I/O — in particular, a newly-created entry being
+    // written always has the lowest frecency and would otherwise be
+    // selected as the first eviction candidate, preventing it from ever
+    // being stored. See bug 2031577.
+    {
+      RefPtr<CacheFileHandle> handle;
+      if (CacheFileIOManager::gInstance &&
+          NS_SUCCEEDED(CacheFileIOManager::gInstance->mHandles.GetHandle(
+              &hash, getter_AddRefs(handle)))) {
+        continue;
+      }
     }
 
     if (CacheIndexEntry::IsPinned(rec)) {

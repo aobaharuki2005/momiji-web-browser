@@ -8,14 +8,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import mozilla.components.lib.state.ext.observeAsState
+import kotlinx.coroutines.flow.map
 import org.mozilla.fenix.components.appstate.recommendations.ContentRecommendationsState
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.e2e.SystemInsetsPaddedFragment
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.pocket.controller.DefaultPocketStoriesController
 import org.mozilla.fenix.home.pocket.controller.PocketStoriesController
@@ -28,7 +31,7 @@ import java.lang.ref.WeakReference
 /**
  * A [Fragment] displaying the stories screen.
  */
-class StoriesFragment : Fragment() {
+class StoriesFragment : Fragment(), SystemInsetsPaddedFragment {
 
     private lateinit var interactor: PocketStoriesInteractor
     private lateinit var controller: PocketStoriesController
@@ -57,12 +60,15 @@ class StoriesFragment : Fragment() {
     ): View? = content {
         FirefoxTheme {
             val appStore = components.appStore
-            val storiesState by appStore.observeAsState(initialValue = ContentRecommendationsState()) { state ->
-                state.recommendationState
-            }
+            val storiesState by remember {
+                appStore.stateFlow.map { state -> state.recommendationState }
+            }.collectAsState(initial = ContentRecommendationsState())
+
+            val entryPointExperimentEnabled = components.settings.privateModeAndStoriesEntryPointEnabled
 
             StoriesScreen(
                 state = storiesState,
+                entryPointExperimentEnabled = entryPointExperimentEnabled,
                 interactor = interactor,
                 onNavigationIconClick = {
                     this@StoriesFragment.findNavController().popBackStack()

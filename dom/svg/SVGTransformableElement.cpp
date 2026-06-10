@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,10 +14,8 @@ namespace mozilla::dom {
 
 already_AddRefed<DOMSVGAnimatedTransformList>
 SVGTransformableElement::Transform() {
-  // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
-  // to allocate the DOMSVGAnimatedTransformList if it hasn't already done so:
   return DOMSVGAnimatedTransformList::GetDOMWrapper(
-      GetAnimatedTransformList(DO_ALLOCATE), this);
+      GetOrCreateAnimatedTransformList(), this);
 }
 
 //----------------------------------------------------------------------
@@ -38,10 +34,6 @@ bool SVGTransformableElement::IsEventAttributeNameInternal(nsAtom* aName) {
 //----------------------------------------------------------------------
 // SVGElement overrides
 
-const gfx::Matrix* SVGTransformableElement::GetAnimateMotionTransform() const {
-  return mAnimateMotionTransform.get();
-}
-
 void SVGTransformableElement::SetAnimateMotionTransform(
     const gfx::Matrix* aMatrix) {
   if ((!aMatrix && !mAnimateMotionTransform) ||
@@ -50,7 +42,7 @@ void SVGTransformableElement::SetAnimateMotionTransform(
     return;
   }
   mAnimateMotionTransform =
-      aMatrix ? MakeUnique<gfx::Matrix>(*aMatrix) : nullptr;
+      aMatrix ? std::make_unique<gfx::Matrix>(*aMatrix) : nullptr;
   DidAnimateTransformList();
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
@@ -64,10 +56,10 @@ void SVGTransformableElement::SetAnimateMotionTransform(
   }
 }
 
-SVGAnimatedTransformList* SVGTransformableElement::GetAnimatedTransformList(
-    uint32_t aFlags) {
-  if (!mTransforms && (aFlags & DO_ALLOCATE)) {
-    mTransforms = MakeUnique<SVGAnimatedTransformList>();
+SVGAnimatedTransformList*
+SVGTransformableElement::GetOrCreateAnimatedTransformList() {
+  if (!mTransforms) {
+    mTransforms = std::make_unique<SVGAnimatedTransformList>();
   }
   return mTransforms.get();
 }

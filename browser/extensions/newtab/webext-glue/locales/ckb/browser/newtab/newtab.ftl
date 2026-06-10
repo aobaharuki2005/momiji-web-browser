@@ -16,7 +16,7 @@ newtab-search-box-search-button =
     .title = گەڕان
     .aria-label = گەڕان
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = بزوێنەری گەڕان زیادبکە
 newtab-topsites-add-shortcut-header = قەدبڕی نوێ

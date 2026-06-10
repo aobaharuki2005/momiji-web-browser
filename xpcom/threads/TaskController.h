@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticString.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/UniquePtr.h"
@@ -95,7 +94,7 @@ class TaskManager {
   uint32_t PendingTaskCount() { return mTaskCount; }
 
  protected:
-  virtual ~TaskManager() {}
+  virtual ~TaskManager() = default;
 
  private:
   friend class TaskController;
@@ -202,7 +201,7 @@ class Task {
         mSeqNo(sCurrentTaskSeqNo++),
         mPriority(static_cast<uint32_t>(aPriority)) {}
 
-  virtual ~Task() {}
+  virtual ~Task() = default;
 
   friend class TaskController;
 
@@ -306,7 +305,8 @@ class TaskController {
     mExternalCondVar = aExternalCondVar;
   }
 
-  void SetIdleTaskManager(IdleTaskManager* aIdleTaskManager) {
+  void SetIdleTaskManager(
+      already_AddRefed<IdleTaskManager>&& aIdleTaskManager) {
     mIdleTaskManager = aIdleTaskManager;
   }
   IdleTaskManager* GetIdleTaskManager() { return mIdleTaskManager.get(); }
@@ -368,6 +368,11 @@ class TaskController {
   // If needed, schedule a round of idle processing for moz_jemalloc's
   // idle purge.
   void MayScheduleIdleMemoryCleanup();
+
+  // Request idle memory cleanup, e.g. after GC/CC completion.
+  // Unlike MayScheduleIdleMemoryCleanup, this does not check for pending
+  // tasks -- the caller knows cleanup is needed regardless.
+  void RequestIdleMemoryCleanup(StaticString aReason);
 #endif
 
  private:

@@ -8,7 +8,6 @@ import re
 # ruff linter deprecates List, Tuple required for Python 3.8 compatibility
 from typing import Callable, Dict, List, Optional, Tuple  # noqa UP035
 
-from mozinfo.platforminfo import android_api_to_os_version
 from tomlkit.items import Array, Table
 from tomlkit.toml_document import TOMLDocument
 
@@ -205,10 +204,11 @@ def read_toml(
 def unused_condition(condition: str) -> bool:
     """true if condition does not exist in the CI infrastructure"""
 
-    if (
-        condition.find("os == 'linux' && os_version == '22.04'") >= 0
-        and condition.find(" asan") >= 0
+    if condition.find("os == 'linux' && os_version == '22.04'") >= 0 and (
+        condition.find(" asan") >= 0 or condition.find(" tsan") >= 0
     ):
+        return True
+    if condition.find("os == 'win'") >= 0 and condition.find(" tsan") >= 0:
         return True
     return False
 
@@ -350,6 +350,8 @@ def idiomatic_condition(cond: str, condition: str) -> TupleOptStrListStr:
 
     # Handle special cases
     if android_version is not None:
+        from mozinfo.platforminfo import android_api_to_os_version
+
         v = android_api_to_os_version(android_version)
         if os is None:
             os = "android"
@@ -379,8 +381,6 @@ def idiomatic_condition(cond: str, condition: str) -> TupleOptStrListStr:
                     op = f"os_version == '{os_version}'"
                     i += 1
                     ops.insert(i, op)
-            elif os_version == "18.04":  # no longer used
-                return (None, new_conds)
             else:
                 i = ops.index(f"os_version == '{os_version}'")
             if arch is None:
@@ -620,7 +620,7 @@ def alphabetize_toml_str(manifest, fix: bool = False):
                         if e_cond == "" or (e_cond is None and simple != first_comment):
                             e_cond = " comment"
                             e_comment = simple
-                        if e_comment:
+                        elif e_comment:
                             e_comment += "\n  # " + simple
                         elif simple != comment1:
                             e_comment = simple

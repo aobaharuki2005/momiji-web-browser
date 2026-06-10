@@ -3,7 +3,6 @@
 
 const PREF_SETTINGS_SERVER = "services.settings.server";
 const SIGNER_NAME = "onecrl.content-signature.mozilla.org";
-const TELEMETRY_COMPONENT = "remotesettings";
 
 const CERT_DIR = "test_remote_settings_signatures/";
 const CHAIN_FILES = ["collection_signing_ee.pem", "collection_signing_int.pem"];
@@ -386,10 +385,10 @@ add_task(async function test_check_synchronization_with_signatures() {
   // .. and use this map to register handlers for each path
   registerHandlers(emptyCollectionResponses);
 
-  let startSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE
-  );
+  // Clear events snapshot.
+  Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_ALL_CHANNELS, true);
+  Services.fog.testResetFOG();
+  enableUptakeMetric();
 
   // With all of this set up, we attempt a sync. This will resolve if all is
   // well and throw if something goes wrong.
@@ -397,17 +396,18 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   equal((await client.get()).length, 0);
 
-  let endSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE
-  );
-
-  // ensure that a success histogram is tracked when a succesful sync occurs.
-  let expectedIncrements = {
-    [UptakeTelemetry.STATUS.SYNC_START]: 1,
-    [UptakeTelemetry.STATUS.SUCCESS]: 1,
-  };
-  checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
+  assertTelemetryEvents([
+    {
+      value: UptakeTelemetry.STATUS.SYNC_START,
+      source: TELEMETRY_SOURCE,
+      trigger: "manual",
+    },
+    {
+      value: UptakeTelemetry.STATUS.SUCCESS,
+      source: TELEMETRY_SOURCE,
+      trigger: "manual",
+    },
+  ]);
 
   //
   // 2.
@@ -441,7 +441,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   const twoItemsResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=3000&_since=%221000%22":
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=3000&_since=1000":
       [RESPONSE_TWO_ADDED],
   };
   registerHandlers(twoItemsResponses);
@@ -482,7 +482,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   const oneAddedOneRemovedResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4000&_since=%223000%22":
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4000&_since=3000":
       [RESPONSE_ONE_ADDED_ONE_REMOVED],
   };
   registerHandlers(oneAddedOneRemovedResponses);
@@ -520,7 +520,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   const noOpResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4100&_since=%224000%22":
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4100&_since=4000":
       [RESPONSE_EMPTY_NO_UPDATE],
   };
   registerHandlers(noOpResponses);
@@ -581,7 +581,7 @@ add_task(async function test_check_synchronization_with_signatures() {
     // The first collection state is the three item collection (since
     // there was sync with no updates before) - but, since the signature is wrong,
     // another request will be made...
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=%224000%22":
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=4000":
       [RESPONSE_EMPTY_NO_UPDATE_BAD_SIG],
     // Subsequent signature returned is a valid one for the three item
     // collection.
@@ -591,11 +591,9 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   registerHandlers(badSigGoodSigResponses);
-
-  startSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE
-  );
+  Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_ALL_CHANNELS, true);
+  Services.fog.testResetFOG();
+  enableUptakeMetric();
 
   let syncEventSent = false;
   client.on("sync", () => {
@@ -606,11 +604,6 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   equal((await client.get()).length, 2);
 
-  endSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE
-  );
-
   // since we only fixed the signature, and no data was changed, the sync event
   // was not sent.
   equal(syncEventSent, false);
@@ -618,11 +611,18 @@ add_task(async function test_check_synchronization_with_signatures() {
   // ensure that the failure count is incremented for a succesful sync with an
   // (initial) bad signature - only SERVICES_SETTINGS_SYNC_SIG_FAIL should
   // increment.
-  expectedIncrements = {
-    [UptakeTelemetry.STATUS.SYNC_START]: -2,
-    [UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1,
-  };
-  checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
+  assertTelemetryEvents([
+    {
+      value: UptakeTelemetry.STATUS.SYNC_START,
+      source: TELEMETRY_SOURCE,
+      trigger: "manual",
+    },
+    {
+      value: UptakeTelemetry.STATUS.SIGNATURE_ERROR,
+      source: TELEMETRY_SOURCE,
+      trigger: "manual",
+    },
+  ]);
 
   //
   // 6.
@@ -639,7 +639,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   const badSigGoodOldResponses = {
     // The first collection state is the current state (since there's no update
     // - but, since the signature is wrong, another request will be made)
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=%224000%22":
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=4000":
       [RESPONSE_EMPTY_NO_UPDATE_BAD_SIG],
     // The next request is for the full collection. This will be
     // checked against the valid signature and last_modified times will be
@@ -691,7 +691,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   const badLocalContentGoodSigResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=%223900%22":
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=3900":
       [RESPONSE_COMPLETE_BAD_SIG],
     "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000": [
       RESPONSE_COMPLETE_INITIAL,
@@ -723,43 +723,27 @@ add_task(async function test_check_synchronization_with_signatures() {
   });
 
   // Clear events snapshot.
-  TelemetryTestUtils.assertEvents([], {}, { process: "dummy" });
-
-  const TELEMETRY_EVENTS_FILTERS = {
-    category: "uptake.remotecontent.result",
-    method: "uptake",
-  };
+  Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_ALL_CHANNELS, true);
+  Services.fog.testResetFOG();
+  enableUptakeMetric();
 
   // Events telemetry is sampled on released, use fake channel.
   await client.maybeSync(5000);
 
   // We should report a corruption_error.
-  TelemetryTestUtils.assertEvents(
-    [
-      [
-        "uptake.remotecontent.result",
-        "uptake",
-        "remotesettings",
-        UptakeTelemetry.STATUS.SYNC_START,
-        {
-          source: client.identifier,
-          trigger: "manual",
-        },
-      ],
-      [
-        "uptake.remotecontent.result",
-        "uptake",
-        "remotesettings",
-        UptakeTelemetry.STATUS.CORRUPTION_ERROR,
-        {
-          source: client.identifier,
-          duration: v => v > 0,
-          trigger: "manual",
-        },
-      ],
-    ],
-    TELEMETRY_EVENTS_FILTERS
-  );
+  assertTelemetryEvents([
+    {
+      value: UptakeTelemetry.STATUS.SYNC_START,
+      source: client.identifier,
+      trigger: "manual",
+    },
+    {
+      value: UptakeTelemetry.STATUS.CORRUPTION_ERROR,
+      source: client.identifier,
+      trigger: "manual",
+      duration: d => parseInt(d) > 0,
+    },
+  ]);
 
   // The local data was corrupted, and the Telemetry status reflects it.
   // But the sync overwrote the bad data and was eventually a success.
@@ -824,17 +808,18 @@ add_task(async function test_check_synchronization_with_signatures() {
     }),
   };
   const allBadSigResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000&_since=%224000%22":
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000&_since=4000":
       [RESPONSE_EMPTY_NO_UPDATE_BAD_SIG_6000],
     "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000": [
       RESPONSE_ONLY_RECORD4_BAD_SIG,
     ],
   };
 
-  startSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE
-  );
+  // Reset telemetry capture.
+  Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_ALL_CHANNELS, true);
+  Services.fog.testResetFOG();
+  enableUptakeMetric();
+
   registerHandlers(allBadSigResponses);
   await Assert.rejects(
     client.maybeSync(6000),
@@ -843,15 +828,18 @@ add_task(async function test_check_synchronization_with_signatures() {
   );
 
   // Ensure that the failure is reflected in the accumulated telemetry:
-  endSnapshot = getUptakeTelemetrySnapshot(
-    TELEMETRY_COMPONENT,
-    TELEMETRY_SOURCE
-  );
-  expectedIncrements = {
-    [UptakeTelemetry.STATUS.SYNC_START]: 1,
-    [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 1,
-  };
-  checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
+  assertTelemetryEvents([
+    {
+      value: UptakeTelemetry.STATUS.SYNC_START,
+      source: TELEMETRY_SOURCE,
+      trigger: "manual",
+    },
+    {
+      value: UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR,
+      source: TELEMETRY_SOURCE,
+      trigger: "manual",
+    },
+  ]);
 
   // When signature fails after retry, the local data present before sync
   // should be maintained (if its signature is valid).

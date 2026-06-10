@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,9 +5,10 @@
 #ifndef LAYOUT_SVG_SVGFOREIGNOBJECTFRAME_H_
 #define LAYOUT_SVG_SVGFOREIGNOBJECTFRAME_H_
 
+#include <memory>
+
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/PresShellForwards.h"
-#include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 
 class gfxContext;
@@ -64,7 +63,7 @@ class SVGForeignObjectFrame final : public nsContainerFrame,
   void ReflowSVG() override;
   void NotifySVGChanged(ChangeFlags aFlags) override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
-                              uint32_t aFlags) override;
+                              SVGBBoxFlags aFlags) override;
   bool IsDisplayContainer() override { return true; }
 
   gfxMatrix GetCanvasTM();
@@ -82,7 +81,7 @@ class SVGForeignObjectFrame final : public nsContainerFrame,
   // If width or height is less than or equal to zero we must disable rendering
   bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
-  UniquePtr<gfxMatrix> mCanvasTM;
+  std::unique_ptr<gfxMatrix> mCanvasTM;
 };
 
 }  // namespace mozilla

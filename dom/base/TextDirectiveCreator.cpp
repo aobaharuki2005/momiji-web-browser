@@ -1,10 +1,10 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextDirectiveCreator.h"
+
+#include <algorithm>
 
 #include "AbstractRange.h"
 #include "Document.h"
@@ -131,14 +131,14 @@ TextDirectiveCreator::ExtendRangeToWordBoundaries(AbstractRange* aRange) {
   }
   RangeBoundary startPoint = TextDirectiveUtil::FindNextNonWhitespacePosition<
       TextScanDirection::Right>(aRange->StartRef());
-  startPoint =
-      TextDirectiveUtil::FindWordBoundary<TextScanDirection::Left>(startPoint);
+  startPoint = TextDirectiveUtil::FindWordBoundary<TextScanDirection::Left>(
+      startPoint, TextDirectiveUtil::BreakOnPunctuation::Yes);
 
   RangeBoundary endPoint =
       TextDirectiveUtil::FindNextNonWhitespacePosition<TextScanDirection::Left>(
           aRange->EndRef());
-  endPoint =
-      TextDirectiveUtil::FindWordBoundary<TextScanDirection::Right>(endPoint);
+  endPoint = TextDirectiveUtil::FindWordBoundary<TextScanDirection::Right>(
+      endPoint, TextDirectiveUtil::BreakOnPunctuation::Yes);
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   auto cmp = nsContentUtils::ComparePoints(startPoint, endPoint);
   MOZ_DIAGNOSTIC_ASSERT(
@@ -560,8 +560,8 @@ RangeBasedTextDirectiveCreator::FindAllMatchingCandidates() {
   auto searchEnd =
       TextDirectiveUtil::FindNextNonWhitespacePosition<TextScanDirection::Left>(
           mRange->EndRef());
-  searchEnd =
-      TextDirectiveUtil::FindWordBoundary<TextScanDirection::Left>(searchEnd);
+  searchEnd = TextDirectiveUtil::FindWordBoundary<TextScanDirection::Left>(
+      searchEnd, TextDirectiveUtil::BreakOnPunctuation::No);
 
   const nsTArray<RefPtr<AbstractRange>> endContentRanges =
       MOZ_TRY(FindAllMatchingRanges(mLastWordOfEndContent, mRange->StartRef(),
@@ -743,7 +743,7 @@ TextDirectiveCreator::CheckAllCombinations(
     TEXT_FRAGMENT_LOG("Checking candidate ({},{}). Score: {}",
                       firstExtendedToWordBoundary, secondExtendedToWordBoundary,
                       costFunctionValue);
-    const bool isInvalid = AnyOf(
+    const bool isInvalid = std::any_of(
         aExactWordLengths.begin(), aExactWordLengths.end(),
         [firstExtended = firstExtendedToWordBoundary,
          secondExtended = secondExtendedToWordBoundary](

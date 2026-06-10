@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -607,7 +605,7 @@ static nsTArray<nsCString> GetMIMELabelStrings(const ParsedMIMEType& aType) {
   if (aType.mCodecs.IsEmpty()) {
     nsCString label = baseLabel;
     label.AppendLiteral("_unspecified");
-    labels.AppendElement(label);
+    labels.AppendElement(std::move(label));
     return labels;
   }
   for (const auto& codec : aType.mCodecs) {
@@ -623,7 +621,7 @@ static nsTArray<nsCString> GetMIMELabelStrings(const ParsedMIMEType& aType) {
         ("GetMIMELabelStrings: type: %s, container: %s, codec: %s => label: %s",
          ToString(aType.mMediaType).c_str(), ToString(aType.mContainer).c_str(),
          ToString(codec).c_str(), label.get()));
-    labels.AppendElement(label);
+    labels.AppendElement(std::move(label));
   }
   return labels;
 }
@@ -1940,12 +1938,12 @@ bool MediaRecorder::IsTypeSupported(const nsAString& aMIMEType) {
 nsresult MediaRecorder::CreateAndDispatchBlobEvent(BlobImpl* aBlobImpl) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
-  if (!GetOwnerGlobal()) {
+  if (!GetRelevantGlobal()) {
     // This MediaRecorder has been disconnected in the meantime.
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<Blob> blob = Blob::Create(GetOwnerGlobal(), aBlobImpl);
+  RefPtr<Blob> blob = Blob::Create(GetRelevantGlobal(), aBlobImpl);
   if (NS_WARN_IF(!blob)) {
     return NS_ERROR_FAILURE;
   }

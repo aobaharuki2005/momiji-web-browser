@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -649,9 +647,9 @@ Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
       }
     }
     if (colorSpace.mTransfer.isSome()) {
-      auto primaries = ToTransferFunction(colorSpace.mTransfer.value());
+      auto transferFunction = ToTransferFunction(colorSpace.mTransfer.value());
       if (vi->mTransferFunction.isSome()) {
-        if (vi->mTransferFunction.value() != primaries) {
+        if (vi->mTransferFunction.value() != transferFunction) {
           LOG("Conflict between decoder config and codec string, keeping codec "
               "string transfer function of %d",
               static_cast<int>(vi->mTransferFunction.value()));

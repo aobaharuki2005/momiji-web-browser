@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=4 sw=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Http3Session_H__
-#define Http3Session_H__
+#ifndef Http3Session_H_
+#define Http3Session_H_
 
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/Array.h"
@@ -204,6 +202,15 @@ class Http3Session final : public Http3SessionBase,
   bool AddStream(nsAHttpTransaction* aHttpTransaction, int32_t aPriority,
                  nsIInterfaceRequestor* aCallbacks);
 
+  // Swap the transaction backing an existing stream. Used by the HE /
+  // 0-RTT adopt path: the HappyEyeballsTransaction shim was the key
+  // under which AddStream registered the stream; after the real
+  // nsHttpTransaction adopts it, we need both mStreamTransactionHash
+  // and the stream's own mTransaction to point at the real txn so
+  // CloseTransaction(real_txn) can find the stream. No-op if aOld
+  // isn't in the hash.
+  void SwapTransaction(nsAHttpTransaction* aOld, nsAHttpTransaction* aNew);
+
   bool CanReuse();
 
   // The following functions are used by Http3Stream and
@@ -299,6 +306,8 @@ class Http3Session final : public Http3SessionBase,
       PRIntervalTime aRtt, bool aIsExtendedCONNECT);
   void SetIsInTunnel() { mIsInTunnel = true; }
 
+  void SetDontExclude() { mDontExclude = true; }
+
  private:
   ~Http3Session();
 
@@ -342,7 +351,6 @@ class Http3Session final : public Http3SessionBase,
   void CloseConnectionTelemetry(CloseError& aError, bool aClosing);
   void Finish0Rtt(bool aRestart);
 
-#ifndef ANDROID
   enum ZeroRttOutcome {
     NOT_USED,
     USED_SUCCEEDED,
@@ -351,7 +359,6 @@ class Http3Session final : public Http3SessionBase,
     USED_CONN_CLOSED_BY_NECKO
   };
   void ZeroRttTelemetry(ZeroRttOutcome aOutcome);
-#endif
 
   RefPtr<NeqoHttp3Conn> mHttp3Connection;
   RefPtr<nsAHttpConnection> mConnection;
@@ -482,6 +489,11 @@ class Http3Session final : public Http3SessionBase,
   bool mHasWebTransportSession = false;
   // When true, we don't add this connection info into the Http/3 excluded list.
   bool mDontExclude = false;
+  // True if any stream accepted Do0RTT() during the ZERORTT phase.  When the
+  // session closes with mBeforeConnectedError we suppress ExcludeHttp3: the
+  // PSK ticket is single-use so the retry does a full handshake and the H3
+  // server itself should still be reachable.
+  bool mHad0RttStream = false;
   // The lifetime of the UDP socket is managed by the HttpConnectionUDP. This
   // is only used in Http3Session::ProcessOutput. Using raw pointer here to
   // improve performance.
@@ -492,4 +504,4 @@ class Http3Session final : public Http3SessionBase,
 
 }  // namespace mozilla::net
 
-#endif  // Http3Session_H__
+#endif  // Http3Session_H_

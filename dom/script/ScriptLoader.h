@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -82,14 +80,15 @@ class ScriptRequestProcessor;
 enum class ReferrerPolicy : uint8_t;
 enum class RequestPriority : uint8_t;
 
-class AsyncCompileShutdownObserver final : public nsIObserver {
-  ~AsyncCompileShutdownObserver() { Unregister(); }
+class ShutdownAndMemoryPressureObserver final : public nsIObserver {
+  ~ShutdownAndMemoryPressureObserver() { Unregister(); }
 
  public:
-  explicit AsyncCompileShutdownObserver(ScriptLoader* aLoader)
+  explicit ShutdownAndMemoryPressureObserver(ScriptLoader* aLoader)
       : mScriptLoader(aLoader) {}
 
   void OnShutdown();
+  void OnMemoryPressure();
   void Unregister();
 
   NS_DECL_ISUPPORTS
@@ -140,7 +139,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   explicit ScriptLoader(Document* aDocument);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
-  NS_DECL_CYCLE_COLLECTION_CLASS(ScriptLoader)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoader)
 
   /**
    * Called when the document that owns this script loader changes global. The
@@ -175,6 +174,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   nsIPrincipal* PartitionedPrincipal() const;
 
   bool ShouldBypassCache() const;
+
+#ifdef NIGHTLY_BUILD
+  // The return value depends on the Integrity-Policy-WAICT-v1 header and
+  // doesn't change after the document started loading.
+  bool WAICTHandlesScripts() const;
+#endif
 
   template <typename T>
   bool HasLoaded(const T& aKey) {
@@ -256,7 +261,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   ModuleLoader* GetModuleLoader() { return mModuleLoader; }
 
   void RegisterContentScriptModuleLoader(ModuleLoader* aLoader);
-  void RegisterShadowRealmModuleLoader(ModuleLoader* aLoader);
 
   /**
    *  Check whether to speculatively OMT parse scripts as soon as
@@ -353,8 +357,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * loading the script. The streamed content is expected to be stored on the
    * aRequest argument.
    */
-  nsresult OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
-                            ScriptLoadRequest* aRequest,
+  nsresult OnStreamComplete(nsIChannel* aChannel, ScriptLoadRequest* aRequest,
                             nsresult aChannelStatus, nsresult aSRIStatus,
                             SRICheckDataVerifier* aSRIDataVerifier);
 
@@ -458,11 +461,19 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   void Destroy();
 
-  /*
-   * Get the currently active script. This is used as the initiating script when
-   * executing timeout handler scripts.
+  /**
+   * Called when memory pressure is detected.
+   * This clears cache-related fields.
    */
-  static JS::loader::LoadedScript* GetActiveScript(JSContext* aCx);
+  void OnMemoryPressure();
+
+  /*
+   * Get the currently active script's ScriptFetchInfo.
+   *
+   * This is used as the ScriptFetchInfo of the initiating script when executing
+   * timeout handler scripts.
+   */
+  static JS::loader::ScriptFetchInfo* GetActiveScriptFetchInfo(JSContext* aCx);
 
   Document* GetDocument() const { return mDocument; }
 
@@ -493,12 +504,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   /**
    * Helper function to notify network observers for cached request.
    */
-  void EmulateNetworkEvents(ScriptLoadRequest* aRequest);
+  void EmulateNetworkEvents(ScriptLoadRequest* aRequest,
+                            const Maybe<nsAutoString>& aCharsetForPreload);
 
   void NotifyObserversForCachedScript(
-      nsIURI* aURI, nsINode* aContext, nsIPrincipal* aTriggeringPrincipal,
-      nsSecurityFlags aSecurityFlags, nsContentPolicyType aContentPolicyType,
-      SubResourceNetworkMetadataHolder* aNetworkMetadata);
+      ScriptLoadRequest* aRequest,
+      const Maybe<nsAutoString>& aCharsetForPreload);
 
   /**
    * Unblocks the creator parser of the parser-blocking scripts.
@@ -519,7 +530,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                            const nsAString& aSourceText);
 
   enum class CacheBehavior : uint8_t {
-    DoNothing,
+    DoNothingDisabled,
+    DoNothingExisting,
     Insert,
     Evict,
   };
@@ -640,8 +652,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   bool ReadyToExecuteScripts() { return mEnabled && !mBlockerCount; }
 
-  nsresult VerifySRI(ScriptLoadRequest* aRequest,
-                     nsIIncrementalStreamLoader* aLoader, nsresult aSRIStatus,
+  nsresult VerifySRI(ScriptLoadRequest* aRequest, nsIChannel* aChannel,
+                     nsresult aSRIStatus,
                      SRICheckDataVerifier* aSRIDataVerifier) const;
 
   nsresult SaveSRIHash(ScriptLoadRequest* aRequest,
@@ -653,6 +665,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void ReportWarningToConsole(
       ScriptLoadRequest* aRequest, const char* aMessageName,
       const nsTArray<nsString>& aParams = nsTArray<nsString>()) const override;
+
+  bool IsImportMapSupported() const override { return true; }
 
   void ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest);
 
@@ -677,6 +691,30 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   // Implements https://html.spec.whatwg.org/#execute-the-script-block
   nsresult EvaluateScriptElement(ScriptLoadRequest* aRequest);
 
+  bool StartCollectingDelazifications(JSContext* aCx,
+                                      JS::Handle<JSScript*> aScript,
+                                      JS::Stencil* aStencil);
+  bool StartCollectingDelazifications(JSContext* aCx,
+                                      JS::Handle<JSObject*> aModule,
+                                      JS::Stencil* aStencil);
+
+ private:
+  void AppendDelazificationCollection(JS::Handle<JSScript*> aScript);
+  void AppendDelazificationCollection(JS::Handle<JSObject*> aModule);
+
+  enum class CollectDelazifications : bool { No, Yes };
+
+  void InstantiateStencil(JSContext* aCx, JS::CompileOptions& aCompileOptions,
+                          JS::Stencil* aStencil,
+                          JS::MutableHandle<JSScript*> aScript,
+                          JS::Handle<JSScript*> aDebuggerIntroductionScript,
+                          ErrorResult& aRv,
+                          const nsAutoCString& aProfilerLabelString,
+                          JS::InstantiationStorage* aStorage = nullptr,
+                          CollectDelazifications aCollectDelazifications =
+                              CollectDelazifications::No);
+
+ public:
   // Instantiate classic script from one of the following data:
   //   * text source
   //   * serialized stencil
@@ -684,7 +722,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void InstantiateClassicScriptFromAny(
       JSContext* aCx, JS::CompileOptions& aCompileOptions,
       ScriptLoadRequest* aRequest, JS::MutableHandle<JSScript*> aScript,
-      JS::Handle<JS::Value> aDebuggerPrivateValue,
       JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv);
 
   // Instantiate classic script from one of the following data:
@@ -695,7 +732,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void InstantiateClassicScriptFromMaybeEncodedSource(
       JSContext* aCx, JS::CompileOptions& aCompileOptions,
       ScriptLoadRequest* aRequest, JS::MutableHandle<JSScript*> aScript,
-      JS::Handle<JS::Value> aDebuggerPrivateValue,
       JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv);
 
   // Instantiate classic script from the following data:
@@ -704,7 +740,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
       JSContext* aCx, JS::CompileOptions& aCompileOptions,
       ScriptLoadRequest* aRequest, JS::Stencil* aStencil,
       JS::MutableHandle<JSScript*> aScript,
-      JS::Handle<JS::Value> aDebuggerPrivateValue,
       JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv);
 
   static nsCString& BytecodeMimeTypeFor(const ScriptLoadRequest* aRequest);
@@ -753,6 +788,11 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   void UpdateDiskCache();
 
+  /**
+   * Stop collecting any ongoing delazifications.
+   */
+  void StopCollectingDelazifications();
+
  public:
   /**
    * Encode the stencils and compress it.
@@ -772,6 +812,10 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                               const Vector<uint8_t>& aCompressed);
 
  private:
+  void Decode(JSContext* aCx, JS::CompileOptions& aCompileOptions,
+              const JS::TranscodeRange& aRange, RefPtr<JS::Stencil>& aStencil,
+              ErrorResult& aRv);
+
   /**
    * Discard all disk-cache-related info for scripts queued for the disk cache.
    *
@@ -795,8 +839,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   int32_t PhysicalSizeOfMemoryInGB();
 
   nsresult PrepareLoadedRequest(ScriptLoadRequest* aRequest,
-                                nsIIncrementalStreamLoader* aLoader,
-                                nsresult aStatus);
+                                nsIChannel* aChannel, nsresult aStatus);
 
   void AddDeferRequest(ScriptLoadRequest* aRequest);
   void AddAsyncRequest(ScriptLoadRequest* aRequest);
@@ -811,6 +854,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   bool IsBeforeFCP();
 
+  bool UsesMemoryCache() const { return !!mCache; }
+
  public:
   struct DiskCacheStrategy {
     bool mIsDisabled = false;
@@ -821,6 +866,16 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   };
 
   static DiskCacheStrategy GetDiskCacheStrategy();
+
+  uint16_t GetLoadedFromNeckoAsText() const { return mLoadedFromNeckoAsText; }
+  uint16_t GetLoadedFromNeckoAsSerializedStencil() const {
+    return mLoadedFromNeckoAsSerializedStencil;
+  }
+  uint16_t GetMemoryCacheUsed() const { return mMemoryCacheUsed; }
+  uint16_t GetMemoryCacheRevived() const { return mMemoryCacheRevived; }
+  uint16_t GetMemoryCacheEvictedDirty() const {
+    return mMemoryCacheEvictedDirty;
+  }
 
  private:
   // Check whether the request should be saved to the following or not:
@@ -842,6 +897,11 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   Document* mDocument;  // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
+
+  // The list of ongoing delazification collections.
+  // They'll get aborted on memory pressure.
+  nsTArray<JS::Heap<JSScript*>> mDelazificationCollectingScripts;
+  nsTArray<JS::Heap<JSObject*>> mDelazificationCollectingModules;
 
   // The following lists maintains the list of requests for each phase and
   // situation.
@@ -913,31 +973,74 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   nsCOMPtr<nsIScriptElement> mCurrentScript;
   nsCOMPtr<nsIScriptElement> mCurrentParserInsertedScript;
   nsTArray<RefPtr<ScriptLoader>> mPendingChildLoaders;
-  uint32_t mParserBlockingBlockerCount;
-  uint32_t mBlockerCount;
-  uint32_t mNumberOfProcessors;
-  uint32_t mTotalFullParseSize;
-  int32_t mPhysicalSizeOfMemory;
-  bool mEnabled;
-  bool mDeferEnabled;
-  bool mSpeculativeOMTParsingEnabled;
-  bool mDeferCheckpointReached;
-  bool mBlockingDOMContentLoaded;
-  bool mLoadEventFired;
-  bool mGiveUpDiskCaching;
-  bool mContinueParsingDocumentAfterCurrentScript;
-  bool mHadFCPDoNotUseDirectly;
+  uint32_t mParserBlockingBlockerCount = 0;
+  uint32_t mBlockerCount = 0;
+  uint32_t mNumberOfProcessors = 0;
+  uint32_t mTotalFullParseSize = 0;
+  int32_t mPhysicalSizeOfMemory = -1;
+
+  // Telemetry data for the memory cache usage per document.
+  //
+  //   Load
+  //     |
+  //     v         YES              NO
+  //   has cache? -----> is dirty? ----> mMemoryCacheUsed++
+  //     |                 |
+  //     | NO              | YES
+  //     |                 v           YES
+  //     |               still valid? -----> mMemoryCacheRevived++
+  //     |                 |
+  //     |                 | NO
+  //     |                 v
+  //     |               mMemoryCacheEvictedDirty++
+  //     v                 |
+  //     +<----------------+
+  //     |
+  //     v       NO
+  //   is text? ----> mLoadedFromNeckoAsSerializedStencil++
+  //     |
+  //     | YES
+  //     v
+  //   mLoadedFromNeckoAsText++
+  //
+  // TotalLoads = mLoadedFromNeckoAsText +
+  //              mLoadedFromNeckoAsSerializedStencil +
+  //              mMemoryCacheUsed +
+  //              mMemoryCacheRevived
+  //
+  // SkippedIPC = mMemoryCacheUsed / TotalLoads
+  //
+  // UsedRawStencil = (mMemoryCacheUsed + mMemoryCacheRevived) / TotalLoads
+  //
+  // SkippedCompilation = (mMemoryCacheUsed + mMemoryCacheRevived +
+  //                       mLoadedFromNeckoAsSerializedStencil) / TotalLoads
+  //
+  uint16_t mLoadedFromNeckoAsText = 0;
+  uint16_t mLoadedFromNeckoAsSerializedStencil = 0;
+  uint16_t mMemoryCacheUsed = 0;
+  uint16_t mMemoryCacheRevived = 0;
+  uint16_t mMemoryCacheEvictedDirty = 0;
+
+  bool mEnabled = true;
+  bool mDeferEnabled = false;
+  bool mSpeculativeOMTParsingEnabled = false;
+  bool mDeferCheckpointReached = false;
+  bool mBlockingDOMContentLoaded = false;
+  bool mLoadEventFired = false;
+  bool mGiveUpDiskCaching = false;
+  bool mContinueParsingDocumentAfterCurrentScript = false;
+  bool mHadFCPDoNotUseDirectly = false;
 
   TimeDuration mMainThreadParseTime;
 
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
 
-  // ShutdownObserver for off thread compilations
-  RefPtr<AsyncCompileShutdownObserver> mShutdownObserver;
+  // ShutdownObserver for off thread compilations, and the
+  // observer for the memory pressure.
+  RefPtr<ShutdownAndMemoryPressureObserver> mObserver;
 
   RefPtr<ModuleLoader> mModuleLoader;
   nsTArray<RefPtr<ModuleLoader>> mWebExtModuleLoaders;
-  nsTArray<RefPtr<ModuleLoader>> mShadowRealmModuleLoaders;
 
   RefPtr<SharedScriptCache> mCache;
 

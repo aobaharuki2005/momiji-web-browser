@@ -5,12 +5,14 @@
 //! Computed percentages.
 
 use crate::derives::*;
+use crate::typed_om::{ToTyped, TypedValue};
 use crate::values::generics::{ClampToNonNegative, NonNegative};
 use crate::values::specified::percentage::ToPercentage;
-use crate::values::{serialize_normalized_percentage, CSSFloat};
+use crate::values::{reify_percentage, serialize_normalized_percentage, CSSFloat};
 use crate::Zero;
 use std::fmt;
 use style_traits::{CssWriter, ToCss};
+use thin_vec::ThinVec;
 
 /// A computed percentage.
 #[derive(
@@ -31,7 +33,6 @@ use style_traits::{CssWriter, ToCss};
     ToComputedValue,
     ToResolvedValue,
     ToShmem,
-    ToTyped,
 )]
 #[repr(C)]
 pub struct Percentage(pub CSSFloat);
@@ -68,8 +69,8 @@ impl Zero for Percentage {
 }
 
 impl ToPercentage for Percentage {
-    fn to_percentage(&self) -> CSSFloat {
-        self.0
+    fn to_percentage(&self) -> Option<CSSFloat> {
+        Some(self.0)
     }
 }
 
@@ -109,6 +110,12 @@ impl ToCss for Percentage {
         W: fmt::Write,
     {
         serialize_normalized_percentage(self.0, dest)
+    }
+}
+
+impl ToTyped for Percentage {
+    fn to_typed(&self, dest: &mut ThinVec<TypedValue>) -> Result<(), ()> {
+        reify_percentage(self.0, /* was_calc = */ false, dest)
     }
 }
 

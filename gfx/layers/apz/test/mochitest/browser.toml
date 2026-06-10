@@ -97,7 +97,8 @@ run-if = [
 support-files = [
   "helper_test_select_popup_position.html",
   "helper_test_select_popup_position_transformed_in_parent.html",
-  "helper_test_select_popup_position_zoomed.html"
+  "helper_test_select_popup_position_zoomed.html",
+  "helper_test_select_popup_position_iframe_zoom.html"
 ]
 
 ["browser_test_select_zoom.js"]
@@ -105,7 +106,9 @@ support-files = ["helper_test_select_zoom.html"]
 skip-if = [
   "os == 'mac' && os_version == '10.15' && arch == 'x86_64' && opt", # bug 1938737
   "os == 'win' && os_version == '11.26100' && arch == 'x86'", # bug 1495580
+  "os == 'win' && os_version == '11.26200' && arch == 'x86'", # bug 1495580
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'", # bug 1495580
+  "os == 'win' && os_version == '11.26200' && arch == 'x86_64'", # bug 1495580
 ]
 
 ["browser_test_tab_drag_event_counts.js"]

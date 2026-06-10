@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -85,8 +84,8 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(CompositionTransaction, EditTransactionBase,
-                                   mEditorBase)
+NS_IMPL_CYCLE_COLLECTION_WEAK_PTR_INHERITED(CompositionTransaction,
+                                            EditTransactionBase, mEditorBase)
 // mRangeList can't lead to cycles
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CompositionTransaction)
@@ -138,19 +137,23 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
   } else {
     // If composition string is split to multiple text nodes, we should put
     // whole new composition string to the first text node and remove the
-    // compostion string in other nodes.
+    // composition string in the following nodes.
     // TODO: This should be handled by `TextComposition` because this assumes
     //       that composition string has never touched by JS.  However, it
-    //       would occur if the web app is a corrabolation software which
+    //       would occur if the web app is a corroboration software which
     //       multiple users can modify anyware in an editor.
     // TODO: And if composition starts from a following text node, the offset
     //       here is outdated and it will cause inserting composition string
     //       **before** the proper point from point of view of the users.
-    uint32_t replaceableLength = textNode->TextLength() - mOffset;
+    const uint32_t replaceableLengthInFirstText =
+        std::min(mReplaceLength, static_cast<uint32_t>(std::max<int64_t>(
+                                     textNode->TextDataLength() - mOffset, 0)));
     IgnoredErrorResult error;
-    editorBase->DoReplaceText(*textNode, mOffset, mReplaceLength,
+    // FIXME: If mStringToInsert is empty string and mOffset is 0 in HTMLEditor,
+    // we should delete the `Text` instead. See bug 2019186.
+    editorBase->DoReplaceText(*textNode, mOffset, replaceableLengthInFirstText,
                               mStringToInsert, error);
-    if (error.Failed()) {
+    if (error.Failed()) [[unlikely]] {
       NS_WARNING("EditorBase::DoReplaceText() failed");
       return error.StealNSResult();
     }
@@ -158,36 +161,35 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
     // Don't use RangeUpdaterRef().SelAdjReplaceText() here because undoing
     // this transaction will remove whole composition string.  Therefore,
     // selection should be restored at start of composition string.
-    // XXX Perhaps, this is a bug of our selection managemnt at undoing.
-    editorBase->RangeUpdaterRef().SelAdjDeleteText(*textNode, mOffset,
-                                                   replaceableLength);
+    // XXX Perhaps, this is a bug of our selection management at undoing.
+    editorBase->RangeUpdaterRef().SelAdjDeleteText(
+        *textNode, mOffset, replaceableLengthInFirstText);
     // But some ranges which after the composition string should be restored
     // as-is.
     editorBase->RangeUpdaterRef().SelAdjInsertText(*textNode, mOffset,
                                                    mStringToInsert.Length());
 
-    if (replaceableLength < mReplaceLength) {
+    if (replaceableLengthInFirstText < mReplaceLength) {
       // XXX Perhaps, scanning following sibling text nodes with composition
       //     string length which we know is wrong because there may be
       //     non-empty text nodes which are inserted by JS.  Instead, we
       //     should remove all text in the ranges of IME selections.
-      uint32_t remainLength = mReplaceLength - replaceableLength;
+      uint32_t remainingLength = mReplaceLength - replaceableLengthInFirstText;
       IgnoredErrorResult ignoredError;
-      for (nsIContent* nextSibling = textNode->GetNextSibling();
-           nextSibling && nextSibling->IsText() && remainLength;
-           nextSibling = nextSibling->GetNextSibling()) {
-        OwningNonNull<Text> followingTextNode =
-            *static_cast<Text*>(nextSibling);
-        uint32_t textLength = followingTextNode->TextLength();
-        editorBase->DoDeleteText(followingTextNode, 0, remainLength,
-                                 ignoredError);
+      for (RefPtr<Text> text = Text::FromNodeOrNull(textNode->GetNextSibling());
+           text && remainingLength;
+           text = Text::FromNodeOrNull(text->GetNextSibling())) {
+        const uint32_t deletableLengthInText =
+            std::min(text->TextDataLength(), remainingLength);
+        // FIXME: We should delete the Text when all of its data is deleted
+        // now and we're working for HTMLEditor, see bug 2019186.
+        editorBase->DoDeleteText(*text, 0, deletableLengthInText, ignoredError);
         NS_WARNING_ASSERTION(!ignoredError.Failed(),
                              "EditorBase::DoDeleteText() failed, but ignored");
         ignoredError.SuppressException();
-        // XXX Needs to check whether the text is deleted as expected.
-        editorBase->RangeUpdaterRef().SelAdjDeleteText(followingTextNode, 0,
-                                                       remainLength);
-        remainLength -= textLength;
+        editorBase->RangeUpdaterRef().SelAdjDeleteText(*text, 0,
+                                                       deletableLengthInText);
+        remainingLength -= deletableLengthInText;
       }
     }
   }
@@ -330,9 +332,9 @@ nsresult CompositionTransaction::SetIMESelection(
   }
 
   IgnoredErrorResult ignoredError;
-  for (uint32_t i = 0; i < std::size(kIMESelections); ++i) {
+  for (short IMESelection : kIMESelections) {
     RefPtr<Selection> selectionOfIME =
-        selectionController->GetSelection(kIMESelections[i]);
+        selectionController->GetSelection(IMESelection);
     if (!selectionOfIME) {
       NS_WARNING("nsISelectionController::GetSelection() failed");
       continue;

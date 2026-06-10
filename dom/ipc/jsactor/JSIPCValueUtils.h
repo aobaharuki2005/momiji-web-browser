@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,25 +53,6 @@ class JSIPCValueUtils {
   // This is equivalent to calling FromJSVal with aSendTyped equal to true.
   static JSIPCValue TypedFromJSVal(Context& aCx, JS::Handle<JS::Value> aVal,
                                    ErrorResult& aError);
-
-  // Wrapper class to abstract away the details of the auxiliary data structure
-  // needed for PrepareForSending.
-  class SCDHolder final {
-   public:
-    SCDHolder() = default;
-    ~SCDHolder() = default;
-    friend class JSIPCValueUtils;
-
-   private:
-    nsTArray<UniquePtr<ipc::StructuredCloneData>> mSCDs;
-  };
-
-  // Prepare a JSIPCValue for IPC by turning any StructuredCloneData it
-  // contains into ClonedMessageData. Auxiliary data needed for IPC
-  // serialization will be added to aHolder, so it needs to be kept alive
-  // until aValue is sent over IPC.
-  [[nodiscard]] static bool PrepareForSending(SCDHolder& aHolder,
-                                              JSIPCValue& aValue);
 
   // Convert the IPDL representation of a JS value back into the equivalent
   // JS value. This will return false on failure.

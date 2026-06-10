@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,11 +14,14 @@ struct already_AddRefed;
 template <class T>
 class nsCOMPtr;
 class nsISupports;
+template <class T>
+class RefPtr;
 
 namespace mozilla {
 
 struct CSSPropertyId;
 class ErrorResult;
+struct StyleUnitValue;
 
 namespace dom {
 
@@ -30,6 +31,15 @@ class CSSUnitValue final : public CSSNumericValue {
  public:
   CSSUnitValue(nsCOMPtr<nsISupports> aParent, double aValue,
                const nsACString& aUnit);
+
+  static RefPtr<CSSUnitValue> Create(nsCOMPtr<nsISupports> aParent,
+                                     double aValue, const nsACString& aUnit);
+
+  static RefPtr<CSSUnitValue> Create(nsCOMPtr<nsISupports> aParent,
+                                     double aValue);
+
+  static RefPtr<CSSUnitValue> Create(nsCOMPtr<nsISupports> aParent,
+                                     const StyleUnitValue& aUnitValue);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -52,6 +62,8 @@ class CSSUnitValue final : public CSSNumericValue {
 
   void ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
                              nsACString& aDest) const;
+
+  StyleUnitValue ToStyleUnitValue() const;
 
  private:
   virtual ~CSSUnitValue() = default;

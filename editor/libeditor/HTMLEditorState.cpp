@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,7 +36,7 @@ namespace mozilla {
 using namespace dom;
 
 using EditorType = EditorUtils::EditorType;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 
 /*****************************************************************************
  * ListElementSelectionState
@@ -282,9 +280,9 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   else if (atStartOfSelection.IsContainerHTMLElement(nsGkAtoms::html) &&
            atBodyOrDocumentElement.IsSet() &&
            atStartOfSelection.Offset() == atBodyOrDocumentElement.Offset()) {
-    editTargetContent = HTMLEditUtils::GetNextContent(
-        atStartOfSelection, {WalkTreeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::Unused, aHTMLEditor.ComputeEditingHost());
+    editTargetContent = HTMLEditUtils::GetNextLeafContent(
+        atStartOfSelection, {LeafNodeOption::IgnoreNonEditableNode},
+        BlockInlineCheck::Auto, aHTMLEditor.ComputeEditingHost());
     if (NS_WARN_IF(!editTargetContent)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;

@@ -1,6 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
-
 ChromeUtils.defineESModuleGetters(this, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
@@ -22,7 +19,7 @@ const selectDownloads = `
 add_task(async function test_removeDownloadsMetadataFromDb() {
   Services.prefs.setStringPref("toolkit.sqlitejsm.loglevel", "Debug");
   // Confirm that test_places.sqlite has the download information.
-  const testDbPath = PathUtils.join(do_get_cwd().path, "test_places.sqlite");
+  const testDbPath = await setupPlacesDatabase("test_places.sqlite");
   let dbConnection;
   try {
     dbConnection = await Sqlite.openConnection({
@@ -66,15 +63,8 @@ add_task(async function test_removeDownloadsMetadataFromDb() {
   }
 
   // Make a copy of test_places.sqlite and remove the download entries from it.
-  const testDbCopyDir = await IOUtils.createUniqueDirectory(
-    PathUtils.tempDir,
-    "test_removeDownloadsMetadataFromDb"
-  );
-  registerCleanupFunction(async () => {
-    await IOUtils.remove(testDbCopyDir, { recursive: true });
-  });
   const testDbCopyPath = PathUtils.join(
-    testDbCopyDir,
+    PathUtils.profileDir,
     "copy_test_places.sqlite"
   );
   await IOUtils.copy(testDbPath, testDbCopyPath);

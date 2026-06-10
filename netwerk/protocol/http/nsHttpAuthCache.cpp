@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -97,7 +96,7 @@ nsresult nsHttpAuthCache::GetAuthEntryForPath(const nsACString& scheme,
                                               nsACString const& originSuffix,
                                               RefPtr<nsHttpAuthEntry>& entry) {
   LOG(("nsHttpAuthCache::GetAuthEntryForPath %p [path=%s]\n", this,
-       path.BeginReading()));
+       PromiseFlatCString(path).get()));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
@@ -117,7 +116,7 @@ nsresult nsHttpAuthCache::GetAuthEntryForDomain(const nsACString& scheme,
 
 {
   LOG(("nsHttpAuthCache::GetAuthEntryForDomain %p [realm=%s]\n", this,
-       realm.BeginReading()));
+       PromiseFlatCString(realm).get()));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
@@ -136,7 +135,8 @@ nsresult nsHttpAuthCache::SetAuthEntry(
   nsresult rv;
 
   LOG(("nsHttpAuthCache::SetAuthEntry %p [realm=%s path=%s metadata=%p]\n",
-       this, realm.BeginReading(), path.BeginReading(), metadata));
+       this, PromiseFlatCString(realm).get(), PromiseFlatCString(path).get(),
+       metadata));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);

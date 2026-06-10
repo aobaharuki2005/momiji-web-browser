@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// @ts-nocheck - TODO - Remove this to type check this file.
+
 /**
  * @typedef {import("../actors/MLEngineParent.sys.mjs").MLEngineParent} MLEngineParent
  * @typedef {import("../content/Utils.sys.mjs").ProgressAndStatusCallbackParams} ProgressAndStatusCallbackParams
@@ -56,7 +58,7 @@ export const FILE_REGEX =
 
 /**
  * @constant
- * @type {{ [key: string]: string }}
+ * @type {{ [key: string]: { modelId: string, dtype: string } }}
  * @description Supported tasks with their default model identifiers.
  */
 export const DEFAULT_MODELS = Object.freeze({
@@ -163,18 +165,44 @@ export const FEATURES = {
     engineId: "smart-tab-topic-engine",
     fluentId: "mlmodel-smart-tab-topic-engine",
   },
+  // see toolkit/components/formautofill/shared/FormAutofillML.sys.mjs
+  "formfill-classification": {
+    engineId: "formfill-classification-engine",
+    fluentId: "mlmodel-formfill-engine",
+  },
   // see toolkit/components/ml/content/nlp/EmbeddingsGenerator.sys.mjs
   "simple-text-embedder": {
     engineId: "simple-text-embedder-engine",
   },
   // see browser/components/genai/LinkPreviewModel.sys.mjs
   "link-preview": {
-    engineId: "wllamapreview",
+    engineId: "link-preview",
     fluentId: "mlmodel-link-preview",
   },
-  // see browser/components/genai/SmartAssistEngine.sys.mjs
+  // see browser/components/aiwindow/models/IntentClassifier.sys.mjs
   "smart-intent": {
     engineId: "smart-intent",
+  },
+  chat: {
+    engineId: "smart-openai",
+  },
+  "title-generation": {
+    engineId: "title-generation-engine",
+  },
+  "conversation-suggestions-sidebar-starter": {
+    engineId: "smart-openai",
+  },
+  "conversation-suggestions-followup": {
+    engineId: "smart-openai",
+  },
+  "memories-initial-generation-system": {
+    engineId: "smart-openai-memories-generation",
+  },
+  "memories-message-classification-system": {
+    engineId: "smart-openai-memories-usage",
+  },
+  "llm-telemetry": {
+    engineId: "llm-telemetry-engine",
   },
 };
 
@@ -344,6 +372,7 @@ export const AllowedBoolean = [false, true];
 /**
  * @import { TranslationsEngineParent } from "../../translations/actors/TranslationsEngineParent.sys.mjs"
  * @import { StaticEmbeddingsOptions } from "./backends/StaticEmbeddingsPipeline.d.ts"
+ * @import { PURPOSES, SERVICE_TYPES } from "../../../../browser/components/aiwindow/models/Utils.sys.mjs"
  */
 
 const PIPELINE_TEST_NAMES = ["moz-echo", "test-echo"];
@@ -430,6 +459,13 @@ export class PipelineOptions {
    * @type {?string}
    */
   modelRevision = null;
+
+  /**
+   * The flowId is used to track a flow of events for telemetry.
+   *
+   * @type {?string}
+   */
+  flowId = null;
 
   /**
    * The identifier for the tokenizer associated with the model, used for pre-processing inputs.
@@ -598,9 +634,16 @@ export class PipelineOptions {
   /**
    * The service type for an OpenAIPipeline.
    *
-   * @type {"ai" | "memories" | "s2s" | null}
+   * @type {SERVICE_TYPES[keyof SERVICE_TYPES] | null}
    */
   serviceType = null;
+
+  /**
+   * The purpose of the request, used for telemetry tracking.
+   *
+   * @type {PURPOSES[keyof PURPOSES] | null}
+   */
+  purpose = null;
 
   /**
    * This option allows for extra headers to be passed to
@@ -792,6 +835,7 @@ export class PipelineOptions {
       "timeoutMS",
       "modelId",
       "modelRevision",
+      "flowId",
       "tokenizerId",
       "tokenizerRevision",
       "processorId",
@@ -817,6 +861,7 @@ export class PipelineOptions {
       "apiKey",
       "staticEmbeddingsOptions",
       "serviceType",
+      "purpose",
       "extraHeaders",
     ];
 
@@ -939,6 +984,7 @@ export class PipelineOptions {
       timeoutMS: this.timeoutMS,
       modelId: this.modelId,
       modelRevision: this.modelRevision,
+      flowId: this.flowId,
       tokenizerId: this.tokenizerId,
       tokenizerRevision: this.tokenizerRevision,
       processorId: this.processorId,
@@ -964,6 +1010,7 @@ export class PipelineOptions {
       apiKey: this.apiKey,
       staticEmbeddingsOptions: this.staticEmbeddingsOptions,
       serviceType: this.serviceType,
+      purpose: this.purpose,
       extraHeaders: this.extraHeaders,
     };
   }
@@ -983,7 +1030,22 @@ export class PipelineOptions {
   }
 
   /**
-   * Checks if this PipelineOptions instance is equal to another.
+   * Per-request metadata fields that must not influence engine reuse.
+   * Callers differing only in these values should share one engine.
+   */
+  static #nonIdentityKeys = new Set([
+    "engineId",
+    "featureId",
+    "flowId",
+    "logLevel",
+    "timeoutMS",
+    "serviceType",
+    "purpose",
+  ]);
+
+  /**
+   * Checks if this PipelineOptions is equivalent to another for engine-reuse
+   * purposes. Fields in #nonIdentityKeys are intentionally ignored.
    *
    * @param {PipelineOptions} other - The other PipelineOptions instance to compare with.
    * @returns {boolean} True if the instances are equal, false otherwise.
@@ -994,6 +1056,7 @@ export class PipelineOptions {
     }
     const options = this.getOptions();
     const otherOptions = other.getOptions();
+    const skip = PipelineOptions.#nonIdentityKeys;
 
     const isEqual = (val1, val2) => {
       if (val1 === val2) {
@@ -1013,8 +1076,8 @@ export class PipelineOptions {
       return keys1.every(key => isEqual(val1[key], val2[key]));
     };
 
-    return Object.keys(options).every(key =>
-      isEqual(options[key], otherOptions[key])
+    return Object.keys(options).every(
+      key => skip.has(key) || isEqual(options[key], otherOptions[key])
     );
   }
 }
@@ -1143,9 +1206,12 @@ export class EngineProcess {
 /**
  * Creates a new `MLEngine` instance with the provided options.
  *
+ * @template {EngineFeatureIds} FeatureID
+ *
  * @param {object} options - Configuration options for the ML engine.
  * @param {?function(ProgressAndStatusCallbackParams):void} [notificationsCallback] - A function to call to indicate notifications.
  * @param {?AbortSignal} [abortSignal] - AbortSignal to cancel the download.
+ * @returns {Promise<MLEngine<FeatureID>>}
  */
 export async function createEngine(
   options,
@@ -1165,6 +1231,7 @@ export async function createEngine(
       engineId: options.engineId || "",
       modelId: options.modelId || "",
       featureId: options.featureId || "",
+      flow_id: options.flowId || "",
       taskName: options.taskName || "",
       error: e.constructor.name || "",
     });

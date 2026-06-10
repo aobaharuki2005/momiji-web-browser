@@ -1,12 +1,10 @@
-/* vim: se cin sw=2 ts=2 et : */
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WIDGET_GTK_GFXINFO_h__
-#define WIDGET_GTK_GFXINFO_h__
+#ifndef WIDGET_GTK_GFXINFO_h_
+#define WIDGET_GTK_GFXINFO_h_
 
 #include "GfxInfoBase.h"
 #include "nsString.h"
@@ -128,6 +126,8 @@ class GfxInfo final : public GfxInfoBase {
   int mVAAPISupportedCodecs = 0;
   mozilla::Maybe<bool> mIsV4L2Supported;
   int mV4L2SupportedCodecs = 0;
+  mozilla::Maybe<bool> mIsVulkanSupported;
+  int mVulkanSupportedCodecs = 0;
 
   static int sGLXTestPipe;
   static pid_t sGLXTestPID;
@@ -138,6 +138,7 @@ class GfxInfo final : public GfxInfoBase {
 
   void GetDataVAAPI();
   void GetDataV4L2();
+  void GetDataVulkan();
   void V4L2ProbeDevice(nsCString& dev);
   void AddCrashReportAnnotations();
 };
@@ -145,4 +146,4 @@ class GfxInfo final : public GfxInfoBase {
 }  // namespace widget
 }  // namespace mozilla
 
-#endif /* WIDGET_GTK_GFXINFO_h__ */
+#endif /* WIDGET_GTK_GFXINFO_h_ */

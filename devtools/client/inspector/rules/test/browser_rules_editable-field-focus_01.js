@@ -27,7 +27,7 @@ add_task(async function () {
   await selectNode("#testid", inspector);
 
   info("Click on the selector of the inline style ('element')");
-  let ruleEditor = getRuleViewRuleEditor(view, 0);
+  let ruleEditor = getRuleViewRuleEditorAt(view, 0);
   const onFocus = once(ruleEditor.element, "focus", true);
 
   // We intentionally turn off this a11y check, because the following click
@@ -46,7 +46,7 @@ add_task(async function () {
   );
 
   info("Focus the next field with Tab");
-  ruleEditor = getRuleViewRuleEditor(view, 1);
+  ruleEditor = getRuleViewRuleEditorAt(view, 1);
   await focusNextEditableField(view, ruleEditor);
   assertEditor(
     view,
@@ -90,7 +90,7 @@ add_task(async function () {
     "Focus should have moved to the new property span"
   );
 
-  ruleEditor = getRuleViewRuleEditor(view, 2);
+  ruleEditor = getRuleViewRuleEditorAt(view, 2);
 
   await focusNextEditableField(view, ruleEditor);
   assertEditor(

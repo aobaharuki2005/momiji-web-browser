@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -122,8 +120,9 @@ SVGAnimatedInteger::DOMAnimatedInteger::~DOMAnimatedInteger() {
   sSVGAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<SMILAttr> SVGAnimatedInteger::ToSMILAttr(SVGElement* aSVGElement) {
-  return MakeUnique<SMILInteger>(this, aSVGElement);
+std::unique_ptr<SMILAttr> SVGAnimatedInteger::ToSMILAttr(
+    SVGElement* aSVGElement) {
+  return std::make_unique<SMILInteger>(this, aSVGElement);
 }
 
 nsresult SVGAnimatedInteger::SMILInteger::ValueFromString(
@@ -137,7 +136,7 @@ nsresult SVGAnimatedInteger::SMILInteger::ValueFromString(
 
   SMILValue smilVal(SMILIntegerType::Singleton());
   smilVal.mU.mInt = val;
-  aValue = smilVal;
+  aValue = std::move(smilVal);
   return NS_OK;
 }
 

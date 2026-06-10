@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -10,17 +8,15 @@
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/Range.h"       // mozilla::Range
 #include "mozilla/RangedPtr.h"   // mozilla::RangedPtr
-
-#include "mozilla/Sprintf.h"    // SprintfLiteral
+#include "mozilla/Sprintf.h"     // SprintfLiteral
 #include "mozilla/TextUtils.h"  // mozilla::AsciiAlphanumericToNumber, mozilla::IsAsciiDigit, mozilla::IsAsciiHexDigit
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 #include <utility>   // std::move
 
-#include "jsnum.h"  // ParseDecimalNumber, GetFullInteger, FullStringToDouble
-
-#include "builtin/Array.h"              // NewDenseCopiedArray
+#include "builtin/Array.h"  // NewDenseCopiedArray
+#include "builtin/Number.h"  // ParseDecimalNumber, GetFullInteger, FullStringToDouble
 #include "builtin/ParseRecordObject.h"  // js::ParseRecordObject
 #include "ds/IdValuePair.h"             // IdValuePair
 #include "gc/GCEnum.h"                  // CanGC
@@ -1131,11 +1127,7 @@ inline bool JSONReviveHandler<CharT>::finishObjectMember(
 
   Rooted<ParseRecordObject*> memberRecord(context(),
                                           parseRecordStack.popCopy());
-  // Removes the member's key from the stack
-  parseRecordStack.popBack();
-
   Rooted<JS::PropertyKey> key(context(), (*properties)->back().id);
-
   return parseRecordStack.back()->addEntries(context(), key, memberRecord);
 }
 

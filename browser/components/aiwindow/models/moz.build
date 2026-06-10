@@ -7,11 +7,11 @@ with Files("**"):
 
 DIRS += [
     "memories",
-    "prompts",
 ]
 
 BROWSER_CHROME_MANIFESTS += [
     "tests/browser/browser.toml",
+    "tests/browser_eval/eval.toml",
 ]
 
 MOZ_SRC_FILES += [
@@ -19,11 +19,19 @@ MOZ_SRC_FILES += [
     "ChatUtils.sys.mjs",
     "ConversationSuggestions.sys.mjs",
     "IntentClassifier.sys.mjs",
+    "PreferencesNavMap.sys.mjs",
+    "PromptLoader.sys.mjs",
+    "PromptOptimizer.sys.mjs",
     "SearchBrowsingHistory.sys.mjs",
     "SearchBrowsingHistoryDomainBoost.sys.mjs",
+    "SecurityProperties.sys.mjs",
+    "SmartWindowNavigationInfo.sys.mjs",
+    "TelemetryManager.sys.mjs",
+    "TelemetryUtils.sys.mjs",
     "TitleGeneration.sys.mjs",
     "Tools.sys.mjs",
     "Utils.sys.mjs",
+    "WCSMerinoClient.sys.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [

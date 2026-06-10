@@ -7,14 +7,14 @@
 use std::cell::RefCell;
 
 use neqo_common::qerror;
-use neqo_crypto::{hkdf, Aead, AeadTrait as _, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
+use nss::{RecordProtection as Aead, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3, hkdf};
 
-use crate::{version::Version, Error, Res};
+use crate::{Error, Res, version::Version};
 
 /// The AEAD used for Retry is fixed, so use thread local storage.
 fn make_aead(version: Version) -> Aead {
     #[cfg(debug_assertions)]
-    ::neqo_crypto::assert_initialized();
+    ::nss::assert_initialized();
 
     let secret = hkdf::import_key(TLS_VERSION_1_3, version.retry_secret()).expect("can import key");
     Aead::new(
@@ -50,6 +50,5 @@ where
 
 /// Determine how large the expansion is for a given key.
 pub fn expansion(version: Version) -> usize {
-    use_aead(version, |aead| Ok(aead.expansion()))
-        .unwrap_or_else(|_| panic!("Unable to access Retry AEAD"))
+    use_aead(version, |aead| Ok(aead.expansion())).expect("Unable to access Retry AEAD")
 }

@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIGlobalObject_h__
-#define nsIGlobalObject_h__
+#ifndef nsIGlobalObject_h_
+#define nsIGlobalObject_h_
 
 #include "js/TypeDecls.h"
 #include "mozilla/LinkedList.h"
@@ -14,7 +12,6 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
-#include "nsContentUtils.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsRFPService.h"
@@ -31,6 +28,7 @@ class nsICookieJarSettings;
 class nsIPrincipal;
 class nsIURI;
 class nsPIDOMWindowInner;
+enum class PropertiesFile : uint8_t;
 
 namespace mozilla {
 class DOMEventTargetHelper;
@@ -256,6 +254,7 @@ class nsIGlobalObject : public nsISupports {
   // Returns a pointer to this object as an inner window if this is one or
   // nullptr otherwise.
   nsPIDOMWindowInner* GetAsInnerWindow();
+  bool IsInnerWindow() const { return mIsInnerWindow; }
 
   virtual void TriggerUpdateCCFlag() {}
 
@@ -387,8 +386,8 @@ class nsIGlobalObject : public nsISupports {
    *          containing error.
    */
   virtual void ReportToConsole(
-      uint32_t aErrorFlags, const nsCString& aCategory,
-      nsContentUtils::PropertiesFile aFile, const nsCString& aMessageName,
+      uint32_t aErrorFlags, const nsCString& aCategory, PropertiesFile aFile,
+      const nsCString& aMessageName,
       const nsTArray<nsString>& aParams = nsTArray<nsString>(),
       const mozilla::SourceLocation& aLocation =
           mozilla::JSCallingLocation::Get());
@@ -422,4 +421,4 @@ class nsIGlobalObject : public nsISupports {
   RefPtr<mozilla::dom::Function> mByteLengthQueuingStrategySizeFunction;
 };
 
-#endif  // nsIGlobalObject_h__
+#endif  // nsIGlobalObject_h_

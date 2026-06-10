@@ -22,7 +22,7 @@ nsICOEncoder::nsICOEncoder()
     : mICOFileHeader{},
       mICODirEntry{},
       mImageBufferStart(nullptr),
-      mImageBufferCurr(0),
+      mImageBufferCurr(nullptr),
       mImageBufferSize(0),
       mImageBufferReadPoint(0),
       mFinished(false),
@@ -35,6 +35,13 @@ nsICOEncoder::~nsICOEncoder() {
     mImageBufferStart = nullptr;
     mImageBufferCurr = nullptr;
   }
+}
+
+NS_IMETHODIMP
+nsICOEncoder::SetColorSpaceInfo(imgIEncoder::CICPColourPrimaries,
+                                imgIEncoder::CICPTransferCharacteristics,
+                                imgIEncoder::CICPMatrixCoefficients, bool) {
+  return NS_OK;
 }
 
 // nsICOEncoder::InitFromData

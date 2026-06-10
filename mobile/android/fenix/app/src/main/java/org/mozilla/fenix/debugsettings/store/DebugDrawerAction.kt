@@ -20,6 +20,11 @@ import org.mozilla.fenix.debugsettings.tabs.TabTools as TabToolsScreen
 sealed class DebugDrawerAction : Action {
 
     /**
+     * [DebugDrawerAction] fired when the overlay is displayed.
+     */
+    object ViewAppeared : DebugDrawerAction()
+
+    /**
      * [DebugDrawerAction] fired when the user opens the drawer.
      */
     object DrawerOpened : DebugDrawerAction()
@@ -88,6 +93,21 @@ sealed class DebugDrawerAction : Action {
          * [NavigateTo] action fired when the debug drawer needs to navigate to [CrashTools].
          */
         object CrashDebugTools : NavigateTo()
+
+        /**
+         * [NavigateTo] action fired when the debug drawer needs to navigate to [IntegrityTools].
+         */
+        object IntegrityDebugTools : NavigateTo()
+
+        /**
+         * [NavigateTo] action fired when the debug drawer needs to navigate to [TabGroupTools].
+         */
+        object TabGroupDebugTools : NavigateTo()
+
+        /**
+         * [NavigateTo] action fired when the debug drawer needs to navigate to [TabProcessTools].
+         */
+        object TabProcessTools : NavigateTo()
     }
 
     /**

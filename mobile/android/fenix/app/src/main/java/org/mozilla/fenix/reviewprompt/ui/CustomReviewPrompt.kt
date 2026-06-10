@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,13 +35,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.theme.surfaceDimVariant
-import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.reviewprompt.CustomReviewPromptAction
 import org.mozilla.fenix.reviewprompt.CustomReviewPromptState
@@ -50,8 +50,10 @@ import org.mozilla.fenix.reviewprompt.CustomReviewPromptState.PrePrompt
 import org.mozilla.fenix.reviewprompt.CustomReviewPromptState.Rate
 import org.mozilla.fenix.reviewprompt.CustomReviewPromptStore
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemeProvider
+import org.mozilla.fenix.theme.ThemedValue
+import org.mozilla.fenix.theme.ThemedValueProvider
 
 /**
  * Prompt that can show either:
@@ -180,8 +182,8 @@ private fun FoxEmojiButton(
     Column(
         modifier
             .height(100.dp)
-            .clip(RoundedCornerShape(size = 18.dp))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(size = 18.dp))
+            .clip(MaterialTheme.shapes.large)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceDimVariant)
             .clickable(onClick = onClick),
         Arrangement.Center,
@@ -193,6 +195,8 @@ private fun FoxEmojiButton(
 
         Text(
             text = label,
+            modifier = Modifier.padding(horizontal = 10.dp),
+            textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.caption,
         )
     }
@@ -267,7 +271,7 @@ private fun FeedbackStep(onLeaveFeedbackButtonClick: () -> Unit, modifier: Modif
 @FlexibleWindowPreview
 @Composable
 private fun BottomSheetPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -288,7 +292,7 @@ private fun BottomSheetPreview(
 @Preview
 @Composable
 private fun PrePromptPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -309,7 +313,7 @@ private fun PrePromptPreview(
 @Preview
 @Composable
 private fun RatePromptPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -330,7 +334,7 @@ private fun RatePromptPreview(
 @Preview
 @Composable
 private fun FeedbackPromptPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -350,13 +354,13 @@ private fun FeedbackPromptPreview(
 @Preview
 @Composable
 private fun FoxEmojiButtonPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(FoxEmojiButtonLabelProvider::class) params: ThemedValue<String>,
 ) {
-    FirefoxTheme(theme) {
+    FirefoxTheme(params.theme) {
         Surface {
             FoxEmojiButton(
                 emoji = painterResource(R.drawable.review_prompt_positive_button),
-                label = "It’s great!",
+                label = params.value,
                 onClick = {},
                 modifier = Modifier
                     .padding(16.dp)
@@ -366,14 +370,20 @@ private fun FoxEmojiButtonPreview(
     }
 }
 
+private class FoxEmojiButtonLabelProvider :
+    ThemedValueProvider<String>(
+        baseValues = sequenceOf("It’s great!", "It’s great! And the text is very long omg"),
+        displayNames = listOf("Single-line", "Multi-line"),
+    )
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 private fun InteractiveBottomSheetPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     val store = CustomReviewPromptStore(PrePrompt)
-    val promptState by store.observeAsState(PrePrompt) { it }
+    val promptState by store.stateFlow.collectAsState()
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 

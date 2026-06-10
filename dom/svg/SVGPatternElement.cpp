@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -28,13 +26,13 @@ JSObject* SVGPatternElement::WrapNode(JSContext* aCx,
 
 SVGElement::LengthInfo SVGPatternElement::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGContentUtils::X},
+     SVGLength::Axis::X},
     {nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGContentUtils::Y},
+     SVGLength::Axis::Y},
     {nsGkAtoms::width, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGContentUtils::X},
+     SVGLength::Axis::X},
     {nsGkAtoms::height, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
-     SVGContentUtils::Y},
+     SVGLength::Axis::Y},
 };
 
 SVGElement::EnumInfo SVGPatternElement::sEnumInfo[2] = {
@@ -88,10 +86,8 @@ SVGPatternElement::PatternContentUnits() {
 
 already_AddRefed<DOMSVGAnimatedTransformList>
 SVGPatternElement::PatternTransform() {
-  // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
-  // to allocate the DOMSVGAnimatedTransformList if it hasn't already done so:
   return DOMSVGAnimatedTransformList::GetDOMWrapper(
-      GetAnimatedTransformList(DO_ALLOCATE), this);
+      GetOrCreateAnimatedTransformList(), this);
 }
 
 already_AddRefed<DOMSVGAnimatedLength> SVGPatternElement::X() {
@@ -120,10 +116,10 @@ already_AddRefed<DOMSVGAnimatedString> SVGPatternElement::Href() {
 //----------------------------------------------------------------------
 // SVGElement methods
 
-SVGAnimatedTransformList* SVGPatternElement::GetAnimatedTransformList(
-    uint32_t aFlags) {
-  if (!mPatternTransform && (aFlags & DO_ALLOCATE)) {
-    mPatternTransform = MakeUnique<SVGAnimatedTransformList>();
+SVGAnimatedTransformList*
+SVGPatternElement::GetOrCreateAnimatedTransformList() {
+  if (!mPatternTransform) {
+    mPatternTransform = std::make_unique<SVGAnimatedTransformList>();
   }
   return mPatternTransform.get();
 }

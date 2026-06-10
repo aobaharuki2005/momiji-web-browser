@@ -15,6 +15,7 @@ add_task(async function test_untrimmed_secure_www() {
   info("Searching for untrimmed https://www entry");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("https://www.mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mo", { isPrivate: false });
   await check_results({
@@ -40,6 +41,7 @@ add_task(async function test_untrimmed_secure_www_path() {
   info("Searching for untrimmed https://www entry with path");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("https://www.mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mozilla.org/t", { isPrivate: false });
   await check_results({
@@ -61,6 +63,7 @@ add_task(async function test_untrimmed_secure() {
   info("Searching for untrimmed https:// entry");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("https://mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mo", { isPrivate: false });
   await check_results({
@@ -86,6 +89,7 @@ add_task(async function test_untrimmed_secure_path() {
   info("Searching for untrimmed https:// entry with path");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("https://mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mozilla.org/t", { isPrivate: false });
   await check_results({
@@ -107,6 +111,7 @@ add_task(async function test_untrimmed_www() {
   info("Searching for untrimmed http://www entry");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://www.mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mo", { isPrivate: false });
   await check_results({
@@ -132,6 +137,7 @@ add_task(async function test_untrimmed_www_path() {
   info("Searching for untrimmed http://www entry with path");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://www.mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mozilla.org/t", { isPrivate: false });
   await check_results({

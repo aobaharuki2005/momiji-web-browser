@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -491,7 +490,12 @@ nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
     // (We always need to be able to handle an error, anyhow, as the printer
     // could get disconnected after we've created the list, for example.)
     bool isAvailable = false;
-    if (printers[i].Attributes & PRINTER_ATTRIBUTE_NETWORK) {
+    // PRINTER_ATTRIBUTE_NETWORK feeds the sortAfterLocal hint on Windows; see
+    // the sortAfterLocal doc-comment in nsIPrinter.idl for why this isn't a
+    // precise "auto-discovered" signal.
+    const bool isNetwork =
+        !!(printers[i].Attributes & PRINTER_ATTRIBUTE_NETWORK);
+    if (isNetwork) {
       isAvailable = true;
     } else if (printers[i].Attributes & PRINTER_ATTRIBUTE_LOCAL) {
       HANDLE handle;
@@ -501,7 +505,9 @@ nsTArray<nsPrinterListBase::PrinterInfo> nsPrinterListWin::Printers() const {
       }
     }
     if (isAvailable) {
-      list.AppendElement(PrinterInfo{nsString(printers[i].pPrinterName)});
+      list.AppendElement(PrinterInfo{nsString(printers[i].pPrinterName),
+                                     nullptr,
+                                     /* mSortAfterLocal = */ isNetwork});
       PR_PL(("Printer Name: %s\n",
              NS_ConvertUTF16toUTF8(printers[i].pPrinterName).get()));
     }
@@ -533,7 +539,9 @@ Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::PrinterByName(
       reinterpret_cast<const _PRINTER_INFO_4W*>(buffer.Elements());
   for (unsigned i = 0; i < count; ++i) {
     if (aName.Equals(nsString(printers[i].pPrinterName))) {
-      rv.emplace(PrinterInfo{aName});
+      rv.emplace(
+          PrinterInfo{aName, nullptr,
+                      !!(printers[i].Attributes & PRINTER_ATTRIBUTE_NETWORK)});
       break;
     }
   }
@@ -547,7 +555,8 @@ Maybe<nsPrinterListBase::PrinterInfo> nsPrinterListWin::PrinterBySystemName(
 }
 
 RefPtr<nsIPrinter> nsPrinterListWin::CreatePrinter(PrinterInfo aInfo) const {
-  return nsPrinterWin::Create(mCommonPaperInfo, std::move(aInfo.mName));
+  return nsPrinterWin::Create(mCommonPaperInfo, std::move(aInfo.mName),
+                              aInfo.mSortAfterLocal);
 }
 
 nsresult nsPrinterListWin::SystemDefaultPrinterName(nsAString& aName) const {
@@ -573,8 +582,7 @@ nsPrinterListWin::InitPrintSettingsFromPrinter(
     return NS_OK;
   }
 
-  RefPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
-  if (!devSpecWin) return NS_ERROR_OUT_OF_MEMORY;
+  auto devSpecWin = MakeRefPtr<nsDeviceContextSpecWin>();
 
   // If the settings have already been initialized from prefs then pass these to
   // GetDataFromPrinter, so that they are saved to the printer.

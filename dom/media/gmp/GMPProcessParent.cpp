@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 et :
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -235,8 +233,7 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   // any overriding, and it only lives on the stack.
   bool launched = SyncLaunch(std::move(args), aTimeoutMs);
   if (launched) {
-    nsFmtString name{FMT_STRING(u"GMPProcessParent {}"),
-                     static_cast<void*>(this)};
+    nsFmtString name{u"GMPProcessParent {}", static_cast<void*>(this)};
     mShutdownBlocker = media::ShutdownBlockingTicket::Create(
         name, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__);
   }
@@ -244,7 +241,7 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
 }
 
 void GMPProcessParent::Delete(nsCOMPtr<nsIRunnable> aCallback) {
-  mDeletedCallback = aCallback;
+  mDeletedCallback = std::move(aCallback);
   XRE_GetAsyncIOEventTarget()->Dispatch(NewNonOwningRunnableMethod(
       "gmp::GMPProcessParent::DoDelete", this, &GMPProcessParent::DoDelete));
 }

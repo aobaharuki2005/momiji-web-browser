@@ -1,4 +1,3 @@
-/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -62,12 +61,19 @@ let JSPROCESSACTORS = {
   },
 
   ProcessConduits: {
+    // "parent" remoteTypes is currently needed to support MV3 background service workers
+    // also when extensions.webextensions.remote is set to false.
+    remoteTypes: ["parent", "extension"],
     parent: {
       esModuleURI: "resource://gre/modules/ConduitsParent.sys.mjs",
     },
     child: {
       esModuleURI: "resource://gre/modules/ConduitsChild.sys.mjs",
     },
+    // This actor is only meant to be used when MV3 background service worker
+    // implementation is enabled (which is currently only allowed in Nightly
+    // and gated by this about:config preference).
+    enablePreference: "extensions.backgroundServiceWorker.enabled",
   },
 
   // A single process (shared with MLEngine) that controls all of the translations.
@@ -103,6 +109,7 @@ let JSWINDOWACTORS = {
     },
 
     matches: ["about:certificate"],
+    remoteTypes: ["privilegedabout"],
   },
 
   AboutHttpsOnlyError: {
@@ -441,7 +448,12 @@ let JSWINDOWACTORS = {
     },
 
     allFrames: true,
-    messageManagerGroups: ["browsers", "webext-browsers", ""],
+    messageManagerGroups: [
+      "browsers",
+      "webext-browsers",
+      "chatbot-browser",
+      "",
+    ],
   },
 
   ManifestMessages: {
@@ -464,6 +476,15 @@ let JSWINDOWACTORS = {
 
     matches: ["about:certerror?*", "about:neterror?*"],
     allFrames: true,
+  },
+
+  OpenSearchLoader: {
+    child: {
+      esModuleURI:
+        "moz-src:///toolkit/components/search/OpenSearchLoaderChild.sys.mjs",
+    },
+    matches: ["about:blank"],
+    messageManagerGroups: ["opensearch"],
   },
 
   PageExtractor: {
@@ -523,13 +544,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  PurgeSessionHistory: {
-    child: {
-      esModuleURI: "resource://gre/actors/PurgeSessionHistoryChild.sys.mjs",
-    },
-    allFrames: true,
-  },
-
   ReportBrokenSite: {
     parent: {
       esModuleURI: "resource://gre/actors/ReportBrokenSiteParent.sys.mjs",
@@ -545,6 +559,14 @@ let JSWINDOWACTORS = {
     ],
     messageManagerGroups: ["browsers"],
     allFrames: true,
+  },
+
+  TLSCertificateBinding: {
+    child: {
+      esModuleURI: "resource://gre/actors/TLSCertificateBindingChild.sys.mjs",
+    },
+
+    messageManagerGroups: ["browsers"],
   },
 
   // This actor is available for all pages that one can
@@ -618,6 +640,12 @@ let JSWINDOWACTORS = {
     matches: ["http://*/*", "https://*/*", "file:///*", "moz-extension://*"],
     messageManagerGroups: ["browsers"],
     enablePreference: "browser.translations.enable",
+    onPreferenceChanged(isEnabled) {
+      const { TranslationsParent } = ChromeUtils.importESModule(
+        "resource://gre/actors/TranslationsParent.sys.mjs"
+      );
+      TranslationsParent.onIsEnabledChanged(isEnabled);
+    },
   },
 
   UAWidgets: {
@@ -759,14 +787,10 @@ if (AppConstants.platform != "android") {
         // Run the actor before any content of the page appears to inject functions.
         DOMDocElementInserted: {},
         DOMContentLoaded: {},
-        // Used to show and hide the translations button.
-        pageshow: { mozSystemGroup: true },
-        pagehide: { mozSystemGroup: true },
       },
     },
     matches: ["about:translations"],
     remoteTypes: ["privilegedabout"],
-    enablePreference: "browser.translations.enable",
   };
 
   JSWINDOWACTORS.ColorPicker = {
@@ -803,12 +827,23 @@ export var ActorManagerParent = {
         throw new Error("Invalid JSActor kind " + kind);
     }
     for (let [actorName, actor] of Object.entries(actors)) {
+      let actorRegistered = false;
+      const registerActor = () => {
+        if (!actorRegistered) {
+          register(actorName, actor);
+          actorRegistered = true;
+        }
+      };
+      const unregisterActor = () => {
+        if (actorRegistered) {
+          unregister(actorName, actor);
+          actorRegistered = false;
+        }
+      };
+
       // The actor defines its own register/unregister logic.
       if (actor.onAddActor) {
-        actor.onAddActor(
-          () => register(actorName, actor),
-          () => unregister(actorName, actor)
-        );
+        actor.onAddActor(registerActor, unregisterActor);
         continue;
       }
 
@@ -821,9 +856,9 @@ export var ActorManagerParent = {
             false
           );
           if (isEnabled) {
-            register(actorName, actor);
+            registerActor();
           } else {
-            unregister(actorName, actor);
+            unregisterActor();
           }
           if (actor.onPreferenceChanged) {
             actor.onPreferenceChanged(isEnabled);
@@ -835,7 +870,7 @@ export var ActorManagerParent = {
         }
       }
 
-      register(actorName, actor);
+      registerActor();
     }
   },
 

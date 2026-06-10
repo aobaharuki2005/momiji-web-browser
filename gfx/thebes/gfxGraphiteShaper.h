@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,7 +7,6 @@
 
 #include "gfxFont.h"
 
-#include "mozilla/gfx/2D.h"
 #include "nsTHashSet.h"
 
 #include "ThebesRLBoxTypes.h"
@@ -16,16 +14,25 @@
 struct gr_face;
 struct gr_font;
 struct gr_segment;
+#if !defined(MAC_OS_X_VERSION_10_7) || \
+    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
+//10.6 thread local stuff
+#define GFX_FONT_USE_THREAD_LOCAL 0
+static pthread_key_t lckey_shaper, lckey_fontEntry;
+static pthread_once_t lckey_shaper_once = PTHREAD_ONCE_INIT; 
+static pthread_once_t lckey_fontEntry_once = PTHREAD_ONCE_INIT; 
+#else
+#define GFX_FONT_USE_THREAD_LOCAL 1
+#endif
 
 class gfxGraphiteShaper : public gfxFontShaper {
  public:
   explicit gfxGraphiteShaper(gfxFont* aFont);
   virtual ~gfxGraphiteShaper();
 
-  bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
-                 uint32_t aOffset, uint32_t aLength, Script aScript,
-                 nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
-                 gfxShapedText* aShapedText) override;
+  bool ShapeText(const char16_t* aText, uint32_t aOffset, uint32_t aLength,
+                 Script aScript, nsAtom* aLanguage, bool aVertical,
+                 RoundingFlags aRounding, gfxShapedText* aShapedText) override;
 
   static void Shutdown();
 
@@ -61,9 +68,24 @@ class gfxGraphiteShaper : public gfxFontShaper {
     // remain valid throughout our lifetime
     gfxFont* MOZ_NON_OWNING_REF mFont;
   };
-
-  CallbackData mCallbackData;
+#ifndef GFX_FONT_USE_THREAD_LOCAL // 10.6
+  static void make_key(void) {
+      pthread_key_create(&lckey_shaper, NULL);
+  }
+  struct CallbackData* CallbackData();
+  static struct CallbackData* tl_GrGetAdvanceData(void) {
+      pthread_once(&lckey_shaper_once, make_key);
+      struct CallbackData *config = (struct CallbackData *)pthread_getspecific(lckey_shaper);
+      if (!config) {
+          config = new struct CallbackData();
+          pthread_setspecific(lckey_shaper, config);
+      }
+      return config;
+  }
+#else
   static thread_local CallbackData* tl_GrGetAdvanceData;
+#endif
+  struct CallbackData mCallbackData;
 
   bool mFallbackToSmallCaps;  // special fallback for the petite-caps case
 

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,18 +23,6 @@ class HTMLOptGroupElement final : public nsGenericHTMLElement {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLOptGroupElement,
                                        nsGenericHTMLElement)
 
-  // nsINode
-  void InsertChildBefore(
-      nsIContent* aKid, nsIContent* aBeforeThis, bool aNotify, ErrorResult& aRv,
-      nsINode* aOldParent = nullptr,
-      MutationEffectOnScript aMutationEffectOnScript =
-          MutationEffectOnScript::DropTrustWorthiness) override;
-  void RemoveChildNode(
-      nsIContent* aKid, bool aNotify, const BatchRemovalState* aState,
-      nsINode* aNewParent = nullptr,
-      MutationEffectOnScript aMutationEffectOnScript =
-          MutationEffectOnScript::DropTrustWorthiness) override;
-
   // nsIContent
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
@@ -58,17 +44,12 @@ class HTMLOptGroupElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::label, aLabel, aError);
   }
 
+  // Get the select content element that contains this optgroup
+  HTMLSelectElement* GetSelect() const;
+
  protected:
   virtual ~HTMLOptGroupElement();
-
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
-
- protected:
-  /**
-   * Get the select content element that contains this option
-   * @param aSelectElement the select element [OUT]
-   */
-  Element* GetSelect();
 };
 
 }  // namespace dom

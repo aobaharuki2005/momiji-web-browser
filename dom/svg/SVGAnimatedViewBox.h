@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,10 +5,14 @@
 #ifndef DOM_SVG_SVGANIMATEDVIEWBOX_H_
 #define DOM_SVG_SVGANIMATEDVIEWBOX_H_
 
+#include <memory>
+
 #include "SVGAttrTearoffTable.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/SMILAttr.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SVGAnimatedRect.h"
+#include "mozilla/gfx/Point.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 
@@ -36,6 +38,8 @@ struct SVGViewBox {
   SVGViewBox operator*(const float m) const {
     return SVGViewBox(x * m, y * m, width * m, height * m);
   }
+
+  gfx::Size Size() const { return gfx::Size(width, height); }
 
   bool IsFinite() const {
     if (none) {
@@ -70,7 +74,7 @@ class SVGAnimatedViewBox {
   SVGAnimatedViewBox& operator=(const SVGAnimatedViewBox& aOther) {
     mBaseVal = aOther.mBaseVal;
     if (aOther.mAnimVal) {
-      mAnimVal = MakeUnique<SVGViewBox>(*aOther.mAnimVal);
+      mAnimVal = std::make_unique<SVGViewBox>(*aOther.mAnimVal);
     }
     mHasBaseVal = aOther.mHasBaseVal;
     return *this;
@@ -125,17 +129,17 @@ class SVGAnimatedViewBox {
   already_AddRefed<dom::SVGAnimatedRect> ToSVGAnimatedRect(
       SVGElement* aSVGElement);
 
-  already_AddRefed<dom::SVGRect> ToDOMBaseVal(SVGElement* aSVGElement);
+  MovingNotNull<RefPtr<dom::SVGRect>> ToDOMBaseVal(SVGElement* aSVGElement);
 
-  already_AddRefed<dom::SVGRect> ToDOMAnimVal(SVGElement* aSVGElement);
+  MovingNotNull<RefPtr<dom::SVGRect>> ToDOMAnimVal(SVGElement* aSVGElement);
 
-  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  std::unique_ptr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
   void SetBaseField(float aHeight, SVGElement* aSVGElement, float& aElement);
 
+  std::unique_ptr<SVGViewBox> mAnimVal;
   SVGViewBox mBaseVal;
-  UniquePtr<SVGViewBox> mAnimVal;
   bool mHasBaseVal;
 
  public:

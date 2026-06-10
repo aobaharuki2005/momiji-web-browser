@@ -34,7 +34,7 @@ newtab-search-box-input =
     .placeholder = Cuardaigh an Gréasán
     .aria-label = Cuardaigh an Gréasán
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Cuir Inneall Cuardaigh Leis
 newtab-topsites-edit-topsites-header = Cuir an Barrshuíomh in Eagar

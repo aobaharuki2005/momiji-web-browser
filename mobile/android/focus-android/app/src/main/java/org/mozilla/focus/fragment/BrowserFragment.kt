@@ -26,6 +26,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +47,6 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuFeature
-import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.downloads.temporary.ShareResourceFeature
@@ -69,6 +69,8 @@ import mozilla.components.support.ktx.android.view.ImeInsetsSynchronizer
 import mozilla.components.support.ktx.android.view.exitImmersiveMode
 import mozilla.components.support.locale.ActivityContextWrapper
 import mozilla.components.support.utils.Browsers
+import mozilla.components.support.utils.DefaultDownloadFileUtils
+import mozilla.components.support.utils.DownloadFileUtils
 import mozilla.components.support.utils.ext.requestInPlacePermissions
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.focus.Components
@@ -81,6 +83,7 @@ import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.FirefoxInstallationHelper
 import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.browser.integration.BrowserMenuCallbacks
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
@@ -155,6 +158,7 @@ class BrowserFragment :
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var cookieBannerReducerStore: CookieBannerReducerStore
     private lateinit var defaultCookieBannerInteractor: DefaultCookieBannerReducerInteractor
+    private lateinit var downloadFileUtils: DownloadFileUtils
     private var tabsPopup: TabsPopup? = null
     private var siteNotSupportedSnackBarScope: CoroutineScope? = null
 
@@ -197,6 +201,7 @@ class BrowserFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initDownloadFileUtils()
         requestPermissionLauncher =
             registerForActivityResult(
                 ActivityResultContracts.RequestMultiplePermissions(),
@@ -220,6 +225,12 @@ class BrowserFragment :
         HomeScreen.checkIfPinningSupported(requireContext(), lifecycleScope)
     }
 
+    private fun initDownloadFileUtils() {
+        downloadFileUtils = DefaultDownloadFileUtils(
+            context = requireContext(),
+        )
+    }
+
     /**
      * Initialize CookieBannerStore ,Interactor and report site snackBar
      * when tacking protection panel is shown.
@@ -229,7 +240,7 @@ class BrowserFragment :
             CookieBannerReducerState(),
             listOf(
                 CookieBannerReducerMiddleware(
-                    ioScope = this.lifecycleScope + Dispatchers.IO,
+                    scope = viewLifecycleOwner.lifecycleScope,
                     cookieBannersStorage = requireContext().components.cookieBannerStorage,
                     appContext = requireContext(),
                     currentTab = tab,
@@ -242,8 +253,8 @@ class BrowserFragment :
         updateCookieBannerSiteToReportSnackBar()
     }
 
-    private fun updateCookieBannerSiteToReportSnackBar() {
-        siteNotSupportedSnackBarScope = cookieBannerReducerStore.flowScoped { flow ->
+    private fun updateCookieBannerSiteToReportSnackBar(dispatcher: CoroutineDispatcher = Dispatchers.Main) {
+        siteNotSupportedSnackBarScope = cookieBannerReducerStore.flowScoped(dispatcher = dispatcher) { flow ->
             flow.mapNotNull { state -> state.showSnackBarForSiteToReport }
                 .distinctUntilChanged()
                 .collect { showSnackBarForSiteToReport ->
@@ -438,6 +449,7 @@ class BrowserFragment :
                 onDownloadStopped = { state, _, status ->
                     handleDownloadStopped(state, status)
                 },
+                downloadFileUtils = downloadFileUtils,
             ),
             this,
             view,
@@ -602,8 +614,8 @@ class BrowserFragment :
         }
     }
 
-    override fun onPictureInPictureModeChanged(enabled: Boolean) {
-        pictureInPictureFeature?.onPictureInPictureModeChanged(enabled)
+    override fun onPictureInPictureModeChanged(isInPipMode: Boolean) {
+        pictureInPictureFeature?.onPictureInPictureModeChanged(isInPipMode)
         if (lifecycle.currentState == Lifecycle.State.CREATED) {
             onBackPressed()
         }
@@ -626,13 +638,15 @@ class BrowserFragment :
             requireComponents.store,
             requireComponents.topSitesUseCases,
             tabId,
-            ::shareCurrentUrl,
-            ::toggleDesktopSite,
-            ::showAddToHomescreenDialog,
-            ::showFindInPageBar,
-            ::openSelectBrowser,
-            ::openInBrowser,
-            ::showShortcutAddedSnackBar,
+            BrowserMenuCallbacks(
+                shareCallback = ::shareCurrentUrl,
+                requestDesktopCallback = ::toggleDesktopSite,
+                addToHomeScreenCallback = ::showAddToHomescreenDialog,
+                showFindInPageCallback = ::showFindInPageBar,
+                openInCallback = ::openSelectBrowser,
+                openInBrowser = ::openInBrowser,
+                showShortcutAddedSnackBar = ::showShortcutAddedSnackBar,
+            ),
         )
 
         val customTabSessionState = tab.ifCustomTab()
@@ -827,12 +841,10 @@ class BrowserFragment :
         )
 
         snackbar.setAction(getString(R.string.download_snackbar_open)) { context ->
-            val opened = AbstractFetchDownloadService.openFile(
-                applicationContext = context.applicationContext,
-                packageName = context.applicationContext.packageName,
-                downloadFileName = state.fileName,
-                downloadFilePath = state.filePath,
-                downloadContentType = state.contentType,
+            val opened = downloadFileUtils.openFile(
+                fileName = state.fileName,
+                directoryPath = state.directoryPath,
+                contentType = state.contentType,
             )
 
             if (!opened) {
@@ -1009,16 +1021,19 @@ class BrowserFragment :
         activity?.finishAndRemoveTask()
     }
 
-    internal fun edit() {
+    internal fun edit(tabId: String = tab.id) {
         requireComponents.appStore.dispatch(
-            AppAction.EditAction(tab.id),
+            AppAction.EditAction(tabId),
         )
     }
 
     private fun tabCounterListener() {
         val openedTabs = requireComponents.store.state.tabs.size
 
-        tabsPopup = TabsPopup(binding.browserToolbar, requireComponents).also { currentTabsPopup ->
+        tabsPopup = TabsPopup(
+            binding.browserToolbar,
+            requireComponents,
+        ).also { currentTabsPopup ->
             currentTabsPopup.showAsDropDown(
                 binding.browserToolbar,
                 0,
@@ -1117,6 +1132,7 @@ class BrowserFragment :
     private fun showConnectionInfo() {
         val connectionInfoPanel = ConnectionDetailsPanel(
             context = requireContext(),
+            engineSession = tab.engineState.engineSession,
             tabTitle = tab.content.title,
             tabUrl = tab.content.url,
             isConnectionSecure = tab.content.securityInfo.isSecure,

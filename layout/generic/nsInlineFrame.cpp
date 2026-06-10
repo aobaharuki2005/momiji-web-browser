@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,7 +14,6 @@
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsBlockFrame.h"
-#include "nsCSSAnonBoxes.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
@@ -377,7 +374,11 @@ void nsInlineFrame::Reflow(nsPresContext* aPresContext,
 
   ReflowFrames(aPresContext, aReflowInput, irs, aReflowOutput, aStatus);
 
-  ReflowAbsoluteFrames(aPresContext, aReflowOutput, aReflowInput, aStatus);
+  if (!StaticPrefs::layout_abspos_fragment_aware_inline_cb_enabled()) {
+    // This is the legacy, spec-incompatible behavior to reflow abspos children
+    // using only the first inline fragment's rect.
+    ReflowAbsoluteFrames(aPresContext, aReflowOutput, aReflowInput, aStatus);
+  }
 
   // Note: the line layout code will properly compute our
   // overflow-rect state for us.
@@ -906,7 +907,7 @@ void nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
   // ComputedStyle.
   RefPtr<ComputedStyle> newContext =
       aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
-          PseudoStyleType::mozBlockInsideInlineWrapper, ourStyle);
+          PseudoStyleType::MozBlockInsideInlineWrapper, ourStyle);
 
   // We're guaranteed that newContext only differs from the old ComputedStyle on
   // the block in things they might inherit from us.  And changehint processing
@@ -919,7 +920,7 @@ void nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
                "Must be first continuation");
 
     MOZ_ASSERT(blockFrame->Style()->GetPseudoType() ==
-                   PseudoStyleType::mozBlockInsideInlineWrapper,
+                   PseudoStyleType::MozBlockInsideInlineWrapper,
                "Unexpected kind of ComputedStyle");
 
     for (nsIFrame* cont = blockFrame; cont;
@@ -928,7 +929,15 @@ void nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
     }
 
     nsIFrame* nextInline = blockFrame->GetProperty(nsIFrame::IBSplitSibling());
-    MOZ_ASSERT(nextInline, "There is always a trailing inline in an IB split");
+    if (MOZ_UNLIKELY(!nextInline)) {
+      MOZ_ASSERT_UNREACHABLE(
+          "There should always a be trailing inline "
+          "in an IB split");
+      // Gracefully bail so that nextInline usage below doesn't
+      // null-deref.  (We can stop worrying about this when we remove
+      // IB split siblings in bug 2031448.)
+      return;
+    }
 
     for (nsIFrame* cont = nextInline; cont;
          cont = cont->GetNextContinuation()) {
@@ -954,13 +963,13 @@ void nsFirstLineFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                             nsIFrame* aPrevInFlow) {
   nsInlineFrame::Init(aContent, aParent, aPrevInFlow);
   if (!aPrevInFlow) {
-    MOZ_ASSERT(Style()->GetPseudoType() == PseudoStyleType::firstLine);
+    MOZ_ASSERT(Style()->GetPseudoType() == PseudoStyleType::FirstLine);
     return;
   }
 
   // This frame is a continuation - fixup the computed style if aPrevInFlow
   // is the first-in-flow (the only one with a ::first-line pseudo).
-  if (aPrevInFlow->Style()->GetPseudoType() == PseudoStyleType::firstLine) {
+  if (aPrevInFlow->Style()->GetPseudoType() == PseudoStyleType::FirstLine) {
     MOZ_ASSERT(FirstInFlow() == aPrevInFlow);
     // Create a new ComputedStyle that is a child of the parent
     // ComputedStyle thus removing the ::first-line style. This way
@@ -969,12 +978,12 @@ void nsFirstLineFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     ComputedStyle* parentContext = aParent->Style();
     RefPtr<ComputedStyle> newSC =
         PresContext()->StyleSet()->ResolveInheritingAnonymousBoxStyle(
-            PseudoStyleType::mozLineFrame, parentContext);
+            PseudoStyleType::MozLineFrame, parentContext);
     SetComputedStyle(newSC);
   } else {
     MOZ_ASSERT(FirstInFlow() != aPrevInFlow);
     MOZ_ASSERT(aPrevInFlow->Style()->GetPseudoType() ==
-               PseudoStyleType::mozLineFrame);
+               PseudoStyleType::MozLineFrame);
   }
 }
 
@@ -1062,7 +1071,11 @@ void nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   ReflowFrames(aPresContext, aReflowInput, irs, aReflowOutput, aStatus);
   aReflowInput.mLineLayout->SetInFirstLine(false);
 
-  ReflowAbsoluteFrames(aPresContext, aReflowOutput, aReflowInput, aStatus);
+  // If we could be an abspos containing block, then this is where we would call
+  // ReflowAbsoluteFrames. But we can't be, per bug 2036239 comment 1.
+  MOZ_ASSERT(!IsAbsoluteContainer(),
+             "None of the properties that apply to ::first-line could make it "
+             "an abspos containing block!");
 
   // Note: the line layout code will properly compute our overflow state for us
 }

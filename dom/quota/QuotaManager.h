@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_quota_quotamanager_h__
-#define mozilla_dom_quota_quotamanager_h__
+#ifndef mozilla_dom_quota_quotamanager_h_
+#define mozilla_dom_quota_quotamanager_h_
 
 #include <cstdint>
 #include <utility>
@@ -32,16 +30,6 @@
 #include "mozilla/dom/quota/NotifyUtils.h"
 #include "mozilla/dom/quota/OpenClientDirectoryInfo.h"
 #include "mozilla/dom/quota/OriginOperationCallbacks.h"
-#include "mozilla/dom/quota/PersistenceType.h"
-#include "nsCOMPtr.h"
-#include "nsClassHashtable.h"
-#include "nsDebug.h"
-#include "nsHashKeys.h"
-#include "nsISupports.h"
-#include "nsStringFwd.h"
-#include "nsTArray.h"
-#include "nsTHashMap.h"
-#include "nsTStringRepr.h"
 #include "nscore.h"
 #include "prenv.h"
 
@@ -269,7 +257,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   template <typename F>
   auto WithOriginInfo(const OriginMetadata& aOriginMetadata, F aFunction)
-      -> std::invoke_result_t<F, const RefPtr<OriginInfo>&>;
+      -> std::invoke_result_t<F, const SafeRefPtr<OriginInfo>&>;
 
   using DirectoryLockIdTableArray =
       AutoTArray<Client::DirectoryLockIdTable, Client::TYPE_MAX>;
@@ -291,7 +279,7 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<Ok, nsresult> EnsureTemporaryOriginDirectoryCreated(
       const OriginMetadata& aOriginMetadata);
 
-  static nsresult CreateDirectoryMetadata2(
+  nsresult CreateDirectoryMetadata2(
       nsIFile& aDirectory, const FullOriginMetadata& aFullOriginMetadata);
 
   nsresult RestoreDirectoryMetadata2(nsIFile* aDirectory);
@@ -754,6 +742,9 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static void InvalidateQuotaCache();
 
+  OriginMetadataArray GetTemporaryOrigins(
+      PersistenceType aPersistenceType) const;
+
  private:
   virtual ~QuotaManager();
 
@@ -783,7 +774,7 @@ class QuotaManager final : public BackgroundThreadObject {
       PersistenceType aPersistenceType, const nsACString& aSuffix,
       const nsACString& aGroup);
 
-  already_AddRefed<OriginInfo> LockedGetOriginInfo(
+  SafeRefPtr<OriginInfo> LockedGetOriginInfo(
       PersistenceType aPersistenceType,
       const OriginMetadata& aOriginMetadata) const;
 
@@ -843,6 +834,22 @@ class QuotaManager final : public BackgroundThreadObject {
       nsIFile& aLsArchiveFile) const;
 
   template <typename OriginFunc>
+  Result<Ok, nsresult> InitializeOriginDirectory(
+      const nsCOMPtr<nsIFile>& aChildDirectory, const nsAutoString& aLeafName,
+      PersistenceType aPersistenceType,
+      nsTArray<struct RenameAndInitInfo>& aRenameAndInitInfos,
+      OriginFunc&& aOriginFunc);
+
+  // Determine the type of a repository entry (directory, file, or absent)
+  // and handle it accordingly.
+  template <typename OriginFunc>
+  Result<Ok, nsresult> ResolveRepositoryEntry(
+      const nsCOMPtr<nsIFile>& aChildDirectory,
+      PersistenceType aPersistenceType,
+      nsTArray<RenameAndInitInfo>& aRenameAndInitInfos,
+      OriginFunc&& aOriginFunc);
+
+  template <typename OriginFunc>
   nsresult InitializeRepository(PersistenceType aPersistenceType,
                                 OriginFunc&& aOriginFunc);
 
@@ -850,11 +857,10 @@ class QuotaManager final : public BackgroundThreadObject {
                             const FullOriginMetadata& aFullOriginMetadata,
                             bool aForGroup = false);
 
-  using OriginInfosFlatTraversable =
-      nsTArray<NotNull<RefPtr<const OriginInfo>>>;
+  using OriginInfosFlatTraversable = nsTArray<NotNull<SafeRefPtr<OriginInfo>>>;
 
   using OriginInfosNestedTraversable =
-      nsTArray<nsTArray<NotNull<RefPtr<const OriginInfo>>>>;
+      nsTArray<nsTArray<NotNull<SafeRefPtr<OriginInfo>>>>;
 
   OriginInfosNestedTraversable GetOriginInfosExceedingGroupLimit() const;
 
@@ -1216,4 +1222,4 @@ class QuotaManager final : public BackgroundThreadObject {
 
 }  // namespace mozilla::dom::quota
 
-#endif /* mozilla_dom_quota_quotamanager_h__ */
+#endif /* mozilla_dom_quota_quotamanager_h_ */

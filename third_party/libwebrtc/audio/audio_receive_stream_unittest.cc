@@ -125,8 +125,6 @@ struct ConfigHelper {
   ConfigHelper(scoped_refptr<MockAudioMixer> audio_mixer,
                bool use_null_audio_processing)
       : audio_mixer_(audio_mixer) {
-    using ::testing::Invoke;
-
     AudioState::Config config;
     config.audio_mixer = audio_mixer_;
     config.audio_processing =
@@ -146,11 +144,10 @@ struct ConfigHelper {
     EXPECT_CALL(*channel_receive_, ResetReceiverCongestionControlObjects())
         .Times(1);
     EXPECT_CALL(*channel_receive_, SetReceiveCodecs(_))
-        .WillRepeatedly(Invoke([](const std::map<int, SdpAudioFormat>& codecs) {
+        .WillRepeatedly([](const std::map<int, SdpAudioFormat>& codecs) {
           EXPECT_THAT(codecs, ::testing::IsEmpty());
-        }));
+        });
 
-    stream_config_.rtp.local_ssrc = kLocalSsrc;
     stream_config_.rtp.remote_ssrc = kRemoteSsrc;
     stream_config_.rtp.nack.rtp_history_ms = 300;
     stream_config_.rtcp_send_transport = &rtcp_send_transport_;
@@ -221,10 +218,9 @@ std::vector<uint8_t> CreateRtcpSenderReport() {
 TEST(AudioReceiveStreamTest, ConfigToString) {
   AudioReceiveStreamInterface::Config config;
   config.rtp.remote_ssrc = kRemoteSsrc;
-  config.rtp.local_ssrc = kLocalSsrc;
   config.rtp.rtcp_mode = RtcpMode::kOff;
   EXPECT_EQ(
-      "{rtp: {remote_ssrc: 1234, local_ssrc: 5678, nack: "
+      "{rtp: {remote_ssrc: 1234, nack: "
       "{rtp_history_ms: 0}, rtcp: off}, "
       "rtcp_send_transport: null}",
       config.ToString());

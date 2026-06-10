@@ -20,7 +20,7 @@ add_task(async function () {
   const { inspector, view } = await openRuleView({ overrideDebounce: false });
   await selectNode("#testid", inspector);
 
-  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  const ruleEditor = getRuleViewRuleEditorAt(view, 1);
   const prop = getTextProperty(view, 1, { "background-color": "#00F" });
   const propEditor = prop.editor;
 

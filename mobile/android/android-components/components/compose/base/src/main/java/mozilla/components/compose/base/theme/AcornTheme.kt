@@ -7,6 +7,8 @@
 package mozilla.components.compose.base.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -21,6 +23,7 @@ import mozilla.components.compose.base.theme.layout.AcornWindowSize
  * A top-level Composable wrapper used to access Acorn Theming tokens.
  *
  * @param colors The [AcornColors] theme to use.
+ * @param colorScheme The [ColorScheme] to use.
  * @param content The children composables to be laid out.
  */
 @Composable
@@ -34,8 +37,24 @@ fun AcornTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            content = content,
-        )
+            shapes = AcornShapes,
+        ) {
+            val textSelectionColors = TextSelectionColors(
+                handleColor = colorScheme.primary,
+                backgroundColor = colors.selectedText,
+            )
+
+            // `LocalTextSelectionColors` needs to be overridden here, inside `MaterialTheme`,
+            // not in `ProvideAcornTokens`. Otherwise, `MaterialTheme` provides its own
+            // `LocalTextSelectionColors` default below `ProvideAcornTokens`, shadowing the
+            // override. Note: any nested `MaterialTheme(colorScheme = ...)` calls deeper in the
+            // tree will still shadow the `LocalTextSelectionColors`.
+            CompositionLocalProvider(
+                // Overrides all the text selection colors for all text fields.
+                LocalTextSelectionColors provides textSelectionColors,
+                content = content,
+            )
+        }
     }
 }
 

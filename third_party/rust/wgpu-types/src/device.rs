@@ -37,7 +37,7 @@ pub struct DeviceDescriptor<L> {
 impl<L> DeviceDescriptor<L> {
     /// Takes a closure and maps the label of the device descriptor into another.
     #[must_use]
-    pub fn map_label<K>(&self, fun: impl FnOnce(&L) -> K) -> DeviceDescriptor<K> {
+    pub fn map_label<'a, K>(&'a self, fun: impl FnOnce(&'a L) -> K) -> DeviceDescriptor<K> {
         DeviceDescriptor {
             label: fun(&self.label),
             required_features: self.required_features,
@@ -83,9 +83,6 @@ pub enum MemoryHints {
 }
 
 /// Controls API call tracing and specifies where the trace is written.
-///
-/// **Note:** Tracing is currently unavailable.
-/// See [issue 5974](https://github.com/gfx-rs/wgpu/issues/5974) for updates.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 // This enum must be non-exhaustive so that enabling the "trace" feature is not a semver break.
@@ -95,9 +92,13 @@ pub enum Trace {
     #[default]
     Off,
 
-    /// Tracing enabled.
+    /// Write trace to disk.
     #[cfg(feature = "trace")]
     // This must be owned rather than `&'a Path`, because if it were that, then the lifetime
     // parameter would be unused when the "trace" feature is disabled, which is prohibited.
     Directory(std::path::PathBuf),
+
+    /// Store trace in memory.
+    #[cfg(feature = "trace")]
+    Memory,
 }

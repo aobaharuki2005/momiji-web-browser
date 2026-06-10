@@ -1,5 +1,3 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
-/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,10 +10,10 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BounceTrackingProtection.h"
-#include "mozilla/BounceTrackingStorageObserver.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/ContentBlockingAllowList.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/IdentityCredentialRequestManager.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ServoCSSParser.h"
@@ -34,6 +32,9 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
+#include "mozilla/dom/DigitalCredential.h"
+#include "mozilla/dom/DigitalCredentialParent.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/IdentityCredential.h"
 #include "mozilla/dom/InProcessParent.h"
 #include "mozilla/dom/JSActorService.h"
@@ -43,6 +44,7 @@
 #include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/NavigatorLogin.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
+#include "mozilla/dom/SerialManagerParent.h"
 #include "mozilla/dom/UseCounterMetrics.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/dom/WebIdentityParent.h"
@@ -74,6 +76,7 @@
 #include "nsIPromptCollection.h"
 #include "nsISessionStoreFunctions.h"
 #include "nsISharePicker.h"
+#include "nsISiteIntegrityService.h"
 #include "nsITimer.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIURIMutator.h"
@@ -94,6 +97,20 @@ extern mozilla::LazyLogModule gSHIPBFCacheLog;
 extern mozilla::LazyLogModule gUseCountersLog;
 
 namespace mozilla::dom {
+
+/**
+ * Accumulated page use counter data for a given top-level content document.
+ */
+struct PageUseCounters {
+  // The number of page use counter data messages we are still waiting for.
+  uint32_t mWaiting = 0;
+
+  // Whether we have received any page use counter data.
+  bool mReceivedAny = false;
+
+  // The accumulated page use counters.
+  UseCounters mUseCounters;
+};
 
 WindowGlobalParent::WindowGlobalParent(
     CanonicalBrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
@@ -199,6 +216,15 @@ void WindowGlobalParent::Init() {
           mDocumentPrincipal,
           getter_AddRefs(mDocContentBlockingAllowListPrincipal));
     }
+  }
+
+  // A fresh document on a reused BC id must not inherit the previous
+  // document's AudioSession override. BFCache restore reuses the WGP so
+  // Init() does not run on restore — only new document loads trigger this
+  // path.
+  if (auto* top = BrowsingContext()->Top();
+      top && top->HasCreatedMediaController()) {
+    top->GetMediaController()->ClearAudioSessionFor(BrowsingContext()->Id());
   }
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -336,11 +362,14 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
 
   RefPtr<CanonicalBrowsingContext> targetBC = aTargetBC.get_canonical();
 
-  // FIXME: For cross-process loads, we should double check CanAccess() for the
-  // source browsing context in the parent process.
-
   if (targetBC->Group() != BrowsingContext()->Group()) {
     return IPC_FAIL(this, "Illegal cross-group BrowsingContext load");
+  }
+
+  if (!nsContentUtils::CanNavigate(BrowsingContext(), targetBC.get(),
+                                   DocumentPrincipal(), true)) {
+    return IPC_FAIL(this,
+                    "Illegal cross-process load attempt (!CanNavigate())");
   }
 
   // FIXME: We should really initiate the load in the parent before bouncing
@@ -370,11 +399,14 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
   RefPtr<CanonicalBrowsingContext> targetBC =
       aLoadState->TargetBrowsingContext().get_canonical();
 
-  // FIXME: For cross-process loads, we should double check CanAccess() for the
-  // source browsing context in the parent process.
-
   if (targetBC->Group() != BrowsingContext()->Group()) {
     return IPC_FAIL(this, "Illegal cross-group BrowsingContext load");
+  }
+
+  if (!nsContentUtils::CanNavigate(BrowsingContext(), targetBC.get(),
+                                   DocumentPrincipal(), true)) {
+    return IPC_FAIL(this,
+                    "Illegal cross-process load attempt (!CanNavigate())");
   }
 
   // FIXME: We should really initiate the load in the parent before bouncing
@@ -417,7 +449,7 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(NotNull<nsIURI*> aURI) {
                     "principal URI");
   }
 
-  mDocumentURI = aURI;
+  mDocumentURI = std::move(aURI);
   return IPC_OK();
 }
 
@@ -553,15 +585,10 @@ IPCResult WindowGlobalParent::RecvDestroy() {
   return IPC_OK();
 }
 
-IPCResult WindowGlobalParent::RecvRawMessage(
-    const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
-    const UniquePtr<ClonedMessageData>& aStack) {
-  UniquePtr<StructuredCloneData> stack;
-  if (aStack) {
-    stack = MakeUnique<StructuredCloneData>();
-    stack->BorrowFromClonedMessageData(*aStack);
-  }
-  ReceiveRawMessage(aMeta, std::move(aData), std::move(stack));
+IPCResult WindowGlobalParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
+                                             JSIPCValue&& aData,
+                                             StructuredCloneData* aStack) {
+  ReceiveRawMessage(aMeta, std::move(aData), aStack);
   return IPC_OK();
 }
 
@@ -571,6 +598,10 @@ const nsACString& WindowGlobalParent::GetRemoteType() const {
   }
 
   return NOT_REMOTE_TYPE;
+}
+
+void WindowGlobalParent::GetRemoteType(nsACString& aRemoteType) const {
+  aRemoteType = GetRemoteType();
 }
 
 void WindowGlobalParent::NotifyContentBlockingEvent(
@@ -640,8 +671,7 @@ already_AddRefed<JSActor> WindowGlobalParent::InitJSActor(
 }
 
 bool WindowGlobalParent::IsCurrentGlobal() {
-  if (mozilla::SessionHistoryInParent() && BrowsingContext() &&
-      BrowsingContext()->IsInBFCache()) {
+  if (BrowsingContext() && BrowsingContext()->IsInBFCache()) {
     return false;
   }
 
@@ -789,9 +819,9 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
   // will _only_ run `DispatchBeforeUnloadToSubtree` for the content process of
   // the top level window. See further comments below in `Run` and in
   // `DispatchBeforeUnloadToSubtree`.
-  void RunTraversable(const SessionHistoryInfo& aInfo) {
+  void RunTraversable(nsDocShellLoadState* aDocShellLoadState) {
     MOZ_DIAGNOSTIC_ASSERT(mWGP->BrowsingContext()->IsTop());
-    Run(nullptr, 0, Some(aInfo));
+    Run(nullptr, 0, aDocShellLoadState);
   }
 
   // The complementing special case for `RunTraversable`, which is short hand
@@ -804,7 +834,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
   }
 
   void Run(ContentParent* aIgnoreProcess = nullptr, uint32_t aTimeout = 0,
-           const Maybe<SessionHistoryInfo>& aInfo = Nothing()) {
+           nsDocShellLoadState* aDocShellLoadState = nullptr) {
     MOZ_ASSERT(mState == State::UNINITIALIZED);
     mState = State::WAITING;
 
@@ -825,17 +855,20 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     auto reject = [self](auto) { self->ResolveRequest(); };
     // If `aInfo` is passed, only dispatch to the content process of the top
     // level window.
-    if (aInfo) {
+    if (aDocShellLoadState) {
       MOZ_DIAGNOSTIC_ASSERT(Navigation::IsAPIEnabled());
       ContentParent* cp = mWGP->GetContentParent();
       mPendingRequests++;
       // Here eDontPromptAndUnload means that we ignore beforeunload handlers,
       // but we still need to handle the traversable navigate handler.
+      mozilla::NotNull<RefPtr<nsDocShellLoadState>> loadState =
+          WrapNotNull(aDocShellLoadState);
       if (mAction ==
           nsIDocumentViewer::PermitUnloadAction::eDontPromptAndUnload) {
-        cp->SendDispatchNavigateToTraversable(bc, aInfo, resolve, reject);
+        cp->SendDispatchNavigateToTraversable(bc, loadState, resolve, reject);
       } else {
-        cp->SendDispatchBeforeUnloadToSubtree(bc, aInfo, resolve, reject);
+        cp->SendDispatchBeforeUnloadToSubtree(bc, Some(loadState), resolve,
+                                              reject);
       }
     } else {
       bc->PreOrderWalk([&](dom::BrowsingContext* aBC) {
@@ -1055,8 +1088,12 @@ void WindowGlobalParent::PermitUnload(
   request->Run();
 }
 
-void WindowGlobalParent::PermitUnloadTraversable(
-    const SessionHistoryInfo& aInfo,
+// https://html.spec.whatwg.org/#checking-if-unloading-is-canceled
+// Implements the traversable-specific portion (step 4): fires beforeunload on
+// the traversable's active document (if needed) and fires the traverse
+// `navigate` event, which may intercept the load via `aDocShellLoadState`.
+void WindowGlobalParent::CheckIfUnloadingIsCanceledForTraversable(
+    nsDocShellLoadState* aDocShellLoadState,
     nsIDocumentViewer::PermitUnloadAction aAction,
     std::function<void(nsIDocumentViewer::PermitUnloadResult)>&& aResolver) {
   MOZ_DIAGNOSTIC_ASSERT(BrowsingContext()->IsTop());
@@ -1064,7 +1101,7 @@ void WindowGlobalParent::PermitUnloadTraversable(
       MakeRefPtr<CheckPermitUnloadRequest>(this,
                                            /* aHasInProcessBlocker */ false,
                                            aAction, std::move(aResolver));
-  request->RunTraversable(aInfo);
+  request->RunTraversable(aDocShellLoadState);
 }
 
 void WindowGlobalParent::PermitUnloadChildNavigables(
@@ -1111,11 +1148,9 @@ already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
   return promise.forget();
 }
 
-void WindowGlobalParent::DrawSnapshotInternal(gfx::CrossProcessPaint* aPaint,
-                                              const Maybe<IntRect>& aRect,
-                                              float aScale,
-                                              nscolor aBackgroundColor,
-                                              uint32_t aFlags) {
+void WindowGlobalParent::DrawSnapshotInternal(
+    gfx::CrossProcessPaint* aPaint, const Maybe<IntRect>& aRect, float aScale,
+    nscolor aBackgroundColor, gfx::CrossProcessPaintFlags aFlags) {
   auto promise = SendDrawSnapshot(aRect, aScale, aBackgroundColor, aFlags);
 
   RefPtr<gfx::CrossProcessPaint> paint(aPaint);
@@ -1129,20 +1164,6 @@ void WindowGlobalParent::DrawSnapshotInternal(gfx::CrossProcessPaint* aPaint,
         paint->LostFragment(wgp);
       });
 }
-
-/**
- * Accumulated page use counter data for a given top-level content document.
- */
-struct PageUseCounters {
-  // The number of page use counter data messages we are still waiting for.
-  uint32_t mWaiting = 0;
-
-  // Whether we have received any page use counter data.
-  bool mReceivedAny = false;
-
-  // The accumulated page use counters.
-  UseCounters mUseCounters;
-};
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvExpectPageUseCounters(
     const MaybeDiscarded<WindowContext>& aTop) {
@@ -1269,11 +1290,11 @@ WindowGlobalParent::FinishAccumulatingPageUseCounters() {
     }
 
     bool any = false;
-    for (int32_t c = 0; c < eUseCounter_Count; ++c) {
-      auto uc = static_cast<UseCounter>(c);
+    for (const UseCounter uc : MakeEnumeratedRange(eUseCounter_Count)) {
       if (!mPageUseCounters->mUseCounters[uc]) {
         continue;
       }
+
       any = true;
       const char* metricName = IncrementUseCounter(uc, /* aIsPage = */ true);
       if (dumpCounters) {
@@ -1362,8 +1383,11 @@ nsCString BFCacheStatusToString(uint32_t aFlags) {
   ADD_BFCACHESTATUS_TO_STRING(HAS_USED_VR);
   ADD_BFCACHESTATUS_TO_STRING(CONTAINS_REMOTE_SUBFRAMES);
   ADD_BFCACHESTATUS_TO_STRING(NOT_ONLY_TOPLEVEL_IN_BCG);
+  ADD_BFCACHESTATUS_TO_STRING(ABOUT_PAGE);
+  ADD_BFCACHESTATUS_TO_STRING(RESTORING);
   ADD_BFCACHESTATUS_TO_STRING(BEFOREUNLOAD_LISTENER);
   ADD_BFCACHESTATUS_TO_STRING(ACTIVE_LOCK);
+  ADD_BFCACHESTATUS_TO_STRING(ACTIVE_WEBTRANSPORT);
   ADD_BFCACHESTATUS_TO_STRING(PAGE_LOADING);
 
 #undef ADD_BFCACHESTATUS_TO_STRING
@@ -1417,6 +1441,17 @@ WindowGlobalParent::RecvUpdateActivePeerConnectionStatus(bool aIsAdded) {
   return IPC_OK();
 }
 
+void WindowGlobalParent::UpdateFullscreenKeyboardLockStatus(
+    FullscreenKeyboardLock aStatus) {
+  auto* bc = GetBrowsingContext();
+  if (auto* topChromeBc = bc ? bc->TopCrossChromeBoundary() : nullptr;
+      topChromeBc != bc) {
+    if (auto* doc = topChromeBc->GetExtantDocument()) {
+      doc->SetFullscreenKeyboardLockStatus(aStatus);
+    }
+  }
+}
+
 mozilla::ipc::IPCResult WindowGlobalParent::RecvSetSingleChannelId(
     const Maybe<uint64_t>& aSingleChannelId) {
   mSingleChannelId = aSingleChannelId;
@@ -1453,6 +1488,24 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvSetDocumentDomain(
   }
 
   mDocumentPrincipal->SetDomain(aDomain);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvSetSiteIntegrityProtected(
+    NotNull<nsIURI*> aSourceURI, uint64_t aMaxAge) {
+  nsCOMPtr<nsISiteIntegrityService> service =
+      do_GetService("@mozilla.org/security/integrity;1");
+  if (!service) {
+    return IPC_OK();
+  }
+
+  OriginAttributes originAttributes =
+      DocumentPrincipal()->OriginAttributesRef();
+  StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
+      aSourceURI, originAttributes);
+
+  (void)service->SetProtected(aSourceURI, originAttributes, aMaxAge);
+
   return IPC_OK();
 }
 
@@ -1642,26 +1695,25 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
     otherContent->SendDiscardWindowContext(InnerWindowId(), callback, callback);
   });
 
-  // Report content blocking log when destroyed.
-  // There shouldn't have any content blocking log when a document is loaded in
-  // the parent process(See NotifyContentBlockingEvent), so we could skip
-  // reporting log when it is in-process.
+  // Report content blocking log when destroyed. In addition to the regular
+  // content-blocking log flush (shared with the flush-on-query path via
+  // MaybeReportContentBlockingLog), the teardown path also emits the
+  // canvas/font/email fingerprinting Glean metrics that are only meaningful
+  // at end-of-page.
+  MaybeReportContentBlockingLog();
   if (!IsInProcess()) {
     RefPtr<BrowserParent> browserParent =
         static_cast<BrowserParent*>(Manager());
     if (browserParent) {
       nsCOMPtr<nsILoadContext> loadContext = browserParent->GetLoadContext();
       if (loadContext && !loadContext->UsePrivateBrowsing() &&
-          BrowsingContext()->IsTopContent()) {
-        GetContentBlockingLog()->ReportLog();
-
-        if (mDocumentURI && net::SchemeIsHttpOrHttps(mDocumentURI)) {
-          GetContentBlockingLog()->ReportCanvasFingerprintingLog(
-              DocumentPrincipal());
-          GetContentBlockingLog()->ReportFontFingerprintingLog(
-              DocumentPrincipal());
-          GetContentBlockingLog()->ReportEmailTrackingLog(DocumentPrincipal());
-        }
+          BrowsingContext()->IsTopContent() && mDocumentURI &&
+          net::SchemeIsHttpOrHttps(mDocumentURI)) {
+        GetContentBlockingLog()->ReportCanvasFingerprintingLog(
+            DocumentPrincipal());
+        GetContentBlockingLog()->ReportFontFingerprintingLog(
+            DocumentPrincipal());
+        GetContentBlockingLog()->ReportEmailTrackingLog(DocumentPrincipal());
       }
     }
   }
@@ -1683,6 +1735,56 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 WindowGlobalParent::~WindowGlobalParent() = default;
+
+void WindowGlobalParent::MaybeReportContentBlockingLog() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // No blocking is recorded for in-process (non-remote) documents — see
+  // NotifyContentBlockingEvent.
+  if (IsInProcess()) {
+    return;
+  }
+  RefPtr<BrowserParent> browserParent = static_cast<BrowserParent*>(Manager());
+  if (!browserParent) {
+    return;
+  }
+  nsCOMPtr<nsILoadContext> loadContext = browserParent->GetLoadContext();
+  if (!loadContext || loadContext->UsePrivateBrowsing()) {
+    return;
+  }
+  if (!BrowsingContext()->IsTopContent()) {
+    return;
+  }
+
+  GetContentBlockingLog()->ReportLog();
+}
+
+/* static */
+void WindowGlobalParent::FlushAllContentBlockingLogs() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsTArray<RefPtr<BrowsingContextGroup>> groups;
+  BrowsingContextGroup::GetAllGroups(groups);
+
+  for (const auto& group : groups) {
+    for (const auto& bc : group->Toplevels()) {
+      if (!bc) {
+        continue;
+      }
+      RefPtr<CanonicalBrowsingContext> canonical = bc->Canonical();
+      if (!canonical) {
+        continue;
+      }
+      RefPtr<WindowGlobalParent> wgp = canonical->GetCurrentWindowGlobal();
+      if (!wgp) {
+        continue;
+      }
+      wgp->MaybeReportContentBlockingLog();
+    }
+  }
+}
 
 JSObject* WindowGlobalParent::WrapObject(JSContext* aCx,
                                          JS::Handle<JSObject*> aGivenProto) {
@@ -1789,8 +1891,7 @@ void WindowGlobalParent::SetShouldReportHasBlockedOpaqueResponse(
 
 IPCResult WindowGlobalParent::RecvSetCookies(
     const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
-    nsIURI* aHost, bool aFromHttp, bool aIsThirdParty,
-    const nsTArray<CookieStruct>& aCookies) {
+    nsIURI* aHost, bool aIsThirdParty, const nsTArray<CookieStruct>& aCookies) {
   // Get CookieServiceParent via
   // ContentParent->NeckoParent->CookieServiceParent.
   ContentParent* contentParent = GetContentParent();
@@ -1804,15 +1905,8 @@ IPCResult WindowGlobalParent::RecvSetCookies(
   NS_ENSURE_TRUE(csParent, IPC_OK());
   auto* cs = static_cast<net::CookieServiceParent*>(csParent);
 
-  return cs->SetCookies(aBaseDomain, aOriginAttributes, aHost, aFromHttp,
-                        aIsThirdParty, aCookies, GetBrowsingContext());
-}
-
-IPCResult WindowGlobalParent::RecvOnInitialStorageAccess() {
-  DebugOnly<nsresult> rv =
-      BounceTrackingStorageObserver::OnInitialStorageAccess(this);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to notify storage access");
-  return IPC_OK();
+  return cs->SetCookies(aBaseDomain, aOriginAttributes, aHost, aIsThirdParty,
+                        aCookies, GetBrowsingContext());
 }
 
 IPCResult WindowGlobalParent::RecvRecordUserActivationForBTP() {
@@ -1833,6 +1927,50 @@ IPCResult WindowGlobalParent::RecvRecordUserActivationForBTP() {
   return IPC_OK();
 }
 
+IPCResult WindowGlobalParent::RecvRecordUserInteractionForPermissions() {
+  WindowGlobalParent* top = TopWindowContext();
+  if (!top) {
+    return IPC_OK();
+  }
+  nsIPrincipal* principal = top->DocumentPrincipal();
+  if (!principal) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (permMgr) {
+    (void)permMgr->UpdateLastInteractionForPrincipal(principal);
+  }
+  return IPC_OK();
+}
+
+IPCResult WindowGlobalParent::RecvNotifyAudioSessionTypeOverride(
+    const dom::AudioSessionType& aType) {
+  // The MediaController lives on the top-level BC, but the override is
+  // keyed by the sender's BC id (which may be an iframe). The setter must
+  // be honoured even before any controllable media has started, so call
+  // GetMediaController() which creates the controller on demand.
+  if (auto* top = BrowsingContext()->Top()) {
+    if (RefPtr<MediaController> controller = top->GetMediaController()) {
+      controller->SetAudioSessionTypeOverride(BrowsingContext()->Id(), aType);
+    }
+  }
+  return IPC_OK();
+}
+
+already_AddRefed<PSerialManagerParent>
+WindowGlobalParent::AllocPSerialManagerParent() {
+  return MakeAndAddRef<SerialManagerParent>();
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvPSerialManagerConstructor(
+    PSerialManagerParent* aActor) {
+  auto* manager = static_cast<SerialManagerParent*>(aActor);
+  manager->Init(BrowsingContext()->GetBrowserId());
+  return IPC_OK();
+}
+
 already_AddRefed<PWebAuthnTransactionParent>
 WindowGlobalParent::AllocPWebAuthnTransactionParent() {
   return MakeAndAddRef<WebAuthnTransactionParent>();
@@ -1841,6 +1979,11 @@ WindowGlobalParent::AllocPWebAuthnTransactionParent() {
 already_AddRefed<PWebIdentityParent>
 WindowGlobalParent::AllocPWebIdentityParent() {
   return MakeAndAddRef<WebIdentityParent>();
+}
+
+already_AddRefed<PDigitalCredentialParent>
+WindowGlobalParent::AllocPDigitalCredentialParent() {
+  return MakeAndAddRef<DigitalCredentialParent>();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(WindowGlobalParent)

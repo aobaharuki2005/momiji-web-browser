@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -263,7 +262,7 @@ void NormalizedConstraintSet::StringRange::Intersect(
   set_intersection(mExact.begin(), mExact.end(), aOther.mExact.begin(),
                    aOther.mExact.end(),
                    std::inserter(intersection, intersection.begin()));
-  mExact = intersection;
+  mExact = std::move(intersection);
 }
 
 bool NormalizedConstraintSet::StringRange::Merge(const StringRange& aOther) {
@@ -275,7 +274,7 @@ bool NormalizedConstraintSet::StringRange::Merge(const StringRange& aOther) {
   ValueType unioned;
   set_union(mIdeal.begin(), mIdeal.end(), aOther.mIdeal.begin(),
             aOther.mIdeal.end(), std::inserter(unioned, unioned.begin()));
-  mIdeal = unioned;
+  mIdeal = std::move(unioned);
   return true;
 }
 

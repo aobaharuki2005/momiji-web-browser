@@ -8,9 +8,10 @@ use crate::derives::*;
 pub use crate::logical_geometry::WritingModeProperty;
 use crate::parser::{Parse, ParserContext};
 use crate::properties::{LonghandId, PropertyDeclarationId, PropertyId};
+pub use crate::typed_om::{KeywordValue, ToTyped, TypedValue};
 use crate::values::generics::box_::{
-    GenericContainIntrinsicSize, GenericLineClamp, GenericOverflowClipMargin, GenericPerspective,
-    GenericVerticalAlign, OverflowClipMarginBox, VerticalAlignKeyword,
+    BaselineShiftKeyword, GenericBaselineShift, GenericContainIntrinsicSize, GenericLineClamp,
+    GenericOverflowClipMargin, GenericPerspective, OverflowClipMarginBox,
 };
 use crate::values::specified::length::{LengthPercentage, NonNegativeLength};
 use crate::values::specified::{AllowQuirks, Integer, NonNegativeNumberOrPercentage};
@@ -18,8 +19,9 @@ use crate::values::CustomIdent;
 use cssparser::Parser;
 use num_traits::FromPrimitive;
 use std::fmt::{self, Write};
-use style_traits::{CssWriter, KeywordsCollectFn, ParseError};
+use style_traits::{CssWriter, KeywordsCollectFn, ParseError /*CssString*/};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
+use thin_vec::ThinVec;
 
 #[cfg(not(feature = "servo"))]
 fn grid_enabled() -> bool {
@@ -28,7 +30,17 @@ fn grid_enabled() -> bool {
 
 #[cfg(feature = "servo")]
 fn grid_enabled() -> bool {
-    style_config::get_bool("layout.grid.enabled")
+    static_prefs::pref!("layout.grid.enabled")
+}
+
+#[inline]
+fn appearance_base_enabled(_context: &ParserContext) -> bool {
+    static_prefs::pref!("layout.css.appearance-base.enabled")
+}
+
+#[inline]
+fn appearance_base_select_enabled(_context: &ParserContext) -> bool {
+    static_prefs::pref!("dom.select.customizable_select.enabled")
 }
 
 /// The specified value of `overflow-clip-margin`.
@@ -150,7 +162,6 @@ impl DisplayInside {
     ToComputedValue,
     ToResolvedValue,
     ToShmem,
-    ToTyped,
 )]
 #[repr(C)]
 pub struct Display(u16);
@@ -523,6 +534,36 @@ impl ToCss for Display {
     }
 }
 
+impl ToTyped for Display {
+    fn to_typed(&self, dest: &mut ThinVec<TypedValue>) -> Result<(), ()> {
+        // Note: The specification does not currently define how display multi
+        // keywords should be reified into Typed OM. The current behavior
+        // follows existing WPT coverage (display.html). Syncing spec with
+        // UA/WPT behavior tracked in
+        // https://github.com/w3c/csswg-drafts/issues/13907
+
+        let outside = self.outside();
+        let inside = self.inside();
+
+        #[cfg(feature = "gecko")]
+        if outside == DisplayOutside::Block && inside == DisplayInside::Ruby {
+            return Err(());
+        }
+
+        if self.is_list_item()
+            && (outside != DisplayOutside::Block || inside != DisplayInside::Flow)
+        {
+            return Err(());
+        }
+
+        let keyword = self.to_css_cssstring();
+        debug_assert!(!keyword.as_ref().contains(&b' '));
+
+        dest.push(TypedValue::Keyword(KeywordValue(keyword)));
+        return Ok(());
+    }
+}
+
 impl Parse for Display {
     fn parse<'i, 't>(
         _: &ParserContext,
@@ -614,10 +655,10 @@ pub type ContainIntrinsicSize = GenericContainIntrinsicSize<NonNegativeLength>;
 /// A specified value for the `line-clamp` property.
 pub type LineClamp = GenericLineClamp<Integer>;
 
-/// A specified value for the `vertical-align` property.
-pub type VerticalAlign = GenericVerticalAlign<LengthPercentage>;
+/// A specified value for the `baseline-shift` property.
+pub type BaselineShift = GenericBaselineShift<LengthPercentage>;
 
-impl Parse for VerticalAlign {
+impl Parse for BaselineShift {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
@@ -625,13 +666,104 @@ impl Parse for VerticalAlign {
         if let Ok(lp) =
             input.try_parse(|i| LengthPercentage::parse_quirky(context, i, AllowQuirks::Yes))
         {
-            return Ok(GenericVerticalAlign::Length(lp));
+            return Ok(BaselineShift::Length(lp));
         }
 
-        Ok(GenericVerticalAlign::Keyword(VerticalAlignKeyword::parse(
-            input,
-        )?))
+        Ok(BaselineShift::Keyword(BaselineShiftKeyword::parse(input)?))
     }
+}
+
+/// A specified value for the `dominant-baseline` property.
+/// https://drafts.csswg.org/css-inline-3/#dominant-baseline
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    FromPrimitive,
+    Hash,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToCss,
+    ToShmem,
+    ToComputedValue,
+    ToResolvedValue,
+    ToTyped,
+)]
+#[repr(u8)]
+pub enum DominantBaseline {
+    /// Equivalent to 'alphabetic' in horizontal writing modes and in vertical writing
+    /// modes when 'text-orientation' is sideways. Equivalent to 'central' in vertical
+    /// writing modes when 'text-orientation' is 'mixed' or 'upright'.
+    Auto,
+    /// Use the text-under baseline.
+    #[parse(aliases = "text-after-edge")]
+    TextBottom,
+    /// Use the alphabetic baseline.
+    Alphabetic,
+    /// Use the ideographic-under baseline.
+    Ideographic,
+    /// In general, use the x-middle baselines; except under text-orientation: upright
+    /// (where the alphabetic and x-height baselines are essentially meaningless) use
+    /// the central baseline instead.
+    Middle,
+    /// Use the central baseline.
+    Central,
+    /// Use the math baseline.
+    Mathematical,
+    /// Use the hanging baseline.
+    Hanging,
+    /// Use the text-over baseline.
+    #[parse(aliases = "text-before-edge")]
+    TextTop,
+}
+
+/// A specified value for the `alignment-baseline` property.
+/// https://drafts.csswg.org/css-inline-3/#alignment-baseline
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    FromPrimitive,
+    Hash,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToCss,
+    ToShmem,
+    ToComputedValue,
+    ToResolvedValue,
+    ToTyped,
+)]
+#[repr(u8)]
+pub enum AlignmentBaseline {
+    /// Use the dominant baseline choice of the parent.
+    Baseline,
+    /// Use the text-under baseline.
+    TextBottom,
+    /// Use the alphabetic baseline.
+    Alphabetic,
+    /// Use the ideographic-under baseline.
+    Ideographic,
+    /// In general, use the x-middle baselines; except under text-orientation: upright
+    /// (where the alphabetic and x-height baselines are essentially meaningless) use
+    /// the central baseline instead.
+    Middle,
+    /// Use the central baseline.
+    Central,
+    /// Use the math baseline.
+    Mathematical,
+    /// Use the hanging baseline.
+    Hanging,
+    /// Use the text-over baseline.
+    TextTop,
+    /// Used to implement the deprecated "align=middle" attribute for HTML img elements.
+    #[cfg(feature = "gecko")]
+    MozMiddleWithBaseline,
 }
 
 /// A specified value for the `baseline-source` property.
@@ -660,6 +792,16 @@ pub enum BaselineSource {
     First,
     /// Use last baseline for alignment.
     Last,
+}
+
+impl BaselineSource {
+    /// Parse baseline source, but without the auto keyword, for the shorthand.
+    pub fn parse_non_auto<'i>(input: &mut Parser<'i, '_>) -> Result<Self, ParseError<'i>> {
+        Ok(try_match_ident_ignore_ascii_case! { input,
+            "first" => Self::First,
+            "last" => Self::Last,
+        })
+    }
 }
 
 /// https://drafts.csswg.org/css-scroll-snap-1/#snap-axis
@@ -730,6 +872,7 @@ pub enum ScrollSnapStrictness {
     ToTyped,
 )]
 #[repr(C)]
+#[typed(todo_derive_fields)]
 pub struct ScrollSnapType {
     axis: ScrollSnapAxis,
     strictness: ScrollSnapStrictness,
@@ -826,6 +969,7 @@ pub enum ScrollSnapAlignKeyword {
     ToTyped,
 )]
 #[repr(C)]
+#[typed(todo_derive_fields)]
 pub struct ScrollSnapAlign {
     block: ScrollSnapAlignKeyword,
     inline: ScrollSnapAlignKeyword,
@@ -955,6 +1099,7 @@ pub enum OverflowAnchor {
 )]
 #[css(comma)]
 #[repr(C)]
+#[typed(no_multiple_values)]
 /// Provides a rendering hint to the user agent, stating what kinds of changes
 /// the author expects to perform on the element.
 ///
@@ -1570,9 +1715,26 @@ pub enum Appearance {
     Textfield,
     /// The dropdown button(s) that open up a dropdown list.
     MenulistButton,
+    /// <menu> and <menuitem> appearances
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Menuitem,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Checkmenuitem,
+    /// https://drafts.csswg.org/css-forms/#appearance
+    #[parse(condition = "appearance_base_enabled")]
+    Base,
+    /// Only relevant to the <select> element and ::picker(select) pseudo-element, allowing them to
+    /// be styled.
+    #[parse(condition = "appearance_base_select_enabled")]
+    BaseSelect,
     /// Menu Popup background.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Menupopup,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Menuseparator,
+    /// The meter bar's meter indicator.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Meterchunk,
     /// The "arrowed" part of the dropdown button that open up a dropdown list.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozMenulistArrowButton,
@@ -1582,9 +1744,14 @@ pub enum Appearance {
     /// For HTML's <input type=password>
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     PasswordInput,
+    /// The progress bar's progress indicator
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Progresschunk,
     /// nsRangeFrame and its subparts
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Range,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    RangeThumb,
     /// The scrollbar slider
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     ScrollbarHorizontal,
@@ -1609,12 +1776,21 @@ pub enum Appearance {
     /// The scroll corner
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Scrollcorner,
+    /// A separator.  Can be horizontal or vertical.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Separator,
+    /// A spin control (up/down control for time/date pickers).
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Spinner,
     /// The up button of a spin control.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     SpinnerUpbutton,
     /// The down button of a spin control.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     SpinnerDownbutton,
+    /// A status bar in a main application window.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Statusbar,
     /// A single toolbar button (with no associated dropdown).
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Toolbarbutton,
@@ -1636,6 +1812,8 @@ pub enum Appearance {
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozMacWindow,
 
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacFullscreenButton,
     /// Windows themed window frame elements.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozWindowButtonBox,
@@ -1653,11 +1831,24 @@ pub enum Appearance {
     MozWindowTitlebarMaximized,
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozWindowDecorations,
-
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacActiveSourceListSelection,
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozMacDisclosureButtonClosed,
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozMacDisclosureButtonOpen,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacSourceList,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacSourceListSelection,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacVibrancyDark,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacVibrancyLight,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacVibrantTitlebarDark,
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozMacVibrantTitlebarLight,
 
     /// A themed focus outline (for outline:auto).
     ///
@@ -1911,9 +2102,10 @@ impl ScrollbarGutter {
 
 /// A specified value for the zoom property.
 #[derive(
-    Clone, Copy, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem, ToTyped,
+    Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem, ToTyped,
 )]
 #[allow(missing_docs)]
+#[typed(todo_derive_fields)]
 pub enum Zoom {
     Normal,
     /// An internal value that resets the effective zoom to 1. Used for scrollbar parts, which

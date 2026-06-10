@@ -12,6 +12,7 @@ import androidx.annotation.DimenRes
 import androidx.annotation.Dimension
 import androidx.annotation.Dimension.Companion.DP
 import androidx.annotation.VisibleForTesting
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.components.Components
 
@@ -90,6 +91,16 @@ fun View.getRectWithScreenLocation(): Rect {
  * @param resId Resource ID of the dimension.
  * @return The pixel size corresponding to the given dimension resource.
  */
+@Suppress("Resources.GetDimensionPixelSizeInsteadOfPixelSizeFor")
 fun View.pixelSizeFor(
     @DimenRes resId: Int,
 ) = resources.getDimensionPixelSize(resId)
+
+/**
+ * Used to get and set CoordinatorLayout Behavior on a View.
+ */
+var View.behavior: CoordinatorLayout.Behavior<*>?
+    get() = (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior
+    set(value) {
+        (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior = value
+    }

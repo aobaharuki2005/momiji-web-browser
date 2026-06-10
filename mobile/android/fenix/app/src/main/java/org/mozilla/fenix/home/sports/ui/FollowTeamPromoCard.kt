@@ -1,0 +1,101 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.fenix.home.sports.ui
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.PromoCard
+import mozilla.components.compose.base.PromoCardColors
+import mozilla.components.compose.base.button.FilledButton
+import org.mozilla.fenix.R
+import org.mozilla.fenix.home.sports.CountrySelectorSource
+import org.mozilla.fenix.theme.FirefoxTheme
+
+/**
+ * Card prompting the user to follow the World Cup.
+ *
+ * @param onFollowTeam Callback invoked when the "Follow your team" button is tapped.
+ * @param modifier The [Modifier] to be applied to the card.
+ * @param pageNumber 1-based page position when shown inside a pager; appended to the title for
+ * assistive technology.
+ * @param pageCount Total page count when inside a pager. Ignored if `pageNumber` is null.
+ */
+@Composable
+fun FollowTeamPromoCard(
+    onFollowTeam: (CountrySelectorSource) -> Unit,
+    modifier: Modifier = Modifier,
+    pageNumber: Int? = null,
+    pageCount: Int? = null,
+) {
+    val titleText = stringResource(R.string.sports_widget_card_title)
+    val titleContentDescription = pagerHeadingContentDescription(
+        baseText = titleText,
+        pageNumber = pageNumber,
+        pageCount = pageCount,
+    )
+    PromoCard(
+        closeButtonContentDescription = null,
+        modifier = modifier,
+        title = {
+            Text(
+                text = titleText,
+                modifier = Modifier.semantics { contentDescription = titleContentDescription },
+            )
+
+            Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static50))
+        },
+        message = { Text(text = stringResource(R.string.sports_widget_card_description)) },
+        actions = {
+            Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static150))
+
+            FilledButton(
+                text = stringResource(R.string.sports_widget_country_selector_title),
+                onClick = { onFollowTeam(CountrySelectorSource.KEEP_TABS_CARD_FOLLOW_TEAM_BUTTON) },
+            )
+        },
+        illustration = {
+            Image(
+                painter = painterResource(R.drawable.firefox_sport),
+                contentDescription = null,
+                modifier = Modifier
+                    .width(100.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+            )
+        },
+        contentSpacing = 0.dp,
+        colors = PromoCardColors.promoCardColors(
+            backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+        ),
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun FollowTeamPromoCardPreview() {
+    FirefoxTheme {
+        Surface {
+            FollowTeamPromoCard(
+                onFollowTeam = {},
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}

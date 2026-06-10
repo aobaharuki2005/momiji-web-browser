@@ -1,10 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "LargestContentfulPaint.h"
 
+#include "GeckoProfiler.h"
 #include "Performance.h"
 #include "PerformanceMainThread.h"
 #include "imgRequest.h"
@@ -529,7 +528,26 @@ void LargestContentfulPaint::ReportLCPToNavigationTimings() {
   if (!document->IsTopLevelContentDocument()) {
     return;
   }
+
+  // These values are going to be used for the LCP profiler markers. Don't
+  // compute them if the profiler is not running.
+  nsAutoString elementStr;
+  nsCString imageURL;
+  if (profiler_is_active_and_unpaused()) {
+    element->NodeInfo()->NameAtom()->ToString(elementStr);
+    if (mId) {
+      elementStr.Append(u'#');
+      nsAutoString idStr;
+      mId->ToString(idStr);
+      elementStr.Append(idStr);
+    }
+
+    imageURL = mURI ? nsContentUtils::TruncatedURLForDisplay(mURI, 1024)
+                    : EmptyCString();
+  }
+
   timing->NotifyLargestContentfulRenderForRootContentDocument(
-      GetReducedTimePrecisionDOMHighRes(mPerformance, mRenderTime));
+      GetReducedTimePrecisionDOMHighRes(mPerformance, mRenderTime), elementStr,
+      imageURL);
 }
 }  // namespace mozilla::dom

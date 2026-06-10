@@ -53,6 +53,7 @@
 #include "call/adaptation/video_stream_input_state_provider.h"
 #include "modules/video_coding/utility/frame_dropper.h"
 #include "modules/video_coding/utility/qp_parser.h"
+#include "rtc_base/experiments/encoder_speed_experiment.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -92,13 +93,14 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       const Environment& env,
       uint32_t number_of_cores,
       VideoStreamEncoderObserver* encoder_stats_observer,
-      const VideoStreamEncoderSettings& settings,
+      VideoStreamEncoderSettings settings,
       std::unique_ptr<OveruseFrameDetector> overuse_detector,
       std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter,
       std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue,
       BitrateAllocationCallbackType allocation_cb_type,
-      VideoEncoderFactory::EncoderSelectorInterface* encoder_selector =
-          nullptr);
+      scoped_refptr<VideoEncoderFactory::EncoderSelectorInterface>
+          encoder_selector = nullptr,
+      EncoderSwitchRequestCallback encoder_switch_request_callback = nullptr);
   ~VideoStreamEncoder() override;
 
   VideoStreamEncoder(const VideoStreamEncoder&) = delete;
@@ -261,7 +263,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       const EncodedImage& encoded_image,
       const CodecSpecificInfo* codec_specific_info) override;
 
-  void OnDroppedFrame(EncodedImageCallback::DropReason reason) override;
+  void OnFrameDropped(uint32_t rtp_timestamp,
+                      int spatial_id,
+                      bool is_end_of_temporal_unit) override;
 
   bool EncoderPaused() const;
   void TraceFrameDropStart();
@@ -303,16 +307,14 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   EncoderSink* sink_ = nullptr;
   const VideoStreamEncoderSettings settings_;
+  EncoderSwitchRequestCallback encoder_switch_request_callback_;
   const BitrateAllocationCallbackType allocation_cb_type_;
   const RateControlSettings rate_control_settings_;
 
-  VideoEncoderFactory::EncoderSelectorInterface* const
-      encoder_selector_from_constructor_;
-  std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface> const
-      encoder_selector_from_factory_;
-  // Pointing to either encoder_selector_from_constructor_ or
-  // encoder_selector_from_factory_ but can be nullptr.
-  VideoEncoderFactory::EncoderSelectorInterface* const encoder_selector_;
+  // Pointing to either encoder_selector from constructor or
+  // encoder_selector from_factory_ but can be nullptr.
+  const scoped_refptr<VideoEncoderFactory::EncoderSelectorInterface>
+      encoder_selector_;
 
   VideoStreamEncoderObserver* const encoder_stats_observer_;
   // Adapter that avoids public inheritance of the cadence adapter's callback
@@ -460,6 +462,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   const std::optional<int> vp9_low_tier_core_threshold_;
   const std::optional<int> experimental_encoder_thread_limit_;
+  const EncoderSpeedExperiment speed_experiment_;
 
   // This is a copy of restrictions (glorified max_pixel_count) set by
   // OnVideoSourceRestrictionsUpdated. It is used to scale down encoding
@@ -472,7 +475,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       RTC_GUARDED_BY(encoder_queue_);
 
   // Used to cancel any potentially pending tasks to the worker thread.
-  // Refrenced by tasks running on `encoder_queue_` so need to be destroyed
+  // Referenced by tasks running on `encoder_queue_` so need to be destroyed
   // after stopping that queue. Must be created and destroyed on
   // `worker_queue_`.
   ScopedTaskSafety task_safety_;

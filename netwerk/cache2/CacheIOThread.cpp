@@ -36,13 +36,17 @@ namespace detail {
 class NativeThreadHandle {
 #ifdef XP_WIN
   // The native handle to the thread
-  HANDLE mThread;
+  HANDLE mThread = NULL;
 #endif
 
  public:
   // Created and destroyed on the main thread only
-  NativeThreadHandle();
+  NativeThreadHandle() = default;
+#ifdef XP_WIN
   ~NativeThreadHandle();
+#else
+  ~NativeThreadHandle() = default;
+#endif
 
   // Called on the IO thread to grab the platform specific
   // reference to it.
@@ -53,8 +57,6 @@ class NativeThreadHandle {
 };
 
 #ifdef XP_WIN
-
-NativeThreadHandle::NativeThreadHandle() : mThread(NULL) {}
 
 NativeThreadHandle::~NativeThreadHandle() {
   if (mThread) {
@@ -94,8 +96,6 @@ void NativeThreadHandle::CancelBlockingIO(Monitor& aMonitor) {
 
 // Stub code only (we don't implement IO cancelation for this platform)
 
-NativeThreadHandle::NativeThreadHandle() = default;
-NativeThreadHandle::~NativeThreadHandle() = default;
 void NativeThreadHandle::InitThread() {}
 void NativeThreadHandle::CancelBlockingIO(Monitor&) {}
 
@@ -333,9 +333,8 @@ void CacheIOThread::ThreadFunc() {
         MakeRefPtr<ThreadEventQueue>(MakeUnique<mozilla::EventQueue>());
     nsCOMPtr<nsIThread> xpcomThread =
         nsThreadManager::get().CreateCurrentThread(queue);
-#if defined(MOZ_GECKO_PROFILER)
+
     profiler_register_thread("Cache2 I/O", &stackTop);
-#endif
 
     threadInternal = do_QueryInterface(xpcomThread);
     if (threadInternal) threadInternal->SetObserver(this);
@@ -403,10 +402,11 @@ void CacheIOThread::ThreadFunc() {
 #endif
   }  // lock
 
-  if (threadInternal) threadInternal->SetObserver(nullptr);
-#if defined(MOZ_GECKO_PROFILER)
+  if (threadInternal) {
+    threadInternal->SetObserver(nullptr);
+  }
+
   profiler_unregister_thread();
-#endif
 }
 
 void CacheIOThread::LoopOneLevel(uint32_t aLevel) {

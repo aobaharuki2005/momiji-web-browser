@@ -32,7 +32,7 @@ newtab-search-box-input =
     .placeholder = Hanapin sa web
     .aria-label = Hanapin sa web
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Magdagdag ng Search Engine
 newtab-topsites-add-shortcut-header = Bagong Shortcut
@@ -223,9 +223,21 @@ newtab-error-fallback-refresh-link = I-refresh ang pahina para masubukan uli.
 
 newtab-custom-shortcuts-title = Mga shortcut
 newtab-custom-shortcuts-subtitle = Mga site na nai-save o binibisita mo
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Mga shortcut
     .description = Mga site na nai-save o binibisita mo
+newtab-custom-shortcuts-nova =
+    .label = Mga shortcut
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } row
+           *[other] { $num } rows
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =

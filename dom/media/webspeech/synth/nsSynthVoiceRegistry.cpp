@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -314,13 +312,12 @@ nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
                         NS_ConvertUTF16toUTF8(aUri).get(),
                         (XRE_IsContentProcess()) ? "child" : "parent"));
 
-  bool found = false;
-  VoiceData* retval = mUriVoiceMap.GetWeak(aUri, &found);
+  RefPtr<VoiceData> retval = mUriVoiceMap.Get(aUri);
 
-  if (NS_WARN_IF(!(found))) {
+  if (NS_WARN_IF(!retval)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if (NS_WARN_IF(!(aService == retval->mService))) {
+  if (NS_WARN_IF(aService != retval->mService)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -390,7 +387,8 @@ nsSynthVoiceRegistry::NotifyVoicesError(const nsAString& aError) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  obs->NotifyObservers(nullptr, "synth-voices-error", aError.BeginReading());
+  obs->NotifyObservers(nullptr, "synth-voices-error",
+                       PromiseFlatString(aError).get());
 
   return NS_OK;
 }

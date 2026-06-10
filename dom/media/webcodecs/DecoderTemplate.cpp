@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -169,7 +167,7 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
   // Audio encoders are all software, no need to do anything.
   // This is incomplete and will be implemented fully in bug 1967793
   if constexpr (std::is_same_v<ConfigType, VideoDecoderConfig>) {
-    ApplyResistFingerprintingIfNeeded(config, GetOwnerGlobal());
+    ApplyResistFingerprintingIfNeeded(config, GetRelevantGlobal());
   }
 
   mState = CodecState::Configured;
@@ -316,6 +314,12 @@ void DecoderTemplate<DecoderType>::CloseInternal(const nsresult& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult != NS_ERROR_DOM_ABORT_ERR, "Use CloseInternalWithAbort");
 
+  // Return early if already closed. This can happen when async error handling
+  // tasks race with user-initiated close().
+  if (mState == CodecState::Closed) {
+    return;
+  }
+
   auto r = ResetInternal(aResult);
   if (r.isErr()) {
     nsCString name;
@@ -442,13 +446,11 @@ void DecoderTemplate<DecoderType>::CancelPendingControlMessagesAndFlushPromises(
   }
 
   // If there are pending flush promises, reject them.
-  mPendingFlushPromises.ForEach(
-      [&](const int64_t& id, const RefPtr<Promise>& p) {
-        LOG("%s %p, reject the promise for flush %" PRId64 " (unique id)",
-            DecoderType::Name.get(), this, id);
-        p->MaybeReject(aResult);
-      });
-  mPendingFlushPromises.Clear();
+  mPendingFlushPromises.Clear([&](const int64_t& id, const RefPtr<Promise>& p) {
+    LOG("%s %p, reject the promise for flush %" PRId64 " (unique id)",
+        DecoderType::Name.get(), this, id);
+    p->MaybeReject(aResult);
+  });
 }
 
 template <typename DecoderType>
@@ -555,7 +557,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
                  self->QueueATask(
                      "Error during configure",
                      [self = RefPtr{self}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                       MOZ_ASSERT(self->mState != CodecState::Closed);
                        self->CloseInternal(
                            NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                      });
@@ -657,7 +658,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                  self->QueueATask(
                      "Error during decode runnable",
                      [self = RefPtr{self}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                       MOZ_ASSERT(self->mState != CodecState::Closed);
                        self->CloseInternal(
                            NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                      });
@@ -767,7 +767,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
                        // Otherwise, the promise is going to be rejected by
                        // CloseInternal() below.
                        self->mProcessingMessage.reset();
-                       MOZ_ASSERT(self->mState != CodecState::Closed);
                        self->CloseInternal(
                            NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                      });

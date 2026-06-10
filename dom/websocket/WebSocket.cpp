@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -101,9 +99,9 @@ class WebSocketImplProxy final : public nsIWebSocketImpl,
     mOwner = nullptr;
   }
 
-  void BindToOwner(nsIGlobalObject* aOwner) {
-    GlobalTeardownObserver::BindToOwner(aOwner);
-    GlobalFreezeObserver::BindToOwner(aOwner);
+  void BindToGlobal(nsIGlobalObject* aGlobal) {
+    GlobalTeardownObserver::BindToGlobal(aGlobal);
+    GlobalFreezeObserver::BindToGlobal(aGlobal);
   }
 
   void DisconnectFromOwner() override;
@@ -664,7 +662,7 @@ void WebSocketImpl::Disconnect(const RefPtr<WebSocketImpl>& aProofOfRef) {
 
   // If we haven't called WebSocket::DisconnectFromOwner yet, update
   // web socket count here.
-  if (nsIGlobalObject* global = mWebSocket->GetOwnerGlobal()) {
+  if (nsIGlobalObject* global = mWebSocket->GetRelevantGlobal()) {
     global->UpdateWebSocketCount(-1);
   }
 
@@ -1591,7 +1589,7 @@ void WebSocket::DisconnectFromOwner() {
   // If we haven't called WebSocketImpl::Disconnect yet, update web
   // socket count here.
   if (mImpl && !mImpl->mDisconnectingOrDisconnected) {
-    GetOwnerGlobal()->UpdateWebSocketCount(-1);
+    GetRelevantGlobal()->UpdateWebSocketCount(-1);
   }
 
   DOMEventTargetHelper::DisconnectFromOwner();
@@ -1647,7 +1645,7 @@ nsresult WebSocketImpl::Init(nsIGlobalObject* aWindowGlobal, JSContext* aCx,
   RefPtr<WebSocketImplProxy> proxy;
   if (mIsMainThread) {
     proxy = new WebSocketImplProxy(this);
-    proxy->BindToOwner(aWindowGlobal);
+    proxy->BindToGlobal(aWindowGlobal);
   }
 
   if (!mIsMainThread) {
@@ -2016,7 +2014,7 @@ nsresult WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
   AssertIsOnTargetThread();
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(GetOwnerGlobal()))) {
+  if (NS_WARN_IF(!jsapi.Init(GetRelevantGlobal()))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2036,7 +2034,7 @@ nsresult WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
       messageType = nsIWebSocketEventListener::TYPE_BLOB;
 
       RefPtr<Blob> blob =
-          Blob::CreateStringBlob(GetOwnerGlobal(), aData, u""_ns);
+          Blob::CreateStringBlob(GetRelevantGlobal(), aData, u""_ns);
       if (NS_WARN_IF(!blob)) {
         return NS_ERROR_FAILURE;
       }
@@ -2855,6 +2853,12 @@ WebSocketImpl::RegisterShutdownTask(nsITargetShutdownTask*) {
 NS_IMETHODIMP
 WebSocketImpl::UnregisterShutdownTask(nsITargetShutdownTask*) {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIEventTarget::FeatureFlags WebSocketImpl::GetFeatures() {
+  // If the worker shuts down, we don't support dispatching to it anymore
+  // during CloseConnection.
+  return SUPPORTS_BASE;
 }
 
 NS_IMETHODIMP

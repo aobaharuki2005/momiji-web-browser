@@ -44,6 +44,11 @@ options-collapse-attrs-label = Truncate DOM attributes
 options-collapse-attrs-tooltip =
     .title = Truncate long attributes in the inspector
 
+# The label for the checkbox option to enable the display of comments in the Inspector
+options-show-comments-label = Show comments
+options-show-comments-tooltip =
+    .title = Display comment nodes in the inspector
+
 # The label for the checkbox option to enable the "drag to update" feature
 options-inspector-draggable-properties-label = Click and drag to edit size values
 options-inspector-draggable-properties-tooltip =
@@ -176,3 +181,16 @@ options-context-triggers-page-refresh-temporary = (current session only, reloads
 # The message shown for settings that trigger page reload
 # This appears underneath the applicable options (e.g. options-show-user-agent-shadow-dom-label).
 options-context-triggers-page-refresh-persists = (reloads the page)
+
+# This is used to add a * marker to the label for the Options Panel tool checkbox for the
+# tool which is not supported for the current toolbox target.
+# Variables:
+#   $toolLabel (String): The name of the tool not being supported
+options-tool-not-supported-marker = { $toolLabel } *
+
+# Used as a label for auto theme
+options-auto-theme-label = Auto
+
+# This is the text that appears in the settings panel for panel that will be removed in future releases.
+# This entire text is treated as a link to an MDN page.
+options-deprecation-notice = Deprecated. Learn More…

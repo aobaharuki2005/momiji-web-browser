@@ -334,6 +334,8 @@ skip-if = [
 ["test_startup_scan.js"]
 head = "head_addons.js head_sideload.js"
 
+["test_startup_version.js"]
+
 ["test_strictcompatibility.js"]
 head = "head_addons.js head_compat.js"
 
@@ -509,3 +511,5 @@ tags = "webextensions"
 skip-if = [
   "os == 'android'", # Non-extension add-ons are not supported on Android, but test installs static theme.
 ]
+
+["test_xpi_relocated_location.js"]

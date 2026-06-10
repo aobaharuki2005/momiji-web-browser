@@ -13,9 +13,7 @@
 ## They should be moved to toolkit/branding/brandings.ftl if the feature is
 ## exposed for localization.
 
--mdn-brand-name = MDN Web Docs
 -mdn-brand-short-name = MDN
--yelp-brand-name = Yelp
 
 ## These strings are used in the urlbar panel.
 
@@ -28,22 +26,6 @@ urlbar-group-shortcuts =
 # A label shown above the top pick group in the urlbar results.
 urlbar-group-best-match =
   .label = Top pick
-
-# Label shown above an extension suggestion in the urlbar results (an
-# alternative phrasing is "Extension for Firefox"). It's singular since only one
-# suggested extension is displayed.
-urlbar-group-addon =
-  .label = { -brand-product-name } extension
-
-# Label shown above a MDN suggestion in the urlbar results.
-urlbar-group-mdn =
-  .label = Recommended resource
-
-# A label shown above urlbar suggestions for businesses and other locations
-# in the user's city or a city they included in their search string (e.g., Yelp
-# suggestions).
-urlbar-group-local =
-  .label = Local recommendations
 
 # A message that replaces a result when the user dismisses a single suggestion.
 firefox-suggest-dismissal-acknowledgment-one = Thanks for your feedback. You won’t see this suggestion again.
@@ -100,25 +82,14 @@ firefox-suggest-command-dont-show-this =
   .label = Don’t show this
 firefox-suggest-command-dont-show-mdn =
   .label = Don’t show { -mdn-brand-short-name } suggestions
-firefox-suggest-command-not-relevant =
-  .label = Not relevant
 firefox-suggest-command-not-interested =
   .label = Not interested
 firefox-suggest-command-dont-show-this-suggestion =
   .label = Don’t show this suggestion
 firefox-suggest-command-dont-show-any-suggestions =
   .label = Don’t show any suggestions
-
-## These strings are used for add-on suggestions in the urlbar.
-
-# This string explaining that the add-on suggestion is a recommendation.
-firefox-suggest-addons-recommended = Recommended
-
-## These strings are used for MDN suggestions in the urlbar.
-
-# This string is shown in MDN suggestions and indicates the suggestion is from
-# MDN.
-firefox-suggest-mdn-bottom-text = { -mdn-brand-name }
+firefox-suggest-command-dont-show-addons =
+  .label = Don’t show { -brand-product-name } extension suggestions
 
 ## These strings are used for Yelp suggestions in the urlbar.
 
@@ -127,10 +98,6 @@ firefox-suggest-mdn-bottom-text = { -mdn-brand-name }
 # Variables:
 #   $service (string) - The title of the service, e.g., "coffee shops".
 firefox-suggest-yelp-service-title = Top results for { $service }
-
-# This string is shown in Yelp suggestions and indicates the suggestion is for
-# Yelp.
-firefox-suggest-yelp-bottom-text = { -yelp-brand-name } · Sponsored
 
 ## Used as title on the introduction pane. The text can be formatted to span
 ## multiple lines as needed (line breaks are significant).
@@ -352,10 +319,15 @@ urlbar-result-aria-group-flight-status =
 # 2" means the game is taking place at Team 2's home venue, and we say Team 1 is
 # the "away" team and Team 2 is the "home" team. If your language doesn't have a
 # similar phrase, use your equivalent of "vs." or even just "and".
+
+# This string is shown for a scheduled future game. Please list $homeTeam before
+# $awayTeam so that the ordering of teams in the string matches the ordering of
+# the team icons in the suggestion UI. Without violating the team ordering,
+# please use your language's equivalent of "vs". "and" is another option.
 # Variables:
-#   $awayTeam (string) - Name of the visting team.
 #   $homeTeam (string) - Name of the home team.
-urlbar-result-sports-team-names = { $awayTeam } at { $homeTeam }
+#   $awayTeam (string) - Name of the visiting team.
+urlbar-result-sports-team-names = { $homeTeam } vs { $awayTeam }
 
 # This string is shown when the game is today, in the near future, or in the
 # recent past.
@@ -380,3 +352,21 @@ urlbar-result-dismissal-acknowledgment-sports = Thanks for your feedback. You wo
 # This a11y label is read by screen readers when an item in the row is selected.
 urlbar-result-aria-group-sports =
   .aria-label = Sports suggestions
+
+## For urlbar results with last-visited dates like history, bookmarks, and top
+## sites, these strings replace their URL when the user selects or hovers over
+## them. They explain the reason the result is shown.
+##
+## TODO: Move these to browser.ftl when they are finalized.
+
+# This explanation is used when the when the last-visited date is formatted as
+# an absolute date like "11 May" or "11 May 2026".
+# Variables:
+#   $date (string) - A localized absolute date string
+urlbar-result-explanation-last-visited-absolute = You last visited this on { $date }
+
+# This explanation is used when the when the last-visited date is formatted as
+# one of the following relative dates: "yesterday", "today"
+# Variables:
+#   $date (string) - A localized relative date string
+urlbar-result-explanation-last-visited-relative = You last visited this { $date }

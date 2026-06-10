@@ -1265,6 +1265,17 @@ loser:
 }
 
 SECStatus
+SEC_PKCS12DecoderSetMaxElementLen(SEC_PKCS12DecoderContext *p12dcx,
+                                  unsigned long maxLen)
+{
+    if (!p12dcx || p12dcx->error) {
+        return SECFailure;
+    }
+    SEC_ASN1DecoderSetMaximumElementSize(p12dcx->pfxA1Dcx, maxLen);
+    return SECSuccess;
+}
+
+SECStatus
 SEC_PKCS12DecoderSetTargetTokenCAs(SEC_PKCS12DecoderContext *p12dcx,
                                    SECPKCS12TargetTokenCAs tokenCAs)
 {
@@ -1319,31 +1330,12 @@ static const char bufferEnd[] = { "BufferEnd" };
 #define FUDGE 128 /* must be as large as bufferEnd or more. */
 
 #ifdef UNSAFE_FUZZER_MODE
-static PRBool
-fuzzer_parity_check(const unsigned char *buf, size_t len)
-{
-    unsigned char p = 0;
-    for (size_t i = 0; i < len; i++)
-        p ^= buf[i];
-    return (p & 1) != 0;
-}
-
 static SECStatus
-sec_pkcs12_decoder_unsafe_parity_outcome(SEC_PKCS12DecoderContext *p12dcx)
+sec_pkcs12_decoder_verify_fuzzer(SEC_PKCS12DecoderContext *p12dcx)
 {
-    PRBool allow = PR_TRUE;
-    if (p12dcx->pfx.encodedMacData.data && p12dcx->pfx.encodedMacData.len) {
-        allow = fuzzer_parity_check(p12dcx->pfx.encodedMacData.data, p12dcx->pfx.encodedMacData.len);
-    }
-
     if (p12dcx->dClose) {
         (*p12dcx->dClose)(p12dcx->dArg, PR_TRUE);
         p12dcx->dIsOpen = PR_FALSE;
-    }
-
-    if (!allow) {
-        PORT_SetError(SEC_ERROR_PKCS12_INVALID_MAC);
-        return SECFailure;
     }
 
     return SECSuccess;
@@ -1373,7 +1365,7 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
         return SECFailure;
     }
 #ifdef UNSAFE_FUZZER_MODE
-    return sec_pkcs12_decoder_unsafe_parity_outcome(p12dcx);
+    return sec_pkcs12_decoder_verify_fuzzer(p12dcx);
 #endif /* UNSAFE_FUZZER_MODE */
     buf = (unsigned char *)PORT_Alloc(IN_BUF_LEN + FUDGE);
     if (!buf)
@@ -1497,7 +1489,7 @@ SEC_PKCS12DecoderVerify(SEC_PKCS12DecoderContext *p12dcx)
         return rv;
     }
 #ifdef UNSAFE_FUZZER_MODE
-    return sec_pkcs12_decoder_unsafe_parity_outcome(p12dcx);
+    return sec_pkcs12_decoder_verify_fuzzer(p12dcx);
 #else  /* UNSAFE_FUZZER_MODE */
     /* check the signature or the mac depending on the type of
      * integrity used.
@@ -1721,6 +1713,13 @@ sec_pkcs12_sanitize_nickname(PK11SlotInfo *slot, SECItem *nick)
         slotName[slotNameLen] = '\0';
         if (PORT_Strcmp(PK11_GetTokenName(slot), slotName) == 0) {
             delimitlen = PORT_Strlen(delimit + 1);
+            if (delimitlen == 0) {
+                /* Nickname was exactly "TokenName:" with nothing after the
+                 * prefix.  Stripping it would yield an empty SECItem, which
+                 * is not a useful nickname; leave the original in place. */
+                PORT_Free(slotName);
+                return;
+            }
             PORT_Memmove(nickname, delimit + 1, delimitlen + 1);
             nick->len = delimitlen;
         }

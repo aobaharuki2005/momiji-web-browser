@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTArray_h__
-#define nsTArray_h__
+#ifndef nsTArray_h_
+#define nsTArray_h_
 
 #include <string.h>
 
@@ -68,13 +66,7 @@ template <typename, typename>
 class RecordEntry;
 }
 
-namespace mozilla::dom::ipc {
-class StructuredCloneData;
-}  // namespace mozilla::dom::ipc
-
 namespace mozilla::dom {
-class ClonedMessageData;
-class MessageData;
 class MessagePortIdentifier;
 template <typename T>
 struct Nullable;
@@ -746,17 +738,12 @@ MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::layers::TileClient)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::SerializedStructuredCloneBuffer)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
-    mozilla::dom::ipc::StructuredCloneData)
-MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::dom::ClonedMessageData)
-MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::dom::indexedDB::ObjectStoreCursorResponse)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::dom::indexedDB::IndexCursorResponse)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo);
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(JSStructuredCloneData)
-MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::dom::MessageData)
-MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::dom::RefMessageData)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::SourceBufferTask)
 
 namespace detail {
@@ -1355,7 +1342,7 @@ class nsTArray_Impl
   // See also SetLengthAndRetainStorage.
   // Make sure to call Compact() if needed to avoid keeping a huge array
   // around.
-  void ClearAndRetainStorage() {
+  MOZ_REINITIALIZES void ClearAndRetainStorage() {
     if (this->HasEmptyHeader()) {
       return;
     }
@@ -2104,7 +2091,8 @@ class nsTArray_Impl
   // @return True if the operation succeeded; false if we ran out of memory
  protected:
   template <typename ActualAlloc = Alloc>
-  typename ActualAlloc::ResultType SetCapacity(size_type aCapacity) {
+  MOZ_REINITIALIZES typename ActualAlloc::ResultType SetCapacity(
+      size_type aCapacity) {
     return ActualAlloc::Result(this->template EnsureCapacity<ActualAlloc>(
         aCapacity, sizeof(value_type)));
   }
@@ -2644,7 +2632,7 @@ class MOZ_GSL_OWNER nsTArray
   using typename base_type::size_type;
   using typename base_type::value_type;
 
-  constexpr nsTArray() {}
+  constexpr nsTArray() = default;
   explicit nsTArray(size_type aCapacity) : base_type(aCapacity) {}
   MOZ_IMPLICIT nsTArray(std::initializer_list<E> aIL) {
     AppendElements(aIL.begin(), aIL.size());
@@ -3768,4 +3756,4 @@ std::ostream& operator<<(std::ostream& aOut,
   return aOut << mozilla::Span(aTArray);
 }
 
-#endif  // nsTArray_h__
+#endif  // nsTArray_h_

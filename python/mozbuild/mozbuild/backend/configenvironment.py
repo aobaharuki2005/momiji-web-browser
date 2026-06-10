@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import functools
 import json
 import os
 import sys
@@ -16,7 +17,6 @@ from mozshellutil import quote as shell_quote
 from mozbuild.util import (
     FileAvoidWrite,
     ReadOnlyDict,
-    memoized_property,
     system_encoding,
 )
 
@@ -53,7 +53,7 @@ class BuildConfig:
             mod.__file__ = path
             sys.modules["config.status"] = mod
 
-            with open(path) as fh:
+            with open(path, encoding="utf-8") as fh:
                 source = fh.read()
                 code_cache[path] = (
                     mtime,
@@ -85,25 +85,28 @@ class ConfigEnvironment:
     each treated through a different member function.
 
     Creating a ConfigEnvironment requires a few arguments:
-      - topsrcdir and topobjdir are, respectively, the top source and
-        the top object directory.
-      - defines is a dict filled from AC_DEFINE and AC_DEFINE_UNQUOTED in autoconf.
-      - substs is a dict filled from AC_SUBST in autoconf.
+
+    - topsrcdir and topobjdir are, respectively, the top source and
+      the top object directory.
+    - defines is a dict filled from AC_DEFINE and AC_DEFINE_UNQUOTED in autoconf.
+    - substs is a dict filled from AC_SUBST in autoconf.
 
     ConfigEnvironment automatically defines one additional substs variable
     from all the defines:
-      - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
-        preprocessor command lines. The order in which defines were given
-        when creating the ConfigEnvironment is preserved.
+
+    - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
+      preprocessor command lines. The order in which defines were given
+      when creating the ConfigEnvironment is preserved.
 
     and two other additional subst variables from all the other substs:
-      - ALLSUBSTS contains the substs in the form NAME = VALUE, in sorted
-        order, for use in autoconf.mk. It includes ACDEFINES.
-        Only substs with a VALUE are included, such that the resulting file
-        doesn't change when new empty substs are added.
-        This results in less invalidation of build dependencies in the case
-        of autoconf.mk..
-      - ALLEMPTYSUBSTS contains the substs with an empty value, in the form NAME =.
+
+    - ALLSUBSTS contains the substs in the form NAME = VALUE, in sorted
+      order, for use in autoconf.mk. It includes ACDEFINES.
+      Only substs with a VALUE are included, such that the resulting file
+      doesn't change when new empty substs are added.
+      This results in less invalidation of build dependencies in the case
+      of autoconf.mk..
+    - ALLEMPTYSUBSTS contains the substs with an empty value, in the form NAME =.
 
     ConfigEnvironment expects a "top_srcdir" subst to be set with the top
     source directory, in msys format on windows. It is used to derive a
@@ -179,7 +182,7 @@ class ConfigEnvironment:
     def is_artifact_build(self):
         return self.substs.get("MOZ_ARTIFACT_BUILDS", False)
 
-    @memoized_property
+    @functools.cached_property
     def acdefines(self):
         acdefines = dict((name, self.defines[name]) for name in self.defines)
         return ReadOnlyDict(acdefines)
@@ -211,7 +214,7 @@ class PartialConfigDict:
     def _load_config_track(self):
         existing_files = set()
         try:
-            with open(self._config_track) as fh:
+            with open(self._config_track, encoding="utf-8") as fh:
                 existing_files.update(fh.read().splitlines())
         except OSError:
             pass

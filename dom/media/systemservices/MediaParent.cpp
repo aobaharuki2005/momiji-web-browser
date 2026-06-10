@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,6 +22,9 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/MediaDrmRemoteCDMParent.h"
+#endif
 
 mozilla::LazyLogModule gMediaParentLog("MediaParent");
 #define LOG(args) MOZ_LOG(gMediaParentLog, mozilla::LogLevel::Debug, args)
@@ -80,7 +81,8 @@ class OriginKeyStore {
       return NS_OK;
     }
 
-    void Clear(int64_t aSinceWhen) {
+    void Clear(int64_t aSinceWhen,
+               nsTArray<nsCString>* aRemovedKeys = nullptr) {
       // Avoid int64_t* <-> void* casting offset
       OriginKey since(nsCString(), aSinceWhen / PR_USEC_PER_SEC);
       for (auto iter = mKeys.Iter(); !iter.Done(); iter.Next()) {
@@ -91,6 +93,9 @@ class OriginKeyStore {
              __FUNCTION__, originKey->mSecondsStamp, since.mSecondsStamp));
 
         if (originKey->mSecondsStamp >= since.mSecondsStamp) {
+          if (aRemovedKeys) {
+            aRemovedKeys->AppendElement(originKey->mKey);
+          }
           iter.Remove();
         }
       }
@@ -337,8 +342,9 @@ class OriginKeyStore {
       return rv;
     }
 
-    void Clear(int64_t aSinceWhen) {
-      OriginKeysTable::Clear(aSinceWhen);
+    void Clear(int64_t aSinceWhen,
+               nsTArray<nsCString>* aRemovedKeys = nullptr) {
+      OriginKeysTable::Clear(aSinceWhen, aRemovedKeys);
       Delete();
       Save();
     }
@@ -447,17 +453,18 @@ mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return PrincipalKeyPromise::CreateAndReject(rv, __func__);
         }
-        return PrincipalKeyPromise::CreateAndResolve(result, __func__);
+        return PrincipalKeyPromise::CreateAndResolve(std::move(result),
+                                                     __func__);
       })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aResolve](const PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
-            if (aValue.IsReject()) {
-              aResolve(""_ns);
-            } else {
-              aResolve(aValue.ResolveValue());
-            }
-          });
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [aResolve = std::move(aResolve)](
+                 const PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 aResolve(""_ns);
+               } else {
+                 aResolve(aValue.ResolveValue());
+               }
+             });
 
   return IPC_OK();
 }
@@ -483,12 +490,32 @@ mozilla::ipc::IPCResult Parent<Super>::RecvSanitizeOriginKeys(
       NewRunnableFrom(
           [this, that, profileDir, aSinceWhen, aOnlyPrivateBrowsing]() {
             MOZ_ASSERT(!NS_IsMainThread());
+#ifdef MOZ_WIDGET_ANDROID
+            // Collect all removed origin keys so we can revoke any
+            // per-origin MediaDRM provisioning. This includes keys that
+            // were only used by enumerateDevices and never for DRM;
+            // unprovisioning those is a harmless no-op.
+            nsTArray<nsCString> removedKeys;
+            {
+              StaticMutexAutoLock lock(sOriginKeyStoreStsMutex);
+              mOriginKeyStore->mPrivateBrowsingOriginKeys.Clear(aSinceWhen,
+                                                                &removedKeys);
+              if (!aOnlyPrivateBrowsing) {
+                mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
+                mOriginKeyStore->mOriginKeys.Clear(aSinceWhen, &removedKeys);
+              }
+            }
+            if (!removedKeys.IsEmpty()) {
+              MediaDrmRemoteCDMParent::UnprovisionMediaDrmOrigins(removedKeys);
+            }
+#else
             StaticMutexAutoLock lock(sOriginKeyStoreStsMutex);
             mOriginKeyStore->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
             if (!aOnlyPrivateBrowsing) {
               mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
               mOriginKeyStore->mOriginKeys.Clear(aSinceWhen);
             }
+#endif
             return NS_OK;
           }),
       NS_DISPATCH_NORMAL);

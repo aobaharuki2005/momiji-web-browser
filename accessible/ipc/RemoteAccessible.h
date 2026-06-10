@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -383,6 +381,8 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   virtual void DOMNodeClass(nsString& aClass) const override;
 
+  virtual int32_t HeadingLevel() const override;
+
   virtual void ScrollToPoint(uint32_t aScrollType, int32_t aX,
                              int32_t aY) override;
 
@@ -394,10 +394,6 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   virtual bool HasCustomActions() const override;
   virtual bool IsEditable() const override;
-
-#if !defined(XP_WIN)
-  void Announce(const nsString& aAnnouncement, uint16_t aPriority);
-#endif  // !defined(XP_WIN)
 
   // HTMLMeterAccessible
   int32_t ValueRegion() const;

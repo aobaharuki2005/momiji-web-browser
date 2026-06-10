@@ -162,22 +162,5 @@ def test_get_decision_parameters(
         assert params[key] == expected[key], f"key {key} does not match!"
 
 
-@pytest.mark.parametrize(
-    "msg, expected",
-    (
-        pytest.param("", "", id="empty"),
-        pytest.param("abc | def", "", id="no_try_syntax"),
-        pytest.param("try: -f -o -o", "try: -f -o -o", id="initial_try_syntax"),
-        pytest.param(
-            "some stuff\ntry: -f -o -o\nabc\ndef",
-            "try: -f -o -o",
-            id="embedded_try_syntax_multiline",
-        ),
-    ),
-)
-def test_try_syntax_from_message(msg, expected):
-    assert decision.try_syntax_from_message(msg) == expected
-
-
 if __name__ == "__main__":
     main()

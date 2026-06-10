@@ -112,3 +112,84 @@ add_task(async function test_time_spinner_markup() {
 
   await helper.tearDown();
 });
+
+/**
+ * Test that time input field has a picker button
+ * with an accessible markup with the time picker enabled
+ */
+add_task(async function test_picker_button_markup_time() {
+  info(
+    "Test that type=time input field has a picker button with an accessible markup with the time picker enabled"
+  );
+
+  await helper.openPicker("data:text/html, <input type='time'>");
+  let browser = helper.tab.linkedBrowser;
+
+  Assert.equal(helper.panel.state, "open", "Panel is visible");
+
+  let closed = helper.promisePickerClosed();
+
+  await testPickerBtnAttribute("aria-expanded", "true");
+  await testPickerBtnAttribute("aria-label", null, true);
+  await testPickerBtnAttribute("data-l10n-id", "datetime-time");
+
+  await SpecialPowers.spawn(browser, [], () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    const pickerBtn = shadowRoot.getElementById("picker-button");
+
+    Assert.equal(pickerBtn.tagName, "BUTTON", "Picker control is a button");
+    Assert.ok(
+      ContentTaskUtils.isVisible(pickerBtn),
+      "The picker button is visible"
+    );
+
+    pickerBtn.click();
+  });
+
+  await closed;
+
+  Assert.equal(
+    helper.panel.state,
+    "closed",
+    "Panel should be closed on click on the picker button"
+  );
+
+  await testPickerBtnAttribute("aria-expanded", "false");
+
+  await helper.tearDown();
+});
+
+/**
+ * Test that time input field does not include a picker button
+ * with the time picker disabled
+ */
+add_task(async function test_picker_button_markup_time_picker_off() {
+  info(
+    "Test that type=time input field does not include a picker button with the time picker disabled"
+  );
+
+  // Toggle off the time picker pref
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.forms.datetime.timepicker", false]],
+  });
+
+  let testTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html, <input type='time'>"
+  );
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const input = content.document.querySelector("input");
+    const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+    const pickerBtn = shadowRoot.getElementById("picker-button");
+
+    Assert.ok(
+      ContentTaskUtils.isHidden(pickerBtn),
+      "The Calendar control within a type=time input field is programmatically hidden with the time picker disabled"
+    );
+  });
+
+  await SpecialPowers.popPrefEnv();
+  BrowserTestUtils.removeTab(testTab);
+});

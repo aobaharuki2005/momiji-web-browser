@@ -8,9 +8,13 @@
 newtab-page-title = Ivinell nevez
 newtab-settings-button =
     .title = Personelait ho pajenn Ivinell Nevez
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Personelaat ar bejenn-mañ
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Personelaat
+newtab-customize-panel-label =
+    .label = Personelaat
 newtab-personalize-settings-icon-label =
     .title = Personelaat an ivinell nevez
     .aria-label = Arventennoù
@@ -49,7 +53,7 @@ newtab-search-box-input =
     .placeholder = Klask er web
     .aria-label = Klask er web
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Ouzhpennañ ul lusker klask
 newtab-topsites-add-shortcut-header = Berradenn nevez
@@ -271,9 +275,24 @@ newtab-error-fallback-refresh-link = Adkargit ar bajenn evit klask en-dro.
 
 newtab-custom-shortcuts-title = Berradennoù
 newtab-custom-shortcuts-subtitle = Lec'hiennoù bet enrollet pe gweladennet ganeoc'h
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Berradennoù
     .description = Lec'hiennoù bet enrollet pe gweladennet ganeoc'h
+newtab-custom-shortcuts-nova =
+    .label = Berradennoù
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } renk
+            [two] { $num } renk
+            [few] { $num } renk
+            [many] { $num } a renkoù
+           *[other] { $num } renk
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -297,8 +316,11 @@ newtab-custom-settings = Merañ muioc'h a arventennoù
 ## New Tab Wallpapers
 
 newtab-wallpaper-title = Drekleurioù
+#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Kas ur skeudenn
 newtab-wallpaper-custom-color = Dibab ul liv
+newtab-wallpaper-toggle-title =
+    .label = Drekleurioù
 newtab-wallpaper-light-red-panda = Panda ruz
 newtab-wallpaper-light-mountain = Menez gwenn
 newtab-wallpaper-light-sky = Oabl gant koumoul limestra ha roz
@@ -442,7 +464,7 @@ newtab-section-mangage-topics-followed-topics = O heuliañ
 newtab-section-mangage-topics-blocked-topics = Stanket
 newtab-custom-wallpaper-cta = Esaeañ
 
-## Strings for reporting ads and content
+## Strings for reporting issues with ads and content
 
 newtab-report-cancel = Nullañ
 newtab-report-submit = Kas
@@ -453,6 +475,7 @@ newtab-report-submit = Kas
 newtab-widget-lists-label-new =
     .label = Nevez
 newtab-widget-lists-menu-create = Krouiñ ur roll nevez
+newtab-widget-lists-input-menu-open-link = Digeriñ an ere
 # The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Roll nevez

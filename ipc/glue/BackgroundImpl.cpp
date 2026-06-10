@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -47,8 +45,6 @@
 #include "nsXULAppAPI.h"
 #include "nsXPCOMPrivate.h"
 #include "prthread.h"
-
-#include <functional>
 
 #ifdef RELEASE_OR_BETA
 #  define THREADSAFETY_ASSERT MOZ_ASSERT
@@ -258,17 +254,12 @@ class ChildImpl final : public BackgroundChildImpl {
 
  public:
   struct ThreadLocalInfo {
-    ThreadLocalInfo()
-#ifdef DEBUG
-        : mClosed(false)
-#endif
-    {
-    }
+    ThreadLocalInfo() = default;
 
     RefPtr<ChildImpl> mActor;
     UniquePtr<BackgroundChildImpl::ThreadLocal> mConsumerThreadLocal;
 #ifdef DEBUG
-    bool mClosed;
+    bool mClosed = false;
 #endif
   };
 
@@ -363,8 +354,8 @@ class ChildImpl final : public BackgroundChildImpl {
       MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
           "PBackgroundStarter Queue", getter_AddRefs(taskQueue)));
 
-      RefPtr<BackgroundStarterChild> starter =
-          new BackgroundStarterChild(otherProcInfo, taskQueue);
+      RefPtr starter =
+          MakeRefPtr<BackgroundStarterChild>(otherProcInfo, taskQueue);
 
       taskQueue->Dispatch(NS_NewRunnableFunction(
           "PBackgroundStarterChild Init",
@@ -469,13 +460,13 @@ class ChildImpl final : public BackgroundChildImpl {
         return nullptr;
       }
 
-      RefPtr<ChildImpl> strongActor = new ChildImpl();
+      RefPtr strongActor = MakeRefPtr<ChildImpl>();
       if (!child.Bind(strongActor)) {
         CRASH_IN_CHILD_PROCESS("Failed to bind ChildImpl!");
         return nullptr;
       }
       strongActor->SetActorAlive();
-      threadLocalInfo->mActor = strongActor;
+      threadLocalInfo->mActor = strongActor.forget();
 
       // Dispatch to the background task queue to create the relevant actor in
       // the remote process.
@@ -486,7 +477,7 @@ class ChildImpl final : public BackgroundChildImpl {
               NS_WARNING("Failed to create toplevel actor");
             }
           }));
-      return strongActor;
+      return threadLocalInfo->mActor;
     }
 
    private:
@@ -745,7 +736,7 @@ bool ParentImpl::sShutdownHasStarted = false;
 // ChildImpl Static Members
 // -----------------------------------------------------------------------------
 
-MOZ_RUNINIT ChildImpl::ThreadInfoWrapper
+MOZ_GLOBINIT ChildImpl::ThreadInfoWrapper
     ChildImpl::sParentAndContentProcessThreadInfo;
 
 bool ChildImpl::sShutdownHasStarted = false;
@@ -833,7 +824,7 @@ bool ParentImpl::AllocStarter(ContentParent* aContent,
 
   sLiveActorCount++;
 
-  RefPtr<BackgroundStarterParent> actor = new BackgroundStarterParent(
+  RefPtr actor = MakeRefPtr<BackgroundStarterParent>(
       aContent ? aContent->ThreadsafeHandle() : nullptr, aCrossProcess);
 
   if (NS_FAILED(sBackgroundThread->Dispatch(NS_NewRunnableFunction(

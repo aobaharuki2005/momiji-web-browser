@@ -1,6 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sw=2 et tw=0 ft=c:
- *
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -840,18 +838,19 @@
     MACRO(NewTarget, new_target, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Dynamic import of the module specified by the string value on the top of
-     * the stack.
+     * the stack. The phase operand selects evaluation vs. source phase.
      *
-     * Implements: [Import Calls][1].
+     * Implements: [Import Calls][1], [Source Phase Import Calls][2].
      *
      * [1]: https://tc39.es/ecma262/#sec-import-calls
+     * [2]: https://tc39.es/proposal-source-phase-imports/#sec-import-calls
      *
      *   Category: Expressions
      *   Type: Other expressions
-     *   Operands:
+     *   Operands: uint8_t phase (ImportPhase enum value)
      *   Stack: moduleId, options => promise
      */ \
-    MACRO(DynamicImport, dynamic_import, NULL, 1, 2, 1, JOF_BYTE) \
+    MACRO(DynamicImport, dynamic_import, NULL, 2, 2, 1, JOF_UINT8) \
     /*
      * Push the `import.meta` object.
      *

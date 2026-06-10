@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,23 +36,19 @@ struct StylePositionArea;
  * its parent.
  *
  * There is no principal child list, just a named child list which contains
- * the absolutely positioned frames (FrameChildListID::Absolute or
- * FrameChildListID::Fixed).
+ * the absolutely positioned frames (FrameChildListID::Absolute).
  *
  * All functions include as the first argument the frame that is delegating
  * the request.
  */
 class AbsoluteContainingBlock {
  public:
-  explicit AbsoluteContainingBlock(FrameChildListID aChildListID)
-#ifdef DEBUG
-      : mChildListID(aChildListID)
-#endif
-  {
-    MOZ_ASSERT(mChildListID == FrameChildListID::Absolute ||
-                   mChildListID == FrameChildListID::Fixed,
-               "should either represent position:fixed or absolute content");
-  }
+  struct AnchorOffsetInfo {
+    nsPoint mScrollOffset;
+    StylePositionArea mResolvedPositionArea;
+  };
+
+  AbsoluteContainingBlock() = default;
 
   const nsFrameList& GetChildList() const { return mAbsoluteFrames; }
   const nsFrameList& GetPushedChildList() const {
@@ -129,6 +123,17 @@ class AbsoluteContainingBlock {
    */
   void MarkAllFramesDirty();
 
+  /**
+   * Rects for abspos frames to position against. Differences are relevant
+   * for containing blocks that scroll.
+   *
+   * See https://drafts.csswg.org/css-position-4/#scrollable-cb
+   */
+  struct ContainingBlockRects {
+    nsRect mLocal;
+    nsRect mScrollable;
+  };
+
  protected:
   /**
    * Returns true if the position of aFrame depends on the position of
@@ -149,10 +154,12 @@ class AbsoluteContainingBlock {
    *
    * aOffset is an outparam.
    */
-  void ResolveSizeDependentOffsets(
-      ReflowInput& aKidReflowInput, const LogicalSize& aCBSize,
-      const LogicalSize& aKidSize, const LogicalMargin& aMargin,
-      const StylePositionArea& aResolvedPositionArea, LogicalMargin& aOffsets);
+  void ResolveSizeDependentOffsets(ReflowInput& aKidReflowInput,
+                                   const LogicalSize& aCBSize,
+                                   const LogicalSize& aKidSize,
+                                   const LogicalMargin& aMargin,
+                                   const AnchorOffsetInfo& aAnchorOffsetInfo,
+                                   LogicalMargin& aOffsets);
 
   /**
    * For frames that have intrinsic block sizes, since we want to use the
@@ -175,11 +182,12 @@ class AbsoluteContainingBlock {
   void ReflowAbsoluteFrame(
       nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
       const ReflowInput& aReflowInput,
-      const nsRect& aOriginalContainingBlockRect,
-      const nsRect& aOriginalScrollableContainingBlockRect,
+      const ContainingBlockRects& aContainingBlockRects,
       AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,
       OverflowAreas* aOverflowAreas,
-      mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache = nullptr);
+      const ContainingBlockRects* aFragmentedContainingBlockRects,
+      AnchorPosResolutionCache* aAnchorPosResolutionCache,
+      bool aReuseUnfragmentedAnchorPosReferences);
 
   /**
    * Mark our absolute frames dirty.
@@ -211,9 +219,25 @@ class AbsoluteContainingBlock {
   // them to its own AbsoluteContainingBlock.
   nsFrameList mPushedAbsoluteFrames;
 
+  // Suppose D is the distance from an absolute containing block fragment's
+  // border-box block-start edge to whichever is larger of either (a) its
+  // border-box block-end edge, or (b) the available space's block-end
+  // edge.
+  //
+  // TODO (TYLin, Bug 2009647): We currently assume (a) cannot be bigger than
+  // (b), but it can if there is an unfragmentable in-flow element.
+  //
+  // This variable stores the sum of the D values for the current absolute
+  // containing block fragment and for all its previous fragments. It represents
+  // the offset from the start of the theoretical unfragmented abspos containing
+  // block to the start of the current fragment. During reflow, we subtract this
+  // value from abspos frames' unfragmented positions to get their local
+  // coordinate space position in the current fragment.
+  nscoord mCumulativeContainingBlockBSize = 0;
+
 #ifdef DEBUG
-  // FrameChildListID::Fixed or FrameChildListID::Absolute
-  FrameChildListID const mChildListID;
+  void SanityCheckChildListsBeforeReflow(
+      const nsIFrame* aDelegatingFrame) const;
 #endif
 };
 

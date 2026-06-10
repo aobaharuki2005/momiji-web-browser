@@ -17,7 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
   SyncHistory: "resource://services-settings/SyncHistory.sys.mjs",
-  UptakeTelemetry: "resource://services-common/uptake-telemetry.sys.mjs",
+  UptakeTelemetry: "resource://services-settings/UptakeTelemetry.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
@@ -31,7 +31,6 @@ const PREF_SETTINGS_SYNC_HISTORY_ERROR_THRESHOLD =
   "sync_history_error_threshold";
 
 // Telemetry identifiers.
-const TELEMETRY_COMPONENT = "Remotesettings";
 const TELEMETRY_SOURCE_POLL = "settings-changes-monitoring";
 const TELEMETRY_SOURCE_SYNC = "settings-sync";
 
@@ -257,7 +256,7 @@ function remoteSettingsFunction() {
    * @throws {Error} If the signature of any bundled changeset is invalid.
    */
   remoteSettings.pullStartupBundle = async () => {
-    if (lazy.Utils.shouldSkipRemoteActivityDueToTests) {
+    if (lazy.Utils.shouldSkipRemoteActivity) {
       return [];
     }
 
@@ -352,7 +351,7 @@ function remoteSettingsFunction() {
     trigger = "manual",
     full = false,
   } = {}) => {
-    if (lazy.Utils.shouldSkipRemoteActivityDueToTests) {
+    if (lazy.Utils.shouldSkipRemoteActivity) {
       return;
     }
     // When running in full mode, we ignore last polling status.
@@ -370,7 +369,6 @@ function remoteSettingsFunction() {
     if (lazy.Utils.isOffline) {
       lazy.console.info("Network is offline. Give up.");
       await lazy.UptakeTelemetry.report(
-        TELEMETRY_COMPONENT,
         lazy.UptakeTelemetry.STATUS.NETWORK_OFFLINE_ERROR,
         pollTelemetryArgs
       );
@@ -389,7 +387,6 @@ function remoteSettingsFunction() {
       if (remainingMilliseconds > 0) {
         // Backoff time has not elapsed yet.
         await lazy.UptakeTelemetry.report(
-          TELEMETRY_COMPONENT,
           lazy.UptakeTelemetry.STATUS.BACKOFF,
           pollTelemetryArgs
         );
@@ -473,22 +470,13 @@ function remoteSettingsFunction() {
       } else {
         reportStatus = lazy.UptakeTelemetry.STATUS.UNKNOWN_ERROR;
       }
-      await lazy.UptakeTelemetry.report(
-        TELEMETRY_COMPONENT,
-        reportStatus,
-        pollTelemetryArgs
-      );
+      await lazy.UptakeTelemetry.report(reportStatus, pollTelemetryArgs);
       // No need to go further.
       throw new Error(`Polling for changes failed: ${e.message}.`);
     }
 
-    const {
-      serverTimeMillis,
-      changes,
-      currentEtag,
-      backoffSeconds,
-      ageSeconds,
-    } = pollResult;
+    const { serverTimeMillis, changes, timestamp, backoffSeconds, ageSeconds } =
+      pollResult;
 
     // Report age of server data in Telemetry.
     pollTelemetryArgs = { age: ageSeconds, ...pollTelemetryArgs };
@@ -498,11 +486,7 @@ function remoteSettingsFunction() {
       changes.length === 0
         ? lazy.UptakeTelemetry.STATUS.UP_TO_DATE
         : lazy.UptakeTelemetry.STATUS.SUCCESS;
-    await lazy.UptakeTelemetry.report(
-      TELEMETRY_COMPONENT,
-      reportStatus,
-      pollTelemetryArgs
-    );
+    await lazy.UptakeTelemetry.report(reportStatus, pollTelemetryArgs);
 
     // Check if the server asked the clients to back off (for next poll).
     if (backoffSeconds) {
@@ -565,21 +549,17 @@ function remoteSettingsFunction() {
     const syncTelemetryArgs = {
       source: TELEMETRY_SOURCE_SYNC,
       duration: durationMilliseconds,
-      timestamp: `${currentEtag}`,
+      timestamp,
       trigger,
     };
 
     if (firstError) {
       // Report the global synchronization failure. Individual uptake reports will also have been sent for each collection.
       const status = lazy.UptakeTelemetry.STATUS.SYNC_ERROR;
-      await lazy.UptakeTelemetry.report(
-        TELEMETRY_COMPONENT,
-        status,
-        syncTelemetryArgs
-      );
+      await lazy.UptakeTelemetry.report(status, syncTelemetryArgs);
       // Keep track of sync failure in history.
       await lazy.gSyncHistory
-        .store(currentEtag, status, {
+        .store(timestamp, status, {
           expectedTimestamp,
           errorName: firstError.name,
         })
@@ -595,7 +575,6 @@ function remoteSettingsFunction() {
       // and https://bugzilla.mozilla.org/show_bug.cgi?id=1658597
       if (await isSynchronizationBroken()) {
         await lazy.UptakeTelemetry.report(
-          TELEMETRY_COMPONENT,
           lazy.UptakeTelemetry.STATUS.SYNC_BROKEN_ERROR,
           syncTelemetryArgs
         );
@@ -611,18 +590,14 @@ function remoteSettingsFunction() {
     }
 
     // Save current Etag for next poll.
-    lazy.gPrefs.setStringPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
+    lazy.gPrefs.setStringPref(PREF_SETTINGS_LAST_ETAG, timestamp);
 
     // Report the global synchronization success.
     const status = lazy.UptakeTelemetry.STATUS.SUCCESS;
-    await lazy.UptakeTelemetry.report(
-      TELEMETRY_COMPONENT,
-      status,
-      syncTelemetryArgs
-    );
+    await lazy.UptakeTelemetry.report(status, syncTelemetryArgs);
     // Keep track of sync success in history.
     await lazy.gSyncHistory
-      .store(currentEtag, status)
+      .store(timestamp, status)
       .catch(error => console.error(error));
 
     lazy.console.info(
@@ -662,14 +637,14 @@ function remoteSettingsFunction() {
     if (!localOnly) {
       // Make sure we fetch the latest server info, use a random cache bust value.
       const randomCacheBust = 99990000 + Math.floor(Math.random() * 9999);
-      ({ changes, currentEtag: serverTimestamp } =
+      ({ changes, timestamp: serverTimestamp } =
         await lazy.Utils.fetchLatestChanges(lazy.Utils.SERVER_URL, {
           expected: randomCacheBust,
         }));
     }
     const collections = await Promise.all(
       changes.map(async change => {
-        const { bucket, collection, last_modified: serverTimestamp } = change;
+        const { bucket, collection, last_modified: remoteTimestamp } = change;
         const client = await _client(bucket, collection);
         if (!client) {
           return null;
@@ -683,7 +658,7 @@ function remoteSettingsFunction() {
           bucket,
           collection,
           localTimestamp,
-          serverTimestamp,
+          serverTimestamp: remoteTimestamp,
           lastCheck,
           signerName: client.signerName,
         };
@@ -795,7 +770,7 @@ export var remoteSettingsBroadcastHandler = {
     );
 
     return RemoteSettings.pollChanges({
-      expectedTimestamp: version.replace('"', ""),
+      expectedTimestamp: version.replaceAll('"', ""),
       trigger: isStartup ? "startup" : "broadcast",
     });
   },

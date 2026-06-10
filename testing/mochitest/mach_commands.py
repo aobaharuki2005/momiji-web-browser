@@ -235,6 +235,12 @@ def setup_argument_parser():
 
     global parser
     parser = MochitestArgumentParser()
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force reinstallation of test symlinks even if up to date.",
+    )
     return parser
 
 
@@ -322,7 +328,7 @@ def run_mochitest_general(
     if kwargs.get("android"):
         buildapp = "android"
 
-    flavors = None
+    flavors = []
     if flavor:
         for fname, fobj in ALL_FLAVORS.items():
             if flavor in fobj["aliases"]:
@@ -371,8 +377,9 @@ def run_mochitest_general(
 
         log.add_handler(ResourceHandler(command_context))
 
+    force = kwargs.pop("force", False)
     driver = command_context._spawn(BuildDriver)
-    driver.install_tests()
+    driver.install_tests(force=force)
 
     subsuite = kwargs.get("subsuite")
     if subsuite == "default":
@@ -524,10 +531,6 @@ def run_mochitest_general(
 
         harness_args = kwargs.copy()
         harness_args.update(suite["kwargs"])
-        # Pass in the full suite name as defined in moztest/resolve.py in case
-        # chunk-by-runtime is called, in which case runtime information for
-        # specific mochitest suite has to be loaded. See Bug 1637463.
-        harness_args.update({"suite_name": suite_name})
 
         result = run_mochitest(
             command_context._mach_context, tests=tests, **harness_args
@@ -615,7 +618,8 @@ def classname_for_test(test):
         "java",
     )
     return (
-        os.path.normpath(test)
+        os.path
+        .normpath(test)
         .split(os.path.normpath(test_path))[-1]
         .removeprefix(os.path.sep)
         .replace(os.path.sep, ".")

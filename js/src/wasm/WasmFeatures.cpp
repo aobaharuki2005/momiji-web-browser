@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- *
+/*
  * Copyright 2016 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +15,8 @@
  */
 
 #include "wasm/WasmFeatures.h"
+
+#include <bit>
 
 #include "jit/AtomicOperations.h"
 #include "jit/JitContext.h"
@@ -231,10 +231,8 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
 
 bool wasm::IsPrivilegedContext(JSContext* cx) {
-  // This may be slightly more lenient than we want in an ideal world, but it
-  // remains safe.
   return cx->realm() && cx->realm()->principals() &&
-         cx->realm()->principals()->isSystemOrAddonPrincipal();
+         cx->realm()->principals()->isSystemPrincipal();
 }
 
 bool wasm::SimdAvailable(JSContext* cx) {
@@ -246,9 +244,9 @@ bool wasm::ThreadsAvailable(JSContext* cx) {
 }
 
 bool wasm::HasPlatformSupport() {
-#if !MOZ_LITTLE_ENDIAN()
-  return false;
-#else
+  if constexpr (std::endian::native != std::endian::little) {
+    return false;
+  }
 
   if (!HasJitBackend()) {
     return false;
@@ -274,7 +272,6 @@ bool wasm::HasPlatformSupport() {
   // Test only whether the compilers are supported on the hardware, not whether
   // they are enabled.
   return BaselinePlatformSupport() || IonPlatformSupport();
-#endif
 }
 
 bool wasm::HasSupport(JSContext* cx) {
@@ -307,7 +304,7 @@ bool wasm::CodeCachingAvailable(JSContext* cx) {
 #else
 
   // TODO(bug 1913109): lazy tiering doesn't support serialization
-  if (JS::Prefs::wasm_lazy_tiering() || JS::Prefs::wasm_lazy_tiering_for_gc()) {
+  if (JS::Prefs::wasm_lazy_tiering()) {
     return false;
   }
 

@@ -11,9 +11,18 @@ add_task(async function () {
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
     Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
+    Services.prefs.clearUserPref(
+      "browser.urlbar.autoFill.adaptiveHistory.enabled"
+    );
   });
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
+
+  // Bookmark-driven autofill is disabled when adaptive autofill is on.
+  Services.prefs.setBoolPref(
+    "browser.urlbar.autoFill.adaptiveHistory.enabled",
+    false
+  );
 
   let host = "example.com";
   let prefixes = ["https://", "https://www.", "http://", "http://www."];
@@ -40,7 +49,7 @@ add_task(async function () {
       }),
       makeBookmarkResult(context, {
         uri: `https://${host}/`,
-        title: host,
+        title: "",
       }),
     ],
   });
@@ -69,7 +78,7 @@ add_task(async function () {
       }),
       makeBookmarkResult(context, {
         uri: `https://www.${host}/`,
-        title: `www.${host}`,
+        title: "",
       }),
     ],
   });

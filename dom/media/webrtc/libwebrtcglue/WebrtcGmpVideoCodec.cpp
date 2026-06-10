@@ -7,9 +7,12 @@
 #include <utility>
 #include <vector>
 
+#include "EncoderConfig.h"
 #include "GMPLog.h"
 #include "GMPUtils.h"
 #include "MainThreadUtils.h"
+#include "MediaMIMETypes.h"
+#include "PlatformDecoderModule.h"
 #include "VideoConduit.h"
 #include "api/video/video_frame_type.h"
 #include "common_video/include/video_frame_buffer.h"
@@ -19,11 +22,76 @@
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/svc/create_scalability_structure.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/media/webrtc/H264FmtpParser.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 
 using detail::InputImageData;
+
+// OpenH264 officially supports both decode and encode up to level 5.2.
+static constexpr H264_LEVEL kOpenH264MaxLevel = H264_LEVEL::H264_LEVEL_5_2;
+
+media::DecodeSupportSet WebrtcGmpDecoderSupports(
+    const MediaExtendedMIMEType& aMime, const SupportDecoderParams&) {
+  if (!HaveGMPFor("decode-video"_ns, {"h264"_ns})) {
+    return {};
+  }
+  const auto fmtp = ParseH264Fmtp(aMime.OriginalString());
+  if (fmtp.mProfileLevel.isErr() &&
+      fmtp.mProfileLevel.inspectErr() == H264FmtpParseError::Invalid) {
+    return {};
+  }
+  if (fmtp.mProfileLevel.isOk()) {
+    const auto& pl = fmtp.mProfileLevel.inspect();
+    if (pl.mProfile > H264_PROFILE::H264_PROFILE_HIGH) {
+      return {};
+    }
+    if (pl.mLevel > kOpenH264MaxLevel) {
+      return {};
+    }
+  }
+  return media::DecodeSupport::SoftwareDecode;
+}
+
+media::EncodeSupportSet WebrtcGmpEncoderSupports(const EncoderConfig& aConfig) {
+  if (aConfig.mCodec != CodecType::H264) {
+    return {};
+  }
+  if (aConfig.mHardwarePreference == HardwarePreference::RequireHardware) {
+    return {};
+  }
+  // L1T2/L1T3 require the moz-h264-temporal-svc GMP tag.
+  switch (aConfig.mScalabilityMode) {
+    case ScalabilityMode::None:
+      break;
+    case ScalabilityMode::L1T2:
+    case ScalabilityMode::L1T3:
+      if (!HaveGMPFor("encode-video"_ns, {"moz-h264-temporal-svc"_ns})) {
+        return {};
+      }
+      break;
+    default:
+      return {};
+  }
+  if (!HaveGMPFor("encode-video"_ns, {"h264"_ns})) {
+    return {};
+  }
+  if (aConfig.mCodecSpecific.is<H264Specific>()) {
+    const auto& codecSpecific = aConfig.mCodecSpecific.as<H264Specific>();
+    // Profiles beyond Baseline need the "moz-h264-advanced" GMP tag. See
+    // GMPEncoderModule::Supports for the playback equivalent.
+    if (codecSpecific.mProfile != H264_PROFILE::H264_PROFILE_UNKNOWN &&
+        codecSpecific.mProfile != H264_PROFILE::H264_PROFILE_BASE &&
+        !HaveGMPFor("encode-video"_ns, {"moz-h264-advanced"_ns})) {
+      return {};
+    }
+    if (codecSpecific.mLevel > kOpenH264MaxLevel) {
+      return {};
+    }
+  }
+  return media::EncodeSupport::SoftwareEncode;
+}
 
 // QP scaling thresholds.
 static const int kLowH264QpThreshold = 24;
@@ -104,7 +172,7 @@ static webrtc::ScalabilityMode GmpCodecParamsToScalabilityMode(
     case 3:
       return webrtc::ScalabilityMode::kL1T3;
     default:
-      NS_WARNING(nsPrintfCString("Expected 1-3 temporal layers but got %d.\n",
+      NS_WARNING(nsPrintfCString("Expected 1-3 temporal layers but got %d.",
                                  aParams.mTemporalLayerNum)
                      .get());
       MOZ_CRASH("Unexpected number of temporal layers");
@@ -183,8 +251,7 @@ void WebrtcGmpVideoEncoder::InitEncode_g(const GMPVideoCodec& aCodecParams,
                                          uint32_t aMaxPayloadSize) {
   nsTArray<nsCString> tags;
   tags.AppendElement("h264"_ns);
-  UniquePtr<GetGMPVideoEncoderCallback> callback(
-      new InitDoneCallback(this, aCodecParams));
+  auto callback = MakeUnique<InitDoneCallback>(this, aCodecParams);
   mInitting = true;
   mMaxPayloadSize = aMaxPayloadSize;
   mSyncLayerCap = aCodecParams.mTemporalLayerNum;
@@ -322,8 +389,8 @@ void WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(uint32_t aWidth,
                                                             uint32_t aHeight) {
   Close_g();
 
-  UniquePtr<GetGMPVideoEncoderCallback> callback(
-      new InitDoneForResolutionChangeCallback(this, aWidth, aHeight));
+  UniquePtr<GetGMPVideoEncoderCallback> callback =
+      MakeUnique<InitDoneForResolutionChangeCallback>(this, aWidth, aHeight);
 
   // OpenH264 codec (at least) can't handle dynamic input resolution changes
   // re-init the plugin when the resolution changes
@@ -672,7 +739,8 @@ void WebrtcGmpVideoEncoder::Encoded(
   }
 
   if (mCodecParams.mTemporalLayerNum > 1) {
-    int temporalIdx = std::max(0, aEncodedFrame->GetTemporalLayerId());
+    int temporalIdx = std::clamp(aEncodedFrame->GetTemporalLayerId(), 0,
+                                 mCodecParams.mTemporalLayerNum - 1);
     unit.SetTemporalIndex(temporalIdx);
     info.codecSpecific.H264.temporal_idx = temporalIdx;
     info.scalability_mode = GmpCodecParamsToScalabilityMode(mCodecParams);
@@ -774,7 +842,8 @@ void WebrtcGmpVideoDecoder::Configure_g(
     const webrtc::VideoDecoder::Settings& settings) {
   nsTArray<nsCString> tags;
   tags.AppendElement("h264"_ns);
-  UniquePtr<GetGMPVideoDecoderCallback> callback(new InitDoneCallback(this));
+  UniquePtr<GetGMPVideoDecoderCallback> callback =
+      MakeUnique<InitDoneCallback>(this);
   mInitting = true;
   nsresult rv =
       mMPS->GetGMPVideoDecoder(nullptr, &tags, ""_ns, std::move(callback));
@@ -910,6 +979,15 @@ int32_t WebrtcGmpVideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
 }
 
 void WebrtcGmpVideoDecoder::Decode_g(UniquePtr<GMPDecodeData>&& aDecodeData) {
+  CheckedInt<uint32_t> dataSize(aDecodeData->mImage.size());
+  dataSize -= 4;
+  if (!dataSize.isValid()) {
+    GMP_LOG_ERROR("%s: bad input size (%zu)!", __PRETTY_FUNCTION__,
+                  aDecodeData->mImage.size());
+    mDecoderStatus = GMPInvalidArgErr;
+    return;
+  }
+
   if (!mGMP) {
     if (mInitting) {
       // InitDone hasn't been called yet (race)
@@ -1035,12 +1113,12 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
   // always.  Also, we can only Destroy() the frame on the gmp thread, so
   // copying is simplest if expensive.
   // I420 size including rounding...
-  CheckedInt32 length =
-      (CheckedInt32(aDecodedFrame->Stride(kGMPYPlane)) *
-       aDecodedFrame->Height()) +
-      (aDecodedFrame->Stride(kGMPVPlane) + aDecodedFrame->Stride(kGMPUPlane)) *
-          ((aDecodedFrame->Height() + 1) / 2);
-  int32_t size = length.value();
+  CheckedInt32 length = (CheckedInt32(aDecodedFrame->Stride(kGMPYPlane)) *
+                         aDecodedFrame->Height()) +
+                        (CheckedInt32(aDecodedFrame->Stride(kGMPVPlane)) +
+                         aDecodedFrame->Stride(kGMPUPlane)) *
+                            ((aDecodedFrame->Height() + 1) / 2);
+  int32_t size = length.isValid() ? length.value() : 0;
   MOZ_RELEASE_ASSERT(length.isValid() && size > 0);
 
   // Don't use MakeUniqueFallible here, because UniquePtr isn't copyable, and

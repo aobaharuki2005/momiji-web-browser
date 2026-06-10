@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dom_xul_XULButtonElement_h__
-#define dom_xul_XULButtonElement_h__
+#ifndef dom_xul_XULButtonElement_h_
+#define dom_xul_XULButtonElement_h_
 
 #include "mozilla/Attributes.h"
 #include "nsINode.h"
@@ -106,6 +104,8 @@ class XULButtonElement : public nsXULElement {
   MOZ_CAN_RUN_SCRIPT void StartBlinking();
   void KillMenuOpenTimer();
   MOZ_CAN_RUN_SCRIPT void PassMenuCommandEventToPopupManager();
+
+  nsAtom* GetCheckedStateAttribute() const;
 
   bool mIsHandlingKeyEvent = false;
 

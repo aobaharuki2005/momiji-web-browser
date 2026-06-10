@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -315,16 +313,17 @@ static Maybe<ScrollTimelineOptions> GetScrollTimelineOptions(
   }
 
   const dom::ScrollTimeline* timeline = aTimeline->AsScrollTimeline();
-  MOZ_ASSERT(timeline->IsActive(),
+  const auto state = timeline->GetState();
+  MOZ_ASSERT(state.IsActive(),
              "We send scroll animation to the compositor only if its timeline "
              "is active");
 
   ScrollableLayerGuid::ViewID source = ScrollableLayerGuid::NULL_SCROLL_ID;
   DebugOnly<bool> success =
-      nsLayoutUtils::FindIDFor(timeline->SourceElement(), &source);
+      nsLayoutUtils::FindIDFor(state.SourceElement(), &source);
   MOZ_ASSERT(success, "We should have a valid ViewID for the scroller");
 
-  return Some(ScrollTimelineOptions(source, timeline->Axis()));
+  return Some(ScrollTimelineOptions(source, state.Axis()));
 }
 
 static void SetAnimatable(NonCustomCSSPropertyId aProperty,
@@ -461,7 +460,7 @@ void AnimationInfo::AddAnimationForProperty(
       static_cast<float>(aAnimation->CurrentOrPendingPlaybackRate());
   animation->previousPlaybackRate() =
       aAnimation->HasPendingPlaybackRate()
-          ? static_cast<float>(aAnimation->PlaybackRate())
+          ? static_cast<float>(aAnimation->PlaybackRateInternal())
           : std::numeric_limits<float>::quiet_NaN();
   animation->transformData() = aTransformData;
   animation->easingFunction() = timing.TimingFunction();
@@ -958,7 +957,7 @@ void AnimationInfo::AddAnimationsForDisplayItem(
   // If the frame is not prerendered, bail out.
   // Do this check only during layer construction; during updating the
   // caller is required to check it appropriately.
-  if (aItem && !aItem->CanUseAsyncAnimations(aBuilder)) {
+  if (aItem && !aItem->CanUseAsyncAnimations()) {
     // EffectCompositor needs to know that we refused to run this animation
     // asynchronously so that it will not throttle the main thread
     // animation.

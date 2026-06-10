@@ -12,29 +12,39 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs",
   MemoriesDriftDetector:
     "moz-src:///browser/components/aiwindow/models/memories/MemoriesDriftDetector.sys.mjs",
-  PREF_GENERATE_MEMORIES:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
   DRIFT_EVAL_DELTA_COUNT:
     "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
   DRIFT_TRIGGER_QUANTILE:
     "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
+  HISTORY:
+    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
+  openAIEngine: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "console", function () {
   return console.createInstance({
     prefix: "MemoriesHistoryScheduler",
-    maxLogLevelPref: "browser.aiwindow.memoriesLogLevel",
+    maxLogLevelPref: "browser.smartwindow.memoriesLogLevel",
   });
 });
 
 // Special case - Minimum number of pages before the first time memories run.
-const INITIAL_MEMORIES_PAGES_THRESHOLD = 10;
+const INITIAL_MEMORIES_PAGES_THRESHOLD = 0;
 
 // Only run if at least this many pages have been visited.
-const MEMORIES_SCHEDULER_PAGES_THRESHOLD = 25;
+const MEMORIES_SCHEDULER_PAGES_THRESHOLD = 30;
 
-// Memories history schedule every 6 hours
-const MEMORIES_SCHEDULER_INTERVAL_MS = 6 * 60 * 60 * 1000;
+// Memories history schedule every 2 mins
+const MEMORIES_SCHEDULER_INTERVAL_MS = 2 * 60 * 1000;
+// Cooldown period - don't run more than once every 6 hours
+const MEMORIES_SCHEDULER_COOLDOWN_MS = Services.prefs.getIntPref(
+  "browser.smartwindow.memoriesSchedulerCooldownInMs",
+  6 * 60 * 60 * 1000
+);
+
+// minimum visit threshold
+const MIN_RECENT_VISITS = 10;
+const MIN_RECENT_VISITS_DAYS = 60;
 
 /**
  * Schedules periodic generation of browsing history based memories.
@@ -49,6 +59,9 @@ export class MemoriesHistoryScheduler {
   #intervalHandle = 0;
   #destroyed = false;
   #running = false;
+  // Earliest time we'll attempt a run again after a budget-exceeded failure.
+  // In-memory only: a browser restart resets this.
+  #backoffUntilMs = 0;
 
   /** @type {MemoriesHistoryScheduler | null} */
   static #instance = null;
@@ -62,7 +75,9 @@ export class MemoriesHistoryScheduler {
    *          The scheduler instance if initialized, otherwise null.
    */
   static maybeInit() {
-    if (!Services.prefs.getBoolPref(lazy.PREF_GENERATE_MEMORIES, false)) {
+    if (
+      !lazy.MemoriesManager.shouldEnableMemoriesFromSchedulers(lazy.HISTORY)
+    ) {
       return null;
     }
     if (!this.#instance) {
@@ -80,12 +95,43 @@ export class MemoriesHistoryScheduler {
    * - Subscribes to Places "page-visited" notifications.
    */
   constructor() {
-    this.#startInterval();
     lazy.PlacesUtils.observers.addListener(
       ["page-visited"],
       this.#onPageVisited
     );
-    lazy.console.debug("[MemoriesHistoryScheduler] Initialized");
+    // run immediately (first run) or just start the interval.
+    void this.#init();
+    lazy.console.debug("Initialized");
+  }
+
+  /**
+   * initializer for the history scheduler.
+   *
+   * - no operation if memories schedulers are disabled.
+   * - If this is the first history memories run, triggers an immediate run.
+   * - Otherwise, starts the periodic interval timer.
+   *
+   * @private
+   * @returns {Promise<void>}
+   */
+  async #init() {
+    if (
+      !lazy.MemoriesManager.shouldEnableMemoriesFromSchedulers(lazy.HISTORY)
+    ) {
+      return;
+    }
+
+    const lastMemoryTs =
+      (await lazy.MemoriesManager.getLastHistoryMemoryTimestamp()) ?? 0;
+    const isFirstRun = lastMemoryTs === 0;
+
+    if (isFirstRun) {
+      lazy.console.debug("First run detected; running immediately.");
+      // #onInterval's finally will start the interval
+      await this.#onInterval();
+    } else {
+      this.#startInterval();
+    }
   }
 
   /**
@@ -140,15 +186,34 @@ export class MemoriesHistoryScheduler {
    */
   #onInterval = async () => {
     if (this.#destroyed) {
-      lazy.console.warn(
-        "[MemoriesHistoryScheduler] Interval fired after destroy; ignoring."
+      lazy.console.warn("Interval fired after destroy; ignoring.");
+      return;
+    }
+
+    // Re-check gating conditions on every tick (AIWindow may have closed, prefs may have changed).
+    if (
+      !lazy.MemoriesManager.shouldEnableMemoriesFromSchedulers(lazy.HISTORY)
+    ) {
+      lazy.console.debug(
+        "Memories from HistoryScheduler no longer enabled; stopping history scheduler."
       );
+      this.destroy();
       return;
     }
 
     if (this.#running) {
       lazy.console.debug(
-        "[MemoriesHistoryScheduler] Skipping run because a previous run is still in progress."
+        "Skipping run because a previous run is still in progress."
+      );
+      return;
+    }
+
+    if (this.#backoffUntilMs && Date.now() < this.#backoffUntilMs) {
+      const remainingMin = Math.ceil(
+        (this.#backoffUntilMs - Date.now()) / (60 * 1000)
+      );
+      lazy.console.debug(
+        `In budget-exceeded backoff for another ${remainingMin}m; skipping.`
       );
       return;
     }
@@ -161,21 +226,47 @@ export class MemoriesHistoryScheduler {
       const lastMemoryTs =
         (await lazy.MemoriesManager.getLastHistoryMemoryTimestamp()) ?? 0;
       const isFirstRun = lastMemoryTs === 0;
+
+      const now = Date.now();
+
+      // Cooldown check - don't run more than once every 6 hours.
+      // keep accumulating pagesVisited until eligible.
+      if (!isFirstRun && now - lastMemoryTs < MEMORIES_SCHEDULER_COOLDOWN_MS) {
+        lazy.console.debug(
+          `Cooldown not met; last run was ${Math.floor(
+            (now - lastMemoryTs) / (60 * 1000)
+          )}m ago (<${Math.floor(
+            MEMORIES_SCHEDULER_COOLDOWN_MS / (60 * 60 * 1000)
+          )}h). Skipping. pagesVisited=${this.#pagesVisited}`
+        );
+        return;
+      }
+
       const minPagesThreshold = isFirstRun
         ? INITIAL_MEMORIES_PAGES_THRESHOLD
         : MEMORIES_SCHEDULER_PAGES_THRESHOLD;
 
       if (this.#pagesVisited < minPagesThreshold) {
         lazy.console.debug(
-          `[MemoriesHistoryScheduler] Not enough pages visited (${this.#pagesVisited}/${minPagesThreshold}); ` +
+          `Not enough pages visited (${this.#pagesVisited}/${minPagesThreshold}); ` +
             `skipping analysis. isFirstRun=${isFirstRun}`
+        );
+        return;
+      }
+
+      const recentVisitCount = await lazy.MemoriesManager.countRecentVisits({
+        days: MIN_RECENT_VISITS_DAYS,
+      });
+      if (recentVisitCount < MIN_RECENT_VISITS) {
+        lazy.console.debug(
+          `Not enough recent visits (${recentVisitCount} < ${MIN_RECENT_VISITS}); skipping.`
         );
         return;
       }
 
       if (!isFirstRun) {
         lazy.console.debug(
-          "[MemoriesHistoryScheduler] Computing history drift metrics before running memories..."
+          "Computing history drift metrics before running memories..."
         );
 
         const { baselineMetrics, deltaMetrics, trigger } =
@@ -186,18 +277,18 @@ export class MemoriesHistoryScheduler {
 
         if (!baselineMetrics.length || !deltaMetrics.length) {
           lazy.console.debug(
-            "[MemoriesHistoryScheduler] Drift metrics incomplete (no baseline or delta); falling back to non-drift scheduling."
+            "Drift metrics incomplete (no baseline or delta); falling back to non-drift scheduling."
           );
         } else if (!trigger.triggered) {
           lazy.console.debug(
-            "[MemoriesHistoryScheduler] History drift below threshold; skipping memories run for this interval."
+            "History drift below threshold; skipping memories run for this interval."
           );
           // Reset pages so we don’t repeatedly attempt with the same data.
           this.#pagesVisited = 0;
           return;
         } else {
           lazy.console.debug(
-            `[MemoriesHistoryScheduler] Drift triggered (jsThreshold=${trigger.jsThreshold.toFixed(4)}, ` +
+            `Drift triggered (jsThreshold=${trigger.jsThreshold.toFixed(4)}, ` +
               `surpriseThreshold=${trigger.surpriseThreshold.toFixed(4)}); sessions=${trigger.triggeredSessionIds.join(
                 ","
               )}`
@@ -206,21 +297,28 @@ export class MemoriesHistoryScheduler {
       }
 
       lazy.console.debug(
-        `[MemoriesHistoryScheduler] Generating memories from history with ${this.#pagesVisited} new pages`
+        `Generating memories from history with ${this.#pagesVisited} new pages`
       );
       await lazy.MemoriesManager.generateMemoriesFromBrowsingHistory();
       this.#pagesVisited = 0;
 
-      lazy.console.debug(
-        "[MemoriesHistoryScheduler] History memories generation complete."
-      );
+      lazy.console.debug("History memories generation complete.");
     } catch (error) {
-      lazy.console.error(
-        "[MemoriesHistoryScheduler] Failed to generate history memories",
-        error
-      );
+      if (lazy.openAIEngine.is429Error(error)) {
+        this.#backoffUntilMs = Date.now() + MEMORIES_SCHEDULER_COOLDOWN_MS;
+        lazy.console.warn(
+          `Rate limited (HTTP 429); deferring next history memories run by ${Math.floor(
+            MEMORIES_SCHEDULER_COOLDOWN_MS / (60 * 60 * 1000)
+          )}h.`
+        );
+      } else {
+        lazy.console.error("Failed to generate history memories", error);
+      }
     } finally {
-      if (!this.#destroyed) {
+      if (
+        !this.#destroyed &&
+        lazy.MemoriesManager.shouldEnableMemoriesFromSchedulers(lazy.HISTORY)
+      ) {
         this.#startInterval();
       }
       this.#running = false;
@@ -241,7 +339,8 @@ export class MemoriesHistoryScheduler {
       this.#onPageVisited
     );
     this.#destroyed = true;
-    lazy.console.debug("[MemoriesHistoryScheduler] Destroyed");
+    MemoriesHistoryScheduler.#instance = null;
+    lazy.console.debug("Destroyed");
   }
 
   /**
@@ -252,6 +351,16 @@ export class MemoriesHistoryScheduler {
    */
   setPagesVisitedForTesting(count) {
     this.#pagesVisited = count;
+  }
+
+  /**
+   * Testing helper: set the backoff deadline (ms since epoch).
+   * Pass 0 to clear the backoff window. Not used in production code.
+   *
+   * @param {number} untilMs
+   */
+  setBackoffUntilMsForTesting(untilMs) {
+    this.#backoffUntilMs = untilMs;
   }
 
   /**

@@ -60,7 +60,14 @@ class BoxModel {
 
     this.inspector.selection.on("new-node-front", this.onNewSelection);
     this.inspector.sidebar.on("select", this.onSidebarSelect);
+
+    const { promise, resolve } = Promise.withResolvers();
+    this.initialized = promise;
+    this.#initializedPromiseResolve = resolve;
   }
+
+  #initializedPromiseResolve;
+
   /**
    * Destruction function called when the inspector is destroyed. Removes event listeners
    * and cleans up references.
@@ -85,6 +92,7 @@ class BoxModel {
     this._tooltip = null;
     this.document = null;
     this.inspector = null;
+    this.initialized = null;
   }
 
   get highlighters() {
@@ -166,7 +174,7 @@ class BoxModel {
       this._updateReasons.push(reason);
     }
 
-    const lastRequest = async function () {
+    const lastRequest = (async () => {
       if (
         !this.inspector ||
         !this.isPanelVisible() ||
@@ -213,19 +221,18 @@ class BoxModel {
       }
 
       this.inspector.emit("boxmodel-view-updated", this._updateReasons);
+      this.#initializedPromiseResolve();
 
       this._lastRequest = null;
       this._updateReasons = [];
 
       return null;
-    }
-      .bind(this)()
-      .catch(error => {
-        // If we failed because we were being destroyed while waiting for a request, ignore.
-        if (this.document) {
-          console.error(error);
-        }
-      });
+    })().catch(error => {
+      // If we failed because we were being destroyed while waiting for a request, ignore.
+      if (this.document) {
+        console.error(error);
+      }
+    });
 
     this._lastRequest = lastRequest;
   }
@@ -296,9 +303,9 @@ class BoxModel {
    * @param  {string} property
    *         The name of the property.
    */
-  onShowRulePreviewTooltip(target, property) {
+  async onShowRulePreviewTooltip(target, property) {
     const { highlightProperty } = this.inspector.getPanel("ruleview").view;
-    const isHighlighted = highlightProperty(property);
+    const isHighlighted = await highlightProperty(property);
 
     // Only show the tooltip if the property is not highlighted.
     // TODO: In the future, use an associated ruleId for toggling the tooltip instead of
@@ -306,6 +313,34 @@ class BoxModel {
     if (!isHighlighted) {
       this.rulePreviewTooltip.show(target);
     }
+  }
+
+  getPropertyValue(property) {
+    const state = this.store.getState();
+    const { layout } = state.boxModel;
+    return layout[property];
+  }
+
+  getFloatValue(valueString) {
+    return valueString ? parseFloat(valueString) : 0;
+  }
+
+  getNonContentHeight() {
+    return (
+      this.getFloatValue(this.getPropertyValue("border-bottom-width")) +
+      this.getFloatValue(this.getPropertyValue("border-top-width")) +
+      this.getFloatValue(this.getPropertyValue("padding-bottom")) +
+      this.getFloatValue(this.getPropertyValue("padding-top"))
+    );
+  }
+
+  getNonContentWidth() {
+    return (
+      this.getFloatValue(this.getPropertyValue("border-left-width")) +
+      this.getFloatValue(this.getPropertyValue("border-right-width")) +
+      this.getFloatValue(this.getPropertyValue("padding-left")) +
+      this.getFloatValue(this.getPropertyValue("padding-right"))
+    );
   }
 
   /**
@@ -325,7 +360,16 @@ class BoxModel {
       doc: this.document,
       elementRules: this.elementRules,
     });
-    const initialValue = session.getProperty(property);
+    let initialValue = session.getProperty(property);
+    const isBorderBox = this.getPropertyValue("box-sizing") === "border-box";
+    if (isBorderBox && (property === "width" || property === "height")) {
+      initialValue = this.getFloatValue(this.getPropertyValue(property));
+      if (property === "height") {
+        initialValue -= this.getNonContentHeight();
+      } else if (property === "width") {
+        initialValue -= this.getNonContentWidth();
+      }
+    }
 
     const editor = new InplaceEditor(
       {
@@ -339,6 +383,18 @@ class BoxModel {
           self.elt.parentNode.classList.add("boxmodel-editing");
         },
         change: value => {
+          if (isBorderBox && property === "height") {
+            const float = this.getFloatValue(value);
+            if (!isNaN(float)) {
+              value = float + this.getNonContentHeight();
+            }
+          }
+          if (isBorderBox && property === "width") {
+            const float = this.getFloatValue(value);
+            if (!isNaN(float)) {
+              value = float + this.getNonContentWidth();
+            }
+          }
           if (NUMERIC.test(value)) {
             value += "px";
           }

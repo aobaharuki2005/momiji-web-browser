@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -59,11 +58,11 @@
 #include "nsPrintfCString.h"
 
 #ifdef MOZ_THUNDERBIRD
-#  include "nsIPK11TokenDB.h"
-#  include "nsIPK11Token.h"
+#  include "nsIPKCS11Token.h"
 #  ifdef XP_MACOSX
 #    include "MacApplicationDelegate.h"
 #  endif
+#  include "nsComponentManagerUtils.h"
 #endif
 
 #include <stdlib.h>
@@ -74,13 +73,13 @@
 #  include "WinUtils.h"
 #endif
 #ifdef XP_MACOSX
+#  ifdef NIGHTLY_BUILD
+#    include "AppGroupPath.h"
+#  endif
 #  include "nsILocalFileMac.h"
 // for chflags()
 #  include <sys/stat.h>
 #  include <unistd.h>
-#endif
-#ifdef XP_UNIX
-#  include <ctype.h>
 #endif
 #ifdef XP_IOS
 #  include "UIKitDirProvider.h"
@@ -223,9 +222,26 @@ nsXREDirProvider::Release() { return 0; }
 
 nsresult nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult) {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = GetUserDataDirectory(getter_AddRefs(file), false);
-
-  if (NS_SUCCEEDED(rv)) {
+  nsresult rv = NS_OK;
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  const char* appGroup = PR_GetEnv("MOZ_APP_GROUP");
+  if (appGroup && *appGroup && strcmp(appGroup, "0") != 0) {
+    nsCOMPtr<nsIFile> group;
+    rv = GetAppGroupContainerBase(getter_AddRefs(group));
+    if (NS_SUCCEEDED(rv) && group) {
+      rv = group->AppendNative("Library"_ns);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = group->AppendNative("Application Support"_ns);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = group->AppendNative("Profiles"_ns);
+      NS_ENSURE_SUCCESS(rv, rv);
+      file = group;
+    }
+  }
+#endif
+  if (!file) {
+    rv = GetUserDataDirectory(getter_AddRefs(file), false);
+    NS_ENSURE_SUCCESS(rv, rv);
 #if !defined(XP_UNIX) || defined(XP_MACOSX)
     rv = file->AppendNative("Profiles"_ns);
 #endif
@@ -656,15 +672,10 @@ nsXREDirProvider::DoStartup() {
       // to avoid the race that triggers multiple prompts (see bug 177175).
       // We use this code until we have a better solution, possibly as
       // described in bug 177175 comment 384.
-      nsCOMPtr<nsIPK11TokenDB> db =
-          do_GetService("@mozilla.org/security/pk11tokendb;1");
-      if (db) {
-        nsCOMPtr<nsIPK11Token> token;
-        if (NS_SUCCEEDED(db->GetInternalKeyToken(getter_AddRefs(token)))) {
-          (void)token->Login(false);
-        }
-      } else {
-        NS_WARNING("Failed to get nsIPK11TokenDB service.");
+      nsCOMPtr<nsIPKCS11Token> token(
+          do_CreateInstance("@mozilla.org/security/internalkeytoken;1"));
+      if (token) {
+        (void)token->Login(false);
       }
     }
 #endif
@@ -1606,7 +1617,7 @@ nsresult nsXREDirProvider::AppendProfilePath(nsIFile* aFile, bool aLocal) {
     folder.Append(profileStart);
     ToLowerCase(folder);
 
-    rv = AppendProfileString(aFile, folder.BeginReading());
+    rv = AppendProfileString(aFile, folder.get());
   } else {
     if (!vendor.IsEmpty()) {
       folder.Append(vendor);

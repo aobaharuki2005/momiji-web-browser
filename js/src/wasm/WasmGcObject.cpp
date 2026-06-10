@@ -1,10 +1,10 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "wasm/WasmGcObject-inl.h"
+
+#include "mozilla/DebugOnly.h"
 
 #include "gc/Tracer.h"
 #include "js/CharacterEncoding.h"
@@ -242,11 +242,7 @@ static void WriteValTo(WasmGcObject* owner, const Val& val, StorageType ty,
       *((V128*)dest) = val.v128();
       break;
     case StorageType::Ref:
-      if (owner->isTenured()) {
-        *((GCPtr<AnyRef>*)dest) = val.ref();
-      } else {
-        *((PreBarriered<AnyRef>*)dest) = val.ref();
-      }
+      BarrieredSet(owner, dest, val.ref());
       break;
   }
 }
@@ -256,11 +252,15 @@ static void WriteValTo(WasmGcObject* owner, const Val& val, StorageType ty,
 
 /* static */
 size_t js::WasmArrayObject::sizeOfExcludingThis() const {
-  if (!isDataInline() || !gc::IsBufferAlloc(dataHeader())) {
+  if (isDataInline()) {
+    return 0;
+  }
+  OOLDataHeader* oolHeader = oolDataHeaderFromDataPointer(data_);
+  if (!gc::IsBufferAlloc(oolHeader)) {
     return 0;
   }
 
-  return gc::GetAllocSize(zone(), dataHeader());
+  return gc::GetAllocSize(zone(), oolHeader);
 }
 
 /* static */
@@ -268,12 +268,19 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
   WasmArrayObject& arrayObj = object->as<WasmArrayObject>();
   uint8_t* data = arrayObj.data_;
 
+  // data_ may be null if the array was only partially initialized due to OOM
+  // during createArrayOOL.
+  if (!data) {
+    MOZ_ASSERT(arrayObj.numElements_ == 0);
+    return;
+  }
+
   if (!arrayObj.isDataInline()) {
-    uint8_t* outlineAlloc = (uint8_t*)dataHeaderFromDataPointer(arrayObj.data_);
-    uint8_t* prior = outlineAlloc;
-    TraceBufferEdge(trc, &arrayObj, &outlineAlloc, "WasmArrayObject storage");
-    if (outlineAlloc != prior) {
-      arrayObj.data_ = (uint8_t*)(((DataHeader*)outlineAlloc) + 1);
+    OOLDataHeader* oolHeader = oolDataHeaderFromDataPointer(arrayObj.data_);
+    OOLDataHeader* prior = oolHeader;
+    TraceBufferEdge(trc, &oolHeader, "WasmArrayObject storage");
+    if (oolHeader != prior) {
+      arrayObj.data_ = oolDataHeaderToDataPointer(oolHeader);
     }
   }
 
@@ -314,7 +321,7 @@ size_t WasmArrayObject::obj_moved(JSObject* objNew, JSObject* objOld) {
   if (arrayOld.isDataInline()) {
     // The old array had inline storage, which has been copied.  Fix up the
     // data pointer in the new array to point to it, and we're done.
-    arrayNew.data_ = WasmArrayObject::addressOfInlineData(&arrayNew);
+    arrayNew.data_ = WasmArrayObject::addressOfInlineArrayData(&arrayNew);
     MOZ_ASSERT(arrayNew.isDataInline());
     return 0;
   }
@@ -343,29 +350,38 @@ size_t WasmArrayObject::obj_moved(JSObject* objNew, JSObject* objOld) {
 
   // arrayNew.numElements_ was validated not to overflow when constructing
   // the array.
-  size_t oolBlockSize = calcStorageBytesUnchecked(
+  size_t oolBlockSize = calcArrayDataBytesUnchecked(
       typeDefNew->arrayType().elementType().size(), arrayNew.numElements_);
   // Ensured by WasmArrayObject::createArrayOOL.
-  MOZ_RELEASE_ASSERT(oolBlockSize <= size_t(MaxArrayPayloadBytes) +
-                                         sizeof(WasmArrayObject::DataHeader));
+  MOZ_RELEASE_ASSERT(oolBlockSize <= size_t(MaxArrayPayloadBytes));
+  oolBlockSize += sizeof(WasmArrayObject::OOLDataHeader);
 
   // Ask the nursery if it wants to relocate the OOL block, and if so capture
   // its new location in `oolHeaderNew`.  Note, at this point `arrayNew.data_`
   // has not been updated; hence the computation for `oolHeaderOld` is correct.
-  DataHeader* oolHeaderOld = dataHeaderFromDataPointer(arrayNew.data_);
-  DataHeader* oolHeaderNew = oolHeaderOld;
+  OOLDataHeader* oolHeaderOld = oolDataHeaderFromDataPointer(arrayNew.data_);
+  OOLDataHeader* oolHeaderNew = oolHeaderOld;
   Nursery& nursery = objNew->runtimeFromMainThread()->gc.nursery();
   nursery.maybeMoveBufferOnPromotion(&oolHeaderNew, objNew, oolBlockSize);
 
   if (oolHeaderNew != oolHeaderOld) {
     // The OOL block has been moved.  Fix up the data pointer in the new
     // object.
-    arrayNew.data_ = dataHeaderToDataPointer(oolHeaderNew);
-    // Set up forwarding for the OOL block.  Use indirect forwarding.
-    // Unfortunately, if the call to `.setForwardingPointer..` OOMs, there's no
-    // way to recover.
-    nursery.setForwardingPointerWhileTenuring(oolHeaderOld, oolHeaderNew,
-                                              /*direct=*/false);
+    arrayNew.data_ = oolDataHeaderToDataPointer(oolHeaderNew);
+    // Set up forwarding for the OOL block.  Use direct forwarding.  Write the
+    // address of the new OOL block to OOLDataHeader::word in the old OOL
+    // block.  This will be later used by Instance::updateFrameForMovingGC. See
+    // SMDOC on definition of WasmArrayObject.
+    //
+    // Note, > rather than >=, because the OOL block must be big enough to hold
+    // the data header plus at least one byte of array data.
+    MOZ_RELEASE_ASSERT(oolBlockSize > sizeof(OOLDataHeader));
+    if (nursery.isInside(oolHeaderOld)) {
+      // Store the forwarding word, with bit 0 set.
+      MOZ_ASSERT((uintptr_t(oolHeaderNew) & 1) == 0);
+      oolHeaderOld->word = uintptr_t(oolHeaderNew) | 1;
+      oolHeaderNew->word = WasmArrayObject::OOLDataHeader_Magic;
+    }
   }
 
   return 0;
@@ -392,16 +408,8 @@ void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
 }
 
 static const JSClassOps WasmArrayObjectClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    WasmGcObject::obj_newEnumerate,
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    nullptr, /* finalize    */
-    nullptr, /* call        */
-    nullptr, /* construct   */
-    WasmArrayObject::obj_trace,
+    .newEnumerate = WasmGcObject::obj_newEnumerate,
+    .trace = WasmArrayObject::obj_trace,
 };
 static const ClassExtension WasmArrayObjectClassExt = {
     WasmArrayObject::obj_moved, /* objectMovedOp */
@@ -473,12 +481,15 @@ void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
   }
   if (MOZ_UNLIKELY(structType.totalSizeOOL_ > 0)) {
     uint8_t** addressOfOOLPtr = structObj.addressOfOOLPointer();
-    TraceBufferEdge(trc, &structObj, addressOfOOLPtr,
-                    "WasmStructObject outline data");
-    uint8_t* oolBase = *addressOfOOLPtr;
-    for (uint32_t offset : structType.outlineTraceOffsets_) {
-      AnyRef* fieldPtr = reinterpret_cast<AnyRef*>(oolBase + offset);
-      TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
+    // *addressOfOOLPtr may be null if the struct was only partially initialized
+    // due to OOM during createStructOOL.
+    if (MOZ_LIKELY(*addressOfOOLPtr)) {
+      TraceBufferEdge(trc, addressOfOOLPtr, "WasmStructObject outline data");
+      uint8_t* oolBase = *addressOfOOLPtr;
+      for (uint32_t offset : structType.outlineTraceOffsets_) {
+        AnyRef* fieldPtr = reinterpret_cast<AnyRef*>(oolBase + offset);
+        TraceManuallyBarrieredEdge(trc, fieldPtr, "wasm-struct-field");
+      }
     }
   }
 }
@@ -536,14 +547,20 @@ size_t WasmStructObject::obj_moved(JSObject* objNew, JSObject* objOld) {
   nursery.maybeMoveBufferOnPromotion(addressOfOOLPointerNew, objNew,
                                      outlineBytes);
 
-  // Set up forwarding for the OOL area.  Use indirect forwarding.  As in
-  // WasmArrayObject::obj_moved, if the call to `.setForwardingPointer..` OOMs,
-  // there's no way to recover.
+  // Set up forwarding for the OOL area.  In order to be able to use direct
+  // forwarding, the OOL data area needs to be at least one word long, so that
+  // this call to setForwardingPointerWhileTenuring can write the forwarding
+  // address directly at the start of the old OOL area.  This is ensured by
+  // logic in StructType::init.  See also comments in
+  // WasmArrayObject::obj_moved.  Note that because the first word of the OOL
+  // area is overwritten, we must not access the area after this point, and in
+  // particular not in Instance::updateFrameForMovingGC.
   uint8_t* oolPointerOld = structOld.getOOLPointer();
   uint8_t* oolPointerNew = structNew.getOOLPointer();
+  MOZ_RELEASE_ASSERT(outlineBytes >= sizeof(uintptr_t));
   if (oolPointerOld != oolPointerNew) {
     nursery.setForwardingPointerWhileTenuring(oolPointerOld, oolPointerNew,
-                                              /*direct=*/false);
+                                              /*direct=*/true);
   }
 
   return 0;
@@ -560,16 +577,8 @@ void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
 }
 
 static const JSClassOps WasmStructObjectOutlineClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    WasmGcObject::obj_newEnumerate,
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    nullptr, /* finalize    */
-    nullptr, /* call        */
-    nullptr, /* construct   */
-    WasmStructObject::obj_trace,
+    .newEnumerate = WasmGcObject::obj_newEnumerate,
+    .trace = WasmStructObject::obj_trace,
 };
 static const ClassExtension WasmStructObjectOutlineClassExt = {
     WasmStructObject::obj_moved, /* objectMovedOp */
@@ -587,16 +596,8 @@ const JSClass WasmStructObject::classOutline_ = {
 // finalizer. This class should otherwise be identical to the class for
 // structs with outline data.
 static const JSClassOps WasmStructObjectInlineClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    WasmGcObject::obj_newEnumerate,
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    nullptr, /* finalize    */
-    nullptr, /* call        */
-    nullptr, /* construct   */
-    WasmStructObject::obj_trace,
+    .newEnumerate = WasmGcObject::obj_newEnumerate,
+    .trace = WasmStructObject::obj_trace,
 };
 static const ClassExtension WasmStructObjectInlineClassExt = {
     nullptr, /* objectMovedOp */

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -28,6 +27,7 @@
 #include "nsLayoutUtils.h"
 #include "nsRangeFrame.h"
 #include "PathHelpers.h"
+#include "nsComboboxControlFrame.h"
 #include "ScrollbarDrawingAndroid.h"
 #include "ScrollbarDrawingCocoa.h"
 #include "ScrollbarDrawingGTK.h"
@@ -436,7 +436,7 @@ std::pair<sRGBColor, sRGBColor> Theme::ComputeProgressColors(
     const Colors& aColors) {
   if (aColors.HighContrast()) {
     return aColors.SystemPair(StyleSystemColor::Selecteditem,
-                              StyleSystemColor::Buttontext);
+                              StyleSystemColor::Windowtext);
   }
   return std::make_pair(aColors.Accent().Get(), aColors.Accent().GetDark());
 }
@@ -444,8 +444,8 @@ std::pair<sRGBColor, sRGBColor> Theme::ComputeProgressColors(
 std::pair<sRGBColor, sRGBColor> Theme::ComputeProgressTrackColors(
     const Colors& aColors) {
   if (aColors.HighContrast()) {
-    return aColors.SystemPair(StyleSystemColor::Buttonface,
-                              StyleSystemColor::Buttontext);
+    return aColors.SystemPair(StyleSystemColor::Selecteditemtext,
+                              StyleSystemColor::Windowtext);
   }
   return std::make_pair(sColorGrey10, sColorGrey40);
 }
@@ -564,13 +564,14 @@ void Theme::PaintCircleShadow(WebRenderBackendData& aWrData,
   shadowRect.MoveBy(shadowOffset);
   shadowRect.Inflate(inflation.width, inflation.height);
   const auto boxRect = wr::ToLayoutRect(aBoxRect);
+  const auto borderRadius =
+      wr::ToBorderRadius(gfx::RectCornerRadii(aBoxRect.Size().width));
   aWrData.mBuilder.PushBoxShadow(
       wr::ToLayoutRect(shadowRect), wr::ToLayoutRect(aClipRect),
       kBackfaceIsVisible, boxRect,
       wr::ToLayoutVector2D(aShadowOffset * aDpiRatio),
       wr::ToColorF(DeviceColor(0.0f, 0.0f, 0.0f, aShadowAlpha)), stdDev,
-      /* aSpread = */ 0.0f,
-      wr::ToBorderRadius(gfx::RectCornerRadii(aBoxRect.Size().width)),
+      /* aSpread = */ 0.0f, borderRadius, borderRadius,
       wr::BoxShadowClipMode::Outset);
 }
 
@@ -894,7 +895,7 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
   tickMarkOrigin -=
       LayoutDevicePoint(tickMarkSize.width, tickMarkSize.height) / 2;
   auto tickMarkRect = LayoutDeviceRect(tickMarkOrigin, tickMarkSize);
-  for (auto tickMark : tickMarks) {
+  for (const auto& tickMark : tickMarks) {
     auto tickMarkOffset =
         tickMarkDirection *
         float(rangeFrame->GetDoubleAsFractionOfRange(tickMark));
@@ -1520,6 +1521,10 @@ LayoutDeviceIntSize Theme::GetMinimumWidgetSize(nsPresContext* aPresContext,
   LayoutDeviceIntSize result;
   switch (aAppearance) {
     case StyleAppearance::MozMenulistArrowButton:
+      if (nsComboboxControlFrame* cf = do_QueryFrame(aFrame->GetParent());
+          cf && !cf->HasDropDownButton()) {
+        break;
+      }
       result.width = (kMinimumDropdownArrowButtonWidth * dpiRatio).Rounded();
       break;
     case StyleAppearance::SpinnerUpbutton:

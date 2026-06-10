@@ -58,6 +58,7 @@ cfg_if! {
         target_os = "vita",
         target_os = "emscripten",
     ))] {
+        mod use_file;
         mod getentropy;
         pub use getentropy::*;
     } else if #[cfg(any(

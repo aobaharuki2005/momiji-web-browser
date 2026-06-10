@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -145,8 +143,7 @@ const nsAttrValue::EnumTableEntry* HTMLButtonElement::ResolveAutoState() const {
   // true: the type attribute is in the Auto state and both the command and
   // commandfor content attributes are not present; or
   // the type attribute is in the Submit Button state.
-  if (StaticPrefs::dom_element_commandfor_enabled() &&
-      (HasAttr(nsGkAtoms::commandfor) || HasAttr(nsGkAtoms::command))) {
+  if (HasAttr(nsGkAtoms::commandfor) || HasAttr(nsGkAtoms::command)) {
     return kButtonButtonType;
   }
   return kButtonSubmitType;
@@ -186,15 +183,12 @@ bool HTMLButtonElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     if (aAttribute == nsGkAtoms::formenctype) {
       return aResult.ParseEnumValue(aValue, kFormEnctypeTable, false);
     }
-
-    if (StaticPrefs::dom_element_commandfor_enabled()) {
-      if (aAttribute == nsGkAtoms::command) {
-        return aResult.ParseEnumValue(aValue, kButtonCommandTable, false);
-      }
-      if (aAttribute == nsGkAtoms::commandfor) {
-        aResult.ParseAtom(aValue);
-        return true;
-      }
+    if (aAttribute == nsGkAtoms::command) {
+      return aResult.ParseEnumValue(aValue, kButtonCommandTable, false);
+    }
+    if (aAttribute == nsGkAtoms::commandfor) {
+      aResult.ParseAtom(aValue);
+      return true;
     }
   }
 
@@ -354,7 +348,7 @@ void HTMLButtonElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
 
   // 4. Let target be the result of running element's get the
   // commandfor-associated element.
-  RefPtr<Element> target = GetCommandForElement();
+  RefPtr<Element> target = GetCommandForElementInternal();
 
   // 5. If target is not null:
   if (target) {
@@ -506,8 +500,7 @@ void HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
     // If the command/commandfor attributes are added and Type is auto, it may
     // need to be recalculated:
-    if (StaticPrefs::dom_element_commandfor_enabled() &&
-        (aName == nsGkAtoms::command || aName == nsGkAtoms::commandfor)) {
+    if (aName == nsGkAtoms::command || aName == nsGkAtoms::commandfor) {
       if (InAutoState()) {
         mType = FormControlType(ResolveAutoState()->value);
       }
@@ -611,14 +604,15 @@ Element::Command HTMLButtonElement::GetCommand() const {
   return Command::Invalid;
 }
 
-Element* HTMLButtonElement::GetCommandForElement() const {
-  if (StaticPrefs::dom_element_commandfor_enabled()) {
-    return GetAttrAssociatedElement(nsGkAtoms::commandfor);
-  }
-  return nullptr;
+Element* HTMLButtonElement::GetCommandForElementForBindings() const {
+  return GetAttrAssociatedElementForBindings(nsGkAtoms::commandfor);
 }
 
-void HTMLButtonElement::SetCommandForElement(Element* aElement) {
+Element* HTMLButtonElement::GetCommandForElementInternal() const {
+  return GetAttrAssociatedElementInternal(nsGkAtoms::commandfor);
+}
+
+void HTMLButtonElement::SetCommandForElementForBindings(Element* aElement) {
   ExplicitlySetAttrElement(nsGkAtoms::commandfor, aElement);
 }
 
@@ -628,3 +622,5 @@ JSObject* HTMLButtonElement::WrapNode(JSContext* aCx,
 }
 
 }  // namespace mozilla::dom
+#undef NS_IN_SUBMIT_CLICK
+#undef NS_OUTER_ACTIVATE_EVENT

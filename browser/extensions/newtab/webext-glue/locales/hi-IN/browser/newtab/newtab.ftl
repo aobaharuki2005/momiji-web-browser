@@ -19,7 +19,7 @@ newtab-search-box-input =
     .placeholder = वेब पर खोजें
     .aria-label = वेब पर खोजें
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = खोज ईंजन जोड़ें
 newtab-topsites-add-shortcut-header = नया शॉर्टकट

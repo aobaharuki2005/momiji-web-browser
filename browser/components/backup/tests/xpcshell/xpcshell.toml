@@ -8,8 +8,6 @@ prefs = [
   "browser.backup.log=true",
   "browser.backup.archive.enabled=true",
   "browser.backup.restore.enabled=true",
-  "browser.backup.archive.overridePlatformCheck=true",
-  "browser.backup.restore.overridePlatformCheck=true",
 ]
 
 ["test_AddonsBackupResource.js"]
@@ -40,9 +38,21 @@ support-files = [
   "data/missing_json_block.html",
 ]
 
+["test_BackupService_crossProfileTypeRecovery.js"]
+prefs = [
+  "browser.backup.profiles.force-enable=true",
+]
+
 ["test_BackupService_enable_disable_encryption.js"]
 
 ["test_BackupService_enabled.js"]
+
+["test_BackupService_enabledListPref.js"]
+head = "../../../../../toolkit/profile/test/xpcshell/head.js ../../../profiles/tests/unit/head.js head.js"
+prefs = [
+  "browser.profiles.created=false",
+  "browser.profiles.enabled=true",
+]
 
 ["test_BackupService_finalizeSingleFileArchive.js"]
 
@@ -65,6 +75,8 @@ run-sequentially = ["true"] # Mock Windows registry interferes with normal opera
 ["test_BackupService_resolveArchiveDestFolderPath.js"]
 
 ["test_BackupService_resolveDownloadLink.js"]
+
+["test_BackupService_restoreStepTelemetry.js"]
 
 ["test_BackupService_retryHeuristic.js"]
 
@@ -100,7 +112,17 @@ run-sequentially = ["true"] # Mock Windows registry interferes with normal opera
 
 ["test_PreferencesBackupResource_searchEngines.js"]
 
+["test_PreferencesBackupResource_selectableProfile.js"]
+
 ["test_ResourceFailures.js"]
+
+["test_SelectableProfileBackupResource.js"]
+head = "../../../../../toolkit/profile/test/xpcshell/head.js ../../../profiles/tests/unit/head.js head.js"
+support-files = ["data/fake_avatar.png"]
+prefs = [
+  "browser.profiles.enabled=true",
+  "browser.profiles.created=false",
+]
 
 ["test_SessionStoreBackupResource.js"]
 

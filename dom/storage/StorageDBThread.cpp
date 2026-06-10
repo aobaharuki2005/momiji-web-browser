@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,7 +23,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/Tokenizer.h"
-#include "mozilla/glean/DomStorageMetrics.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
@@ -247,8 +244,6 @@ nsresult StorageDBThread::Shutdown() {
   if (!mThread) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  auto timer = glean::localdomstorage::shutdown_database.Measure();
 
   {
     MonitorAutoLock monitor(mThreadObserver->GetMonitor());
@@ -800,9 +795,9 @@ class OriginAttrsPatternMatchSQLFunction final : public mozIStorageFunction {
   explicit OriginAttrsPatternMatchSQLFunction(
       OriginAttributesPattern const& aPattern)
       : mPattern(aPattern) {}
+  OriginAttrsPatternMatchSQLFunction() = delete;
 
  private:
-  OriginAttrsPatternMatchSQLFunction() = delete;
   ~OriginAttrsPatternMatchSQLFunction() = default;
 
   OriginAttributesPattern mPattern;

@@ -8,7 +8,7 @@ use base64::prelude::*;
 use neqo_bin::server::{HttpServer, Runner};
 use neqo_common::Bytes;
 use neqo_common::{event::Provider, qdebug, qerror, qinfo, qtrace, Datagram, Header};
-use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
+use nss_rs::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
     ConnectUdpRequest, ConnectUdpServerEvent, Error, Http3OrWebTransportStream, Http3Parameters,
     Http3Server, Http3ServerEvent, SessionAcceptAction, StreamId, WebTransportRequest,
@@ -39,9 +39,10 @@ use cfg_if::cfg_if;
 cfg_if! {
     if #[cfg(not(target_os = "android"))] {
         use std::sync::mpsc::{channel, Receiver, TryRecvError};
-        use hyper::body::HttpBody;
+        use http_body_util::{BodyExt, Full};
         use hyper::header::{HeaderName, HeaderValue};
-        use hyper::{Body, Client, Method, Request};
+        use hyper::Method;
+        use hyper_util::client::legacy::Client;
     }
 }
 
@@ -76,6 +77,10 @@ struct Http3TestServer {
     wt_unidi_conn_to_stream: HashMap<ConnectionRef, Http3OrWebTransportStream>,
     wt_unidi_echo_back: HashMap<Http3OrWebTransportStream, Http3OrWebTransportStream>,
     received_datagram: Option<Bytes>,
+    // When true, server will stop processing datagrams after accepting 0-RTT,
+    // simulating a stuck ZERORTT session that never transitions to CONNECTED.
+    stuck_0rtt_mode: bool,
+    stuck_0rtt_activated: bool,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -96,6 +101,8 @@ impl Http3TestServer {
             wt_unidi_conn_to_stream: HashMap::new(),
             wt_unidi_echo_back: HashMap::new(),
             received_datagram: None,
+            stuck_0rtt_mode: false,
+            stuck_0rtt_activated: false,
         }
     }
 
@@ -189,13 +196,27 @@ impl Http3TestServer {
 }
 
 impl HttpServer for Http3TestServer {
-    fn process_multiple<'a>(
+    fn process_multiple<'a, D: IntoIterator<Item = Datagram<&'a mut [u8]>>>(
         &mut self,
-        dgrams: impl IntoIterator<Item = Datagram<&'a mut [u8]>>,
+        dgrams: D,
         now: Instant,
         max_datagrams: NonZeroUsize,
     ) -> OutputBatch {
+        // If stuck_0rtt_mode is enabled and we've already processed datagrams once,
+        // stop processing to simulate a connection stuck in ZERORTT state.
+        if self.stuck_0rtt_mode && self.stuck_0rtt_activated {
+            qinfo!("Stuck 0-RTT mode active - ignoring datagrams to keep session in ZERORTT");
+            // Return Callback to keep the server loop running but don't process datagrams
+            return OutputBatch::Callback(Duration::from_millis(100));
+        }
+
         let output = self.server.process_multiple(dgrams, now, max_datagrams);
+
+        // If we just processed datagrams with stuck mode enabled, mark it as activated
+        if self.stuck_0rtt_mode && !self.stuck_0rtt_activated {
+            qinfo!("Stuck 0-RTT mode activated - next datagrams will be ignored");
+            self.stuck_0rtt_activated = true;
+        }
 
         let output = if self.sessions_to_close.is_empty() && self.connections_to_close.is_empty() {
             output
@@ -283,6 +304,22 @@ impl HttpServer for Http3TestServer {
                                     .unwrap();
                             } else if path == b"/EarlyResponse" {
                                 stream.stream_stop_sending(Error::HttpNone.code()).unwrap();
+                            } else if path == b"/SetStuckZeroRtt" {
+                                qinfo!("Enabling stuck 0-RTT mode - next connection will be stuck in ZERORTT");
+                                self.stuck_0rtt_mode = true;
+                                let response_body = b"Stuck 0-RTT mode enabled".to_vec();
+                                stream
+                                    .send_headers(&[
+                                        Header::new(":status", "200"),
+                                        Header::new("cache-control", "no-cache"),
+                                        Header::new("content-type", "text/plain"),
+                                        Header::new(
+                                            "content-length",
+                                            response_body.len().to_string(),
+                                        ),
+                                    ])
+                                    .unwrap();
+                                self.new_response(stream, response_body, now);
                             } else if path == b"/RequestRejected" {
                                 stream
                                     .stream_stop_sending(Error::HttpRequestRejected.code())
@@ -290,6 +327,10 @@ impl HttpServer for Http3TestServer {
                                 stream
                                     .stream_reset_send(Error::HttpRequestRejected.code())
                                     .unwrap();
+                            } else if path == b"/UnknownReset" {
+                                // Reset with an unrecognized application error code.
+                                stream.stream_stop_sending(0xfe).unwrap();
+                                stream.stream_reset_send(0xfe).unwrap();
                             } else if path == b"/closeafter1000ms" {
                                 let response_body = b"0123456789".to_vec();
                                 stream
@@ -712,9 +753,9 @@ impl ::std::fmt::Display for Server {
 }
 
 impl HttpServer for Server {
-    fn process_multiple<'a>(
+    fn process_multiple<'a, D: IntoIterator<Item = Datagram<&'a mut [u8]>>>(
         &mut self,
-        dgrams: impl IntoIterator<Item = Datagram<&'a mut [u8]>>,
+        dgrams: D,
         now: Instant,
         max_datagrams: NonZeroUsize,
     ) -> OutputBatch {
@@ -818,12 +859,12 @@ impl Http3ReverseProxyServer {
 
     #[cfg(not(target_os = "android"))]
     async fn fetch_url(
-        request: Request<Body>,
+        request: http::Request<Full<hyper::body::Bytes>>,
         out_header: &mut Vec<Header>,
         out_body: &mut Vec<u8>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let client = Client::new();
-        let mut resp = client.request(request).await?;
+        let client = Client::builder(hyper_util::rt::TokioExecutor::new()).build_http();
+        let resp = client.request(request).await?;
         out_header.push(Header::new(":status", resp.status().as_str()));
         for (key, value) in resp.headers() {
             out_header.push(Header::new(
@@ -835,12 +876,15 @@ impl Http3ReverseProxyServer {
             ));
         }
 
-        while let Some(chunk) = resp.body_mut().data().await {
-            match chunk {
-                Ok(data) => {
-                    out_body.append(&mut data.to_vec());
+        let mut body = resp.into_body();
+        while let Some(frame) = body.frame().await {
+            match frame {
+                Ok(frame) => {
+                    if let Ok(data) = frame.into_data() {
+                        out_body.extend_from_slice(&data);
+                    }
                 }
-                _ => {}
+                Err(_) => break,
             }
         }
 
@@ -854,7 +898,7 @@ impl Http3ReverseProxyServer {
         request_headers: &Vec<Header>,
         request_body: Vec<u8>,
     ) {
-        let mut request: Request<Body> = Request::default();
+        let mut request: http::Request<Full<hyper::body::Bytes>> = http::Request::new(Full::new(hyper::body::Bytes::new()));
         let mut path = String::new();
         for hdr in request_headers.iter() {
             match hdr.name() {
@@ -880,7 +924,7 @@ impl Http3ReverseProxyServer {
                 }
             }
         }
-        *request.body_mut() = Body::from(request_body);
+        *request.body_mut() = Full::new(hyper::body::Bytes::from(request_body));
         *request.uri_mut() =
             match format!("http://127.0.0.1:{}{}", self.server_port.to_string(), path).parse() {
                 Ok(uri) => uri,
@@ -953,9 +997,9 @@ impl Http3ReverseProxyServer {
 }
 
 impl HttpServer for Http3ReverseProxyServer {
-    fn process_multiple<'a>(
+    fn process_multiple<'a, D: IntoIterator<Item = Datagram<&'a mut [u8]>>>(
         &mut self,
-        dgrams: impl IntoIterator<Item = Datagram<&'a mut [u8]>>,
+        dgrams: D,
         now: Instant,
         max_datagrams: NonZeroUsize,
     ) -> OutputBatch {
@@ -1103,9 +1147,9 @@ impl Http3ConnectProxyServer {
 }
 
 impl HttpServer for Http3ConnectProxyServer {
-    fn process_multiple<'a>(
+    fn process_multiple<'a, D: IntoIterator<Item = Datagram<&'a mut [u8]>>>(
         &mut self,
-        dgrams: impl IntoIterator<Item = Datagram<&'a mut [u8]>>,
+        dgrams: D,
         now: Instant,
         max_datagrams: NonZeroUsize,
     ) -> OutputBatch {
@@ -1203,14 +1247,21 @@ impl HttpServer for Http3ConnectProxyServer {
                     );
                     let tcp_stream = self.tcp_streams.get_mut(&stream.stream_id()).unwrap();
                     while !tcp_stream.recv_buffer.is_empty() {
-                        let sent = stream
-                            .send_data(&tcp_stream.recv_buffer.make_contiguous(), now)
-                            .unwrap();
-                        qtrace!("tcp_stream send to client sent={}", sent);
-                        if sent == 0 {
-                            break;
+                        match stream.send_data(&tcp_stream.recv_buffer.make_contiguous(), now) {
+                            Ok(sent) => {
+                                qtrace!("tcp_stream send to client sent={}", sent);
+                                if sent == 0 {
+                                    // no progress possible right now — stop trying to send in this loop
+                                    // (could also mark for later retry)
+                                    break;
+                                }
+                                tcp_stream.recv_buffer.drain(0..sent);
+                            }
+                            Err(e) => {
+                                eprintln!("send_data failed: {:?}", e);
+                                break;
+                            }
                         }
-                        tcp_stream.recv_buffer.drain(0..sent);
                     }
                 }
                 Http3ServerEvent::ConnectUdp(ConnectUdpServerEvent::NewSession {
@@ -1391,7 +1442,10 @@ impl HttpServer for Http3ConnectProxyServer {
                         buf.resize(len, 0);
                         // TODO: Might overflow our current datagram buffer of 10
                         // https://github.com/mozilla/neqo/issues/2852
-                        socket.session.send_datagram(buf.as_slice(), None).unwrap();
+                        socket
+                            .session
+                            .send_datagram(buf.as_slice(), None, Instant::now())
+                            .unwrap();
                         progressed = true;
                     }
                     Poll::Ready(Err(e)) => {
@@ -1471,9 +1525,9 @@ impl ::std::fmt::Display for NonRespondingServer {
 }
 
 impl HttpServer for NonRespondingServer {
-    fn process_multiple<'a>(
+    fn process_multiple<'a, D: IntoIterator<Item = Datagram<&'a mut [u8]>>>(
         &mut self,
-        _dgrams: impl IntoIterator<Item = Datagram<&'a mut [u8]>>,
+        _dgrams: D,
         _now: Instant,
         _max_datagrams: NonZeroUsize,
     ) -> OutputBatch {
@@ -1715,7 +1769,11 @@ async fn main() -> Result<(), io::Error> {
 #[no_mangle]
 extern "C" fn __tsan_default_suppressions() -> *const std::os::raw::c_char {
     // https://github.com/rust-lang/rust/issues/128769
-    "race:tokio::runtime::io::registration_set::RegistrationSet::allocate\0".as_ptr() as *const _
+    concat!(
+        "race:<tokio::runtime::io::registration_set::RegistrationSet>::allocate\n",
+        "race:tokio::runtime::io::registration_set::RegistrationSet::allocate\0",
+    )
+    .as_ptr() as *const _
 }
 
 // Work around until we can use raw-dylibs.
@@ -1724,4 +1782,6 @@ extern "C" {}
 #[cfg_attr(target_os = "windows", link(name = "propsys"))]
 extern "C" {}
 #[cfg_attr(target_os = "windows", link(name = "iphlpapi"))]
+extern "C" {}
+#[cfg_attr(target_os = "windows", link(name = "rpcrt4"))]
 extern "C" {}

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -458,12 +456,6 @@ void EventListenerManager::AddEventListenerInternal(
         if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
           window->SetHasSMILTimeEventListeners();
         }
-        break;
-      case eFormCheckboxStateChange:
-        nsContentUtils::SetMayHaveFormCheckboxStateChangeListeners();
-        break;
-      case eFormRadioStateChange:
-        nsContentUtils::SetMayHaveFormRadioStateChangeListeners();
         break;
       case eMozOrientationChange:
         if (nsScreen* screen = mTarget->GetAsScreen()) {
@@ -1129,6 +1121,8 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   nsAutoCString url("-moz-evil:lying-event-listener"_ns);
   MOZ_ASSERT(body);
   MOZ_ASSERT(aElement);
+  MOZ_ASSERT(!aElement->ChromeOnlyAccess(),
+             "Don't use inline handlers on NAC/UAWidget");
   nsIURI* uri = aElement->OwnerDoc()->GetDocumentURI();
   if (uri) {
     uri->GetSpec(url);
@@ -1141,17 +1135,16 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(), aTypeAtom, win,
                                    &argCount, &argNames);
 
-  // Wrap the event target, so that we can use it as the scope for the event
-  // handler. Note that mTarget is different from aElement in the <body> case,
-  // where mTarget is a Window.
+  // Use the document's realm as per spec:
   //
-  // The wrapScope doesn't really matter here, because the target will create
-  // its reflector in the proper scope, and then we'll enter that realm.
+  //     Let settings object be the relevant settings object of document.
+  //
+  // https://html.spec.whatwg.org/#getting-the-current-value-of-the-event-handler
   JS::Rooted<JSObject*> wrapScope(cx, global->GetGlobalJSObject());
   JS::Rooted<JS::Value> v(cx);
   {
     JSAutoRealm ar(cx, wrapScope);
-    nsresult rv = nsContentUtils::WrapNative(cx, mTarget, &v,
+    nsresult rv = nsContentUtils::WrapNative(cx, global, &v,
                                              /* aAllowWrapping = */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1190,8 +1183,10 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
           JS::loader::ParserMetadata::NotParserInserted,
           aElement->OwnerDoc()->NodePrincipal());
 
-  RefPtr<JS::loader::EventScript> eventScript = new JS::loader::EventScript(
-      aElement->OwnerDoc()->GetReferrerPolicy(), fetchOptions, uri);
+  RefPtr<JS::loader::ScriptFetchInfo> fetchInfo =
+      new JS::loader::ScriptFetchInfo(JS::loader::ScriptKind::eEvent,
+                                      aElement->OwnerDoc()->GetReferrerPolicy(),
+                                      fetchOptions, uri);
 
   JS::CompileOptions options(cx);
   // Use line 0 to make the function body starts from line 1.
@@ -1206,7 +1201,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
-  JS::Rooted<JS::Value> privateValue(cx, JS::PrivateValue(eventScript));
+  JS::Rooted<JS::Value> privateValue(cx, JS::PrivateValue(fetchInfo));
   result = nsJSUtils::UpdateFunctionDebugMetadata(jsapi, handler, options,
                                                   jsStr, privateValue);
   NS_ENSURE_SUCCESS(result, result);
@@ -1373,7 +1368,7 @@ already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
         // listener->mListener.GetXPCOMCallback().
         // In most cases, it would be the same as for
         // the target, so let's do that.
-        if (nsIGlobalObject* global = mTarget->GetOwnerGlobal()) {
+        if (nsIGlobalObject* global = mTarget->GetRelevantGlobal()) {
           innerWindow = global->GetAsInnerWindow();
         }
       }
@@ -2023,9 +2018,13 @@ const TypedEventHandler* EventListenerManager::GetTypedEventHandler(
   }
 
   JSEventHandler* jsEventHandler = listener->GetJSEventHandler();
-
+  Maybe<RefPtr<JSEventHandler>> pin;
   if (listener->mHandlerIsString) {
-    CompileEventHandlerInternal(listener, aEventName, nullptr, nullptr);
+    pin.emplace(jsEventHandler);
+    if (NS_FAILED(CompileEventHandlerInternal(listener, aEventName, nullptr,
+                                              nullptr))) {
+      listener = nullptr;
+    }
   }
 
   const TypedEventHandler& typedHandler =

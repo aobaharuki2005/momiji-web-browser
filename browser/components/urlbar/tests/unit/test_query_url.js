@@ -9,8 +9,14 @@ testEngine_setup();
 add_task(async function test_no_slash() {
   info("Searching for host match without slash should match host");
   await PlacesTestUtils.addVisits([
-    { uri: "http://file.org/test/" },
-    { uri: "file:///c:/test.html" },
+    {
+      uri: "http://file.org/test/",
+      transition: PlacesUtils.history.TRANSITION_TYPED,
+    },
+    {
+      uri: "file:///c:/test.html",
+      transition: PlacesUtils.history.TRANSITION_TYPED,
+    },
   ]);
   let context = createContext("file", { isPrivate: false });
   await check_results({
@@ -43,9 +49,11 @@ add_task(async function test_w_slash() {
   await PlacesTestUtils.addVisits(
     {
       uri: Services.io.newURI("http://file.org/test/"),
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: Services.io.newURI("file:///c:/test.html"),
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     }
   );
   let context = createContext("file.org/", { isPrivate: false });
@@ -76,9 +84,11 @@ add_task(async function test_middle() {
   await PlacesTestUtils.addVisits(
     {
       uri: Services.io.newURI("http://file.org/test/"),
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
     {
       uri: Services.io.newURI("file:///c:/test.html"),
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     }
   );
   let context = createContext("file.org/t", { isPrivate: false });

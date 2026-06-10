@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +5,7 @@
 #include "RemoteEncoderModule.h"
 
 #include "RemoteDecodeUtils.h"
-#include "RemoteMediaDataEncoderChild.h"
+#include "RemoteMediaDataEncoder.h"
 #include "RemoteMediaManagerChild.h"
 
 #ifdef MOZ_APPLEMEDIA
@@ -64,7 +62,7 @@ already_AddRefed<MediaDataEncoder> RemoteEncoderModule::CreateEncoder(
   }
 
   auto encoder =
-      MakeRefPtr<RemoteMediaDataEncoderChild>(std::move(thread), mLocation);
+      MakeRefPtr<RemoteMediaDataEncoder>(std::move(thread), mLocation);
 
   // This returns a promise, but we know that once it returns, the only
   // interactions the caller can do will require a dispatch to the manager
@@ -93,7 +91,7 @@ RemoteEncoderModule::AsyncCreateEncoder(const EncoderConfig& aEncoderConfig,
   }
 
   auto encoder =
-      MakeRefPtr<RemoteMediaDataEncoderChild>(std::move(thread), mLocation);
+      MakeRefPtr<RemoteMediaDataEncoder>(std::move(thread), mLocation);
   return RemoteMediaManagerChild::InitializeEncoder(std::move(encoder),
                                                     aEncoderConfig);
 }

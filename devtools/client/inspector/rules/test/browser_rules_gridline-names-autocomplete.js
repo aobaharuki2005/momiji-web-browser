@@ -46,6 +46,7 @@ const newAreaTestData = [
   ["VK_BACK_SPACE", {}, "", OPEN | CHANGE],
   ["r", {}, "revert", OPEN | SELECTED | CHANGE],
   ["VK_DOWN", {}, "revert-layer", OPEN | SELECTED | CHANGE],
+  ["VK_DOWN", {}, "revert-rule", OPEN | SELECTED | CHANGE],
   ["VK_DOWN", {}, "row1-start", OPEN | SELECTED | CHANGE],
   ["r", {}, "rr", CHANGE],
   ["VK_BACK_SPACE", {}, "r", CHANGE],
@@ -69,6 +70,7 @@ const newRowTestData = [
   ["VK_BACK_SPACE", {}, "", OPEN | CHANGE],
   ["r", {}, "revert", OPEN | SELECTED | CHANGE],
   ["VK_DOWN", {}, "revert-layer", OPEN | SELECTED | CHANGE],
+  ["VK_DOWN", {}, "revert-rule", OPEN | SELECTED | CHANGE],
   ["VK_DOWN", {}, "row1-start", OPEN | SELECTED | CHANGE],
   ["VK_TAB", {}, "", CHANGE],
 ];
@@ -114,7 +116,7 @@ async function runNewPropertyAutocompletionTest(
   await selectNode("#cell2", inspector);
 
   info("Focusing the css property editable field");
-  const ruleEditor = getRuleViewRuleEditor(view, 0);
+  const ruleEditor = getRuleViewRuleEditorAt(view, 0);
   const editor = await focusNewRuleViewProperty(ruleEditor);
 
   info("Starting to test for css property completion");
@@ -132,7 +134,7 @@ async function runChangePropertyAutocompletionTest(
   info("Selecting the test node");
   await selectNode("#cell3", inspector);
 
-  const ruleEditor = getRuleViewRuleEditor(view, 1).rule;
+  const ruleEditor = getRuleViewRuleEditorAt(view, 1).rule;
   const prop = ruleEditor.textProps[0];
 
   info("Focusing the css property editable value");

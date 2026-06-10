@@ -17,7 +17,6 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
@@ -27,8 +26,8 @@ import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.helpers.FenixGleanTestRule
-import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class RecentTabControllerTest {
@@ -39,7 +38,6 @@ class RecentTabControllerTest {
     private val navController: NavController = mockk(relaxed = true)
     private val selectTabUseCase: TabsUseCases = mockk(relaxed = true)
     private val appStore: AppStore = mockk()
-    private val settings: Settings = mockk(relaxed = true)
 
     private lateinit var store: BrowserStore
 
@@ -55,7 +53,6 @@ class RecentTabControllerTest {
                 selectTabUseCase = selectTabUseCase.selectTab,
                 navController = navController,
                 appStore = appStore,
-                settings = settings,
             ),
         )
     }
@@ -118,22 +115,7 @@ class RecentTabControllerTest {
 
         verify {
             navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
-            )
-        }
-
-        assertNotNull(RecentTabs.showAllClicked.testGetValue())
-    }
-
-    @Test
-    fun handleRecentTabShowAllClickedFromSearchDialog() {
-        assertNull(RecentTabs.showAllClicked.testGetValue())
-
-        controller.handleRecentTabShowAllClicked()
-
-        verify {
-            navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
+                match<NavDirections> { it.actionId == R.id.action_global_tabManagementFragment },
             )
         }
 

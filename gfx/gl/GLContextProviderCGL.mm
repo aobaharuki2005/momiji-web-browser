@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -188,13 +187,23 @@ static bool IsSameGPU(CGOpenGLDisplayMask mask1, CGOpenGLDisplayMask mask2) {
   return !mask1 && !mask2;
 }
 
+static NSOpenGLPixelFormat* GetPixelFormatForContext(NSOpenGLContext* aContext) {
+  // -[NSOpenGLContext pixelFormat] is macOS 10.10+
+  if ([aContext respondsToSelector:@selector(pixelFormat)]) {
+    return [aContext pixelFormat];
+  }
+  return [[[NSOpenGLPixelFormat alloc]
+      initWithCGLPixelFormatObj:CGLGetPixelFormat([aContext CGLContextObj])] autorelease];
+}
+
+
 void GLContextCGL::MigrateToActiveGPU() {
   if (!mActiveGPUSwitchMayHaveOccurred.compareExchange(true, false)) {
     return;
   }
 
   CGOpenGLDisplayMask newPreferredDisplayMask = GetFreshContextDisplayMask();
-  NSOpenGLPixelFormat* pixelFormat = [mContext pixelFormat];
+  NSOpenGLPixelFormat* pixelFormat = GetPixelFormatForContext(mContext); 
   GLint currentVirtualScreen = [mContext currentVirtualScreen];
   GLint currentDisplayMask = 0;
   [pixelFormat getValues:&currentDisplayMask

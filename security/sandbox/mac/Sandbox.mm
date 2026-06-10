@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -17,7 +16,6 @@
 #include <sys/sysctl.h>
 #include <sys/types.h>
 
-#include <iostream>
 #include <sstream>
 #include <vector>
 
@@ -86,12 +84,14 @@ void OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor,
 
   CFURLRef url = CFURLCreateWithString(
       kCFAllocatorDefault,
-      CFSTR("file:///System/Library/CoreServices/SystemVersion.plist"), NULL);
+      CFSTR("file:///System/Library/CoreServices/SystemVersion.plist"),
+      nullptr);
   CFReadStreamRef stream = CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
   CFReadStreamOpen(stream);
   CFDictionaryRef sysVersionPlist =
       (CFDictionaryRef)CFPropertyListCreateWithStream(
-          kCFAllocatorDefault, stream, 0, kCFPropertyListImmutable, NULL, NULL);
+          kCFAllocatorDefault, stream, 0, kCFPropertyListImmutable, nullptr,
+          nullptr);
   CFReadStreamClose(stream);
   CFRelease(stream);
   CFRelease(url);
@@ -158,7 +158,7 @@ bool GetRealPath(std::string& aOutputPath, const char* aInputPath) {
 bool ProcessIsRosettaTranslated() {
   int ret = 0;
   size_t size = sizeof(ret);
-  if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
+  if (sysctlbyname("sysctl.proc_translated", &ret, &size, nullptr, 0) == -1) {
     if (errno != ENOENT) {
       fprintf(stderr, "Failed to check for translation environment\n");
     }
@@ -334,6 +334,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
   } else if (aInfo.type == MacSandboxType_RDD) {
     profile = const_cast<char*>(SandboxPolicyRDD);
     params.push_back("SHOULD_LOG");
@@ -358,6 +360,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
     params.push_back("HOME_PATH");
     params.push_back(getenv("HOME"));
   } else if (aInfo.type == MacSandboxType_GMP) {
@@ -378,6 +382,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
     if (!aInfo.testingReadPath1.empty()) {
       params.push_back("TESTING_READ_PATH1");
       params.push_back(aInfo.testingReadPath1.c_str());
@@ -414,7 +420,6 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
         params.push_back("CRASH_PORT");
         params.push_back(aInfo.crashServerPort.c_str());
       }
-
       params.push_back("DARWIN_USER_CACHE_DIR");
       char confStrBuf[PATH_MAX];
       if (!confstr(_CS_DARWIN_USER_CACHE_DIR, confStrBuf, sizeof(confStrBuf))) {
@@ -490,8 +495,11 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
     bundleIDCacheDir.append("/" MOZ_GPU_PROCESS_BUNDLEID);
     params.push_back("BUNDLE_ID_CACHE_DIR");
     params.push_back(bundleIDCacheDir.c_str());
+    params.push_back("ALLOW_REMOTE_APPLE_IMAGEIO");
+    params.push_back(getenv("MOZ_BLOCK_REMOTE_APPLE_IMAGEIO") ? "FALSE"
+                                                              : "TRUE");
   } else {
-    char* msg = NULL;
+    char* msg = nullptr;
     asprintf(&msg, "Unexpected sandbox type %u", aInfo.type);
     if (msg) {
       aErrorMessage.assign(msg);
@@ -532,12 +540,12 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
   // The parameters array is null terminated.
   params.push_back(nullptr);
 
-  char* errorbuf = NULL;
+  char* errorbuf = nullptr;
   int rv = sandbox_init_with_parameters(profile.c_str(), 0, params.data(),
                                         &errorbuf);
   if (rv) {
     if (errorbuf) {
-      char* msg = NULL;
+      char* msg = nullptr;
       asprintf(&msg, "sandbox_init() failed with error \"%s\"", errorbuf);
       if (msg) {
         aErrorMessage.assign(msg);
@@ -640,7 +648,7 @@ bool GetContentSandboxParamsFromArgs(int aArgc, char** aArgv,
 #endif  // DEBUG
 
     // Handle crash server positional argument
-    if (strstr(aArgv[i], "gecko-crash-server-pipe") != NULL) {
+    if (strstr(aArgv[i], "gecko-crash-server-pipe") != nullptr) {
       aInfo.crashServerPort.assign(aArgv[i]);
       continue;
     }
@@ -711,7 +719,7 @@ bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv,
     }
 
     // Handle crash server positional argument
-    if (strstr(aArgv[i], "gecko-crash-server-pipe") != NULL) {
+    if (strstr(aArgv[i], "gecko-crash-server-pipe") != nullptr) {
       aInfo.crashServerPort.assign(aArgv[i]);
       continue;
     }
@@ -789,7 +797,7 @@ bool GetPluginSandboxParamsFromArgs(int aArgc, char** aArgv,
     }
 
     // Handle crash server positional argument
-    if (strstr(aArgv[i], "gecko-crash-server-pipe") != NULL) {
+    if (strstr(aArgv[i], "gecko-crash-server-pipe") != nullptr) {
       aInfo.crashServerPort.assign(aArgv[i]);
       continue;
     }
@@ -891,12 +899,12 @@ bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc,
   return StartMacSandbox(info, aErrorMessage);
 }
 
-bool IsMacSandboxStarted() { return sandbox_check(getpid(), NULL, 0) == 1; }
+bool IsMacSandboxStarted() { return sandbox_check(getpid(), nullptr, 0) == 1; }
 
 #ifdef DEBUG
 // sandbox_check returns 1 if the specified process is sandboxed
 void AssertMacSandboxEnabled() {
-  MOZ_ASSERT(sandbox_check(getpid(), NULL, 0) == 1);
+  MOZ_ASSERT(sandbox_check(getpid(), nullptr, 0) == 1);
 }
 #endif /* DEBUG */
 

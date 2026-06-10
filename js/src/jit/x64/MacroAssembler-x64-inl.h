@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -298,6 +296,10 @@ void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
 
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   imulq(rhs, srcDest);
+}
+
+void MacroAssembler::mul64(const Register64& rhs, const Register64& srcDest) {
+  imulq(rhs.reg, srcDest.reg);
 }
 
 void MacroAssembler::mulPtr(ImmWord rhs, Register srcDest) {
@@ -651,7 +653,7 @@ void MacroAssembler::popcnt64(Register64 src64, Register64 dest64,
 
   ScratchRegisterScope scratch(*this);
 
-  // Equivalent to mozilla::CountPopulation32, adapted for 64 bits.
+  // Equivalent to popcnt32, adapted for 64 bits.
   // x -= (x >> 1) & m1;
   movq(src, tmp);
   movq(ImmWord(0x5555555555555555), scratch);
@@ -944,6 +946,13 @@ void MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr,
   j(cond, label);
 }
 
+void MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& valaddr,
+                                     JSWhyMagic why, Label* label) {
+  uint64_t magic = MagicValue(why).asRawBits();
+  cmpPtr(Operand(valaddr), ImmWord(magic));
+  j(cond, label);
+}
+
 template <typename T>
 void MacroAssembler::branchTestValue(Condition cond, const T& lhs,
                                      const ValueOperand& rhs, Label* label) {
@@ -1102,6 +1111,53 @@ void MacroAssembler::spectreBoundsCheckPtr(Register index,
   if (JitOptions.spectreIndexMasking) {
     cmovCCq(Assembler::AboveOrEqual, scratch, index);
   }
+}
+
+// ===============================================================
+// 128-bit arithmetic
+
+void MacroAssembler::wasmAddSubI128HI64(Register lhsLo, Register lhsHi,
+                                        Register rhsLo, Register rhsHi,
+                                        Register output, bool isAdd) {
+  // Require (all targets): the output is not the same as any of the inputs.
+  MOZ_ASSERT(output != lhsLo && output != lhsHi && output != rhsLo &&
+             output != rhsHi);
+  // Set the carry flag (indicating carry or borrow, respectively) from the
+  // low-half operation, but ignore the actual result.
+  movq(lhsLo, output);
+  if (isAdd) {
+    addq(rhsLo, output);
+  } else {
+    subq(rhsLo, output);
+  }
+  // Then compute the high half result and roll the carry flag into it.
+  movq(lhsHi, output);
+  if (isAdd) {
+    adcq(rhsHi, output);
+  } else {
+    sbbq(rhsHi, output);
+  }
+}
+
+// Produces the top 64 bits of the 128-bit value `RAX *widen rhs`.  The result
+// will be in RAX.  RDX is trashed.  `rhs` may not be RAX or RDX.  Callers
+// must preserve live values in RAX and RDX themselves.
+void MacroAssembler::wasmMulI64WideHI64(Register rhs, bool isSigned) {
+  MOZ_RELEASE_ASSERT(rhs != rax && rhs != rdx);
+  if (isSigned) {
+    imulq(rhs);
+  } else {
+    umulq(rhs);
+  }
+  // Currently we have a 128-bit result in RDX(hi64):RAX(lo64).  But we need the
+  // top 64 bits to be in RAX.  The reason for this last-minute move is so as to
+  // make the associated LIR's register constraints describable to the register
+  // allocator, since it appears impossible to describe a LIR with "one arg in
+  // RAX, the other arg in any-reg (not RAX or RDX), result in RDX".  But
+  // specifying the result to be in RAX does make it describable, providing we
+  // also say that RDX is trashed.  This of course does unfortunately put an
+  // extra move on the critical path.
+  movq(rdx, rax);
 }
 
 // ========================================================================

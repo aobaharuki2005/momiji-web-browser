@@ -34,7 +34,6 @@ const {
   changeMatrixBase,
   getBasis,
 } = require("resource://devtools/shared/layout/dom-matrix-2d.js");
-const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   getMatchingCSSRules,
 } = require("resource://devtools/shared/inspector/css-logic.js");
@@ -86,7 +85,6 @@ const _dragging = Symbol("shapes/dragging");
 class ShapesHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
     super(highlighterEnv);
-    EventEmitter.decorate(this);
 
     this.referenceBox = "border";
     this.useStrokeBox = false;
@@ -390,7 +388,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       this.highlighterEnv.window.document === this.drawingNode.ownerDocument
         ? this.currentQuads[this.referenceBox][0].bounds
         : getAdjustedQuads(
-            this.drawingNode.ownerGlobal,
+            this.drawingNode.documentGlobal,
             this.drawingNode,
             this.referenceBox
           )[0].bounds;
@@ -475,9 +473,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     // If the node exists within an iframe, get offsets for the virtual viewport so that
     // points can be dragged to the extent of the global window, outside of the iframe
     // window.
-    if (this.currentNode.ownerGlobal !== this.win) {
+    if (this.currentNode.documentGlobal !== this.win) {
       const win = this.win;
-      const nodeWin = this.currentNode.ownerGlobal;
+      const nodeWin = this.currentNode.documentGlobal;
       // Get bounding box of iframe document relative to global document.
       const bounds = nodeWin.document
         .getBoxQuads({
@@ -513,7 +511,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     const nodeDocument = this.currentNode.ownerDocument;
     if (target !== nodeDocument && target.ownerDocument !== nodeDocument) {
       const [xOffset, yOffset] = getFrameOffsets(
-        target.ownerGlobal,
+        target.documentGlobal,
         this.currentNode
       );
       const zoom = getCurrentZoom(this.win);
@@ -2975,8 +2973,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   getUnitToPixelRatio(unit, size) {
     let ratio;
-    const windowHeight = this.currentNode.ownerGlobal.innerHeight;
-    const windowWidth = this.currentNode.ownerGlobal.innerWidth;
+    const windowHeight = this.currentNode.documentGlobal.innerHeight;
+    const windowWidth = this.currentNode.documentGlobal.innerWidth;
     switch (unit) {
       case "%":
         ratio = 100 / size;

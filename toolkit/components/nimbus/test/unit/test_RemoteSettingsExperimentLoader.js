@@ -9,14 +9,12 @@ const { EnrollmentsContext, MatchStatus } = ChromeUtils.importESModule(
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
 
 const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 const UPLOAD_PREF = "datareporting.healthreport.uploadEnabled";
 const DEBUG_PREF = "nimbus.debug";
+const AI_FEATURES_ENABLED_PREF = "browser.ai.control.default";
 
 add_setup(async function setup() {
   Services.fog.initializeFOG();
@@ -40,12 +38,13 @@ add_task(async function test_lazy_pref_getters() {
 });
 
 add_task(async function test_init() {
-  const { sandbox, loader, initExperimentAPI, cleanup } =
-    await NimbusTestUtils.setupTest({ init: false });
+  const { sandbox, loader, cleanup } = await NimbusTestUtils.setupTest({
+    init: false,
+  });
   sandbox.spy(loader, "setTimer");
   sandbox.spy(loader, "updateRecipes");
 
-  await initExperimentAPI();
+  await ExperimentAPI.init();
 
   Assert.ok(loader.setTimer.calledOnce, "should call .setTimer");
   Assert.ok(loader.updateRecipes.calledOnce, "should call .updateRecipes");
@@ -54,14 +53,16 @@ add_task(async function test_init() {
 });
 
 add_task(async function test_init_with_opt_in() {
-  const { sandbox, loader, initExperimentAPI, cleanup } =
-    await NimbusTestUtils.setupTest({ init: false });
+  const { sandbox, loader, cleanup } = await NimbusTestUtils.setupTest({
+    init: false,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
+  });
   sandbox.spy(loader, "setTimer");
   sandbox.spy(loader, "updateRecipes");
 
   Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, false);
 
-  await initExperimentAPI();
+  await ExperimentAPI.init();
 
   Assert.equal(
     loader.setTimer.callCount,
@@ -92,16 +93,17 @@ add_task(async function test_updateRecipes() {
     targeting: "false",
   });
 
-  const { sandbox, loader, manager, initExperimentAPI, cleanup } =
-    await NimbusTestUtils.setupTest({
+  const { sandbox, loader, manager, cleanup } = await NimbusTestUtils.setupTest(
+    {
       init: false,
       experiments: [passRecipe, failRecipe],
-    });
+    }
+  );
 
   sandbox.spy(loader, "updateRecipes");
   sandbox.stub(manager, "onRecipe").resolves();
 
-  await initExperimentAPI();
+  await ExperimentAPI.init();
 
   Assert.ok(loader.updateRecipes.calledOnce, "should call .updateRecipes");
   Assert.equal(
@@ -215,13 +217,12 @@ add_task(async function test_optIn_debug_disabled() {
   const recipe = NimbusTestUtils.factories.recipe("foo", {
     targeting: "false",
   });
-  const { loader, initExperimentAPI, cleanup } =
-    await NimbusTestUtils.setupTest({
-      init: false,
-      experiments: [recipe],
-    });
+  const { loader, cleanup } = await NimbusTestUtils.setupTest({
+    init: false,
+    experiments: [recipe],
+  });
 
-  await initExperimentAPI();
+  await ExperimentAPI.init();
 
   Services.prefs.setBoolPref(DEBUG_PREF, false);
   Services.prefs.setBoolPref(UPLOAD_PREF, true);
@@ -250,10 +251,13 @@ add_task(async function test_optIn_studies_disabled() {
   const recipe = NimbusTestUtils.factories.recipe("foo", {
     targeting: "false",
   });
-  const { loader, initExperimentAPI, cleanup } =
-    await NimbusTestUtils.setupTest({ init: false, experiments: [recipe] });
+  const { loader, cleanup } = await NimbusTestUtils.setupTest({
+    init: false,
+    experiments: [recipe],
+    migrationState: NimbusTestUtils.migrationState.LATEST,
+  });
 
-  await initExperimentAPI();
+  await ExperimentAPI.init();
 
   Services.prefs.setBoolPref(DEBUG_PREF, true);
 
@@ -282,16 +286,16 @@ add_task(async function test_optIn_studies_disabled() {
 add_task(async function test_enrollment_changed_notification() {
   const recipe = NimbusTestUtils.factories.recipe("foo");
 
-  const { sandbox, loader, initExperimentAPI, cleanup } =
-    await NimbusTestUtils.setupTest({ init: false, experiments: [recipe] });
+  const { sandbox, loader, cleanup } = await NimbusTestUtils.setupTest({
+    init: false,
+    experiments: [recipe],
+  });
   sandbox.spy(loader, "updateRecipes");
   sandbox.stub(loader.manager, "onRecipe").resolves();
 
-  const enrollmentChanged = TestUtils.topicObserved(
-    "nimbus:enrollments-updated"
-  );
+  const enrollmentChanged = promiseEnrollmentsUpdated();
 
-  await initExperimentAPI();
+  await ExperimentAPI.init();
   await enrollmentChanged;
 
   Assert.ok(loader.updateRecipes.called, "should call .updateRecipes");
@@ -344,4 +348,79 @@ add_task(async function test_experiment_optin_targeting() {
   Services.prefs.clearUserPref(DEBUG_PREF);
 
   await cleanup();
+});
+
+add_task(async function testUpdateIfAiPrefChanges() {
+  const AVAILABLE = "available";
+  const BLOCKED = "blocked";
+
+  const AI_TARGETING = `'${AI_FEATURES_ENABLED_PREF}'|preferenceValue == '${AVAILABLE}'`;
+
+  Services.prefs.setStringPref(AI_FEATURES_ENABLED_PREF, AVAILABLE);
+
+  const experiment = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "experiment",
+    { featureId: "no-feature-firefox-desktop" },
+    {
+      targeting: AI_TARGETING,
+    }
+  );
+
+  const rollout = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "rollout",
+    { featureId: "no-feature-firefox-desktop" },
+    {
+      isRollout: true,
+      targeting: AI_TARGETING,
+    }
+  );
+
+  const { cleanup, manager } = await NimbusTestUtils.setupTest({
+    experiments: [experiment, rollout],
+    migrationState: NimbusTestUtils.migrationState.LATEST,
+  });
+
+  Assert.ok(
+    manager.store.get(experiment.slug)?.active,
+    "Enrolled in experiment"
+  );
+
+  Assert.ok(manager.store.get(rollout.slug)?.active, "Enrolled in rollout");
+
+  info("Disabling AI features");
+  {
+    const updatedPromise = promiseEnrollmentsUpdated();
+    Services.prefs.setStringPref(AI_FEATURES_ENABLED_PREF, BLOCKED);
+    await updatedPromise;
+    await ExperimentAPI._rsLoader.finishedUpdating();
+
+    const experimentEnrollment = manager.store.get(experiment.slug);
+    Assert.ok(!experimentEnrollment.active, "Experiment no longer active");
+    Assert.equal(experimentEnrollment.unenrollReason, "targeting-mismatch");
+
+    const rolloutEnrollment = manager.store.get(rollout.slug);
+    Assert.ok(!rolloutEnrollment.active, "Rollout no longer active");
+    Assert.equal(rolloutEnrollment.unenrollReason, "targeting-mismatch");
+  }
+
+  info("Enabling AI features");
+  {
+    const updatedPromise = promiseEnrollmentsUpdated();
+    Services.prefs.setStringPref(AI_FEATURES_ENABLED_PREF, AVAILABLE);
+    await updatedPromise;
+    await ExperimentAPI._rsLoader.finishedUpdating();
+
+    const experimentEnrollment = manager.store.get(experiment.slug);
+    Assert.ok(!experimentEnrollment.active, "Experiment is not active");
+    Assert.equal(experimentEnrollment.unenrollReason, "targeting-mismatch");
+
+    const rolloutEnrollment = manager.store.get(rollout.slug);
+    Assert.ok(rolloutEnrollment.active, "Rollout is active again");
+  }
+
+  await manager.unenroll(rollout.slug, "test");
+
+  await cleanup();
+
+  Services.prefs.clearUserPref(AI_FEATURES_ENABLED_PREF);
 });

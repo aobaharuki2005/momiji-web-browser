@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -10,7 +8,8 @@
 #include "jit/MacroAssembler.h"
 
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/MathAlgorithms.h"
+
+#include <bit>
 
 #include "gc/Zone.h"
 #include "jit/CalleeToken.h"
@@ -193,6 +192,9 @@ ABIFunctionType MacroAssembler::signature() const {
     case Args_Int32_Float32:
     case Args_Double_Double:
     case Args_Double_Int:
+    case Args_Double_IntInt:
+    case Args_Double_IntIntInt:
+    case Args_Double_IntInt64:
     case Args_Double_DoubleInt:
     case Args_Double_DoubleDouble:
     case Args_Double_IntDouble:
@@ -431,22 +433,23 @@ void MacroAssembler::branchIfNotNullOrUndefined(ValueOperand val,
 
 void MacroAssembler::branchIfRope(Register str, Label* label) {
   Address flags(str, JSString::offsetOfFlags());
-  branchTest32(Assembler::Zero, flags, Imm32(JSString::LINEAR_BIT), label);
+  branchTest32(Assembler::Zero, flags, Imm32(StringFlags::LINEAR_BIT), label);
 }
 
 void MacroAssembler::branchIfNotRope(Register str, Label* label) {
   Address flags(str, JSString::offsetOfFlags());
-  branchTest32(Assembler::NonZero, flags, Imm32(JSString::LINEAR_BIT), label);
+  branchTest32(Assembler::NonZero, flags, Imm32(StringFlags::LINEAR_BIT),
+               label);
 }
 
 void MacroAssembler::branchLatin1String(Register string, Label* label) {
   branchTest32(Assembler::NonZero, Address(string, JSString::offsetOfFlags()),
-               Imm32(JSString::LATIN1_CHARS_BIT), label);
+               Imm32(StringFlags::LATIN1_CHARS_BIT), label);
 }
 
 void MacroAssembler::branchTwoByteString(Register string, Label* label) {
   branchTest32(Assembler::Zero, Address(string, JSString::offsetOfFlags()),
-               Imm32(JSString::LATIN1_CHARS_BIT), label);
+               Imm32(StringFlags::LATIN1_CHARS_BIT), label);
 }
 
 void MacroAssembler::branchIfBigIntIsNegative(Register bigInt, Label* label) {
@@ -774,24 +777,25 @@ void MacroAssembler::branchTestProxyHandlerFamily(Condition cond,
   branchPtr(cond, familyAddr, ImmPtr(handlerp), label);
 }
 
-void MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond,
-                                                       Label* label) {
+void MacroAssembler::branchTestNeedsMarkingBarrier(Condition cond,
+                                                   Label* label) {
   MOZ_ASSERT(cond == Zero || cond == NonZero);
   CompileZone* zone = realm()->zone();
-  const uint32_t* needsBarrierAddr = zone->addressOfNeedsIncrementalBarrier();
+  const uint32_t* needsBarrierAddr = zone->addressOfNeedsMarkingBarrier();
   branchTest32(cond, AbsoluteAddress(needsBarrierAddr), Imm32(0x1), label);
 }
 
-void MacroAssembler::branchTestNeedsIncrementalBarrierAnyZone(
-    Condition cond, Label* label, Register scratch) {
+void MacroAssembler::branchTestNeedsMarkingBarrierAnyZone(Condition cond,
+                                                          Label* label,
+                                                          Register scratch) {
   MOZ_ASSERT(cond == Zero || cond == NonZero);
   if (maybeRealm_) {
-    branchTestNeedsIncrementalBarrier(cond, label);
+    branchTestNeedsMarkingBarrier(cond, label);
   } else {
     // We are compiling the interpreter or another runtime-wide trampoline, so
     // we have to load cx->zone.
     loadPtr(AbsoluteAddress(runtime()->addressOfZone()), scratch);
-    Address needsBarrierAddr(scratch, Zone::offsetOfNeedsIncrementalBarrier());
+    Address needsBarrierAddr(scratch, Zone::offsetOfNeedsMarkingBarrier());
     branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
   }
 }
@@ -869,18 +873,56 @@ void MacroAssembler::branchFloat32NotInUInt64Range(Address src, Register temp,
 
 // ========================================================================
 // Canonicalization primitives.
-void MacroAssembler::canonicalizeFloat(FloatRegister reg) {
+void MacroAssembler::canonicalizeFloatNaN(FloatRegister reg) {
   Label notNaN;
   branchFloat(DoubleOrdered, reg, reg, &notNaN);
   loadConstantFloat32(float(JS::GenericNaN()), reg);
   bind(&notNaN);
 }
 
-void MacroAssembler::canonicalizeDouble(FloatRegister reg) {
+void MacroAssembler::canonicalizeDoubleNaN(FloatRegister reg) {
   Label notNaN;
   branchDouble(DoubleOrdered, reg, reg, &notNaN);
   loadConstantDouble(JS::GenericNaN(), reg);
   bind(&notNaN);
+}
+
+void MacroAssembler::canonicalizeDoubleZero(FloatRegister reg,
+                                            FloatRegister scratch) {
+  // If denormals are disabled, then operations on them will flush denormal
+  // values to zero (FTZ flag). We need the cheapest operation that is the
+  // identity function.
+  //
+  // Unfortunately, just moving the float register doesn't trigger FTZ. Adding
+  // '+-0' isn't an identity function, because it can toggle the sign bit.
+  //
+  // Therefore we choose to multiply by 1.0, which won't change the result.
+  loadConstantDouble(1.0, scratch);
+  mulDouble(scratch, reg);
+}
+
+void MacroAssembler::canonicalizeValueZero(ValueOperand value,
+                                           FloatRegister scratch) {
+  // Don't do anything if this isn't a double value.
+  Label notDouble;
+  branchTestDouble(Assembler::NotEqual, value, &notDouble);
+
+  // Unbox the double.
+  unboxDouble(value, scratch);
+
+  {
+    // Minimize the duration of using the scratch double to avoid
+    // conflict with unboxDouble.
+    ScratchDoubleScope tmpD(*this);
+
+    // Canonicalize the double.
+    canonicalizeDoubleZero(scratch, tmpD);
+
+    // Box the double back into value.
+    boxDouble(scratch, value, tmpD);
+  }
+
+  bind(&notDouble);
 }
 
 // ========================================================================
@@ -1066,7 +1108,7 @@ void MacroAssembler::assertStackAlignment(uint32_t alignment,
                                           int32_t offset /* = 0 */) {
 #ifdef DEBUG
   Label ok, bad;
-  MOZ_ASSERT(mozilla::IsPowerOfTwo(alignment));
+  MOZ_ASSERT(std::has_single_bit(alignment));
 
   // Wrap around the offset to be a non-negative number.
   offset %= alignment;
@@ -1077,7 +1119,7 @@ void MacroAssembler::assertStackAlignment(uint32_t alignment,
   // Test if each bit from offset is set.
   uint32_t off = offset;
   while (off) {
-    uint32_t lowestBit = 1 << mozilla::CountTrailingZeroes32(off);
+    uint32_t lowestBit = 1 << std::countr_zero(off);
     branchTestStackPtr(Assembler::Zero, Imm32(lowestBit), &bad);
     off ^= lowestBit;
   }

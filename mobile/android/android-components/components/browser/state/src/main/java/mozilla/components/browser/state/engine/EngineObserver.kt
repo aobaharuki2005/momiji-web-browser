@@ -5,7 +5,6 @@
 package mozilla.components.browser.state.engine
 
 import android.content.Intent
-import android.os.Environment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
@@ -44,7 +43,7 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.state.Store
 import java.security.cert.X509Certificate
 
-private const val PAGE_LOAD_COMPLETION_PROGRESS = 100
+internal const val PAGE_LOAD_COMPLETION_PROGRESS = 100
 
 /**
  * [EngineSession.Observer] implementation responsible to update the state of a [Session] from the events coming out of
@@ -241,7 +240,6 @@ internal class EngineObserver(
             0,
             INITIATED,
             userAgent,
-            Environment.DIRECTORY_DOWNLOADS,
             private = isPrivate,
             skipConfirmation = skipConfirmation,
             openInApp = openInApp,

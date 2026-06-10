@@ -83,7 +83,7 @@ loader.lazyGetter(this, "ChromeDebugToolbar", () =>
   )
 );
 
-const l10n = require("resource://devtools/client/webconsole/utils/l10n.js");
+const l10n = require("resource://devtools/shared/webconsole/l10n.js");
 const {
   Utils: WebConsoleUtils,
 } = require("resource://devtools/client/webconsole/utils.js");
@@ -124,6 +124,8 @@ class App extends Component {
     };
   }
 
+  #abortController = new AbortController();
+
   constructor(props) {
     super(props);
 
@@ -143,8 +145,6 @@ class App extends Component {
     this.#abortController.abort();
   }
 
-  #abortController = new AbortController();
-
   onBlur() {
     this.props.dispatch(actions.autocompleteClear());
   }
@@ -157,7 +157,7 @@ class App extends Component {
       (isMacOS && event.key === "r" && event.ctrlKey === true)
     ) {
       const initialValue =
-        webConsoleUI.jsterm && webConsoleUI.jsterm.getSelectedText();
+        webConsoleUI.jsterm && webConsoleUI.jsterm.editor.getSelectedText();
 
       dispatch(
         actions.reverseSearchInputToggle({ initialValue, access: "keyboard" })

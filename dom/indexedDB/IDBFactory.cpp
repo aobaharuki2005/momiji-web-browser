@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -111,7 +109,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateForWindow(
 
     auto factory =
         MakeRefPtr<IDBFactory>(IDBFactoryGuard{}, /* aAllowed */ false);
-    factory->BindToOwner(aWindow->AsGlobal());
+    factory->BindToGlobal(aWindow->AsGlobal());
     factory->mInnerWindowID = aWindow->WindowID();
 
     return factory;
@@ -140,7 +138,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateForWindow(
   auto factory = MakeRefPtr<IDBFactory>(IDBFactoryGuard{}, /* aAllowed */ true);
   factory->mPrincipalInfo = std::move(principalInfo);
 
-  factory->BindToOwner(aWindow->AsGlobal());
+  factory->BindToGlobal(aWindow->AsGlobal());
 
   factory->mBrowserChild = BrowserChild::GetFrom(aWindow);
   factory->mEventTarget =
@@ -170,7 +168,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateForMainThreadJS(
   if (!AllowedForPrincipal(principal, &isSystem)) {
     auto factory =
         MakeRefPtr<IDBFactory>(IDBFactoryGuard{}, /* aAllowed */ false);
-    factory->BindToOwner(aGlobal);
+    factory->BindToGlobal(aGlobal);
 
     return factory;
   }
@@ -197,7 +195,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateForWorker(
   if (!aPrincipalInfo) {
     auto factory =
         MakeRefPtr<IDBFactory>(IDBFactoryGuard{}, /* aAllowed */ false);
-    factory->BindToOwner(aGlobal);
+    factory->BindToGlobal(aGlobal);
     factory->mInnerWindowID = aInnerWindowID;
 
     return factory;
@@ -245,7 +243,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateInternal(
 
     auto factory =
         MakeRefPtr<IDBFactory>(IDBFactoryGuard{}, /* aAllowed */ false);
-    factory->BindToOwner(aGlobal);
+    factory->BindToGlobal(aGlobal);
     factory->mInnerWindowID = aInnerWindowID;
 
     return factory;
@@ -253,7 +251,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateInternal(
 
   auto factory = MakeRefPtr<IDBFactory>(IDBFactoryGuard{}, /* aAllowed */ true);
   factory->mPrincipalInfo = std::move(aPrincipalInfo);
-  factory->BindToOwner(aGlobal);
+  factory->BindToGlobal(aGlobal);
   factory->mEventTarget = GetCurrentSerialEventTarget();
   factory->mInnerWindowID = aInnerWindowID;
 
@@ -403,7 +401,7 @@ void IDBFactory::UpdateActiveDatabaseCount(int32_t aDelta) {
                         (mActiveDatabaseCount + aDelta) < mActiveDatabaseCount);
   mActiveDatabaseCount += aDelta;
 
-  if (nsIGlobalObject* global = GetOwnerGlobal()) {
+  if (nsIGlobalObject* global = GetRelevantGlobal()) {
     global->UpdateActiveIndexedDBDatabaseCount(aDelta);
   }
 }
@@ -450,12 +448,12 @@ RefPtr<IDBOpenDBRequest> IDBFactory::DeleteDatabase(JSContext* aCx,
 
 already_AddRefed<Promise> IDBFactory::Databases(JSContext* const aCx,
                                                 ErrorResult& aRv) {
-  if (NS_WARN_IF(!GetOwnerGlobal())) {
+  if (NS_WARN_IF(!GetRelevantGlobal())) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::CreateInfallible(GetOwnerGlobal());
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetRelevantGlobal());
   if (!mAllowed) {
     promise->MaybeRejectWithSecurityError(kAccessError);
     return promise.forget();
@@ -672,7 +670,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     ErrorResult& aRv) {
   MOZ_ASSERT(mAllowed);
 
-  if (NS_WARN_IF(!GetOwnerGlobal())) {
+  if (NS_WARN_IF(!GetRelevantGlobal())) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return nullptr;
   }
@@ -711,11 +709,11 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
       return nullptr;
     }
   } else {
-    if (GetOwnerGlobal()->GetStorageAccess() ==
+    if (GetRelevantGlobal()->GetStorageAccess() ==
         StorageAccess::ePrivateBrowsing) {
       if (NS_IsMainThread()) {
         SetUseCounter(
-            GetOwnerGlobal()->GetGlobalJSObject(),
+            GetRelevantGlobal()->GetGlobalJSObject(),
             aDeleting
                 ? eUseCounter_custom_PrivateBrowsingIDBFactoryOpen
                 : eUseCounter_custom_PrivateBrowsingIDBFactoryDeleteDatabase);
@@ -769,7 +767,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
   }
 
   RefPtr<IDBOpenDBRequest> request = IDBOpenDBRequest::Create(
-      aCx, SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, GetOwnerGlobal());
+      aCx, SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, GetRelevantGlobal());
   if (!request) {
     MOZ_ASSERT(!NS_IsMainThread());
     aRv.ThrowUncatchableException();

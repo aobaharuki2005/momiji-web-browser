@@ -5,6 +5,7 @@
 extern crate geckoservo;
 
 extern crate abridged_certs;
+extern crate app_collator_glue;
 #[cfg(feature = "cubeb-remoting")]
 extern crate audioipc2_client;
 #[cfg(feature = "cubeb-remoting")]
@@ -30,11 +31,14 @@ extern crate encoding_glue;
 extern crate fog_control;
 extern crate gecko_profiler;
 extern crate gkrust_utils;
+extern crate harfbuzz_glue;
 extern crate http_sfv;
 extern crate idna_glue;
 extern crate ipdl_utils;
 extern crate jog;
 extern crate jsrust_shared;
+#[cfg(feature = "jxl_decoder")]
+extern crate jxl_decoder;
 extern crate kvstore;
 extern crate mapped_hyph;
 extern crate mozurl;
@@ -44,7 +48,6 @@ extern crate nserror;
 extern crate nsstring;
 extern crate prefs_parser;
 extern crate processtools;
-#[cfg(feature = "gecko_profiler")]
 extern crate profiler_helper;
 extern crate rsdparsa_capi;
 extern crate signature_cache;
@@ -88,7 +91,9 @@ extern crate l10nregistry_ffi;
 extern crate localization_ffi;
 
 extern crate ipcclientcerts;
+extern crate pdf_trust_anchors;
 extern crate qwac_trust_anchors;
+extern crate ssl_tokens_cache;
 extern crate trust_anchors;
 
 #[cfg(any(
@@ -127,6 +132,8 @@ extern crate midir_impl;
 
 #[cfg(target_os = "windows")]
 extern crate detect_win32k_conflicts;
+#[cfg(all(target_os = "windows", feature = "shell_windows"))]
+extern crate shell_windows;
 #[cfg(target_os = "windows")]
 extern crate widget_windows;
 
@@ -137,6 +144,8 @@ extern crate dap_ffi;
 extern crate data_encoding_ffi;
 
 extern crate binary_http;
+extern crate happy_eyeballs_glue;
+extern crate lockstore_ffi;
 extern crate mls_gk;
 extern crate oblivious_http;
 
@@ -145,6 +154,9 @@ extern crate mime_guess_ffi;
 extern crate uritemplate_glue;
 extern crate urlpattern;
 extern crate urlpattern_glue;
+
+extern crate adblock;
+extern crate content_classifier_engine;
 
 #[cfg(feature = "libz-rs-sys")]
 extern crate libz_rs_sys;

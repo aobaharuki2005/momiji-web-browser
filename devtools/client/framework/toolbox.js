@@ -91,7 +91,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
-  TYPES: "resource://devtools/shared/highlighters.mjs",
 });
 loader.lazyRequireGetter(this, "flags", "resource://devtools/shared/flags.js");
 loader.lazyRequireGetter(
@@ -244,7 +243,7 @@ const BOOLEAN_CONFIGURATION_PREFS = {
     name: "pauseOverlay",
     thread: true,
   },
-  "devtools.debugger.features.javascript-tracing": {
+  "devtools.command-button-jstracer.enabled": {
     name: "isTracerFeatureEnabled",
   },
 };
@@ -332,6 +331,7 @@ class Toolbox extends EventEmitter {
     this.enableAccentedPseudoLocale = () => this.changePseudoLocale("accented");
     this.enableBidiPseudoLocale = () => this.changePseudoLocale("bidi");
     this._updateFrames = this._updateFrames.bind(this);
+    this._onKeydown = this._onKeydown.bind(this);
     this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
     this.closeToolbox = this.closeToolbox.bind(this);
     this.destroy = this.destroy.bind(this);
@@ -357,8 +357,8 @@ class Toolbox extends EventEmitter {
     this._onMouseDown = this._onMouseDown.bind(this);
     this.updateToolboxButtonsVisibility =
       this.updateToolboxButtonsVisibility.bind(this);
-    this.updateToolboxButtons = this.updateToolboxButtons.bind(this);
     this.selectTool = this.selectTool.bind(this);
+    this._renderToolboxButtons = this._renderToolboxButtons.bind(this);
     this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
     this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
     this.toggleOptions = this.toggleOptions.bind(this);
@@ -988,7 +988,7 @@ class Toolbox extends EventEmitter {
       let tracerInitialization;
       if (
         Services.prefs.getBoolPref(
-          "devtools.debugger.features.javascript-tracing",
+          "devtools.command-button-jstracer.enabled",
           false
         )
       ) {
@@ -1136,23 +1136,27 @@ class Toolbox extends EventEmitter {
 
       this.emit("ready");
       this._resolveIsOpen();
-    } catch (error) {
+    } catch (exception) {
       console.error(
         "Exception while opening the toolbox",
-        String(error),
-        error
+        String(exception),
+        exception
       );
       // While the exception stack is correctly printed in the Browser console when
       // passing `e` to console.error, it is not on the stdout, so print it via dump.
-      dump(error.stack + "\n");
-      if (error.clientPacket) {
+      dump(exception.stack + "\n");
+      if (exception.clientPacket) {
         dump(
-          "Client packet:" + JSON.stringify(error.clientPacket, null, 2) + "\n"
+          "Client packet:" +
+            JSON.stringify(exception.clientPacket, null, 2) +
+            "\n"
         );
       }
-      if (error.serverPacket) {
+      if (exception.serverPacket) {
         dump(
-          "Server packet:" + JSON.stringify(error.serverPacket, null, 2) + "\n"
+          "Server packet:" +
+            JSON.stringify(exception.serverPacket, null, 2) +
+            "\n"
         );
       }
 
@@ -1164,15 +1168,7 @@ class Toolbox extends EventEmitter {
         // If React managed to load, try to display the exception to the user via AppErrorBoundary component.
         // But ignore the exception if the React component itself thrown while rendering (errorInfo is defined)
         if (this._appBoundary && !this._appBoundary.state.errorInfo) {
-          this._appBoundary.setState({
-            errorMsg: error.toString(),
-            errorStack: error.stack,
-            errorInfo: {
-              clientPacket: error.clientPacket,
-              serverPacket: error.serverPacket,
-            },
-            toolbox: this,
-          });
+          this._appBoundary.handleException(exception, this, true);
         }
       } catch (e) {
         // Ignore any further error related to AppErrorBoundary as it would prevent closing the toolbox.
@@ -1218,6 +1214,13 @@ class Toolbox extends EventEmitter {
     this._addShortcuts();
     this._addWindowHostShortcuts();
 
+    // We want to have both keydown and keypress: the split console should be toggled
+    // after an Escape keypress, but we might want to prevent the event to be fired
+    // if the current panel's `shouldPreventSplitConsoleToggle` needs to handle
+    // the Escape key before that. For example, if we have opened popover in a panel,
+    // the keypress event happens too late and the popover is already dismissed,
+    // so we can't check if we should toggle the split console or not.
+    this._chromeEventHandler.addEventListener("keydown", this._onKeydown);
     this._chromeEventHandler.addEventListener(
       "keypress",
       this._splitConsoleOnKeypress
@@ -1245,6 +1248,7 @@ class Toolbox extends EventEmitter {
       "keypress",
       this._splitConsoleOnKeypress
     );
+    this._chromeEventHandler.removeEventListener("keydown", this._onKeydown);
     this._chromeEventHandler.removeEventListener("focus", this._onFocus, true);
     this._chromeEventHandler.removeEventListener("focus", this._onBlur, true);
     this._chromeEventHandler.removeEventListener(
@@ -1447,11 +1451,9 @@ class Toolbox extends EventEmitter {
     // Also support for custom input elements using .devtools-input class
     // (e.g. CodeMirror instances).
     const isInInput =
-      e.originalTarget.closest("input[type=text]") ||
-      e.originalTarget.closest("input[type=search]") ||
-      e.originalTarget.closest("input:not([type])") ||
-      e.originalTarget.closest(".devtools-input") ||
-      e.originalTarget.closest("textarea");
+      e.composedTarget.matches(
+        "input:is([type=text], [type=search], :not([type])), textarea"
+      ) || e.composedTarget.closest(".devtools-input");
 
     const doc = e.originalTarget.ownerDocument;
     const isHTMLPanel = doc.documentElement.namespaceURI === HTML_NS;
@@ -1484,8 +1486,8 @@ class Toolbox extends EventEmitter {
   }
 
   _getDebugTargetData() {
-    const url = new URL(this.win.location);
-    const remoteId = url.searchParams.get("remoteId");
+    const url = URL.parse(this.win.location);
+    const remoteId = url ? url.searchParams.get("remoteId") : null;
     const runtimeInfo = remoteClientManager.getRuntimeInfoByRemoteId(remoteId);
     const connectionType =
       remoteClientManager.getConnectionTypeByRemoteId(remoteId);
@@ -1704,6 +1706,7 @@ class Toolbox extends EventEmitter {
       isToggle,
       onKeyDown,
       experimentalURL,
+      highlighterTypes,
     } = options;
     const toolbox = this;
     const button = {
@@ -1742,6 +1745,7 @@ class Toolbox extends EventEmitter {
       // holding buttons. By default the buttons are placed in the end container.
       isInStartContainer: !!isInStartContainer,
       experimentalURL,
+      highlighterTypes,
       getContextMenu() {
         if (options.getContextMenu) {
           return options.getContextMenu(toolbox);
@@ -1768,21 +1772,24 @@ class Toolbox extends EventEmitter {
     return button;
   }
 
-  _splitConsoleOnKeypress(e) {
-    if (e.keyCode !== KeyCodes.DOM_VK_ESCAPE || !this.isSplitConsoleEnabled()) {
+  _onKeydown(e) {
+    if (e.keyCode !== KeyCodes.DOM_VK_ESCAPE) {
       return;
     }
 
     const currentPanel = this.getCurrentPanel();
-    if (
-      typeof currentPanel.onToolboxChromeEventHandlerEscapeKeyDown ===
-      "function"
-    ) {
-      const ac = new this.win.AbortController();
-      currentPanel.onToolboxChromeEventHandlerEscapeKeyDown(ac);
-      if (ac.signal.aborted) {
-        return;
+    // Allow the current panel to prevent the split console from being toggled.
+    if (typeof currentPanel.shouldPreventSplitConsoleToggle === "function") {
+      if (currentPanel.shouldPreventSplitConsoleToggle()) {
+        // this prevents the `keypress` event to be dispatched.
+        e.preventDefault();
       }
+    }
+  }
+
+  _splitConsoleOnKeypress(e) {
+    if (e.keyCode !== KeyCodes.DOM_VK_ESCAPE || !this.isSplitConsoleEnabled()) {
+      return;
     }
 
     this.toggleSplitConsole();
@@ -2184,7 +2191,7 @@ class Toolbox extends EventEmitter {
       this.toolbarButtons.push(button);
     });
 
-    this.component.setToolboxButtons(this.toolbarButtons);
+    this._renderToolboxButtons();
   }
 
   /**
@@ -2457,27 +2464,20 @@ class Toolbox extends EventEmitter {
    * Update the visibility of the buttons.
    */
   updateToolboxButtonsVisibility() {
+    const inspectorFront = this.target.getCachedFront("inspector");
+
     this.toolbarButtons.forEach(button => {
       button.isVisible = this._commandIsVisible(button);
-    });
-    this.component.setToolboxButtons(this.toolbarButtons);
-  }
 
-  /**
-   * Update the buttons.
-   */
-  updateToolboxButtons() {
-    const inspectorFront = this.target.getCachedFront("inspector");
-    // two of the buttons have highlighters that need to be cleared
-    // on will-navigate, otherwise we hold on to the stale highlighter
-    const hasHighlighters =
-      inspectorFront &&
-      (inspectorFront.hasHighlighter(lazy.TYPES.RULERS) ||
-        inspectorFront.hasHighlighter(lazy.TYPES.MEASURING));
-    if (hasHighlighters) {
-      inspectorFront.destroyHighlighters();
-      this.component.setToolboxButtons(this.toolbarButtons);
-    }
+      if (!button.isVisible && inspectorFront) {
+        // Any highlighters associated with the toolbox button need to be cleared
+        // when a button is hidden.
+        button.highlighterTypes?.forEach(type => {
+          inspectorFront.destroyHighlighterByType(type);
+        });
+      }
+    });
+    this._renderToolboxButtons();
   }
 
   /**
@@ -3098,6 +3098,13 @@ class Toolbox extends EventEmitter {
     });
   }
 
+  /**
+   * Render the toolbox buttons
+   */
+  _renderToolboxButtons() {
+    this.component.setToolboxButtons(this.toolbarButtons);
+  }
+
   _pingTelemetrySelectTool(id, reason) {
     const width = Math.ceil(this.win.outerWidth / 50) * 50;
     const panelName = this.getTelemetryPanelNameOrOther(id);
@@ -3442,7 +3449,9 @@ class Toolbox extends EventEmitter {
     if (!isFrameSwitching) {
       this._updateFrames({ destroyAll: true });
     }
-    this.updateToolboxButtons();
+
+    this.updateToolboxButtonsVisibility();
+
     const toolId = this.currentToolId;
     // For now, only inspector, webconsole, netmonitor and accessibility fire "reloaded" event
     if (
@@ -3810,7 +3819,7 @@ class Toolbox extends EventEmitter {
         () => {
           // Toolbox may have been destroyed in the meantime
           if (this.component) {
-            this.component.setToolboxButtons(this.toolbarButtons);
+            this._renderToolboxButtons();
           }
           this.debouncedToolbarUpdate = null;
         },
@@ -4229,8 +4238,8 @@ class Toolbox extends EventEmitter {
     this.updateFrameButton();
     this.updateErrorCountButton();
 
-    // Calling setToolboxButtons in case the visibility of a button changed.
-    this.component.setToolboxButtons(this.toolbarButtons);
+    // Calling _renderToolboxButtons in case the visibility of a button changed.
+    this._renderToolboxButtons();
   }
 
   /**
@@ -4293,7 +4302,7 @@ class Toolbox extends EventEmitter {
    * Public API to check is the current toolbox is currently being destroyed.
    */
   isDestroying() {
-    return this._destroyer;
+    return !!this._destroyer;
   }
 
   /**
@@ -4424,7 +4433,7 @@ class Toolbox extends EventEmitter {
 
     if (
       Services.prefs.getBoolPref(
-        "devtools.debugger.features.javascript-tracing",
+        "devtools.command-button-jstracer.enabled",
         false
       )
     ) {

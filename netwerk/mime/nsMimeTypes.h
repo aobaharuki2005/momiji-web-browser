@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -255,7 +254,6 @@
  */
 #define PARAM_PROTOCOL "protocol"
 #define PARAM_MICALG "micalg"
-#define PARAM_MICALG_MD2 "rsa-md2"
 #define PARAM_MICALG_MD5 "rsa-md5"
 #define PARAM_MICALG_MD5_2 "md5"
 #define PARAM_MICALG_SHA1 "sha1"

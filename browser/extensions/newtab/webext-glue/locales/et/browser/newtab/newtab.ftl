@@ -39,7 +39,7 @@ newtab-search-box-input =
     .placeholder = Otsi veebist
     .aria-label = Otsi veebist
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Lisa otsingumootor
 newtab-topsites-add-shortcut-header = Uus otsetee
@@ -237,9 +237,21 @@ newtab-error-fallback-refresh-link = Uuesti proovimiseks laadi leht uuesti.
 
 newtab-custom-shortcuts-title = Otseteed
 newtab-custom-shortcuts-subtitle = Saidid, mida oled külastanud või mille oled salvestanud
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Otseteed
     .description = Saidid, mida oled külastanud või mille oled salvestanud
+newtab-custom-shortcuts-nova =
+    .label = Otseteed
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } rida
+           *[other] { $num } rida
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =

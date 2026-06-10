@@ -1,8 +1,6 @@
 /*
- * jsimd_x86_64.c
- *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2009-2011, 2014, 2016, 2018, 2022-2023, D. R. Commander.
+ * Copyright (C) 2009-2011, 2014, 2016, 2018, 2022-2025, D. R. Commander.
  * Copyright (C) 2015-2016, 2018, 2022, Matthieu Darbois.
  *
  * Based on the x86 SIMD extension for IJG JPEG library,
@@ -15,11 +13,11 @@
  */
 
 #define JPEG_INTERNALS
-#include "../../jinclude.h"
-#include "../../jpeglib.h"
-#include "../../jsimd.h"
-#include "../../jdct.h"
-#include "../../jsimddct.h"
+#include "../../src/jinclude.h"
+#include "../../src/jpeglib.h"
+#include "../../src/jsimd.h"
+#include "../../src/jdct.h"
+#include "../../src/jsimddct.h"
 #include "../jsimd.h"
 
 /*
@@ -31,9 +29,21 @@
 #define IS_ALIGNED_SSE(ptr)  (IS_ALIGNED(ptr, 4)) /* 16 byte alignment */
 #define IS_ALIGNED_AVX(ptr)  (IS_ALIGNED(ptr, 5)) /* 32 byte alignment */
 
+#if defined(XP_DARWIN)
+#include <AvailabilityMacros.h>
+#endif
+#if !defined(MAC_OS_X_VERSION_10_7) || \
+    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
+/* see comments at
+ * https://github.com/libjpeg-turbo/libjpeg-turbo/commit/ae87a958613b69628b92088b313ded0d4f59a716
+ * all removing THREAD_LOCAL does is affect thread safety of the
+ * error handler. even the dev thought it was "innocuous"
+ */
+#  define THREAD_LOCAL
+#endif
+
 static THREAD_LOCAL unsigned int simd_support = (unsigned int)(~0);
 static THREAD_LOCAL unsigned int simd_huffman = 1;
-
 /*
  * Check what SIMD accelerations are supported.
  */
@@ -1069,7 +1079,7 @@ jsimd_can_encode_mcu_AC_first_prepare(void)
     return 0;
   if (sizeof(JCOEF) != 2)
     return 0;
-  if (simd_support & JSIMD_SSE2)
+  if ((simd_support & JSIMD_SSE2) && simd_huffman)
     return 1;
 
   return 0;
@@ -1093,7 +1103,7 @@ jsimd_can_encode_mcu_AC_refine_prepare(void)
     return 0;
   if (sizeof(JCOEF) != 2)
     return 0;
-  if (simd_support & JSIMD_SSE2)
+  if ((simd_support & JSIMD_SSE2) && simd_huffman)
     return 1;
 
   return 0;

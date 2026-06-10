@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,8 +11,8 @@
 #include <sys/mount.h>
 #include <sys/param.h>
 
-#include "MacLaunchHelper.h"
 #include "MacRunFromDmgUtils.h"
+#include "MacLaunchHelper.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/intl/Localization.h"
@@ -34,8 +33,6 @@
 // For IOKit docs, see:
 // https://developer.apple.com/documentation/iokit
 // https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/
-
-using namespace mozilla::MacLaunchHelper;
 
 namespace mozilla::MacRunFromDmgUtils {
 
@@ -262,19 +259,22 @@ static void ShowInstallFailedDialog() {
 #ifdef MOZ_UPDATER
 bool LaunchElevatedDmgInstall(NSString* aBundlePath, NSArray* aArguments) {
   NSTask* task = [[NSTask alloc] init];
-  [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
   if (aArguments) {
     [task setArguments:aArguments];
   }
-  [task launchAndReturnError:nil];
-
+  if (@available(macOS 10.13, *)) {
+    [task setExecutableURL:[NSURL fileURLWithPath:aBundlePath]];
+    [task launchAndReturnError:nil];
+  } else {
+    [task setLaunchPath:aBundlePath];
+    [task launch];
+  }
   bool didSucceed = InstallPrivilegedHelper();
   [task waitUntilExit];
   [task release];
   if (!didSucceed) {
-    AbortElevatedUpdate();
+      AbortElevatedUpdate();
   }
-
   return didSucceed;
 }
 #endif

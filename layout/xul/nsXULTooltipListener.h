@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXULTooltipListener_h__
-#define nsXULTooltipListener_h__
+#ifndef nsXULTooltipListener_h_
+#define nsXULTooltipListener_h_
 
 #include "Units.h"
 #include "nsCOMPtr.h"
@@ -71,6 +69,7 @@ class nsXULTooltipListener final : public nsIDOMEventListener {
   nsWeakPtr mTargetNode;
   nsWeakPtr mCurrentTooltip;
   nsWeakPtr mPreviousMouseMoveTarget;
+  nsWeakPtr mTooltipSourceDoc;
 
   // a timer for showing the tooltip
   nsCOMPtr<nsITimer> mTooltipTimer;

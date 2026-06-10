@@ -1,7 +1,11 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ChromeUtils.defineESModuleGetters(this, {
+  AIWindowUI:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowUI.sys.mjs",
+});
 
 document.addEventListener(
   "DOMContentLoaded",
@@ -196,7 +200,8 @@ document.addEventListener(
         #identity-icon-box,
         #identity-permission-box,
         #translations-button,
-        #split-view-button
+        #split-view-button,
+        #smartwindow-ask-button
         `);
       if (!element) {
         return;
@@ -291,6 +296,12 @@ document.addEventListener(
           }
           break;
 
+        case "smartwindow-ask-button":
+          if (isLeftClick) {
+            AIWindowUI.toggleSidebar(window);
+          }
+          break;
+
         default:
           throw new Error(`Missing case for #${element.id}`);
       }
@@ -319,7 +330,9 @@ document.addEventListener(
         #fxa-toolbar-menu-button,
         #unified-extensions-button,
         #library-button,
-        #split-view-button
+        #ipprotection-button,
+        #split-view-button,
+        #smartwindow-ask-button
       `);
       if (!element) {
         return;
@@ -405,9 +418,19 @@ document.addEventListener(
           PanelUI.showSubView("appMenu-libraryView", element, event);
           break;
 
+        case "ipprotection-button":
+          PanelUI.showSubView("PanelUI-ipprotection", element, event);
+          break;
+
         case "split-view-button":
           if (isLikeLeftClick) {
             gBrowser.openSplitViewMenu(element);
+          }
+          break;
+
+        case "smartwindow-ask-button":
+          if (isLikeLeftClick) {
+            AIWindowUI.toggleSidebar(window);
           }
           break;
 

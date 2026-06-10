@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -463,6 +461,11 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
         break;
     }
   }
+
+  platformOptions.gamma =
+      int16_t(StaticPrefs::gfx_font_rendering_freetype_gamma());
+  platformOptions.enhanced_contrast =
+      int16_t(StaticPrefs::gfx_font_rendering_freetype_enhanced_contrast());
 
   *aOutOptions = Some(options);
   *aOutPlatformOptions = Some(platformOptions);

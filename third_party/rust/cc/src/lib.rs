@@ -3972,7 +3972,7 @@ impl Build {
                     let minor = deployment_target.next().unwrap_or(0);
 
                     // If below 10.9, we ignore it and let the SDK's target definitions handle it.
-                    if major == 10 && minor < 9 {
+                    if major == 10 && minor < 6 {
                         self.cargo_output.print_warning(&format_args!(
                             "macOS deployment target ({deployment_target_ver}) too low, it will be increased"
                         ));

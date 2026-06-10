@@ -152,13 +152,13 @@ fun Context.tabClosedUndoMessage(private: Boolean): String =
 
 /**
  * Returns the message to be shown when multiple tabs are closed based on whether the tabs were all private or not.
- * @param private true if the tab was private, false otherwise.
+ * @param count The number of tabs that were closed.
  */
-fun Context.tabsClosedUndoMessage(private: Boolean): String =
-    if (private) {
-        getString(R.string.snackbar_private_data_deleted)
+fun Context.tabsClosedUndoMessage(count: Int): String =
+    if (count > 1) {
+        getString(R.string.snackbar_num_tabs_closed, count.toString())
     } else {
-        getString(R.string.snackbar_tabs_closed)
+        getString(R.string.snackbar_tab_closed)
     }
 
 /**
@@ -219,6 +219,7 @@ fun Context.isToolbarAtBottom() =
  * @param resId Resource ID of the dimension.
  * @return The pixel size corresponding to the given dimension resource.
  */
+@Suppress("Resources.GetDimensionPixelSizeInsteadOfPixelSizeFor")
 fun Context.pixelSizeFor(
     @DimenRes resId: Int,
 ) = resources.getDimensionPixelSize(resId)

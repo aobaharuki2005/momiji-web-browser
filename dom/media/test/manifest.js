@@ -516,6 +516,12 @@ var gMKVtests = [
     type: 'audio/matroska; codecs="opus"',
     duration: 1.0,
   },
+  // ffmpeg -f lavfi -i sine=frequency=1000:duration=1 -c:a libopus -ac 6 -mapping_family 1 output_opus_surround.mkv
+  {
+    name: "output_opus_surround.mkv",
+    type: 'audio/matroska; codecs="opus"',
+    duration: 1.0,
+  },
   // ffmpeg -f lavfi -i testsrc=size=320x240:rate=30 -t 1 -c:v libvpx output_vp8.mkv
   {
     name: "output_vp8.mkv",

@@ -23,7 +23,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarProviderTopSites:
     "moz-src:///browser/components/urlbar/UrlbarProviderTopSites.sys.mjs",
-  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+  UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer:
@@ -32,6 +33,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
+ * @import {SearchEngine} from "moz-src:///toolkit/components/search/SearchEngine.sys.mjs"
  * @import {SearchSuggestionController} from "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs"
  */
 
@@ -69,6 +71,9 @@ function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
  * Class used to create the provider.
  */
 export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
+  // Rich suggestions icon size in px.
+  static RICH_ICON_SIZE = 28;
+
   constructor() {
     super();
   }
@@ -136,7 +141,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       (queryContext.restrictSource &&
         queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) ||
       queryContext.tokens.some(
-        t => t.type == lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH
+        t => t.type == lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH
       ) ||
       (queryContext.searchMode &&
         queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH))
@@ -226,8 +231,9 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext
    * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} addCallback
    *   Callback invoked by the provider to add a new result.
+   * @param {UrlbarController} controller The UrlbarController instance.
    */
-  async startQuery(queryContext, addCallback) {
+  async startQuery(queryContext, addCallback, controller) {
     let instance = this.queryInstance;
 
     let aliasEngine = await this._maybeGetAlias(queryContext);
@@ -255,7 +261,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       lazy.UrlbarTokenizer.isRestrictionToken(queryContext.tokens[0]) &&
       (queryContext.tokens.length > 1 ||
         queryContext.tokens[0].type ==
-          lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
+          lazy.UrlbarShared.TOKEN_TYPE.RESTRICT_SEARCH)
     ) {
       leadingRestrictionToken = queryContext.tokens[0].value;
     }
@@ -264,7 +270,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
     // when the search shortcut is used and it's not user typed. Don't strip
     // other restriction chars, so that it's possible to search for things
     // including one of those (e.g. "c#").
-    if (leadingRestrictionToken === lazy.UrlbarTokenizer.RESTRICT.SEARCH) {
+    if (leadingRestrictionToken === lazy.UrlbarShared.RESTRICT_TOKENS.SEARCH) {
       query = UrlbarUtils.substringAfter(query, leadingRestrictionToken).trim();
     }
 
@@ -289,7 +295,8 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       queryContext,
       engine,
       query,
-      alias
+      alias,
+      controller.browserWindow
     );
 
     if (!results || instance != this.queryInstance) {
@@ -341,7 +348,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
         },
         {
           name: RESULT_MENU_COMMANDS.TRENDING_HELP,
-          l10n: { id: "urlbar-result-menu-trending-why" },
+          l10n: { id: "urlbar-result-menu-learn-more" },
         },
       ]);
     }
@@ -380,7 +387,13 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
    */
   #suggestionsController;
 
-  async #fetchSearchSuggestions(queryContext, engine, searchString, alias) {
+  async #fetchSearchSuggestions(
+    queryContext,
+    engine,
+    searchString,
+    alias,
+    win
+  ) {
     if (!engine) {
       return null;
     }
@@ -421,6 +434,11 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       }
     }
 
+    // Show local results of all engines in search bar.
+    let restrictToEngine =
+      queryContext.sapName != "searchbar" &&
+      this._isTokenOrRestrictionPresent(queryContext);
+
     // See `SearchSuggestionsController.fetch` documentation for a description
     // of `fetchData`.
     let fetchData = await this.#suggestionsController.fetch({
@@ -428,7 +446,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       inPrivateBrowsing: queryContext.isPrivate,
       engine,
       userContextId: queryContext.userContextId,
-      restrictToEngine: this._isTokenOrRestrictionPresent(queryContext),
+      restrictToEngine,
       dedupeRemoteAndLocal: false,
       fetchTrending: this.#shouldFetchTrending(queryContext),
       maxLocalResults,
@@ -495,10 +513,13 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
         let query = searchString.trim();
         let suggestion = entry.value;
         let title;
+        let titleHighlight;
         if (tail && entry.tailOffsetIndex >= 0) {
           title = tail;
+          titleHighlight = UrlbarUtils.HIGHLIGHT.SUGGESTED;
         } else if (suggestion) {
           title = suggestion;
+          titleHighlight = UrlbarUtils.HIGHLIGHT.SUGGESTED;
         } else {
           title = query;
         }
@@ -508,6 +529,9 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
             type: UrlbarUtils.RESULT_TYPE.SEARCH,
             source: UrlbarUtils.RESULT_SOURCE.SEARCH,
             isRichSuggestion: !!entry.icon,
+            richSuggestionIconSize: entry.icon
+              ? UrlbarProviderSearchSuggestions.RICH_ICON_SIZE
+              : undefined,
             payload: {
               title,
               engine: engine.name,
@@ -520,14 +544,17 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
               trending: entry.trending,
               description: entry.description || undefined,
               query,
-              icon: !entry.value ? await engine.getIconURL() : entry.icon,
+              icon: !entry.value
+                ? await engine.getIconURL()
+                : UrlbarUtils.getRemoteIconUrl(
+                    entry.icon,
+                    UrlbarProviderSearchSuggestions.RICH_ICON_SIZE,
+                    win
+                  ),
               helpUrl: entry.trending ? TRENDING_HELP_URL : undefined,
             },
             highlights: {
-              engine: UrlbarUtils.HIGHLIGHT.TYPED,
-              suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-              tail: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-              keyword: UrlbarUtils.HIGHLIGHT.TYPED,
+              title: titleHighlight,
             },
           })
         );
@@ -544,7 +571,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
   /**
    * @typedef {object} EngineAlias
    *
-   * @property {nsISearchEngine} engine
+   * @property {SearchEngine} engine
    *   The search engine
    * @property {string} alias
    *   The search engine's alias
@@ -612,7 +639,6 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
   #shouldFetchTrending(queryContext) {
     return !!(
       queryContext.searchString == "" &&
-      queryContext.sapName != "searchbar" &&
       lazy.UrlbarPrefs.get("trending.featureGate") &&
       lazy.UrlbarPrefs.get("suggest.trending") &&
       (queryContext.searchMode ||

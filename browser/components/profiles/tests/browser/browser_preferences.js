@@ -3,6 +3,16 @@
 
 "use strict";
 
+// In the Settings Redesign, profiles is a subpane of paneSync (not paneGeneral)
+// and the privacy-pane "profiles" data-collection note moved to the
+// permissionsData pane. Detect the mode once and branch navigation below.
+const SRD_ENABLED = Services.prefs.getBoolPref(
+  "browser.settings-redesign.enabled",
+  false
+);
+const PROFILES_PARENT_PANE = SRD_ENABLED ? "paneSync" : "paneGeneral";
+const PROFILES_PRIVACY_NOTE_PANE = SRD_ENABLED ? "permissionsData" : "privacy";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
@@ -41,60 +51,6 @@ async function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
 
 // Note: copied from preferences head.js. We can remove this when we migrate
 // this test into that component.
-function promiseLoadSubDialog(aURL) {
-  return new Promise(resolve => {
-    content.gSubDialog._dialogStack.addEventListener(
-      "dialogopen",
-      function dialogopen(aEvent) {
-        if (
-          aEvent.detail.dialog._frame.contentWindow.location == "about:blank"
-        ) {
-          return;
-        }
-        content.gSubDialog._dialogStack.removeEventListener(
-          "dialogopen",
-          dialogopen
-        );
-
-        is(
-          aEvent.detail.dialog._frame.contentWindow.location.toString(),
-          aURL,
-          "Check the proper URL is loaded"
-        );
-
-        // Check visibility
-        ok(
-          BrowserTestUtils.isVisible(aEvent.detail.dialog._overlay),
-          "Overlay is visible"
-        );
-
-        // Check that stylesheets were injected
-        let expectedStyleSheetURLs =
-          aEvent.detail.dialog._injectedStyleSheets.slice(0);
-        for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
-          .styleSheets) {
-          let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
-          if (i >= 0) {
-            info("found " + styleSheet.href);
-            expectedStyleSheetURLs.splice(i, 1);
-          }
-        }
-        is(
-          expectedStyleSheetURLs.length,
-          0,
-          "All expectedStyleSheetURLs should have been found"
-        );
-
-        // Wait for the next event tick to make sure the remaining part of the
-        // testcase runs after the dialog gets ready for input.
-        executeSoon(() => resolve(aEvent.detail.dialog._frame.contentWindow));
-      }
-    );
-  });
-}
-
-// Note: copied from preferences head.js. We can remove this when we migrate
-// this test into that component.
 async function waitForPaneChange(paneId) {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let event = await BrowserTestUtils.waitForEvent(doc, "paneshown");
@@ -109,7 +65,7 @@ add_task(async function testHiddenWhenDisabled() {
     set: [["browser.profiles.enabled", false]],
   });
 
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+  await openPreferencesViaOpenPreferencesAPI(PROFILES_PARENT_PANE, {
     leaveOpen: true,
   });
   let doc = gBrowser.contentDocument;
@@ -123,11 +79,11 @@ add_task(async function testHiddenWhenDisabled() {
 });
 
 add_task(async function testEnabled() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+  await openPreferencesViaOpenPreferencesAPI(PROFILES_PARENT_PANE, {
     leaveOpen: true,
   });
   let doc = gBrowser.contentDocument;
-  let win = doc.ownerGlobal;
+  let win = doc.documentGlobal;
 
   // Verify the profiles section is shown when enabled.
   let profilesCategory = doc.getElementById("profilesGroup");
@@ -135,11 +91,16 @@ add_task(async function testEnabled() {
   ok(profilesCategory, "The category exists");
   ok(BrowserTestUtils.isVisible(profilesCategory), "The category is visible");
 
-  // Verify the Learn More link exists and points to the right place.
+  // Verify the Learn More link exists and points to the right place. In the
+  // Settings Redesign the setting-group wraps its <moz-fieldset> in a
+  // <moz-card>, so query for the fieldset directly to stay mode-agnostic.
   let profilesSettingGroup = doc.querySelector(
     "setting-group[groupid='profiles']"
-  ).firstElementChild;
-  let learnMore = profilesSettingGroup.shadowRoot.querySelector(
+  );
+  let profilesFieldset =
+    profilesSettingGroup.querySelector("moz-fieldset") ??
+    profilesSettingGroup.firstElementChild;
+  let learnMore = profilesFieldset.shadowRoot.querySelector(
     "a[is='moz-support-link']"
   );
   Assert.equal(
@@ -171,11 +132,11 @@ add_task(async function testEnabled() {
 });
 
 add_task(async function subpaneContentsWithOneProfile() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+  await openPreferencesViaOpenPreferencesAPI(PROFILES_PARENT_PANE, {
     leaveOpen: true,
   });
   let doc = gBrowser.contentDocument;
-  let win = doc.ownerGlobal;
+  let win = doc.documentGlobal;
 
   let paneLoaded = waitForPaneChange("profiles");
   win.gotoPref("paneProfiles");
@@ -206,11 +167,17 @@ add_task(async function subpaneContentsWithOneProfile() {
     "Until we create a second profile, the copy section should be hidden"
   );
 
-  // Verify the manage profiles button opens the correct subdialog.
+  // Verify the manage profiles button opens the correct window.
   manageProfilesButton.scrollIntoView();
-  let promiseSubDialogLoaded = promiseLoadSubDialog("about:profilemanager");
+  let windowOpened = BrowserTestUtils.domWindowOpenedAndLoaded();
   EventUtils.synthesizeMouseAtCenter(manageProfilesButton, {}, win);
-  await promiseSubDialogLoaded;
+  let dialog = await windowOpened;
+  Assert.equal(
+    dialog.location.href,
+    "about:profilemanager",
+    "The profile manager window should open"
+  );
+  await BrowserTestUtils.closeWindow(dialog);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -218,13 +185,13 @@ add_task(async function subpaneContentsWithOneProfile() {
 add_task(async function copyProfile() {
   // Add an additional profile, then load the subpane, and the copy section should be visible.
   await initGroupDatabase();
-  await SelectableProfileService.createNewProfile(false);
+  await SelectableProfileService.createNewProfile(false, null, "tests");
 
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+  await openPreferencesViaOpenPreferencesAPI(PROFILES_PARENT_PANE, {
     leaveOpen: true,
   });
   let doc = gBrowser.contentDocument;
-  let win = doc.ownerGlobal;
+  let win = doc.documentGlobal;
 
   let paneLoaded = waitForPaneChange("profiles");
   win.gotoPref("paneProfiles");
@@ -299,19 +266,27 @@ add_task(async function copyProfile() {
 // Tests for the small addition to the privacy section
 add_task(async function testPrivacyInfoEnabled() {
   ok(SelectableProfileService.isEnabled, "service should be enabled");
-  await openPreferencesViaOpenPreferencesAPI("privacy", {
+  await openPreferencesViaOpenPreferencesAPI(PROFILES_PRIVACY_NOTE_PANE, {
     leaveOpen: true,
   });
   let doc = gBrowser.contentDocument;
-  let profilesNote = doc.getElementById("preferences-privacy-profiles");
+  let win = doc.documentGlobal;
+  let profilesNote = doc.getElementById("preferencesPrivacyProfiles");
 
   ok(BrowserTestUtils.isVisible(profilesNote), "The profiles note is visible");
 
-  // Verify that clicking the button shows the manage screen in a subdialog.
-  let promiseSubDialogLoaded = promiseLoadSubDialog("about:profilemanager");
+  // Verify that clicking the button opens the manage screen in a new window.
   let profilesButton = doc.getElementById("dataCollectionViewProfiles");
-  profilesButton.click();
-  await promiseSubDialogLoaded;
+  profilesButton.scrollIntoView();
+  let windowOpened = BrowserTestUtils.domWindowOpenedAndLoaded();
+  EventUtils.synthesizeMouseAtCenter(profilesButton, {}, win);
+  let dialog = await windowOpened;
+  Assert.equal(
+    dialog.location.href,
+    "about:profilemanager",
+    "The profile manager window should open"
+  );
+  await BrowserTestUtils.closeWindow(dialog);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -333,11 +308,11 @@ add_task(async function testPrivacyInfoHiddenWhenDisabled() {
 
   ok(!SelectableProfileService.isEnabled, "service should not be enabled");
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", {
+  await openPreferencesViaOpenPreferencesAPI(PROFILES_PRIVACY_NOTE_PANE, {
     leaveOpen: true,
   });
   let profilesNote = gBrowser.contentDocument.getElementById(
-    "preferences-privacy-profiles"
+    "preferencesPrivacyProfiles"
   );
 
   ok(!BrowserTestUtils.isVisible(profilesNote), "The profiles note is hidden");
@@ -361,7 +336,7 @@ add_task(async function testReactivateProfileGroupID() {
     set: [["datareporting.healthreport.uploadEnabled", true]],
   });
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", {
+  await openPreferencesViaOpenPreferencesAPI(PROFILES_PRIVACY_NOTE_PANE, {
     leaveOpen: true,
   });
   let checkbox = gBrowser.contentDocument.getElementById(

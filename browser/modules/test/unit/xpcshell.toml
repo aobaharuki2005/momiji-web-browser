@@ -43,16 +43,14 @@ run-if = [
 
 ["test_LinksCache.js"]
 
+["test_PermissionPromptTargeting.js"]
+
 ["test_ProfileCounter.js"]
 run-if = [
   "os == 'win'", # Test of a Windows-specific feature
 ]
 
-["test_Sanitizer_interrupted.js"]
-prefs = ["privacy.sanitize.useOldClearHistoryDialog=true"]
-
 ["test_Sanitizer_interrupted_v2.js"]
-prefs = ["privacy.sanitize.useOldClearHistoryDialog=false"]
 
 ["test_SiteDataManager.js"]
 
@@ -63,5 +61,13 @@ prefs = ["privacy.sanitize.useOldClearHistoryDialog=false"]
 ["test_SitePermissions_temporary.js"]
 
 ["test_TabUnloader.js"]
+
+["test_UpdatePolicyEnforcer.js"]
+head =  "../../../../toolkit/components/enterprisepolicies/tests/xpcshell/head.js"
+firefox-appdir = "browser"
+
+["test_UpdatePolicySettings.js"]
+head =  "../../../../toolkit/components/enterprisepolicies/tests/xpcshell/head.js"
+firefox-appdir = "browser"
 
 ["test_discovery.js"]

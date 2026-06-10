@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -34,12 +33,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -54,12 +55,11 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
+import mozilla.components.compose.base.button.RadioButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
-import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.iconpicker.AppIcon
 import org.mozilla.fenix.iconpicker.AppIconSnackbarState
 import org.mozilla.fenix.iconpicker.AppIconState
@@ -72,14 +72,13 @@ import org.mozilla.fenix.iconpicker.IconGroupTitle
 import org.mozilla.fenix.iconpicker.SystemAction
 import org.mozilla.fenix.iconpicker.UserAction
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemeProvider
 
 private val ListItemHeight = 56.dp
 private val AppIconSize = 40.dp
 private val AppIconPadding = 6.dp
 private val AppIconBorderWidth = 1.dp
-private val AppIconCornerRadius = 4.dp
 private val GroupHeaderHeight = 36.dp
 private val GroupHeaderPaddingStart = 72.dp
 private val GroupSpacerHeight = 8.dp
@@ -96,7 +95,7 @@ fun AppIconSelection(
     store: AppIconStore,
     shortcutRemovalWarning: () -> Boolean,
 ) {
-    val state by store.observeAsState(store.state) { it }
+    val state by store.stateFlow.collectAsState()
     val selectedIcon = state.userSelectedAppIcon ?: state.currentAppIcon
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -218,7 +217,7 @@ private fun AppIconGroupHeader(title: IconGroupTitle) {
             .wrapContentHeight(Alignment.CenterVertically)
             .semantics { heading() },
         style = FirefoxTheme.typography.headline8,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 }
 
@@ -279,9 +278,8 @@ fun AppIcon(
     appIcon: AppIcon,
     iconSize: Dp = AppIconSize,
     borderWidth: Dp = AppIconBorderWidth,
-    cornerRadius: Dp = AppIconCornerRadius,
+    shape: Shape = MaterialTheme.shapes.extraSmall,
 ) {
-    val roundedShape = RoundedCornerShape(cornerRadius)
     // Spacing the background to make up for inconsistency between box and background clippings.
     // If unchanged, the background will spill over the border; if adjusted by the border width,
     // the background won't exactly reach the border. Pixel hunting.
@@ -293,10 +291,10 @@ fun AppIcon(
             .border(
                 width = borderWidth,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = roundedShape,
+                shape = shape,
             )
             .padding(backgroundPadding)
-            .clip(roundedShape),
+            .clip(shape),
     ) {
         when (val background = appIcon.iconBackground) {
             is IconBackground.Color -> {
@@ -392,7 +390,7 @@ private fun AppIconSelectionPreview() {
 @FlexibleWindowPreview
 @Composable
 private fun AppIconOptionPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         AppIconOption(AppIcon.AppDefault, false) {}
@@ -402,7 +400,7 @@ private fun AppIconOptionPreview(
 @FlexibleWindowPreview
 @Composable
 private fun AppIconOptionWithSubtitlePreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         AppIconOption(AppIcon.AppMomo, false) {}
@@ -412,7 +410,7 @@ private fun AppIconOptionWithSubtitlePreview(
 @FlexibleWindowPreview
 @Composable
 private fun RestartWarningDialogPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         RestartWarningDialog(
@@ -427,7 +425,7 @@ private fun RestartWarningDialogPreview(
 @FlexibleWindowPreview
 @Composable
 private fun ShortcutRemovalWarningDialogPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         RestartWarningDialog(

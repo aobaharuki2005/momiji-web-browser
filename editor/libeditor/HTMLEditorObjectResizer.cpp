@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1163,8 +1162,9 @@ nsresult HTMLEditor::UpdateResizerOrGrabberPositionTo(
     int32_t yThreshold =
         LookAndFeel::GetInt(LookAndFeel::IntID::DragThresholdY, 1);
 
-    if (DeprecatedAbs(aClientPoint.x - mOriginalX) * 2 >= xThreshold ||
-        DeprecatedAbs(aClientPoint.y - mOriginalY) * 2 >= yThreshold) {
+    MOZ_ASSERT(xThreshold >= 0 && yThreshold >= 0);
+    if (Abs(aClientPoint.x - mOriginalX) * 2 >= (uint32_t)xThreshold ||
+        Abs(aClientPoint.y - mOriginalY) * 2 >= (uint32_t)yThreshold) {
       mGrabberClicked = false;
       DebugOnly<nsresult> rvIgnored = StartMoving();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),

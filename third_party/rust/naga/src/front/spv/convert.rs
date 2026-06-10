@@ -136,18 +136,19 @@ pub(super) fn map_builtin(word: spirv::Word, invariant: bool) -> Result<crate::B
         // vertex
         Some(Bi::BaseInstance) => crate::BuiltIn::BaseInstance,
         Some(Bi::BaseVertex) => crate::BuiltIn::BaseVertex,
-        Some(Bi::ClipDistance) => crate::BuiltIn::ClipDistance,
+        Some(Bi::ClipDistance) => crate::BuiltIn::ClipDistances,
         Some(Bi::CullDistance) => crate::BuiltIn::CullDistance,
         Some(Bi::InstanceIndex) => crate::BuiltIn::InstanceIndex,
         Some(Bi::PointSize) => crate::BuiltIn::PointSize,
         Some(Bi::VertexIndex) => crate::BuiltIn::VertexIndex,
-        Some(Bi::DrawIndex) => crate::BuiltIn::DrawID,
+        Some(Bi::DrawIndex) => crate::BuiltIn::DrawIndex,
         // fragment
         Some(Bi::FragDepth) => crate::BuiltIn::FragDepth,
         Some(Bi::PointCoord) => crate::BuiltIn::PointCoord,
         Some(Bi::FrontFacing) => crate::BuiltIn::FrontFacing,
         Some(Bi::PrimitiveId) => crate::BuiltIn::PrimitiveIndex,
-        Some(Bi::BaryCoordKHR) => crate::BuiltIn::Barycentric,
+        Some(Bi::BaryCoordKHR) => crate::BuiltIn::Barycentric { perspective: true },
+        Some(Bi::BaryCoordNoPerspKHR) => crate::BuiltIn::Barycentric { perspective: false },
         Some(Bi::SampleId) => crate::BuiltIn::SampleIndex,
         Some(Bi::SampleMask) => crate::BuiltIn::SampleMask,
         // compute

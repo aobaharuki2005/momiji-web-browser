@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -534,18 +533,21 @@ nsresult AddonManagerStartup::ReadStartupData(
 nsresult AddonManagerStartup::EncodeBlob(JS::Handle<JS::Value> value,
                                          JSContext* cx,
                                          JS::MutableHandle<JS::Value> result) {
-  StructuredCloneData holder;
+  auto holder = MakeRefPtr<StructuredCloneData>(
+      JS::StructuredCloneScope::DifferentProcess,
+      dom::StructuredCloneHolder::TransferringNotSupported);
 
   ErrorResult rv;
-  holder.Write(cx, value, rv);
+  holder->Write(cx, value, rv);
+  rv.WouldReportJSException();
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
   nsAutoCString scData;
 
-  bool ok =
-      holder.Data().ForEachDataChunk([&](const char* aData, size_t aSize) {
+  bool ok = holder->BufferData().ForEachDataChunk(
+      [&](const char* aData, size_t aSize) {
         return scData.Append(nsDependentCSubstring(aData, aSize),
                              mozilla::fallible);
       });
@@ -568,8 +570,6 @@ nsresult AddonManagerStartup::DecodeBlob(JS::Handle<JS::Value> value,
                      JS::ArrayBufferHasData(&value.toObject()),
                  NS_ERROR_INVALID_ARG);
 
-  StructuredCloneData holder;
-
   nsCString data;
   {
     JS::AutoCheckCannotGC nogc;
@@ -586,11 +586,20 @@ nsresult AddonManagerStartup::DecodeBlob(JS::Handle<JS::Value> value,
     data = MOZ_TRY(DecodeLZ4(lz4, STRUCTURED_CLONE_MAGIC));
   }
 
-  bool ok = holder.CopyExternalData(data.get(), data.Length());
+  auto holder = MakeRefPtr<StructuredCloneData>(
+      JS::StructuredCloneScope::DifferentProcess,
+      dom::StructuredCloneHolder::TransferringNotSupported);
+  // FIXME: This currently assumes the data on disk was serialized with the same
+  // JS_STRUCTURED_CLONE_VERSION as the current binary. This should probably be
+  // improved to avoid migration issues if JS_STRUCTURED_CLONE_VERSION is bumped
+  // in the future.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=2014441
+  bool ok = holder->CopyExternalData(data.get(), data.Length(),
+                                     JS_STRUCTURED_CLONE_VERSION);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
   ErrorResult rv;
-  holder.Read(cx, result, rv);
+  holder->Read(cx, result, rv);
   return rv.StealNSResult();
 }
 

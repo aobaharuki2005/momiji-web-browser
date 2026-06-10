@@ -31,7 +31,8 @@ MULTI_REVISION_ROOT = f"{API_ROOT}/namespaces"
 MULTI_TASK_ROOT = f"{API_ROOT}/tasks"
 ON_TRY = "MOZ_AUTOMATION" in os.environ
 DOWNLOAD_TIMEOUT = 30
-METRICS_MATCHER = re.compile(r"(perfMetrics.*)")
+PERF_METRICS_MATCHER = re.compile(r"(perfMetrics.*)")
+EVAL_DATA_MATCHER = re.compile(r"(evalDataPayload.*)")
 PRETTY_APP_NAMES = {
     "org.mozilla.fenix": "fenix",
     "org.mozilla.firefox": "fenix",
@@ -55,6 +56,17 @@ class NoPerfMetricsError(Exception):
         super().__init__(
             f"No perftest results were found in the {flavor} test. Results must be "
             'reported using:\n info("perfMetrics", { metricName: metricValue });'
+        )
+
+
+class NoEvalDataError(Exception):
+    """Raised when evalDataPayload was not found, or were not output
+    during a test run."""
+
+    def __init__(self, flavor):
+        super().__init__(
+            f"No eval data was found in the {flavor} test. Results must be "
+            'reported using:\n info("evalDataPayload", { evalData: evalValue });'
         )
 
 
@@ -195,10 +207,10 @@ class MachLogger:
         self._logger(logging.ERROR, name, kwargs, msg)
 
     def group_start(self, msg=None, name="mozperftest", **kwargs):
-        self._logger(logging.INFO, name, kwargs, msg)
+        self._logger(logging.INFO, name, kwargs, msg or "")
 
     def group_end(self, msg=None, name="mozperftest", **kwargs):
-        self._logger(logging.INFO, name, kwargs, msg)
+        self._logger(logging.INFO, name, kwargs, msg or "")
 
 
 def install_package(virtualenv_manager, package, ignore_failure=False):
@@ -359,6 +371,8 @@ def build_test_list(tests):
         elif resolved_test.is_dir():
             for file in resolved_test.rglob("perftest_*.js"):
                 res.append(str(file))
+            for file in resolved_test.rglob("eval_*.js"):
+                res.append(str(file))
         else:
             raise FileNotFoundError(str(resolved_test))
     res.sort()
@@ -454,7 +468,7 @@ def strtobool(val):
     elif val in ("n", "no", "f", "false", "off", "0"):
         return 0
     else:
-        raise ValueError("invalid truth value %r" % (val,))
+        raise ValueError(f"invalid truth value {val!r}")
 
 
 @contextlib.contextmanager
@@ -598,7 +612,7 @@ _WPT_URL = "{0}/secrets/v1/secret/project/perftest/gecko/level-{1}/perftest-logi
 _DEFAULT_SERVER = "https://firefox-ci-tc.services.mozilla.com"
 
 
-@functools.lru_cache
+@functools.cache
 def get_tc_secret(wpt=False):
     """Returns the Taskcluster secret.
 
@@ -668,14 +682,18 @@ def archive_folder(folder_to_archive, output_path, archive_name=None):
     return full_archive_path
 
 
-def archive_files(files, output_dir, archive_name, prefix=""):
+def archive_files(
+    files, output_dir, archive_name, prefix="", sort_key=None, base_dir=None
+):
     """Archives individual files into a zip file, with optional append mode.
 
     Args:
         files: List of Path objects to archive
         output_dir: Path object - directory where the archive should be created
         archive_name: Name for the archive
-        prefix: Optional prefix for archived filenames
+        prefix: Optional subdirectory within the archive for files (ignored if base_dir is set)
+        sort_key: Optional sorting key function for ordering files
+        base_dir: Optional base directory to compute relative paths from
 
     Returns:
         Path to the archive if created/updated, None otherwise
@@ -685,14 +703,16 @@ def archive_files(files, output_dir, archive_name, prefix=""):
 
     mode = "a" if archive_path.exists() else "w"
 
-    with zipfile.ZipFile(archive_path, mode, compression=zipfile.ZIP_DEFLATED) as zf:
-        for file_path in files:
-            base_name = file_path.name
+    sorted_files = sorted(files, key=sort_key) if sort_key else files
 
-            if prefix:
-                archive_name = f"{prefix}-{base_name}"
+    with zipfile.ZipFile(archive_path, mode, compression=zipfile.ZIP_DEFLATED) as zf:
+        for file_path in sorted_files:
+            if base_dir:
+                archive_name = str(file_path.relative_to(base_dir))
+            elif prefix:
+                archive_name = f"{prefix}/{file_path.name}"
             else:
-                archive_name = base_name
+                archive_name = file_path.name
 
             print(f"Adding {archive_name} to archive")
             zf.write(file_path, arcname=archive_name)
@@ -709,7 +729,10 @@ def extract_tgz_and_find_files(output_dir, tgz_name, patterns):
         patterns: List of patterns for file extensions (e.g., ["*.data", "*.json.gz"])
 
     Returns:
-        Tuple of (files, work_dir) where work_dir is the temp directory to clean up (or None)
+        Tuple of (files, search_dir, work_dir) where:
+            - files: list of found file paths
+            - search_dir: base directory where files were found (for relative path computation)
+            - work_dir: temp directory to clean up (or None if not on CI)
     """
     work_dir = None
     search_dir = output_dir
@@ -728,4 +751,40 @@ def extract_tgz_and_find_files(output_dir, tgz_name, patterns):
 
     valid_files = [f for f in found_files if f.is_file()]
 
-    return (valid_files, work_dir)
+    return (valid_files, search_dir, work_dir)
+
+
+def get_adb_device_or_emu(verbose=False):
+    from mozdevice import ADBDeviceFactory, ADBError
+
+    try:
+        return ADBDeviceFactory(verbose=verbose)
+    except Exception as e:
+        if "No ready devices found." not in str(e):
+            raise e
+        from mozbuild.base import MozbuildObject
+        from mozrunner.devices.android_device import AndroidEmulator
+
+        try:
+            build_obj = MozbuildObject.from_environment()
+            substs = build_obj.substs
+        except Exception:
+            substs = None
+        emulator = AndroidEmulator("*", substs=substs, verbose=True)
+        if emulator.is_available():
+            try:
+                response = input(
+                    "No Android devices connected. Start an emulator? (Y/n) "
+                ).strip()
+            except EOFError:
+                raise EOFError("Could not get input on non-interective output")
+            if response.lower().startswith("y") or response == "":
+                if not emulator.check_avd():
+                    print("Android AVD not found, please run |mach bootstrap|")
+                    raise ADBError("No ready devices found.")
+                print(f"Starting emulator running {emulator.get_avd_description()}...")
+                emulator.start()
+                emulator.wait_for_start()
+                return ADBDeviceFactory(verbose=True)
+            else:
+                raise ADBError("No emulator started and android device not found")

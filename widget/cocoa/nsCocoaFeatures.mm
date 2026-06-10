@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -11,11 +10,15 @@
 // The formula for the version integer is (major << 16) + (minor << 8) + bugfix.
 
 #define MACOS_VERSION_MASK 0x00FFFFFF
-#define MACOS_MAJOR_VERSION_MASK 0x00FFFFFF
-#define MACOS_MINOR_VERSION_MASK 0x00FFFFFF
-#define MACOS_BUGFIX_VERSION_MASK 0x00FFFFFF
-#define MACOS_VERSION_10_0_HEX 0x000A0000
-#define MACOS_VERSION_10_9_HEX 0x000A0900
+#define MACOS_MAJOR_VERSION_MASK 0x00FF0000
+#define MACOS_MINOR_VERSION_MASK 0x0000FF00
+#define MACOS_BUGFIX_VERSION_MASK 0x000000FF
+#define MACOS_VERSION_10_0_HEX  0x000A0000
+#define MACOS_VERSION_10_5_HEX  0x000A0500
+#define MACOS_VERSION_10_6_HEX  0x000A0600
+#define MACOS_VERSION_10_7_HEX  0x000A0700
+#define MACOS_VERSION_10_8_HEX  0x000A0800
+#define MACOS_VERSION_10_9_HEX  0x000A0900
 #define MACOS_VERSION_10_10_HEX 0x000A0A00
 #define MACOS_VERSION_10_11_HEX 0x000A0B00
 #define MACOS_VERSION_10_12_HEX 0x000A0C00
@@ -64,7 +67,7 @@ int32_t nsCocoaFeatures::ExtractBugFixVersion(int32_t aVersion) {
 }
 
 static int intAtStringIndex(NSArray* array, int index) {
-  return [(NSString*)[array objectAtIndex:index] integerValue];
+  return [(NSString*)[array objectAtIndex:index] intValue];
 }
 
 void nsCocoaFeatures::GetSystemVersion(int& major, int& minor, int& bugfix) {
@@ -98,12 +101,12 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor,
   int32_t macOSVersion;
   if (aMajor < 10) {
     aMajor = 10;
-    NS_ERROR("Couldn't determine macOS version, assuming 10.9");
-    macOSVersion = MACOS_VERSION_10_9_HEX;
-  } else if (aMajor == 10 && aMinor < 9) {
-    aMinor = 9;
-    NS_ERROR("macOS version too old, assuming 10.9");
-    macOSVersion = MACOS_VERSION_10_9_HEX;
+    NS_ERROR("Couldn't determine macOS version, assuming 10.6");
+    macOSVersion = MACOS_VERSION_10_6_HEX;
+  } else if (aMajor == 10 && aMinor < 6) {
+    aMinor = 6;
+    NS_ERROR("macOS version too old, assuming 10.6");
+    macOSVersion = MACOS_VERSION_10_6_HEX;
   } else {
     MOZ_ASSERT(aMajor >= 10);
     MOZ_ASSERT(aMajor < 256);
@@ -161,6 +164,54 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor,
   return ExtractBugFixVersion(macOSVersion());
 }
 
+/* static */ bool nsCocoaFeatures::OnLionOrLater()
+{
+    return (macOSVersion() >= MACOS_VERSION_10_7_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnMountainLionOrLater()
+{
+    return (macOSVersion() >= MACOS_VERSION_10_8_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnMavericksOrLater()
+{
+    return (macOSVersion() >= MACOS_VERSION_10_9_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnYosemiteOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_10_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnElCapitanOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_11_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnSierraExactly() {
+    return (macOSVersion() >= MACOS_VERSION_10_12_HEX) && (macOSVersion() < MACOS_VERSION_10_13_HEX);
+}
+
+/* Version of OnSierraExactly as global function callable from cairo & skia */
+bool Gecko_OnSierraExactly() { return nsCocoaFeatures::OnSierraExactly(); }
+
+/* static */ bool nsCocoaFeatures::OnSierraOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_12_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnHighSierraOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_13_HEX);
+}
+
+bool Gecko_OnSierraOrLater() { return nsCocoaFeatures::OnSierraOrLater(); }
+
+/* static */ bool nsCocoaFeatures::OnMojaveOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_14_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnCatalinaOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_15_HEX);
+}
+
 /* static */ bool nsCocoaFeatures::OnBigSurOrLater() {
   // Account for the version being 10.16 or 11.0 on Big Sur.
   // The version is reported as 10.16 if SYSTEM_VERSION_COMPAT is set to 1,
@@ -172,8 +223,7 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor,
   // launched from the command line, see bug 1727624. (This only applies to
   // the Intel build - the arm64 build is linked against a Big Sur SDK and
   // always sees the correct version.)
-  return ((macOSVersion() >= MACOS_VERSION_10_16_HEX) ||
-          (macOSVersion() >= MACOS_VERSION_11_0_HEX));
+  return (macOSVersion() >= MACOS_VERSION_10_16_HEX);
 }
 
 /* static */ bool nsCocoaFeatures::OnMontereyOrLater() {
@@ -216,7 +266,7 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor,
 /* static */ bool nsCocoaFeatures::ProcessIsRosettaTranslated() {
   int ret = 0;
   size_t size = sizeof(ret);
-  if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
+  if (sysctlbyname("sysctl.proc_translated", &ret, &size, nullptr, 0) == -1) {
     if (errno != ENOENT) {
       fprintf(stderr, "Failed to check for translation environment\n");
     }

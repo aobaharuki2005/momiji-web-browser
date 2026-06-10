@@ -102,7 +102,7 @@ tab-context-close-multiple-tabs =
     .accesskey = M
 tab-context-close-duplicate-tabs =
     .label = Close Duplicate Tabs
-    .accesskey = u
+    .accesskey = x
 tab-context-share-url =
     .label = Share
     .accesskey = h
@@ -140,3 +140,16 @@ tab-context-send-to-device =
            *[other] Send { $tabCount } Tabs to Device
         }
     .accesskey = n
+# The following string intentionally omits the word "Tab" from the singular and includes it in the plural.
+tab-context-send-to-mobile =
+    .label =
+        { $tabCount ->
+            [1] Send to Mobile
+           *[other] Send { $tabCount } Tabs to Mobile
+        }
+    .accesskey = n
+
+# Verb: share a collection of selected tabs as a link
+tab-context-share-selected-tabs =
+    .label = Create Shareable Link
+    .accesskey = a

@@ -1,4 +1,3 @@
-/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -61,7 +60,7 @@ NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
   progressFillRect.size.width *= mFractionValue;
   [NSGraphicsContext saveGraphicsState];
   [NSBezierPath clipRect:progressFillRect];
-  [[NSColor controlAccentColor] setFill];
+  [ControlAccentColor() setFill];
   [path fill];
   [NSGraphicsContext restoreGraphicsState];
 
@@ -233,6 +232,7 @@ void nsMacDockSupport::BuildDockTile() {
     imageView.imageScaling = NSImageScaleAxesIndependently;
     imageView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     [mDockTileWrapperView addSubview:imageView];
+    [imageView release];
 
     mDockBadgeView =
         [[NSImageView alloc] initWithFrame:NSMakeRect(19.5, 19.5, 12, 12)];
@@ -324,17 +324,17 @@ NSString* GetPathForApp(NSDictionary* aPersistantApp) {
   if (![aPersistantApp isKindOfClass:[NSDictionary class]]) {
     return nil;
   }
-  NSDictionary* tileData = aPersistantApp[kDockTileDataKey];
+  NSDictionary* tileData = [aPersistantApp objectForKey:kDockTileDataKey];
   if (![tileData isKindOfClass:[NSDictionary class]]) {
     return nil;
   }
-  NSDictionary* fileData = tileData[kDockFileDataKey];
+  NSDictionary* fileData = [tileData objectForKey:kDockFileDataKey];
   if (![fileData isKindOfClass:[NSDictionary class]]) {
     // Some special tiles may not have DockFileData but we can ignore those.
     return nil;
   }
   NSURL* url = CFBridgingRelease(
-      _CFURLCreateFromPropertyListRepresentation(NULL, fileData));
+      _CFURLCreateFromPropertyListRepresentation(nullptr, fileData));
   if (!url) {
     return nil;
   }
@@ -527,25 +527,42 @@ nsresult nsMacDockSupport::LaunchAppBundle(
     [arguments addObject:mozilla::XPCOMStringToNSString(arg)];
   }
 
-  NSWorkspaceOpenConfiguration* config =
-      [NSWorkspaceOpenConfiguration configuration];
-  [config setArguments:arguments];
-  [config setCreatesNewApplicationInstance:YES];
-  [config setEnvironment:[[NSProcessInfo processInfo] environment]];
-
-  if (aLaunchOptions) {
-    bool val = false;
-    if (NS_SUCCEEDED(aLaunchOptions->GetAddsToRecentItems(&val))) {
-      [config setAddsToRecentItems:val];
+  if (@available(macOS 10.15, *)) {
+    NSWorkspaceOpenConfiguration* config =
+        [NSWorkspaceOpenConfiguration configuration];
+    [config setArguments:arguments];
+    [config setCreatesNewApplicationInstance:YES];
+    [config setEnvironment:[[NSProcessInfo processInfo] environment]];
+    if (aLaunchOptions) {
+      bool val = false;
+      if (NS_SUCCEEDED(aLaunchOptions->GetAddsToRecentItems(&val))) {
+        [config setAddsToRecentItems:val];
+      }
     }
+
+    [[NSWorkspace sharedWorkspace]
+        openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
+               configuration:config
+           completionHandler:^(NSRunningApplication* aChild, NSError* aError){
+           }];
+  } else {
+    NSError *error=nil;
+    unsigned options = NSWorkspaceLaunchAsync | NSWorkspaceLaunchNewInstance;
+    if (aLaunchOptions) {
+      bool val = false;
+      if (NS_SUCCEEDED(aLaunchOptions->GetAddsToRecentItems(&val))) {
+         if (!val) { //only add to the options line if we DON'T WANT IT TO SHOW in recent items 
+           options |= NSWorkspaceLaunchWithoutAddingToRecents;
+          }
+      }
+    }
+    [[NSWorkspace sharedWorkspace] 
+        launchApplicationAtURL:[NSBundle mainBundle].bundleURL
+        options:options
+        configuration:@{NSWorkspaceLaunchConfigurationArguments:arguments, 
+                        NSWorkspaceLaunchConfigurationEnvironment:[[NSProcessInfo processInfo] environment]}
+        error:&error];
   }
-
-  [[NSWorkspace sharedWorkspace]
-      openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
-             configuration:config
-         completionHandler:^(NSRunningApplication* aChild, NSError* aError){
-         }];
-
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);

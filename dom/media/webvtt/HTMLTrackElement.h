@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +5,6 @@
 #ifndef mozilla_dom_HTMLTrackElement_h
 #define mozilla_dom_HTMLTrackElement_h
 
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/TextTrack.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericHTMLElement.h"
@@ -20,6 +17,7 @@ namespace mozilla::dom {
 class WebVTTListener;
 class WindowDestroyObserver;
 enum class TextTrackReadyState : uint8_t;
+class HTMLMediaElement;
 
 class HTMLTrackElement final : public nsGenericHTMLElement {
  public:

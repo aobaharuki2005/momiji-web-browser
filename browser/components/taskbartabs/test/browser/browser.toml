@@ -2,6 +2,7 @@
 support-files = ["head.js"]
 run-if = [
   "os == 'win'",
+  "os == 'linux'",
 ]
 prefs = [
   "browser.taskbarTabs.enabled=true"
@@ -13,14 +14,17 @@ prefs = [
 
 ["browser_taskbarTabs_content.js"]
 
+["browser_taskbarTabs_icons.js"]
+support-files = [
+  "../../../../../dom/manifest/test/red-50.png",
+  "../../../../../dom/manifest/test/blue-150.png",
+]
+
 ["browser_taskbarTabs_manifest.js"]
 
 ["browser_taskbarTabs_nimbus.js"]
 
 ["browser_taskbarTabs_pageAction.js"]
-skip-if = [
-  "msix", # Bug 1984762 - Web Apps page action has been disabled until MSIX supports secondary tile pinning.
-]
 
 ["browser_taskbarTabs_telemetry.js"]
 
@@ -29,5 +33,8 @@ skip-if = [
 ["browser_taskbarTabs_uriTest.js"]
 
 ["browser_taskbarTabs_windowManager.js"]
+support-files = [
+  "../../../places/tests/browser/favicon-normal16.png",
+]
 
 ["browser_taskbarTabs_windowTracker.js"]

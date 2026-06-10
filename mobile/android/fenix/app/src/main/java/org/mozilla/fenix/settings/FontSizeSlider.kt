@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -40,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.PreviewThemeProvider
 import org.mozilla.fenix.theme.Theme
-import org.mozilla.fenix.theme.ThemeProvider
 import kotlin.math.roundToInt
 
 private const val HALF_ALPHA = 0.5F
@@ -120,7 +119,7 @@ private fun SampleText(fontSize: Float) {
             .wrapContentSize()
             .background(
                 color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = RoundedCornerShape(28.dp),
+                shape = MaterialTheme.shapes.extraLarge,
             )
             .padding(16.dp),
     ) {
@@ -231,7 +230,7 @@ private fun Track(fraction: Float, isEnabled: Boolean) {
             .height(2.dp)
             .background(
                 MaterialTheme.colorScheme.surfaceContainerHighest,
-                RoundedCornerShape(12.dp),
+                MaterialTheme.shapes.medium,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -250,7 +249,7 @@ private fun FilledTrack(fraction: Float, isEnabled: Boolean) {
             .height(2.dp)
             .background(
                 color = color,
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.medium,
             ),
     ) {}
 }
@@ -258,7 +257,7 @@ private fun FilledTrack(fraction: Float, isEnabled: Boolean) {
 @Preview
 @Composable
 private fun FontSizePreferencePreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         FontSizePreference(
@@ -273,7 +272,7 @@ private fun FontSizePreferencePreview(
 @Preview
 @Composable
 private fun FontSizePreferenceDisabledPreview(
-    @PreviewParameter(ThemeProvider::class) theme: Theme,
+    @PreviewParameter(PreviewThemeProvider::class) theme: Theme,
 ) {
     FirefoxTheme(theme) {
         FontSizePreference(

@@ -94,6 +94,8 @@ support-files = [
 
 ["browser_fixed_ABA_partitionKey.js"]
 
+["browser_flushOnQuery.js"]
+
 ["browser_foreignWorker_eventSource.js"]
 support-files= [
   "eventsource_worker.js",
@@ -116,8 +118,6 @@ support-files= [
 
 ["browser_nimbus_etp_features.js"]
 
-["browser_nimbus_thirdPartyTrackerCookieBlocking.js"]
-
 ["browser_noStorageAccessAutoGrant_thirdPartyTracker.js"]
 
 ["browser_onBeforeRequestNotificationForTrackingResources.js"]
@@ -131,6 +131,10 @@ support-files= [
 ]
 
 ["browser_partitionedABA.js"]
+
+["browser_partitionedABBredirectToABAServiceWorkers.js"]
+
+["browser_partitionedABOpen.js"]
 
 ["browser_partitionedABnavigatestToAA.js"]
 
@@ -181,6 +185,8 @@ support-files = [
 
 ["browser_partitionkey_bloburl.js"]
 
+["browser_partitionkey_mediasourceurl.js"]
+
 ["browser_permissionInNormalWindows.js"]
 
 ["browser_permissionInPrivateWindows.js"]
@@ -194,6 +200,8 @@ skip-if = [
 support-files = ["referrer.sjs"]
 
 ["browser_sameSiteTrackerBlocking.js"]
+
+["browser_scopedTrackingProtection.js"]
 
 ["browser_script.js"]
 support-files = ["tracker.js"]
@@ -243,6 +251,9 @@ skip-if = [
 ["browser_staticPartition_network.js"]
 
 ["browser_staticPartition_saveAs.js"]
+skip-if = [
+  "os == 'win' && os_version == '11.26200' && asan", # Bug 2019745
+]
 support-files = [
   "file_saveAsImage.sjs",
   "file_saveAsVideo.sjs",
@@ -301,37 +312,11 @@ support-files = [
 
 ["browser_storageAccessWithHeuristics.js"]
 
-["browser_storageAccess_TopLevel_Arguments.js"]
-
-["browser_storageAccess_TopLevel_CookieBehavior.js"]
-
-["browser_storageAccess_TopLevel_CookiePermission.js"]
-
-["browser_storageAccess_TopLevel_CrossOriginSameSite.js"]
-
-["browser_storageAccess_TopLevel_Doorhanger.js"]
-
-["browser_storageAccess_TopLevel_Embed.js"]
-
-["browser_storageAccess_TopLevel_Enable.js"]
-
-["browser_storageAccess_TopLevel_RequireIntermediatePermission.js"]
-
-["browser_storageAccess_TopLevel_StorageAccessPermission.js"]
-
-["browser_storageAccess_TopLevel_UserActivation.js"]
-skip-if = [
-  "debug", # Bug 1700551
-]
-
 ["browser_storageAccess_cookies_on_grant.js"]
 
 ["browser_storageAccess_userActivation.js"]
 
 ["browser_subResources.js"]
-support-files = ["subResources.sjs"]
-
-["browser_subResourcesPartitioned.js"]
 support-files = ["subResources.sjs"]
 
 ["browser_thirdPartyChecks_sandboxed_context.js"]

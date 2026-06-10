@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +9,6 @@
 #include "StorageDBThread.h"
 #include "StorageIPC.h"
 #include "StorageUtils.h"
-#include "mozilla/glean/DomStorageMetrics.h"
 #include "nsDOMString.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -172,7 +169,7 @@ inline bool LocalStorageCache::Persist(const LocalStorage* aStorage) const {
                          !aStorage->IsPrivateBrowsingOrLess());
 }
 
-const nsCString LocalStorageCache::Origin() const {
+nsCString LocalStorageCache::Origin() const {
   return LocalStorageManager::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
 }
 
@@ -235,11 +232,6 @@ void LocalStorageCache::WaitForPreload() {
   // Telemetry of rates of pending preloads
   if (!mPreloadTelemetryRecorded) {
     mPreloadTelemetryRecorded = true;
-    glean::localdomstorage::preload_pending_on_first_access
-        .EnumGet(static_cast<
-                 glean::localdomstorage::PreloadPendingOnFirstAccessLabel>(
-            !loaded))
-        .Add();
   }
 
   if (loaded) {

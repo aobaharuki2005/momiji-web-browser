@@ -20,7 +20,6 @@ import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -41,6 +40,7 @@ import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class IntentReceiverActivityTest {
@@ -301,6 +301,7 @@ class IntentReceiverActivityTest {
     private fun attachMocks(activity: Activity) {
         every { activity.settings() } returns settings
         every { activity.components.analytics } returns mockk(relaxed = true)
+        every { activity.components.core } returns mockk(relaxed = true)
         every { activity.components.intentProcessors } returns intentProcessors
         every { activity.components.strictMode } returns TestStrictModeManager()
     }

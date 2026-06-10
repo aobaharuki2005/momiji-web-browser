@@ -14,10 +14,10 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <utility>
 #include <vector>
 
-#include "api/array_view.h"
 #include "api/audio/audio_frame.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
@@ -56,7 +56,6 @@ namespace voe {
 namespace {
 
 using ::testing::Eq;
-using ::testing::Invoke;
 using ::testing::IsTrue;
 using ::testing::NiceMock;
 using ::testing::Return;
@@ -156,7 +155,7 @@ TEST_F(ChannelSendTest, IncreaseRtpTimestampByPauseDuration) {
   channel_->StartSend();
   uint32_t timestamp;
   int sent_packets = 0;
-  auto send_rtp = [&](ArrayView<const uint8_t> data,
+  auto send_rtp = [&](std::span<const uint8_t> data,
                       const PacketOptions& /* options */) {
     ++sent_packets;
     RtpPacketReceived packet;
@@ -164,7 +163,7 @@ TEST_F(ChannelSendTest, IncreaseRtpTimestampByPauseDuration) {
     timestamp = packet.Timestamp();
     return true;
   };
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(send_rtp));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(send_rtp);
   ProcessNextFrame();
   ProcessNextFrame();
   EXPECT_EQ(sent_packets, 1);
@@ -191,7 +190,7 @@ TEST_F(ChannelSendTest, FrameTransformerGetsCorrectTimestamp) {
   EXPECT_CALL(*mock_frame_transformer, UnregisterTransformedFrameCallback);
 
   std::optional<uint32_t> sent_timestamp;
-  auto send_rtp = [&](ArrayView<const uint8_t> data,
+  auto send_rtp = [&](std::span<const uint8_t> data,
                       const PacketOptions& /* options */) {
     RtpPacketReceived packet;
     packet.Parse(data);
@@ -200,7 +199,7 @@ TEST_F(ChannelSendTest, FrameTransformerGetsCorrectTimestamp) {
     }
     return true;
   };
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(send_rtp));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(send_rtp);
 
   channel_->StartSend();
   int64_t transformable_frame_timestamp = -1;
@@ -240,7 +239,7 @@ TEST_F(ChannelSendTest, AudioLevelsAttachedToCorrectTransformedFrame) {
   EXPECT_CALL(*mock_frame_transformer, UnregisterTransformedFrameCallback);
 
   std::vector<uint8_t> sent_audio_levels;
-  auto send_rtp = [&](ArrayView<const uint8_t> data,
+  auto send_rtp = [&](std::span<const uint8_t> data,
                       const PacketOptions& /* options */) {
     RtpPacketReceived packet(&extension_manager);
     packet.Parse(data);
@@ -249,7 +248,7 @@ TEST_F(ChannelSendTest, AudioLevelsAttachedToCorrectTransformedFrame) {
     sent_audio_levels.push_back(header.extension.audio_level()->level());
     return true;
   };
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(send_rtp));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(send_rtp);
 
   channel_->StartSend();
   std::vector<std::unique_ptr<TransformableFrameInterface>> frames;
@@ -304,7 +303,7 @@ TEST_F(ChannelSendTest, AudioLevelsAttachedToInsertedTransformedFrame) {
   EXPECT_CALL(*mock_frame_transformer, UnregisterTransformedFrameCallback);
 
   std::optional<uint8_t> sent_audio_level;
-  auto send_rtp = [&](ArrayView<const uint8_t> data,
+  auto send_rtp = [&](std::span<const uint8_t> data,
                       const PacketOptions& /* options */) {
     RtpPacketReceived packet(&extension_manager);
     packet.Parse(data);
@@ -313,7 +312,7 @@ TEST_F(ChannelSendTest, AudioLevelsAttachedToInsertedTransformedFrame) {
     sent_audio_level = header.extension.audio_level()->level();
     return true;
   };
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(send_rtp));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(send_rtp);
 
   channel_->StartSend();
 
@@ -324,7 +323,7 @@ TEST_F(ChannelSendTest, AudioLevelsAttachedToInsertedTransformedFrame) {
   ON_CALL(*mock_frame, AudioLevel()).WillByDefault(Return(audio_level));
   uint8_t payload[10];
   ON_CALL(*mock_frame, GetData())
-      .WillByDefault(Return(ArrayView<uint8_t>(&payload[0], 10)));
+      .WillByDefault(Return(std::span<uint8_t>(&payload[0], 10)));
   EXPECT_THAT(WaitUntil([&] { return callback; }, IsTrue()), IsRtcOk());
   callback->OnTransformedFrame(std::move(mock_frame));
 
@@ -416,7 +415,7 @@ TEST_F(ChannelSendTest, ConfiguredCsrcsAreIncludedInRtpPackets) {
   channel_->SetCsrcs(expected_csrcs);
 
   std::vector<uint32_t> csrcs;
-  auto send_rtp = [&](ArrayView<const uint8_t> data,
+  auto send_rtp = [&](std::span<const uint8_t> data,
                       const PacketOptions& /* options */) {
     RtpPacketReceived packet;
     packet.Parse(data);
@@ -424,7 +423,7 @@ TEST_F(ChannelSendTest, ConfiguredCsrcsAreIncludedInRtpPackets) {
     return true;
   };
 
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(send_rtp));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(send_rtp);
   ProcessNextFrame();
   ProcessNextFrame();
 
@@ -486,7 +485,7 @@ TEST_F(ChannelSendTest, FrameTransformerTakesPrecedenceOverSetCsrcs) {
   std::vector<uint32_t> csrcs_output_by_frame_transformer = {1, 2, 3};
   EXPECT_CALL(*mock_frame_transformer, Transform)
       .WillRepeatedly(
-          Invoke([&](std::unique_ptr<TransformableFrameInterface> frame) {
+          [&](std::unique_ptr<TransformableFrameInterface> frame) {
             auto audio_frame =
                 static_cast<TransformableAudioFrameInterface*>(frame.get());
             csrcs_provided_to_frame_transformer.assign(
@@ -494,14 +493,14 @@ TEST_F(ChannelSendTest, FrameTransformerTakesPrecedenceOverSetCsrcs) {
                 audio_frame->GetContributingSources().end());
             callback->OnTransformedFrame(CreateMockFrameWithCsrcs(
                 audio_frame, csrcs_output_by_frame_transformer));
-          }));
+          });
 
   std::vector<uint32_t> set_csrcs = {4, 5, 6};
   channel_->SetCsrcs(set_csrcs);
   channel_->StartSend();
 
   std::vector<uint32_t> sent_csrcs;
-  auto send_rtp = [&](ArrayView<const uint8_t> data,
+  auto send_rtp = [&](std::span<const uint8_t> data,
                       const PacketOptions& /* options */) {
     RtpPacketReceived packet;
     packet.Parse(data);
@@ -509,7 +508,7 @@ TEST_F(ChannelSendTest, FrameTransformerTakesPrecedenceOverSetCsrcs) {
     return true;
   };
 
-  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(Invoke(send_rtp));
+  EXPECT_CALL(transport_, SendRtp).WillRepeatedly(send_rtp);
   ProcessNextFrame();
   ProcessNextFrame();
 

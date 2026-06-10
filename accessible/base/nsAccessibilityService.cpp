@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,6 +29,7 @@
 #include "nsCRT.h"
 #include "nsEventShell.h"
 #include "nsGkAtoms.h"
+#include "nsIAccessibleAnnouncementEvent.h"
 #include "nsIFrameInlines.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTextFormatter.h"
@@ -60,6 +60,7 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeUtils.h"
 #include "mozilla/a11y/AccTypes.h"
+#include "mozilla/dom/ARIANotifyMixinBinding.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/EventTarget.h"
@@ -179,13 +180,11 @@ static bool MustBeGenericAccessible(nsIContent* aContent,
   }
   nsIFrame* frame = aContent->GetPrimaryFrame();
   MOZ_ASSERT(frame);
-  nsAutoCString overflow;
-  frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
   // If the frame has been transformed, and the content has any children, we
   // should create an Accessible so that we can account for the transform when
   // calculating the Accessible's bounds using the parent process cache.
   // Ditto for content which is position: fixed or sticky or has overflow
-  // styling (auto, scroll, hidden).
+  // styling (auto, scroll, hidden, or any multi-axis combination).
   // However, don't do this for XUL widgets, as this breaks XUL a11y code
   // expectations in some cases. XUL widgets are only used in the parent
   // process and can't be cached anyway.
@@ -194,8 +193,7 @@ static bool MustBeGenericAccessible(nsIContent* aContent,
           frame->IsStickyPositioned() ||
           (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
            nsLayoutUtils::IsReallyFixedPos(frame)) ||
-          overflow.Equals("auto"_ns) || overflow.Equals("scroll"_ns) ||
-          overflow.Equals("hidden"_ns));
+          frame->StyleDisplay()->IsScrollableOverflow());
 }
 
 /**
@@ -242,8 +240,7 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
 
     // If the given ID is referred by relation attribute then create an
     // Accessible for it.
-    nsAutoString id;
-    if (nsCoreUtils::GetID(aContent, id) && !id.IsEmpty()) {
+    if (nsAtom* id = aContent->GetID()) {
       return aDocument->IsDependentID(aContent->AsElement(), id);
     }
   }
@@ -261,13 +258,13 @@ bool nsAccessibilityService::ShouldCreateImgAccessible(
   }
 
   // If the element is not an img, not an embedded image via embed or object,
-  // and not a pseudo-element with CSS content alt text, then we should not
-  // create an accessible.
+  // and not a pseudo-element with non-empty CSS content alt text, then we
+  // should not create an accessible.
   if (!aElement->IsHTMLElement(nsGkAtoms::img) &&
       ((!aElement->IsHTMLElement(nsGkAtoms::embed) &&
         !aElement->IsHTMLElement(nsGkAtoms::object)) ||
        frame->AccessibleType() != AccType::eImageType) &&
-      !CssAltContent(aElement)) {
+      CssAltContent(aElement).IsEmpty()) {
     return false;
   }
 
@@ -318,7 +315,11 @@ static RefPtr<LocalAccessible> MaybeCreateSVGAccessible(
     // Shape elements: rect, circle, ellipse, line, path, polygon, and polyline.
     // 'use' and 'text' graphic elements require special support.
     if (MustSVGElementBeAccessible(aContent, aDocument)) {
-      return new EnumRoleAccessible<roles::GRAPHIC>(aContent, aDocument);
+      // Any accessible that could have TextLeafAccessible children must be a
+      // HyperTextAccessible to satisfy the invariant in
+      // GetTextAttributesLocalAcc.
+      return new EnumRoleHyperTextAccessible<roles::GRAPHIC>(aContent,
+                                                             aDocument);
     }
   } else if (aContent->IsSVGElement(nsGkAtoms::text)) {
     return new HyperTextAccessible(aContent->AsElement(), aDocument);
@@ -340,7 +341,7 @@ static RefPtr<LocalAccessible> MaybeCreateSVGAccessible(
 }
 
 /**
- * Used by XULMap.h to map both menupopup and popup elements
+ * Used by XULMap.inc to map both menupopup and popup elements
  */
 LocalAccessible* CreateMenupopupAccessible(Element* aElement,
                                            LocalAccessible* aContext) {
@@ -411,11 +412,11 @@ static int32_t sPlatformDisabledState = 0;
   {nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), {__VA_ARGS__}},
 
 static const MarkupMapInfo sHTMLMarkupMapList[] = {
-#include "HTMLMarkupMap.h"
+#include "HTMLMarkupMap.inc"
 };
 
 static const MarkupMapInfo sMathMLMarkupMapList[] = {
-#include "MathMLMarkupMap.h"
+#include "MathMLMarkupMap.inc"
 };
 
 #undef MARKUPMAP
@@ -430,7 +431,7 @@ static const MarkupMapInfo sMathMLMarkupMapList[] = {
       })
 
 static const XULMarkupMapInfo sXULMarkupMapList[] = {
-#include "XULMap.h"
+#include "XULMap.inc"
 };
 
 #undef XULMAP_TYPE
@@ -602,13 +603,14 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
   if (IPCAccessibilityActive()) {
     document->QueueCacheUpdate(accessible, CacheDomain::Bounds);
   }
-  if (accessible->IsTextLeaf() &&
+  MOZ_ASSERT(!aContent->IsText() || accessible->IsTextLeaf(),
+             "A DOM Text node should only ever have a TextLeafAccessible");
+  if (aContent->IsText() && accessible->IsTextLeaf() &&
       accessible->AsTextLeaf()->Text().EqualsLiteral(" ")) {
     // This space might be becoming invisible, even though it still has a frame.
     // In this case, the frame will have 0 width. Unfortunately, we can't check
     // the frame width here because layout isn't ready yet, so we need to defer
     // this until the refresh driver tick.
-    MOZ_ASSERT(aContent->IsText());
     document->UpdateText(aContent);
   }
 }
@@ -654,7 +656,7 @@ void nsAccessibilityService::NotifyOfResolutionChange(
   DocAccessible* document = aPresShell->GetDocAccessible();
   if (document && document->IPCDoc()) {
     AutoTArray<mozilla::a11y::CacheData, 1> data;
-    RefPtr<AccAttributes> fields = new AccAttributes();
+    auto fields = MakeRefPtr<AccAttributes>();
     fields->SetAttribute(CacheKey::Resolution, aResolution);
     data.AppendElement(mozilla::a11y::CacheData(0, fields));
     document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
@@ -666,7 +668,7 @@ void nsAccessibilityService::NotifyOfDevPixelRatioChange(
   DocAccessible* document = aPresShell->GetDocAccessible();
   if (document && document->IPCDoc()) {
     AutoTArray<mozilla::a11y::CacheData, 1> data;
-    RefPtr<AccAttributes> fields = new AccAttributes();
+    auto fields = MakeRefPtr<AccAttributes>();
     fields->SetAttribute(CacheKey::AppUnitsPerDevPixel, aAppUnitsPerDevPixel);
     data.AppendElement(mozilla::a11y::CacheData(0, fields));
     document->IPCDoc()->SendCache(CacheUpdateType::Update, data);
@@ -753,6 +755,26 @@ void nsAccessibilityService::NotifyAttrElementChanged(
   }
 }
 
+void nsAccessibilityService::AriaNotify(
+    nsINode* aNode, const nsAString& aAnnouncement,
+    const mozilla::dom::AriaNotificationOptions& aOptions) {
+  Document* doc = aNode->GetUncomposedDoc();
+  if (!doc) {
+    return;
+  }
+  DocAccessible* docAcc = GetDocAccessible(doc);
+  if (!docAcc) {
+    return;
+  }
+  LocalAccessible* acc = docAcc->GetAccessible(aNode);
+  if (acc) {
+    acc->Announce(aAnnouncement,
+                  aOptions.mPriority == dom::AriaNotifyPriority::High
+                      ? nsIAccessibleAnnouncementEvent::ASSERTIVE
+                      : nsIAccessibleAnnouncementEvent::POLITE);
+  }
+}
+
 LocalAccessible* nsAccessibilityService::GetRootDocumentAccessible(
     PresShell* aPresShell, bool aCanCreate) {
   PresShell* presShell = aPresShell;
@@ -784,8 +806,8 @@ void nsAccessibilityService::NotifyOfTabPanelVisibilityChange(
   }
 
   if (LocalAccessible* acc = document->GetAccessible(aPanel)) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(acc, states::OFFSCREEN, aNowVisible);
+    auto event =
+        MakeRefPtr<AccStateChangeEvent>(acc, states::OFFSCREEN, aNowVisible);
     document->FireDelayedEvent(event);
   }
 }
@@ -863,6 +885,19 @@ void nsAccessibilityService::TableLayoutGuessMaybeChanged(
   }
 }
 
+void nsAccessibilityService::ComboboxValueChanged(nsIContent* aSelect) {
+  DocAccessible* document =
+      GetDocAccessible(aSelect->OwnerDoc()->GetPresShell());
+  if (!document) {
+    return;
+  }
+  if (LocalAccessible* accessible = document->GetAccessible(aSelect);
+      accessible && accessible->IsCombobox()) {
+    document->FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE,
+                               accessible);
+  }
+}
+
 void nsAccessibilityService::ComboboxOptionMaybeChanged(
     PresShell* aPresShell, nsIContent* aMutatingNode) {
   DocAccessible* document = GetDocAccessible(aPresShell);
@@ -910,6 +945,18 @@ void nsAccessibilityService::RangeValueChanged(PresShell* aPresShell,
     LocalAccessible* accessible = document->GetAccessible(aContent);
     if (accessible) {
       document->FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                                 accessible);
+    }
+  }
+}
+
+void nsAccessibilityService::ColorValueChanged(PresShell* aPresShell,
+                                               nsIContent* aContent) {
+  DocAccessible* document = GetDocAccessible(aPresShell);
+  if (document) {
+    LocalAccessible* accessible = document->GetAccessible(aContent);
+    if (accessible) {
+      document->FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE,
                                  accessible);
     }
   }
@@ -974,7 +1021,7 @@ void nsAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString) {
     return;
 
   switch (aRole) {
-#include "RoleMap.h"
+#include "RoleMap.inc"
     default:
       aString.AssignLiteral("unknown");
       return;
@@ -999,7 +1046,7 @@ void nsAccessibilityService::GetStringStates(uint32_t aState,
 
 already_AddRefed<DOMStringList> nsAccessibilityService::GetStringStates(
     uint64_t aStates) const {
-  RefPtr<DOMStringList> stringStates = new DOMStringList();
+  auto stringStates = MakeRefPtr<DOMStringList>();
 
   if (aStates & states::UNAVAILABLE) {
     stringStates->Add(u"unavailable"_ns);
@@ -1191,7 +1238,7 @@ void nsAccessibilityService::GetStringRelationType(uint32_t aRelationType,
 
   RelationType relationType = static_cast<RelationType>(aRelationType);
   switch (relationType) {
-#include "RelationTypeMap.h"
+#include "RelationTypeMap.inc"
     default:
       aString.AssignLiteral("unknown");
       return;
@@ -1368,7 +1415,12 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
       return nullptr;
     }
-
+    if (cssAlt && cssAlt.IsEmpty()) {
+      if (aIsSubtreeHidden) {
+        *aIsSubtreeHidden = true;
+      }
+      return nullptr;
+    }
     newAcc = CreateAccessibleByFrameType(frame, content, aContext);
     MOZ_ASSERT(newAcc, "Accessible not created for text node!");
     document->BindToDocument(newAcc, nullptr);
@@ -1469,7 +1521,9 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
   }
 
   // XUL accessibles.
-  if (!newAcc && content->IsXULElement()) {
+  // We don't support XUL in remote docs, so if this isn't the top process,
+  // don't create XUL accessible for it.
+  if (!newAcc && content->IsXULElement() && !IPCAccessibilityActive()) {
     if (content->IsXULElement(nsGkAtoms::panel)) {
       // We filter here instead of in the XUL map because
       // if we filter there and return null, we still end up
@@ -1533,13 +1587,14 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       if (aIsSubtreeHidden) {
         *aIsSubtreeHidden = true;
       }
-    } else if (auto cssAlt = CssAltContent(content)) {
-      // This is a pseudo-element without children that has CSS alt text. This
-      // only happens when there is alt text with an empty content string; e.g.
-      // content: "" / "alt"
-      // In this case, we need to expose the alt text on the pseudo-element
-      // itself, since we don't have a child to use. We create a
-      // TextLeafAccessible with the pseudo-element as the backing DOM node.
+    } else if (auto cssAlt = CssAltContent(content);
+               cssAlt && !cssAlt.IsEmpty()) {
+      // This is a pseudo-element without children that has CSS alt text which
+      // isn't empty. This only happens when there is alt text with an empty
+      // content string; e.g. content: "" / "alt" In this case, we need to
+      // expose the alt text on the pseudo-element itself, since we don't have a
+      // child to use. We create a TextLeafAccessible with the pseudo-element as
+      // the backing DOM node.
       newAcc = new TextLeafAccessible(content, document);
       nsAutoString text;
       cssAlt.AppendToString(text);
@@ -1559,15 +1614,10 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // accessibility property. If it's interesting we need it in the
     // accessibility hierarchy so that events or other accessibles can point to
     // it, or so that it can hold a state, etc.
-    if (content->IsHTMLElement() || content->IsMathMLElement() ||
-        content->IsSVGElement(nsGkAtoms::foreignObject)) {
-      // Interesting container which may have selectable text and/or embedded
-      // objects.
-      newAcc = new HyperTextAccessible(content, document);
-    } else {  // XUL, other SVG, etc.
-      // Interesting generic non-HTML container
-      newAcc = new AccessibleWrap(content, document);
-    }
+    // Interesting container which may have selectable text and/or embedded
+    // objects. Must be a HyperTextAccessible because children might include
+    // TextLeafAccessibles.
+    newAcc = new HyperTextAccessible(content, document);
   } else if (!newAcc && MustBeGenericAccessible(content, document)) {
     newAcc = new EnumRoleHyperTextAccessible<roles::TEXT_CONTAINER>(content,
                                                                     document);
@@ -1583,7 +1633,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 #  include "mozilla/Monitor.h"
 #  include "mozilla/Maybe.h"
 
-MOZ_RUNINIT static Maybe<Monitor> sAndroidMonitor;
+constinit static Maybe<Monitor> sAndroidMonitor;
 
 mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
   if (!sAndroidMonitor.isSome()) {
@@ -1597,7 +1647,7 @@ mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private
 
-bool nsAccessibilityService::Init(uint64_t aCacheDomains) {
+bool nsAccessibilityService::Init(uint64_t aCacheDomains, uint32_t aConsumer) {
   AUTO_PROFILER_MARKER_UNTYPED("nsAccessibilityService::Init", A11Y, {});
   // DO NOT ADD CODE ABOVE HERE: THIS CODE IS MEASURING TIMINGS.
   PerfStats::AutoMetricRecording<
@@ -1615,13 +1665,6 @@ bool nsAccessibilityService::Init(uint64_t aCacheDomains) {
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
-#if defined(XP_WIN)
-  // This information needs to be initialized before the observer fires.
-  if (XRE_IsParentProcess()) {
-    Compatibility::Init();
-  }
-#endif  // defined(XP_WIN)
-
   // Subscribe to EventListenerService.
   nsCOMPtr<nsIEventListenerService> eventListenerService =
       do_GetService("@mozilla.org/eventlistenerservice;1");
@@ -1629,17 +1672,15 @@ bool nsAccessibilityService::Init(uint64_t aCacheDomains) {
 
   eventListenerService->AddListenerChangeListener(this);
 
-  for (uint32_t i = 0; i < std::size(sHTMLMarkupMapList); i++) {
-    mHTMLMarkupMap.InsertOrUpdate(sHTMLMarkupMapList[i].tag,
-                                  &sHTMLMarkupMapList[i]);
+  for (const auto& info : sHTMLMarkupMapList) {
+    mHTMLMarkupMap.InsertOrUpdate(info.tag, &info);
   }
   for (const auto& info : sMathMLMarkupMapList) {
     mMathMLMarkupMap.InsertOrUpdate(info.tag, &info);
   }
 
-  for (uint32_t i = 0; i < std::size(sXULMarkupMapList); i++) {
-    mXULMarkupMap.InsertOrUpdate(sXULMarkupMapList[i].tag,
-                                 &sXULMarkupMapList[i]);
+  for (const auto& info : sXULMarkupMapList) {
+    mXULMarkupMap.InsertOrUpdate(info.tag, &info);
   }
 
 #ifdef A11Y_LOG
@@ -1656,30 +1697,65 @@ bool nsAccessibilityService::Init(uint64_t aCacheDomains) {
   }
 
   NS_ADDREF(gApplicationAccessible);  // will release in Shutdown()
-  gApplicationAccessible->Init();
-
   CrashReporter::RecordAnnotationCString(
       CrashReporter::Annotation::Accessibility, "Active");
 
-  // Now its safe to start platform accessibility.
-  if (XRE_IsParentProcess()) PlatformInit();
-
-  // Check the startup cache domain pref. We might be in a test environment
-  // where we need to have all cache domains enabled (e.g., fuzzing).
-  if (XRE_IsParentProcess() &&
-      StaticPrefs::accessibility_enable_all_cache_domains_AtStartup()) {
-    gCacheDomains = CacheDomain::All;
+  if (aConsumer == ePdfOutput) {
+    // When running purely for PDF output, we don't force creation of
+    // DocAccessibles for existing documents (which would affect unrelated
+    // documents) or initialize platform AT APIs (which have no clients in this
+    // mode). PDF output also uses doc-specific cache domains.
+    gCacheDomains = aCacheDomains;
+  } else {
+    FullInit(aCacheDomains, aConsumer);
   }
 
-  // Set the active accessibility cache domains. We might want to modify the
-  // domains that we activate based on information about the instantiator.
-  gCacheDomains = ::GetCacheDomainsForKnownClients(aCacheDomains);
-
-  static const char16_t kInitIndicator[] = {'1', 0};
+  // We deliberately fire the a11y init notification even for ePdfOutput so that
+  // tests know that the accessibility service has started in all cases. We use
+  // a different value to differentiate this from full init notifications. Note
+  // that gConsumers hasn't been set yet, so we can't use IsOnlyForPdfOutput()
+  // here.
   observerService->NotifyObservers(nullptr, "a11y-init-or-shutdown",
-                                   kInitIndicator);
+                                   aConsumer == ePdfOutput ? u"pdf" : u"1");
 
   return true;
+}
+
+void nsAccessibilityService::FullInit(uint64_t aCacheDomains,
+                                      uint32_t aConsumer) {
+  gApplicationAccessible->CreateInitialDocs();
+  if (XRE_IsParentProcess()) {
+    PlatformInit();
+  }
+  if (XRE_IsParentProcess() &&
+      StaticPrefs::accessibility_enable_all_cache_domains_AtStartup()) {
+    // We might be in a test environment where we need to have all cache domains
+    // enabled (e.g., fuzzing).
+    gCacheDomains = CacheDomain::All;
+  } else if (aConsumer == eXPCOM) {
+    // When instantiated via XPCOM, cache all accessibility information.
+    gCacheDomains = CacheDomain::All;
+  } else {
+    // Set the active accessibility cache domains. We might want to modify the
+    // domains that we activate based on information about the instantiator.
+    gCacheDomains = ::GetCacheDomainsForKnownClients(aCacheDomains);
+  }
+}
+
+void nsAccessibilityService::PromoteFromPdfOutput(uint64_t aCacheDomains,
+                                                  uint32_t aConsumer) {
+  // Called by GetOrCreateAccService when the service was previously brought
+  // up only for ePdfOutput and a real consumer has just been added. Runs the
+  // init work that Init skipped for the original ePdfOutput-only consumer.
+  // The new consumer is already recorded in gConsumers by this point so the
+  // init notification below sees the post-promote state.
+  FullInit(aCacheDomains, aConsumer);
+
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "a11y-init-or-shutdown", u"1");
+  }
 }
 
 void nsAccessibilityService::Shutdown() {
@@ -1689,7 +1765,7 @@ void nsAccessibilityService::Shutdown() {
   // if someone will try to operate with it.
 
   MOZ_ASSERT(gConsumers, "Accessibility was shutdown already");
-  UnsetConsumers(eXPCOM | eMainProcess | ePlatformAPI);
+  UnsetConsumers(eXPCOM | eMainProcess | ePlatformAPI | ePdfOutput);
 
   // Remove observers.
   nsCOMPtr<nsIObserverService> observerService =
@@ -1974,6 +2050,13 @@ void nsAccessibilityService::SetCacheDomains(uint64_t aCacheDomains) {
   if (newDomains != CacheDomain::None) {
     for (const RefPtr<DocAccessible>& doc : mDocAccessibleCache.Values()) {
       MOZ_ASSERT(doc, "DocAccessible in cache is null!");
+      if (doc->EffectiveCacheDomains() != gCacheDomains) {
+        // This document uses a specific set of cache domains rather than the
+        // global set. Thus, a change to the global set shouldn't impact this
+        // document.
+        MOZ_ASSERT(doc->IsPrintDoc());
+        continue;
+      }
       doc->QueueCacheUpdate(doc.get(), newDomains, true);
       Pivot pivot(doc.get());
       LocalAccInSameDocRule rule;
@@ -2029,14 +2112,8 @@ nsAccessibilityService* GetOrCreateAccService(uint32_t aNewConsumer,
   }
 
   if (!nsAccessibilityService::gAccessibilityService) {
-    uint64_t cacheDomains = aCacheDomains;
-    if (aNewConsumer == nsAccessibilityService::eXPCOM) {
-      // When instantiated via XPCOM, cache all accessibility information.
-      cacheDomains = CacheDomain::All;
-    }
-
     RefPtr<nsAccessibilityService> service = new nsAccessibilityService();
-    if (!service->Init(cacheDomains)) {
+    if (!service->Init(aCacheDomains, aNewConsumer)) {
       service->Shutdown();
       return nullptr;
     }
@@ -2044,7 +2121,15 @@ nsAccessibilityService* GetOrCreateAccService(uint32_t aNewConsumer,
 
   MOZ_ASSERT(nsAccessibilityService::gAccessibilityService,
              "LocalAccessible service is not initialized.");
+  // If the service was previously brought up only for tagged PDF output and a
+  // real consumer is arriving now, finish the init work that was deferred.
+  bool wasOnlyForPdfOutput = nsAccessibilityService::IsOnlyForPdfOutput();
   nsAccessibilityService::gAccessibilityService->SetConsumers(aNewConsumer);
+  if (wasOnlyForPdfOutput &&
+      aNewConsumer != nsAccessibilityService::ePdfOutput) {
+    nsAccessibilityService::gAccessibilityService->PromoteFromPdfOutput(
+        aCacheDomains, aNewConsumer);
+  }
   return nsAccessibilityService::gAccessibilityService;
 }
 
@@ -2056,8 +2141,12 @@ void MaybeShutdownAccService(uint32_t aFormerConsumer, bool aAsync) {
     return;
   }
 
-  // Still used by XPCOM
-  if (nsCoreUtils::AccEventObserversExist() ||
+  // Check if we're still being used by XPCOM. However, when running purely for
+  // PDF output, we ignore event observers so that tests can assert that
+  // unexpected events aren't fired without unintentionally preventing the
+  // service from shutting down.
+  if ((!nsAccessibilityService::IsOnlyForPdfOutput() &&
+       nsCoreUtils::AccEventObserversExist()) ||
       xpcAccessibilityService::IsInUse() || accService->HasXPCDocuments()) {
     // In case the XPCOM flag was unset (possibly because of the shutdown
     // timer in the xpcAccessibilityService) ensure it is still present. Note:

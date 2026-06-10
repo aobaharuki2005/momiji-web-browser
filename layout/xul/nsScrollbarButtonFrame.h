@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,8 +9,8 @@
 
 **/
 
-#ifndef nsScrollbarButtonFrame_h___
-#define nsScrollbarButtonFrame_h___
+#ifndef nsScrollbarButtonFrame_h_
+#define nsScrollbarButtonFrame_h_
 
 #include "SimpleXULLeafFrame.h"
 #include "mozilla/Attributes.h"
@@ -73,7 +71,7 @@ class nsScrollbarButtonFrame final : public mozilla::SimpleXULLeafFrame {
     nsRepeatService::GetInstance()->Start(Notify, this, mContent->OwnerDoc(),
                                           "nsScrollbarButtonFrame"_ns);
   }
-  void StopRepeat() { nsRepeatService::GetInstance()->Stop(Notify, this); }
+  void StopRepeat();
   void Notify();
   static void Notify(void* aData) {
     static_cast<nsScrollbarButtonFrame*>(aData)->Notify();

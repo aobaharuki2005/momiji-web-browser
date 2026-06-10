@@ -67,14 +67,15 @@ skip-if = [
 ["browser_bookmark_change_location.js"]
 
 ["browser_bookmark_context_menu_contents.js"]
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && socketprocess_networking", # Bug 1775657
-]
+
+["browser_bookmark_context_on_gutter.js"]
 
 ["browser_bookmark_copy_folder_tree.js"]
 tags = "os_integration"
 
 ["browser_bookmark_current_tabs.js"]
+
+["browser_bookmark_drag_splitview.js"]
 
 ["browser_bookmark_folder_moveability.js"]
 
@@ -235,6 +236,11 @@ https_first_disabled = true
 
 ["browser_remove_bookmarks.js"]
 
+["browser_sidebar_bookmarks_glean.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && debug", # Bug 2036783
+]
+
 ["browser_sidebar_bookmarks_telemetry.js"]
 
 ["browser_sidebar_history_telemetry.js"]
@@ -250,6 +256,8 @@ https_first_disabled = true
 ["browser_stayopenmenu.js"]
 
 ["browser_toolbar_drop_bookmarklet.js"]
+
+["browser_toolbar_drop_indicator_empty.js"]
 
 ["browser_toolbar_drop_multiple_flavors.js"]
 

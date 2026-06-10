@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,25 +14,27 @@ extern const GMPPlatformAPI* sPlatform;
 namespace mozilla {
 
 void WidevineFileIO::Open(const char* aFilename, uint32_t aFilenameLength) {
+  DestroyRecord();
+
   mName = std::string(aFilename, aFilename + aFilenameLength);
-  GMPRecord* record = nullptr;
-  GMPErr err = sPlatform->createrecord(aFilename, aFilenameLength, &record,
+  GMPErr err = sPlatform->createrecord(aFilename, aFilenameLength, &mRecord,
                                        static_cast<GMPRecordClient*>(this));
   if (GMP_FAILED(err)) {
     GMP_LOG_DEBUG("WidevineFileIO::Open() '%s' GMPCreateRecord failed",
                   mName.c_str());
+    DestroyRecord();
     mClient->OnOpenComplete(cdm::FileIOClient::Status::kError);
     return;
   }
-  if (GMP_FAILED(record->Open())) {
+  if (GMP_FAILED(mRecord->Open())) {
     GMP_LOG_DEBUG("WidevineFileIO::Open() '%s' record open failed",
                   mName.c_str());
+    DestroyRecord();
     mClient->OnOpenComplete(cdm::FileIOClient::Status::kError);
     return;
   }
 
   GMP_LOG_DEBUG("WidevineFileIO::Open() '%s'", mName.c_str());
-  mRecord = record;
 }
 
 void WidevineFileIO::Read() {
@@ -58,12 +58,16 @@ void WidevineFileIO::Write(const uint8_t* aData, uint32_t aDataSize) {
   mRecord->Write(aData, aDataSize);
 }
 
-void WidevineFileIO::Close() {
-  GMP_LOG_DEBUG("WidevineFileIO::Close() '%s'", mName.c_str());
+void WidevineFileIO::DestroyRecord() {
   if (mRecord) {
     mRecord->Close();
     mRecord = nullptr;
   }
+}
+
+void WidevineFileIO::Close() {
+  GMP_LOG_DEBUG("WidevineFileIO::Close() '%s'", mName.c_str());
+  DestroyRecord();
   delete this;
 }
 

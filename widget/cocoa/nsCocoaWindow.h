@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -55,7 +54,6 @@ class TextInputHandler;
 
   NSRect mDirtyRect;
 
-  BOOL mBeingShown;
   BOOL mIsAnimationSuppressed;
 
   nsTouchBar* mTouchBar;
@@ -85,8 +83,7 @@ class TextInputHandler;
 - (void)createTrackingArea;
 - (void)removeTrackingArea;
 
-- (void)setIsBeingShown:(BOOL)aValue;
-- (BOOL)isBeingShown;
+@property(nonatomic) BOOL isBeingShown;
 - (BOOL)isVisibleOrBeingShown;
 
 - (void)setIsAnimationSuppressed:(BOOL)aValue;
@@ -112,8 +109,7 @@ class TextInputHandler;
 @property(nonatomic) mozilla::WindowShadow shadowStyle;
 
 - (void)updateTitlebarTransparency;
-- (void)setTitlebarSeparatorStyle:(NSTitlebarSeparatorStyle)aStyle
-    API_AVAILABLE(macos(11.0));
+- (void)setTitlebarSeparatorStyle:(NSTitlebarSeparatorStyle)aStyle API_AVAILABLE(macos(11.0));
 
 - (void)releaseJSObjects;
 
@@ -121,23 +117,29 @@ class TextInputHandler;
 
 @interface NSWindow (Undocumented)
 - (NSDictionary*)shadowParameters;
+- (BOOL)bottomCornerRounded;
 
-// Present in the same form on OS X since at least OS X 10.5.
+// Present in the same form on macOS since at least macOS 10.5.
 - (NSRect)contentRectForFrameRect:(NSRect)windowFrame
                         styleMask:(NSUInteger)windowStyle;
 - (NSRect)frameRectForContentRect:(NSRect)windowContentRect
                         styleMask:(NSUInteger)windowStyle;
 
-// Present since at least OS X 10.5.  The OS calls this method on NSWindow
+// Present since at least macOS 10.5.  The OS calls this method on NSWindow
 // (and its subclasses) to find out which NSFrameView subclass to instantiate
 // to create its "frame view".
 + (Class)frameViewClassForStyleMask:(NSUInteger)styleMask;
 
 @end
 
-@interface PopupWindow : BaseWindow {
+@interface PopupWindow : BaseWindow <NSPopoverDelegate> {
  @private
   BOOL mIsContextMenu;
+
+  // NSPopover support for native appearance
+  NSPopover* mPopover;
+  NSViewController* mPopoverViewController;
+  BOOL mUsePopover;
 }
 
 - (id)initWithContentRect:(NSRect)contentRect
@@ -147,6 +149,16 @@ class TextInputHandler;
 - (BOOL)isContextMenu;
 - (void)setIsContextMenu:(BOOL)flag;
 - (BOOL)canBecomeMainWindow;
+
+// NSPopover support
+- (void)setAllowPopover;
+- (BOOL)usePopover;
+- (void)showPopoverRelativeToRect:(NSRect)positioningRect
+                           ofView:(NSView*)positioningView
+                    preferredEdge:(NSRectEdge)preferredEdge
+                     hiddenAnchor:(BOOL)hiddenAnchor;
+- (void)closePopover;
+- (void)updatePopoverContent;
 
 @end
 
@@ -186,11 +198,25 @@ class TextInputHandler;
   // fullscreen.
   FullscreenTitlebarTracker* mFullscreenTitlebarTracker;
 
+  CGFloat mUnifiedToolbarHeight;
+  /* Store the height of the titlebar when this window is initialized. The
+     titlebarHeight getter returns 0 when in fullscreen, which is not useful in
+     some cases. */
+  CGFloat mInitialTitlebarHeight; 
   CGFloat mMenuBarHeight;
   NSRect mWindowButtonsRect;
+  NSRect mFullScreenButtonRect;
 }
+- (void)setUnifiedToolbarHeight:(CGFloat)aHeight;
+- (CGFloat)unifiedToolbarHeight;
+- (CGFloat)titlebarHeight;
+- (NSRect)titlebarRect;
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
+
 - (void)placeWindowButtons:(NSRect)aRect;
+- (void)placeFullScreenButton:(NSRect)aRect;
+- (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
+- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
 - (NSRect)windowButtonsRect;
 - (void)windowMainStateChanged;
 @end
@@ -202,6 +228,10 @@ class nsCocoaWindow final : public nsIWidget {
 
  public:
   nsCocoaWindow();
+
+  // Check if this window should use NSPopover for popup/menu display
+  bool ShouldUseNSPopover() const;
+  bool ShouldShowAsNSPopover() const;
 
   [[nodiscard]] nsresult Create(nsIWidget* aParent, const DesktopIntRect& aRect,
                                 const InitData&) override;
@@ -227,7 +257,6 @@ class nsCocoaWindow final : public nsIWidget {
   bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override {
     return false;
   }
-
   void* GetNativeData(uint32_t aDataType) override;
 
   void ConstrainPosition(DesktopIntPoint&) override;
@@ -243,25 +272,21 @@ class nsCocoaWindow final : public nsIWidget {
 
   nsresult SynthesizeNativeKeyEvent(
       int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
-      uint32_t aModifierFlags, const nsAString& aCharacters,
+      nsIWidget::NativeModifiers aModifierFlags, const nsAString& aCharacters,
       const nsAString& aUnmodifiedCharacters,
       nsISynthesizedEventCallback* aCallback) override;
 
   nsresult SynthesizeNativeMouseEvent(
       LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
-      mozilla::MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
+      mozilla::MouseButton aButton, nsIWidget::NativeModifiers aModifierFlags,
       nsISynthesizedEventCallback* aCallback) override;
 
   nsresult SynthesizeNativeMouseMove(
       LayoutDeviceIntPoint aPoint,
-      nsISynthesizedEventCallback* aCallback) override {
-    return SynthesizeNativeMouseEvent(
-        aPoint, NativeMouseMessage::Move, mozilla::MouseButton::eNotPressed,
-        nsIWidget::Modifiers::NO_MODIFIERS, aCallback);
-  }
+      nsISynthesizedEventCallback* aCallback) override;
   nsresult SynthesizeNativeMouseScrollEvent(
       LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage, double aDeltaX,
-      double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
+      double aDeltaY, double aDeltaZ, nsIWidget::NativeModifiers aModifierFlags,
       uint32_t aAdditionalFlags,
       nsISynthesizedEventCallback* aCallback) override;
   nsresult SynthesizeNativeTouchPoint(
@@ -299,9 +324,6 @@ class nsCocoaWindow final : public nsIWidget {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aRect, BackingScaleFactor());
   }
 
-  // Called by nsCocoaWindow when the window's fullscreen state changes.
-  void UpdateFullscreen(bool aFullscreen);
-
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent);
   nsEventStatus DispatchAPZInputEvent(mozilla::InputData& aEvent);
 
@@ -336,7 +358,6 @@ class nsCocoaWindow final : public nsIWidget {
   mozilla::VibrancyManager& EnsureVibrancyManager();
 
   void TearDownView();
-
   bool PrepareForFullscreenTransition(nsISupports** aData) override;
   void PerformFullscreenTransition(FullscreenTransitionStage aStage,
                                    uint16_t aDuration, nsISupports* aData,
@@ -360,6 +381,7 @@ class nsCocoaWindow final : public nsIWidget {
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntRect GetScreenBounds() override;
   LayoutDeviceIntRect GetBounds() override { return mBounds; }
+  [[nodiscard]] nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   void ReportMoveEvent();
   void ReportSizeEvent();
   bool WidgetTypeSupportsAcceleration() override { return true; }
@@ -373,23 +395,24 @@ class nsCocoaWindow final : public nsIWidget {
   void BackingScaleFactorChanged();
   double GetDefaultScaleInternal() override;
   int32_t RoundsWidgetCoordinatesTo() override;
-
   // Mac specific methods
   void PaintWindow();
   void PaintWindowInDrawTarget(mozilla::gfx::DrawTarget* aDT,
                                const LayoutDeviceIntRegion& aRegion,
                                const mozilla::gfx::IntSize& aSurfaceSize);
 
+  bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
+                            mozilla::gfx::IntSize aSurfaceSize);
   void PaintWindowInContentLayer();
   void HandleMainThreadCATransaction();
 
 #ifdef ACCESSIBILITY
-  already_AddRefed<mozilla::a11y::LocalAccessible> GetDocumentAccessible();
+  already_AddRefed<mozilla::a11y::LocalAccessible> GetWindowAccessible();
 #endif
 
   bool WidgetPaintsBackground() override { return true; }
-
   void CreateCompositor(int aWidth, int aHeight) override;
+  void CreateCompositor() override;
   void DestroyCompositor() override;
   void NotifyCompositorSessionLost(
       mozilla::layers::CompositorSession* aSession) override;
@@ -415,7 +438,7 @@ class nsCocoaWindow final : public nsIWidget {
                         const bool aIsVertical,
                         const LayoutDeviceIntPoint& aPoint) override;
 
-  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final {
+  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() const final {
     return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
   }
 
@@ -470,7 +493,7 @@ class nsCocoaWindow final : public nsIWidget {
 
   void SetInputContext(const InputContext& aContext,
                        const InputContextAction& aAction) override;
-  InputContext GetInputContext() override;
+  InputContext GetInputContext() override; 
   MOZ_CAN_RUN_SCRIPT bool GetEditCommands(
       mozilla::NativeKeyBindingsType aType,
       const mozilla::WidgetKeyboardEvent& aEvent,
@@ -497,6 +520,7 @@ class nsCocoaWindow final : public nsIWidget {
     Zoom,
   };
   void FinishCurrentTransitionIfMatching(const TransitionType& aTransition);
+  bool IsInTransition() { return mTransitionCurrent.isSome(); }
 
   // Called when something has happened that might cause us to update our
   // fullscreen state. Returns true if we updated state. We'll call this
@@ -504,6 +528,16 @@ class nsCocoaWindow final : public nsIWidget {
   // since fullscreen to-and-from zoomed windows won't necessarily trigger
   // a resize.
   bool HandleUpdateFullscreenOnResize();
+
+  void LockNativePointer(NativePointerLockMode aNativePointerLockMode) override;
+  void UnlockNativePointer() override;
+  void SetNativePointerLockMode(
+      NativePointerLockMode aNativePointerLockMode) override;
+  bool SupportsUnadjustedMovement() override;
+
+  static const mozilla::Maybe<NativePointerLockMode>&
+  GetNativePointerLockedMode();
+  static LayoutDeviceIntPoint GetNativeLockedPoint();
 
  protected:
   virtual ~nsCocoaWindow();
@@ -519,6 +553,11 @@ class nsCocoaWindow final : public nsIWidget {
   void DoResize(double aX, double aY, double aWidth, double aHeight,
                 bool aRepaint, bool aConstrainToCurrentScreen);
 
+  // If the window's NSWindow frame doesn't intersect any currently-attached
+  // NSScreen, relocate the window onto the main screen so the user can reach
+  // it.
+  void EnsureFrameIsOnScreen();
+
   void UpdateFullscreenState(bool aFullScreen, bool aNativeMode);
   nsresult DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition);
 
@@ -530,12 +569,14 @@ class nsCocoaWindow final : public nsIWidget {
   WindowDelegate* mDelegate =
       nullptr;  // our delegate for processing window msgs [STRONG]
   RefPtr<nsMenuBarX> mMenuBar;
-  ChildView* mChildView = nullptr;  // Cocoa content view, [STRONG]
+  ChildView* mChildView = nullptr; //Cocoa content view, [STRONG]
+
 #ifdef ACCESSIBILITY
   // weak ref to this childview's associated mozAccessible for speed reasons
   // (we get queried for it *a lot* but don't want to own it)
   nsWeakPtr mAccessible;
 #endif
+
   // Held while the compositor (or WR renderer) thread is compositing.
   // Protects from tearing down the view during compositing and from presenting
   // half-composited layers to the screen.
@@ -543,15 +584,25 @@ class nsCocoaWindow final : public nsIWidget {
 
   mozilla::ViewRegion mNonDraggableRegion;
 
-  // Cached value of [mChildView backingScaleFactor], to avoid sending two obj-c
+  // Cached value of [mView backingScaleFactor], to avoid sending two obj-c
   // messages (respondsToSelector, backingScaleFactor) every time we need to
   // use it.
   // ** We'll need to reinitialize this if the backing resolution changes. **
   mutable CGFloat mBackingScaleFactor;
 
+  bool mVisible;
+  bool mDrawing;
+  bool mIsDispatchPaint;  // Is a paint event being dispatched
+
   RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
   RefPtr<mozilla::layers::NativeLayerRootRemoteMacParent>
       mNativeLayerRootRemoteMacParent;
+  mozilla::ipc::Endpoint<mozilla::layers::PNativeLayerRemoteChild>
+      mChildEndpoint;
+ 
+  // Only used for drawRect-based painting in popups.
+  // Always null if nsCocoaFeatures::OnMavericksOrLater() is true.
+  RefPtr<mozilla::gfx::DrawTarget> mBackingSurface;
 
   // In BasicLayers mode, this is the CoreAnimation layer that contains the
   // rendering from Gecko. It is a sublayer of mNativeLayerRoot's underlying
@@ -571,6 +622,7 @@ class nsCocoaWindow final : public nsIWidget {
   // transition, it is the animation object.
   NSAnimation* mFullscreenTransitionAnimation;
   mozilla::WindowShadow mShadowStyle;
+
   CGFloat mAspectRatio;
 
   WindowAnimationType mAnimationType;
@@ -608,7 +660,6 @@ class nsCocoaWindow final : public nsIWidget {
   // Windowed.
   mozilla::Maybe<TransitionType> mUpdateFullscreenOnResize;
 
-  bool IsInTransition() { return mTransitionCurrent.isSome(); }
   void QueueTransition(const TransitionType& aTransition);
   void ProcessTransitions();
 
@@ -646,16 +697,22 @@ class nsCocoaWindow final : public nsIWidget {
   bool mWasShown = false;
 
   int32_t mNumModalDescendants = 0;
-
-  // The workspaceID to move to once the window becomes visible. A value of 0
-  // is a no-op.
+   // The workspaceID to move to once the window becomes visible. A value of 0
   int32_t mDeferredWorkspaceID = 0;
-
+ 
   RefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
+
   InputContext mInputContext;
   NSWindowAnimationBehavior mWindowAnimationBehavior;
 
   LayoutDeviceIntRect mBounds;
+
+  // The window bounds saved just before the window last left nsSizeMode_Normal
+  // (for fullscreen, maximized, or minimized). Used by GetRestoredBounds() so
+  // that we can persist the pre-transition position/size while the window is
+  // not in normal mode. Nothing() until the first transition out of normal
+  // mode occurs.
+  mozilla::Maybe<LayoutDeviceIntRect> mRestoredBounds;
 
   mozilla::widget::PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate =
       nullptr;
@@ -670,6 +727,11 @@ class nsCocoaWindow final : public nsIWidget {
   // to EndOurNativeTransition() when the native transition is complete.
   bool CanStartNativeTransition();
   void EndOurNativeTransition();
+
+  // This is class state for tracking native pointer lock state.
+  static mozilla::Maybe<NativePointerLockMode> sNativePointerLockMode;
+  static LayoutDeviceIntPoint sNativeLockedPoint;
+  static nsCocoaWindow* sNativeLockedWindow;
 };
 
 #endif  // nsCocoaWindow_h_

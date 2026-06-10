@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -125,9 +123,9 @@ webrtc::scoped_refptr<VideoCaptureModule> VideoCaptureAvFoundation::Create(
     Clock* _Nonnull clock, const char* _Nullable aDeviceUniqueIdUTF8) {
   std::string uniqueId(aDeviceUniqueIdUTF8);
 
-  for (AVCaptureDevice* device in [RTCCameraVideoCapturer
-           captureDevicesWithDeviceTypes:[RTCCameraVideoCapturer
-                                             defaultCaptureDeviceTypes]]) {
+  for (AVCaptureDevice* device in [RTCCameraVideoCapturer captureDevices]
+           /* //FUCK YOU captureDevicesWithDeviceTypes:[RTCCameraVideoCapturer
+                                             defaultCaptureDeviceTypes]]*/) {
     if ([NSString stdStringForString:device.uniqueID] == uniqueId) {
       webrtc::scoped_refptr<VideoCaptureModule> module(
           new webrtc::RefCountedObject<VideoCaptureAvFoundation>(clock,

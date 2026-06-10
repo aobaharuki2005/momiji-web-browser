@@ -23,7 +23,7 @@ add_task(async function () {
   await selectNode("#testid", inspector);
 
   info("Getting the second property in the rule");
-  const rule = getRuleViewRuleEditor(view, 1).rule;
+  const rule = getRuleViewRuleEditorAt(view, 1).rule;
   let prop = rule.textProps[1];
 
   info("Clearing the property value and pressing shift-tab");

@@ -12,10 +12,14 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from mozbuild.nodeutil import find_node_executable
-from mozdevice import ADBDevice
 
 from mozperftest.layers import Layer
-from mozperftest.utils import ON_TRY, archive_files, extract_tgz_and_find_files
+from mozperftest.utils import (
+    ON_TRY,
+    archive_files,
+    extract_tgz_and_find_files,
+    get_adb_device_or_emu,
+)
 
 """The default Simpleperf options will collect a 30s system-wide profile that uses DWARF based
    call graph so that we can collect Java stacks.  This requires root access.
@@ -77,7 +81,7 @@ class SimpleperfSymbolicationError(SimpleperfError):
 
 class SimpleperfController:
     def __init__(self):
-        self.device = ADBDevice()
+        self.device = get_adb_device_or_emu()
         self.profiler_process = None
 
     def start(self, simpleperf_opts):
@@ -111,7 +115,7 @@ class SimpleperfController:
             stderr=subprocess.PIPE,
         )
 
-        # Sleep for 1s to let simpleperf settle and begin profiling.
+        # Profiles are streamed directly from device and ready to use
         time.sleep(1)
 
     def stop(self, output_path, index):
@@ -150,16 +154,16 @@ class SimpleperfProfiler(Layer):
             "default": None,
             "help": "Path to breakpad symbols directory (e.g. target.crashreporter-symbols).",
         },
-        "symbolicator-path": {
+        "profiler-node-tools-path": {
             "type": str,
             "default": None,
-            "help": "Path to directory containing symbolicator-cli build.",
+            "help": "Path to directory containing profiler-node-tools build.",
         },
     }
 
     def __init__(self, env, mach_cmd):
         super().__init__(env, mach_cmd)
-        self.device = ADBDevice()
+        self.device = get_adb_device_or_emu()
 
     @staticmethod
     def is_enabled():
@@ -230,13 +234,15 @@ class SimpleperfProfiler(Layer):
         self.device.shell("chmod a+x /data/local/tmp/simpleperf")
         os.environ["MOZPERFTEST_SIMPLEPERF"] = "1"
 
-    def _validate_symbolication_paths(self, symbol_dir_arg, symbolicator_dir_arg):
-        """Check if the breakpad directory path and the symbolicator-cli paths
+    def _validate_symbolication_paths(
+        self, symbol_dir_arg, profiler_node_tools_dir_arg
+    ):
+        """Check if the breakpad directory path and the profiler-node-tools paths
         for symbolication are valid.
 
         :param symbol_dir_arg str: Path to the Breakpad symbol directory
-        :param symbolicator_dir_arg str: Path to the symbolicator-cli directory
-        :return tuple[pathlib.Path, pathlib.Path]: Returns a tuple containing validated (breakpad_symbol_dir, symbolicator_dir).
+        :param profiler_node_tools_dir_arg str: Path to the profiler-node-tools directory
+        :return tuple[pathlib.Path, pathlib.Path]: Returns a tuple containing validated (breakpad_symbol_dir, profiler_node_tools_dir).
         :raises SimpleperfSymbolicationError: If validation fails
         """
 
@@ -251,16 +257,18 @@ class SimpleperfProfiler(Layer):
                 f"Breakpad Symbol Directory not found at {breakpad_symbol_dir}."
             )
 
-        if not symbolicator_dir_arg:
-            raise SimpleperfSymbolicationError("Symbolicator Directory not provided.")
-
-        symbolicator_dir = Path(symbolicator_dir_arg)
-        if not symbolicator_dir.exists():
+        if not profiler_node_tools_dir_arg:
             raise SimpleperfSymbolicationError(
-                f"Symbolicator Directory not found at {symbolicator_dir}."
+                "Profiler-node-tools directory not provided."
             )
 
-        return breakpad_symbol_dir, symbolicator_dir
+        profiler_node_tools_dir = Path(profiler_node_tools_dir_arg)
+        if not profiler_node_tools_dir.exists():
+            raise SimpleperfSymbolicationError(
+                f"Profiler-node-tools directory not found at {profiler_node_tools_dir}."
+            )
+
+        return breakpad_symbol_dir, profiler_node_tools_dir
 
     def _prepare_symbolication_environment(self):
         """Set up variables needed by symbolication helper functions.
@@ -275,7 +283,7 @@ class SimpleperfProfiler(Layer):
             self.breakpad_symbol_dir = Path(moz_fetch, "target.crashreporter-symbols")
             self.samply_path = Path(moz_fetch, "samply", "samply")
             self.node_path = Path(moz_fetch, "node", "bin", "node")
-            self.symbolicator_dir = Path(moz_fetch, "symbolicator-cli")
+            self.profiler_node_tools_dir = Path(moz_fetch, "profiler-node-tools")
 
             # Extracting crashreporter symbols
             zip_path = f"{self.breakpad_symbol_dir}.zip"
@@ -284,10 +292,10 @@ class SimpleperfProfiler(Layer):
         else:
             self.samply_path = "samply"  # Assumed to be available via PATH
             self.node_path = Path(find_node_executable()[0]).resolve()
-            self.breakpad_symbol_dir, self.symbolicator_dir = (
+            self.breakpad_symbol_dir, self.profiler_node_tools_dir = (
                 self._validate_symbolication_paths(
                     self.get_arg("symbol-path", None),
-                    self.get_arg("symbolicator-path", None),
+                    self.get_arg("profiler-node-tools-path", None),
                 )
             )
 
@@ -306,10 +314,12 @@ class SimpleperfProfiler(Layer):
         for file_path in perf_data:
             filename = file_path.stem
             number = filename.split("-")[-1]
-            output_path = Path(
-                work_dir if work_dir else self.output_dir,
-                f"profile-{number}-unsymbolicated.json",
-            )
+
+            # Preserve parent folder structure for cleaner archive output.
+            parent_folder = file_path.parent.name
+            output_dir = Path(work_dir if work_dir else self.output_dir) / parent_folder
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = output_dir / f"profile-{number}-unsymbolicated.json"
 
             # Run samply import as a blocking command to ensure perf.data
             # is processed to profile.json before proceeding
@@ -332,8 +342,6 @@ class SimpleperfProfiler(Layer):
                     self.info(f"samply {line.strip()}")
 
             unsymbolicated_profiles.append(output_path)
-
-        unsymbolicated_profiles.sort()
 
         return unsymbolicated_profiles
 
@@ -390,28 +398,26 @@ class SimpleperfProfiler(Layer):
             # Symbolicate profiles with a blocking symbolicator-cli call
             input_profile_path = file_path
             filename = file_path.stem.replace("-unsymbolicated", "")
-            output_profile_path = Path(
-                work_dir if work_dir else self.output_dir, f"{filename}.json"
-            )
+            output_profile_path = file_path.parent / f"{filename}.json"
             with subprocess.Popen(
                 [
                     str(self.node_path),
-                    str(Path(self.symbolicator_dir, "symbolicator-cli.js")),
-                    "--input",
+                    str(Path(self.profiler_node_tools_dir, "profiler-edit.js")),
+                    "-i",
                     str(input_profile_path),
-                    "--output",
+                    "-o",
                     str(output_profile_path),
-                    "--server",
+                    "--symbolicate-with-server",
                     server_url,
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
-            ) as symbolicator_process:
+            ) as profiler_edit_process:
                 # Stream and forward to self.info()
-                for line in symbolicator_process.stdout:
-                    self.info(f"symbolicator-cli {line.strip()}")
+                for line in profiler_edit_process.stdout:
+                    self.info(f"profiler-edit {line.strip()}")
 
             symbolicated_profiles.append(output_profile_path)
 
@@ -421,20 +427,21 @@ class SimpleperfProfiler(Layer):
 
         return symbolicated_profiles
 
-    def _archive_profiles(self, symbolicated_profiles):
+    def _archive_profiles(self, symbolicated_profiles, base_dir):
         """Archive all symbolicated profiles into a compressed .zip file
 
         :param symbolicated_profiles list[pathlib.Path]: List of paths to symbolicated
             profile.json files to be archived.
+        :param base_dir pathlib.Path: Base directory to preserve relative paths in archive.
         """
 
         # Archive and export symbolicated profiles
-        symbolicated_profiles.sort()
         archive_files(
             symbolicated_profiles,
             self.output_dir,
             f"profile_{self.test_name}",
-            prefix="simpleperf",
+            sort_key=lambda p: (p.parent.name, int(p.stem.split("-")[-1])),
+            base_dir=base_dir,
         )
 
     def _symbolicate(self):
@@ -444,7 +451,7 @@ class SimpleperfProfiler(Layer):
         locally, it assumes that samply is already
         installed on the system. Additionally, local paths to
         the directories containing Breakpad symbols and a build of
-        symbolicator-cli must be provided via command-line arguments for
+        profiler-node-tools must be provided via command-line arguments for
         local symbolication.
         """
         work_dir = None
@@ -453,7 +460,7 @@ class SimpleperfProfiler(Layer):
             self._prepare_symbolication_environment()
 
             self.info("Obtaining perf.data files")
-            perf_data, work_dir = extract_tgz_and_find_files(
+            perf_data, search_dir, work_dir = extract_tgz_and_find_files(
                 self.output_dir, self.test_name, ["*.data"]
             )
 
@@ -468,7 +475,7 @@ class SimpleperfProfiler(Layer):
             )
 
             self.info("Archiving symbolicated profile.json files")
-            self._archive_profiles(symbolicated_profiles)
+            self._archive_profiles(symbolicated_profiles, search_dir)
         except SimpleperfSymbolicationError as e:
             # If flags are not provided / invalid, skip this symbolication step completely
             self.warning(

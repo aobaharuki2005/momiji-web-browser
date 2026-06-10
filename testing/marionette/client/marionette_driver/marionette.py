@@ -386,6 +386,15 @@ class WebElement:
             "WebDriver:GetComputedRole", {"id": self.id}, key="value"
         )
 
+    @property
+    def accessibility_properties(self):
+        """Gets the accessibility properties for the current element"""
+        return self.marionette._send_message(
+            "Marionette:GetAccessibilityPropertiesForElement",
+            {"id": self.id},
+            key="value",
+        )
+
     @classmethod
     def _from_json(cls, json, marionette):
         if isinstance(json, dict):
@@ -1326,7 +1335,7 @@ class Marionette:
             or requriedCapabilities), and only recognises extension
             capabilities that are specific to Marionette.
         :param process_forked: If True, the existing process forked itself due
-        to an internal restart.
+            to an internal restart.
         :param timeout: Optional timeout in seconds for the server to be ready.
 
         :returns: A dictionary of the capabilities offered.
@@ -1474,11 +1483,6 @@ class Marionette:
         :param width: The width to resize the window to.
         :param height: The height to resize the window to.
         """
-        if (x is None and y is None) and (height is None and width is None):
-            raise errors.InvalidArgumentException(
-                "x and y or height and width need values"
-            )
-
         body = {"x": x, "y": y, "height": height, "width": width}
         return self._send_message("WebDriver:SetWindowRect", body)
 
@@ -1822,11 +1826,18 @@ class Marionette:
 
         ::
 
-            result = marionette.execute_script("return arguments[0] + arguments[1];",
-                                               script_args=(2, 3,))
+            result = marionette.execute_script(
+                "return arguments[0] + arguments[1];",
+                script_args=(
+                    2,
+                    3,
+                ),
+            )
             assert result == 5
             some_element = marionette.find_element(By.ID, "someElement")
-            sid = marionette.execute_script("return arguments[0].id;", script_args=(some_element,))
+            sid = marionette.execute_script(
+                "return arguments[0].id;", script_args=(some_element,)
+            )
             assert some_element.get_attribute("id") == sid
 
         Scripts wishing to access non-standard properties of the window
@@ -1849,7 +1860,9 @@ class Marionette:
         ::
 
             marionette.execute_script("global.test1 = 'foo';")
-            result = self.marionette.execute_script("return global.test1;", new_sandbox=False)
+            result = self.marionette.execute_script(
+                "return global.test1;", new_sandbox=False
+            )
             assert result == "foo"
 
         """
@@ -2040,8 +2053,12 @@ class Marionette:
 
             driver.add_cookie({"name": "foo", "value": "bar"})
             driver.add_cookie({"name": "foo", "value": "bar", "path": "/"})
-            driver.add_cookie({"name": "foo", "value": "bar", "path": "/",
-                               "secure": True})
+            driver.add_cookie({
+                "name": "foo",
+                "value": "bar",
+                "path": "/",
+                "secure": True,
+            })
         """
         self._send_message("WebDriver:AddCookie", {"cookie": cookie})
 
@@ -2222,3 +2239,11 @@ class Marionette:
             "state": state,
         }
         return self._send_message("WebDriver:SetPermission", body)
+
+    def get_accessibility_properties_for_accessibility_node(self, id):
+        """Gets the properties for the accessibility node with the given id."""
+        return self._send_message(
+            "Marionette:GetAccessibilityPropertiesForAccessibilityNode",
+            {"id": id},
+            key="value",
+        )

@@ -43,7 +43,7 @@ ALL_FLAVORS = {
     "chrome": {
         "suite": "chrome",
         "aliases": ("chrome", "mochitest-chrome"),
-        "enabled_apps": ("firefox"),
+        "enabled_apps": ("firefox",),
         "extra_args": {
             "flavor": "chrome",
         },
@@ -237,43 +237,6 @@ class MochitestArguments(ArgumentContainer):
                 "dest": "maxTimeouts",
                 "default": None,
                 "help": "The maximum number of timeouts permitted before halting testing.",
-            },
-        ],
-        [
-            ["--total-chunks"],
-            {
-                "type": int,
-                "dest": "totalChunks",
-                "help": "Total number of chunks to split tests into.",
-                "default": None,
-            },
-        ],
-        [
-            ["--this-chunk"],
-            {
-                "type": int,
-                "dest": "thisChunk",
-                "help": "If running tests by chunks, the chunk number to run.",
-                "default": None,
-            },
-        ],
-        [
-            ["--chunk-by-runtime"],
-            {
-                "action": "store_true",
-                "dest": "chunkByRuntime",
-                "help": "Group tests such that each chunk has roughly the same runtime.",
-                "default": False,
-            },
-        ],
-        [
-            ["--chunk-by-dir"],
-            {
-                "type": int,
-                "dest": "chunkByDir",
-                "help": "Group tests together in the same chunk that are in the same top "
-                "chunkByDir directories.",
-                "default": 0,
             },
         ],
         [
@@ -968,6 +931,15 @@ class MochitestArguments(ArgumentContainer):
             },
         ],
         [
+            ["--restart-between-tests"],
+            {
+                "action": "store_true",
+                "dest": "restartBetweenTests",
+                "default": False,
+                "help": "Restart the browser between each test to identify tests with undocumented dependencies.",
+            },
+        ],
+        [
             ["--variant"],
             {
                 "dest": "variant",
@@ -1041,9 +1013,6 @@ class MochitestArguments(ArgumentContainer):
                 os.path.join(build_obj.bindir, *p) for p in gmp_modules
             )
 
-        if options.totalChunks is not None and options.thisChunk is None:
-            parser.error("thisChunk must be specified when totalChunks is specified")
-
         if options.extra_mozinfo_json:
             if not os.path.isfile(options.extra_mozinfo_json):
                 parser.error(
@@ -1052,13 +1021,6 @@ class MochitestArguments(ArgumentContainer):
                 )
 
             options.extra_mozinfo_json = json.load(open(options.extra_mozinfo_json))
-
-        if options.totalChunks:
-            if not 1 <= options.thisChunk <= options.totalChunks:
-                parser.error("thisChunk must be between 1 and totalChunks")
-
-        if options.chunkByDir and options.chunkByRuntime:
-            parser.error("can only use one of --chunk-by-dir or --chunk-by-runtime")
 
         if options.xrePath is None:
             # default xrePath to the app path if not provided
@@ -1124,14 +1086,6 @@ class MochitestArguments(ArgumentContainer):
                 parser.error(
                     "directory for %s does not exist as a destination to copy a "
                     "chrome manifest." % options.store_chrome_manifest
-                )
-
-        if options.jscov_dir_prefix:
-            options.jscov_dir_prefix = os.path.abspath(options.jscov_dir_prefix)
-            if not os.path.isdir(options.jscov_dir_prefix):
-                parser.error(
-                    "directory %s does not exist as a destination for coverage "
-                    "data." % options.jscov_dir_prefix
                 )
 
         if options.testingModulesDir is None:

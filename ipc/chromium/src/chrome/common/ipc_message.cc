@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -133,8 +131,10 @@ void Message::SetAttachedFileHandles(
 bool Message::has_any_attachments() const {
   return !attached_ports_.IsEmpty() || !attached_handles_.IsEmpty()
 #if defined(XP_DARWIN)
-         || !attached_send_rights_.IsEmpty() ||
+/* sorry nika it ain't working
+      || !attached_send_rights_.IsEmpty() ||
          !attached_receive_rights_.IsEmpty()
+*/
 #endif
       ;
 }
@@ -197,6 +197,8 @@ uint32_t Message::num_send_rights() const {
   return attached_send_rights_.Length();
 }
 
+//it ain't working sorry nika
+/*
 bool Message::WriteMachReceiveRight(mozilla::UniqueMachReceiveRight port) {
   uint32_t index = attached_receive_rights_.Length();
   WriteUInt32(index);
@@ -225,6 +227,7 @@ bool Message::ConsumeMachReceiveRight(
 uint32_t Message::num_receive_rights() const {
   return attached_receive_rights_.Length();
 }
+*/
 #endif
 
 bool Message::WillBeRoutedExternally(

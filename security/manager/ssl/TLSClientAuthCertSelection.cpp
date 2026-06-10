@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -912,7 +911,7 @@ void DoSelectClientAuthCertificate(NSSSocketControl* info,
                              rememberedCertBytes, rememberedCertChainBytes)) {
     continuation->SetSelectedClientAuthData(
         std::move(rememberedCertBytes), std::move(rememberedCertChainBytes));
-    (void)NS_DispatchToCurrentThread(continuation);
+    (void)continuation->Run();
     return;
   }
 
@@ -944,7 +943,7 @@ void DoSelectClientAuthCertificate(NSSSocketControl* info,
         ("[%p] no client certificates available after filtering by CA", &info));
     // By default, the continuation will continue the connection with no client
     // auth certificate.
-    (void)NS_DispatchToCurrentThread(continuation);
+    (void)continuation->Run();
     return;
   }
 #endif  // MOZ_WIDGET_ANDROID

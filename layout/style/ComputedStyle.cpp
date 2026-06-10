@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,25 +6,17 @@
 
 #include "mozilla/ComputedStyle.h"
 
-#include "RubyUtils.h"
+#include "PseudoStyleType.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
-#include "mozilla/ReflowInput.h"
 #include "mozilla/ToString.h"
-#include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
-#include "nsCSSAnonBoxes.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSVisitedDependentPropList.h"
 #include "nsCoord.h"
-#include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"
-#include "nsPresContext.h"
 #include "nsPrintfCString.h"
-#include "nsString.h"
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "nsStyleStructInlines.h"
@@ -39,9 +29,8 @@
 
 namespace mozilla {
 
-ComputedStyle::ComputedStyle(PseudoStyleType aPseudoType,
-                             ServoComputedDataForgotten aComputedValues)
-    : mSource(aComputedValues), mPseudoType(aPseudoType) {}
+ComputedStyle::ComputedStyle(ServoComputedDataForgotten aComputedValues)
+    : mSource(aComputedValues) {}
 
 // If a struct returned nsChangeHint_UpdateContainingBlock, that means that one
 // property's influence on whether we're a containing block for abs-pos or
@@ -274,8 +263,8 @@ void ComputedStyle::List(FILE* out, int32_t aIndent) {
     str.AppendLiteral("  ");
   }
   str.Append(nsPrintfCString("%p(%d) parent=%p ", (void*)this, 0, nullptr));
-  if (mPseudoType != PseudoStyleType::NotPseudo) {
-    str.Append(nsPrintfCString("%s ", ToString(mPseudoType).c_str()));
+  if (GetPseudoType() != PseudoStyleType::NotPseudo) {
+    str.Append(nsPrintfCString("%s ", ToString(GetPseudoType()).c_str()));
   }
 
   fprintf_stderr(out, "%s{ServoComputedData}\n", str.get());
@@ -391,14 +380,14 @@ Maybe<StyleStructID> ComputedStyle::LookupStruct(const nsACString& aName) {
 #endif  // DEBUG
 
 ComputedStyle* ComputedStyle::GetCachedLazyPseudoStyle(
-    PseudoStyleType aPseudo) const {
-  MOZ_ASSERT(PseudoStyle::IsPseudoElement(aPseudo));
+    const PseudoStyleRequest& aRequest) const {
+  MOZ_ASSERT(PseudoStyle::IsPseudoElement(aRequest.mType));
 
-  if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(aPseudo)) {
+  if (PseudoStyle::SupportsUserActionState(aRequest.mType)) {
     return nullptr;
   }
 
-  return mCachedInheritingStyles.Lookup(aPseudo);
+  return mCachedInheritingStyles.Lookup(aRequest);
 }
 
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
@@ -432,14 +421,14 @@ void ComputedStyle::DumpMatchedRules() const {
 
 bool ComputedStyle::HasAnchorPosReference() const {
   const auto* pos = StylePosition();
-  if (pos->mPositionAnchor.IsIdent()) {
+  if (pos->mPositionAnchor.value.IsIdent()) {
     // Short circuit if there's an explicit default anchor defined,
     // even if it may not end up being referenced. If this early return is
     // removed, we'll need to handle mPositionArea explicitly.
     return true;
   }
 
-  if (pos->mPositionAnchor.IsAuto()) {
+  if (pos->CanHaveDefaultAnchor()) {
     if (!pos->mPositionArea.IsNone()) {
       // Position area is relative to an anchor.
       return true;

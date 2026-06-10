@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,16 +25,16 @@ nsresult NS_NewXMLElement(
 void nsXMLElement::UnbindFromTree(UnbindContext& aContext) {
   nsAtom* property;
   switch (GetPseudoElementType()) {
-    case PseudoStyleType::marker:
+    case PseudoStyleType::Marker:
       property = nsGkAtoms::markerPseudoProperty;
       break;
-    case PseudoStyleType::before:
+    case PseudoStyleType::Before:
       property = nsGkAtoms::beforePseudoProperty;
       break;
-    case PseudoStyleType::after:
+    case PseudoStyleType::After:
       property = nsGkAtoms::afterPseudoProperty;
       break;
-    case PseudoStyleType::backdrop:
+    case PseudoStyleType::Backdrop:
       property = nsGkAtoms::backdropPseudoProperty;
       break;
     default:

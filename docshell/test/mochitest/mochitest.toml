@@ -58,6 +58,8 @@ prefs=["privacy.restrict3rdpartystorage.heuristic.window_open=false"]
 
 ["test_anchor_scroll_after_document_open.html"]
 
+["test_animations_playback_rate_multiplier.html"]
+
 ["test_bfcache_plus_hash.html"]
 
 ["test_bug385434.html"]
@@ -190,9 +192,6 @@ support-files = [
 
 ["test_bug1741132.html"]
 support-files = ["file_bug1741132.html"]
-skip-if = [
-  "os == 'android' && !sessionHistoryInParent",
-]
 
 ["test_bug1742865.html"]
 support-files = [
@@ -309,6 +308,8 @@ skip-if = [
   "http2",
   "http3",
 ]
+
+["test_remove_iframe_during_append.html"]
 
 ["test_triggeringprincipal_location_seturi.html"]
 skip-if = [

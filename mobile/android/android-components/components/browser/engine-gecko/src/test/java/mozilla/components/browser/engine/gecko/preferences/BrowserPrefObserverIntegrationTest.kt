@@ -1,10 +1,12 @@
 package mozilla.components.browser.engine.gecko.preferences
 
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.preferences.BrowserPrefType
 import mozilla.components.concept.engine.preferences.BrowserPreference
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.verify
 
@@ -48,6 +50,23 @@ class BrowserPrefObserverIntegrationTest {
     }
 
     @Test
+    fun `WHEN registerPrefsForObservation THEN the engine method is invoked`() {
+        val engine = mock<Engine>()
+        val feature = BrowserPrefObserverIntegration(engine)
+
+        val onSuccess: () -> Unit = {}
+        val onError: (Throwable) -> Unit = {}
+        feature.registerPrefsForObservation(
+            listOf("test.item"),
+            onSuccess,
+            onError,
+        )
+
+        verify(engine)
+            .registerPrefsForObservation(anyList<String>(), any(), any())
+    }
+
+    @Test
     fun `WHEN unregisterPrefForObservation THEN the engine method is invoked`() {
         val engine = mock<Engine>()
         val feature = BrowserPrefObserverIntegration(engine)
@@ -65,7 +84,24 @@ class BrowserPrefObserverIntegrationTest {
     }
 
     @Test
-    fun `WHEN onOfferTranslate is called THEN notify onTranslateOffer`() {
+    fun `WHEN unregisterPrefsForObservation THEN the engine method is invoked`() {
+        val engine = mock<Engine>()
+        val feature = BrowserPrefObserverIntegration(engine)
+
+        val onSuccess: () -> Unit = {}
+        val onError: (Throwable) -> Unit = {}
+        feature.unregisterPrefsForObservation(
+            listOf("test.item"),
+            onSuccess,
+            onError,
+        )
+
+        verify(engine)
+            .unregisterPrefsForObservation(anyList<String>(), any(), any())
+    }
+
+    @Test
+    fun `WHEN onPreferenceChange is called THEN notify observer`() {
         var onPreferenceChangeWasCalled = false
         val engine = mock<Engine>()
         val feature = BrowserPrefObserverIntegration(engine)
@@ -85,6 +121,7 @@ class BrowserPrefObserverIntegrationTest {
             defaultValue = false,
             userValue = true,
             hasUserChangedValue = true,
+            prefType = BrowserPrefType.STRING,
         )
         feature.onPreferenceChange(pref)
         assert(onPreferenceChangeWasCalled)

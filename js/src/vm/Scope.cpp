@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,8 +6,7 @@
 
 #include <new>
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "frontend/CompilationStencil.h"  // ScopeStencilRef, CompilationStencil, CompilationState, CompilationAtomCache
 #include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable, frontend::ParserAtom
 #include "frontend/ScriptIndex.h"  // ScriptIndex
@@ -21,6 +18,7 @@
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 
+#include "gc/Allocator-inl.h"
 #include "gc/BufferAllocator-inl.h"
 #include "gc/GCContext-inl.h"
 #include "gc/ObjectKind-inl.h"
@@ -162,11 +160,22 @@ SharedShape* js::CreateEnvironmentShapeForSyntheticModule(
 
   RootedId id(cx);
   uint32_t slotIndex = numSlots;
+
+  auto addProperty = [&](PropertyName* name) {
+    id = NameToId(name);
+    return SharedPropMap::addPropertyWithKnownSlot(
+        cx, cls, &map, &mapLength, id, propFlags, slotIndex, &objectFlags);
+  };
+
+  // Add internal *namespace* property.
+  if (!addProperty(cx->names().star_namespace_star_)) {
+    return nullptr;
+  }
+  slotIndex++;
+
+  // Add synthetic exports.
   for (JSAtom* exportName : module->syntheticExportNames()) {
-    id = NameToId(exportName->asPropertyName());
-    if (!SharedPropMap::addPropertyWithKnownSlot(cx, cls, &map, &mapLength, id,
-                                                 propFlags, slotIndex,
-                                                 &objectFlags)) {
+    if (!addProperty(exportName->asPropertyName())) {
       return nullptr;
     }
     slotIndex++;
@@ -239,7 +248,7 @@ static typename ConcreteScope::RuntimeData* NewEmptyScopeData(
   using Data = typename ConcreteScope::RuntimeData;
 
   size_t dataSize = SizeOfScopeData<Data>(length);
-  Data* data = gc::NewBuffer<Data>(cx->zone(), dataSize, false, length);
+  Data* data = gc::NewSizedBuffer<Data>(cx->zone(), dataSize, false, length);
   if (!data) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -644,22 +653,6 @@ void EvalScope::prepareForScopeCreation(ScopeKind scopeKind,
     PrepareScopeData<EvalScope, VarEnvironmentObject>(bi, data, firstFrameSlot,
                                                       envShape);
   }
-}
-
-/* static */
-Scope* EvalScope::nearestVarScopeForDirectEval(Scope* scope) {
-  for (ScopeIter si(scope); si; si++) {
-    switch (si.kind()) {
-      case ScopeKind::Function:
-      case ScopeKind::FunctionBodyVar:
-      case ScopeKind::Global:
-      case ScopeKind::NonSyntactic:
-        return scope;
-      default:
-        break;
-    }
-  }
-  return nullptr;
 }
 
 ModuleScope::RuntimeData::RuntimeData(size_t length) {

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -59,7 +58,7 @@ RootAccessible::RootAccessible(Document* aDocument, PresShell* aPresShell)
   mType = eRootType;
 }
 
-RootAccessible::~RootAccessible() {}
+RootAccessible::~RootAccessible() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible
@@ -127,17 +126,11 @@ const char* const kEventTypes[] = {
 #endif
     // Fired when list or tree selection changes.
     "select",
-    // Fired when value changes immediately, wether or not focused changed.
+    // Fired when value changes immediately, whether or not focused changed.
     "ValueChange", "AlertActive", "TreeRowCountChanged", "TreeInvalidated",
     // add ourself as a OpenStateChange listener (custom event fired in
     // tree.xml)
-    "OpenStateChange",
-    // add ourself as a CheckboxStateChange listener (custom event fired in
-    // HTMLInputElement.cpp)
-    "CheckboxStateChange",
-    // add ourself as a RadioStateChange Listener (custom event fired in in
-    // HTMLInputElement.cpp & radio.js)
-    "RadioStateChange", "popupshown", "popuphiding", "DOMMenuInactive",
+    "OpenStateChange", "popupshown", "popuphiding", "DOMMenuInactive",
     "DOMMenuItemActive", "DOMMenuItemInactive", "DOMMenuBarActive",
     "DOMMenuBarInactive", "scroll", "DOMTitleChanged"};
 
@@ -315,41 +308,6 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
       return;
     }
   }
-
-  if (eventType.EqualsLiteral("RadioStateChange")) {
-    uint64_t state = accessible->State();
-    bool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
-
-    if (accessible->NeedsDOMUIEvent()) {
-      RefPtr<AccEvent> accEvent =
-          new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
-      nsEventShell::FireEvent(accEvent);
-    }
-
-    if (isEnabled) {
-      FocusMgr()->ActiveItemChanged(accessible);
-#ifdef A11Y_LOG
-      if (logging::IsEnabled(logging::eFocus)) {
-        logging::ActiveItemChangeCausedBy("RadioStateChange", accessible);
-      }
-#endif
-    }
-
-    return;
-  }
-
-  if (eventType.EqualsLiteral("CheckboxStateChange")) {
-    if (accessible->NeedsDOMUIEvent()) {
-      uint64_t state = accessible->State();
-      bool isEnabled = !!(state & states::CHECKED);
-
-      RefPtr<AccEvent> accEvent =
-          new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
-      nsEventShell::FireEvent(accEvent);
-    }
-    return;
-  }
-
   LocalAccessible* treeItemAcc = nullptr;
   // If it's a tree element, need the currently selected item.
   if (treeAcc) {
@@ -361,8 +319,8 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
     uint64_t state = accessible->State();
     bool isEnabled = (state & states::EXPANDED) != 0;
 
-    RefPtr<AccEvent> accEvent =
-        new AccStateChangeEvent(accessible, states::EXPANDED, isEnabled);
+    auto accEvent = MakeRefPtr<AccStateChangeEvent>(
+        accessible, states::EXPANDED, isEnabled);
     nsEventShell::FireEvent(accEvent);
     return;
   }
@@ -396,7 +354,7 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
         return;
       }
 
-      RefPtr<AccSelChangeEvent> selChangeEvent = new AccSelChangeEvent(
+      auto selChangeEvent = MakeRefPtr<AccSelChangeEvent>(
           treeAcc, treeItemAcc, AccSelChangeEvent::eSelectionAdd);
       nsEventShell::FireEvent(selChangeEvent);
       return;
@@ -436,8 +394,8 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
       }
     }
   } else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(accessible, states::ACTIVE, true);
+    auto event =
+        MakeRefPtr<AccStateChangeEvent>(accessible, states::ACTIVE, true);
     nsEventShell::FireEvent(event);
     FocusMgr()->ActiveItemChanged(accessible);
 #ifdef A11Y_LOG
@@ -446,8 +404,8 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
     }
 #endif
   } else if (eventType.EqualsLiteral("DOMMenuItemInactive")) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(accessible, states::ACTIVE, false);
+    auto event =
+        MakeRefPtr<AccStateChangeEvent>(accessible, states::ACTIVE, false);
     nsEventShell::FireEvent(event);
 
     // Process DOMMenuItemInactive event for autocomplete only because this is
@@ -564,9 +522,11 @@ void RootAccessible::HandlePopupShownEvent(LocalAccessible* aAccessible) {
     if (!combobox) return;
 
     if (combobox->IsCombobox()) {
-      RefPtr<AccEvent> event =
-          new AccStateChangeEvent(combobox, states::EXPANDED, true);
-      nsEventShell::FireEvent(event);
+      auto event =
+          MakeRefPtr<AccStateChangeEvent>(combobox, states::EXPANDED, true);
+      if (DocAccessible* doc = event->Document()) {
+        doc->FireDelayedEvent(event);
+      }
     }
 
     // If aria-activedescendant is present, redirect focus.
@@ -649,8 +609,8 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
 
   // Fire expanded state change event.
   if (widget->IsCombobox()) {
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(widget, states::EXPANDED, false);
+    auto event =
+        MakeRefPtr<AccStateChangeEvent>(widget, states::EXPANDED, false);
     document->FireDelayedEvent(event);
   }
 }

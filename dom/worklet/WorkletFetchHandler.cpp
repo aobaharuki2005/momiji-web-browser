@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -43,13 +41,13 @@ class StartModuleLoadRunnable final : public Runnable {
       WorkletImpl* aWorkletImpl,
       const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef,
       nsCOMPtr<nsIURI> aURI, nsIURI* aReferrer,
-      const nsTArray<nsString>& aLocalizedStrs)
+      nsTArray<nsString>&& aLocalizedStrs)
       : Runnable("Worklet::StartModuleLoadRunnable"),
         mWorkletImpl(aWorkletImpl),
         mHandlerRef(aHandlerRef),
         mURI(std::move(aURI)),
         mReferrer(aReferrer),
-        mLocalizedStrs(aLocalizedStrs),
+        mLocalizedStrs(std::move(aLocalizedStrs)),
         mParentRuntime(
             JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context())) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -68,7 +66,7 @@ class StartModuleLoadRunnable final : public Runnable {
   nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mReferrer;
-  const nsTArray<nsString>& mLocalizedStrs;
+  nsTArray<nsString> mLocalizedStrs;
   JSRuntime* mParentRuntime;
   JS::ContextOptions mContextOptions;
 };
@@ -108,7 +106,7 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
   MOZ_ASSERT(moduleLoader);
 
   if (!moduleLoader->HasSetLocalizedStrings()) {
-    moduleLoader->SetLocalizedStrings(&mLocalizedStrs);
+    moduleLoader->SetLocalizedStrings(mLocalizedStrs.Clone());
   }
 
   RefPtr<WorkletLoadContext> loadContext = new WorkletLoadContext(mHandlerRef);
@@ -215,6 +213,20 @@ NS_IMETHODIMP FetchCompleteRunnable::RunOnWorkletThread() {
   ModuleLoadRequest* request = moduleLoader->GetRequest(mURI);
   MOZ_ASSERT(request);
 
+#ifdef NIGHTLY_BUILD
+  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-module-script
+  // Extract the content-type. If its essence is wasm, we'll attempt to
+  // compile this module as a wasm module. (Steps 13.2, 13.6)
+  if (mHasWasmMimeTypeEssence) {
+    request->SetHasWasmMimeTypeEssence();
+    request->SetWasmBytes();
+    request->SetBaseURL(mURI);
+    request->OnFetchComplete(mResult);
+    moduleLoader->RemoveRequest(mURI);
+    return NS_OK;
+  }
+#endif
+
   // Set the Source type to "text" for decoding.
   request->SetTextSource(request->mLoadContext.get());
 
@@ -226,15 +238,6 @@ NS_IMETHODIMP FetchCompleteRunnable::RunOnWorkletThread() {
                                 true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-#ifdef NIGHTLY_BUILD
-  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-module-script
-  // Extract the content-type. If its essence is wasm, we'll attempt to
-  // compile this module as a wasm module. (Steps 13.2, 13.6)
-  if (mHasWasmMimeTypeEssence) {
-    request->SetHasWasmMimeTypeEssence();
-  }
-#endif
 
   request->SetBaseURL(mURI);
   request->OnFetchComplete(mResult);
@@ -343,7 +346,7 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   nsIURI* referrer = doc->GetDocumentURIAsReferrer();
   nsCOMPtr<nsIRunnable> runnable = new StartModuleLoadRunnable(
       aWorklet->mImpl, handlerRef, std::move(resolvedURI), referrer,
-      aWorklet->GetLocalizedStrings());
+      aWorklet->GetLocalizedStrings().Clone());
 
   if (NS_FAILED(aWorklet->mImpl->SendControlMessage(runnable.forget()))) {
     return nullptr;
@@ -459,14 +462,11 @@ void WorkletFetchHandler::ResolvePromises() {
 
 nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
                                          nsIURI* aReferrer) {
-  nsAutoCString spec;
-  nsresult res = aURI->GetSpec(spec);
+  RequestOrUTF8String requestInput;
+  nsresult res = aURI->GetSpec(requestInput.SetAsUTF8String());
   if (NS_WARN_IF(NS_FAILED(res))) {
     return NS_ERROR_FAILURE;
   }
-
-  RequestOrUTF8String requestInput;
-  requestInput.SetAsUTF8String().ShareOrDependUpon(spec);
 
   RootedDictionary<RequestInit> requestInit(aCx);
   requestInit.mCredentials.Construct(mCredentials);

@@ -186,6 +186,9 @@ export default class SidebarMain extends MozLitElement {
             // because Lit will lose the original references to them. We instead create copies of
             // these buttons to add to the overflow panel
             let newCopyButton = this.createCopyButton(view);
+            if (!newCopyButton) {
+              continue;
+            }
             panelButtonGroup.appendChild(newCopyButton);
 
             // Hide original button
@@ -239,6 +242,11 @@ export default class SidebarMain extends MozLitElement {
       newButtonAction = this.bottomActions[0];
     } else {
       newButtonAction = this.getToolsAndExtensions().get(view);
+    }
+    if (!newButtonAction) {
+      // We can't make a button without an action.
+      // This can happen if an extension or other tool was just removed
+      return null;
     }
     let newButtonValues = this.getEntrypointValues(newButtonAction);
     let newButton = document.createElement("moz-button");
@@ -524,6 +532,7 @@ export default class SidebarMain extends MozLitElement {
             }
             window.SidebarController.hide({ dismissPanel: false });
             window.SidebarController._state.updateVisibility(false);
+            window.SidebarController.updateToolbarButton();
             break;
           case "sidebar-context-menu-enable-vertical-tabs":
             await window.SidebarController.toggleVerticalTabs();

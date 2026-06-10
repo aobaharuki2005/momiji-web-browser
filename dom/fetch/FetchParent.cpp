@@ -8,9 +8,11 @@
 #include "FetchService.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/PerformanceTimingTypes.h"
+#include "mozilla/dom/ProcessIsolation.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsThreadUtils.h"
@@ -30,18 +32,19 @@ FetchParent::FetchParentCSPEventListener::FetchParentCSPEventListener(
 }
 
 NS_IMETHODIMP FetchParent::FetchParentCSPEventListener::OnCSPViolationEvent(
-    const nsAString& aJSON) {
+    const nsAString& aJSON, const nsAString& aReportGroupName) {
   AssertIsOnMainThread();
   FETCH_LOG(("FetchParentCSPEventListener::OnCSPViolationEvent [%p]", this));
 
   nsAutoString json(aJSON);
-  nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction(__func__, [actorID = mActorID, json]() mutable {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      __func__, [actorID = mActorID, json,
+                 reportGroup = nsString{aReportGroupName}]() mutable {
         FETCH_LOG(
             ("FetchParentCSPEventListener::OnCSPViolationEvent, Runnale"));
         RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
         if (actor) {
-          actor->OnCSPViolationEvent(json);
+          actor->OnCSPViolationEvent(json, reportGroup);
         }
       });
 
@@ -49,8 +52,7 @@ NS_IMETHODIMP FetchParent::FetchParentCSPEventListener::OnCSPViolationEvent(
   return NS_OK;
 }
 
-MOZ_RUNINIT nsTHashMap<nsIDHashKey, RefPtr<FetchParent>>
-    FetchParent::sActorTable;
+constinit nsTHashMap<nsIDHashKey, RefPtr<FetchParent>> FetchParent::sActorTable;
 
 /*static*/
 RefPtr<FetchParent> FetchParent::GetActorByID(const nsID& aID) {
@@ -89,9 +91,36 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
   FETCH_LOG(("FetchParent::RecvFetchOp [%p]", this));
   AssertIsOnBackgroundThread();
 
+  if (mReceivedFetchOp.exchange(true)) {
+    return IPC_FAIL(this, "FetchOp received more than once on this actor");
+  }
   MOZ_ASSERT(!mIsDone);
   if (mActorDestroyed) {
     return IPC_OK();
+  }
+
+  auto principalOrErr = PrincipalInfoToPrincipal(aArgs.principalInfo());
+  if (principalOrErr.isErr()) {
+    return IPC_FAIL(this, "RecvFetchOp failed deserializing principalInfo");
+  }
+  nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
+
+  RefPtr<ThreadsafeContentParentHandle> contentHandle =
+      BackgroundParent::GetContentParentHandle(Manager());
+  if (contentHandle &&
+      StaticPrefs::dom_fetch_validatePrincipalForRemoteType()) {
+    const nsACString& remoteType = contentHandle->GetRemoteType();
+    // The inference process uses ChromeWorkers which have a system principal,
+    // so system principals must be allowed there.
+    EnumSet<ValidatePrincipalOptions> options;
+    if (remoteType == INFERENCE_REMOTE_TYPE) {
+      options += ValidatePrincipalOptions::AllowSystem;
+    }
+    if (!ValidatePrincipalCouldPotentiallyBeLoadedBy(principal, remoteType,
+                                                     options)) {
+      return IPC_FAIL(this,
+                      "RecvFetchOp principal not allowed for remote type");
+    }
   }
 
   mRequest = MakeSafeRefPtr<InternalRequest>(std::move(aArgs.request()));
@@ -176,7 +205,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
       self->mResponsePromises =
           fetchService->Fetch(AsVariant(FetchService::WorkerFetchArgs(
               {self->mRequest.clonePtr(), self->mPrincipalInfo,
-               self->mWorkerScript, self->mClientInfo, self->mController,
+               self->mWorkerScript, *self->mClientInfo, self->mController,
                self->mCookieJarSettings, self->mNeedOnDataAvailable,
                self->mCSPEventListener, self->mAssociatedBrowsingContextID,
                self->mBackgroundEventTarget, self->mID,
@@ -189,6 +218,7 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
           fetchService->Fetch(AsVariant(FetchService::MainThreadFetchArgs({
               self->mRequest.clonePtr(),
               self->mPrincipalInfo,
+              *self->mClientInfo,
               self->mCookieJarSettings,
               self->mNeedOnDataAvailable,
               self->mCSPEventListener,
@@ -394,13 +424,14 @@ nsICSPEventListener* FetchParent::GetCSPEventListener() {
   return mCSPEventListener;
 }
 
-void FetchParent::OnCSPViolationEvent(const nsAString& aJSON) {
+void FetchParent::OnCSPViolationEvent(const nsAString& aJSON,
+                                      const nsAString& aReportGroupName) {
   FETCH_LOG(("FetchParent::OnCSPViolationEvent [%p]", this));
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mHasCSPEventListener);
   MOZ_ASSERT(!mActorDestroyed);
 
-  (void)SendOnCSPViolationEvent(aJSON);
+  (void)SendOnCSPViolationEvent(aJSON, aReportGroupName);
 }
 
 }  // namespace mozilla::dom

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -759,7 +757,7 @@ double AudioContext::CurrentTime() {
 }
 
 nsISerialEventTarget* AudioContext::GetMainThread() const {
-  if (nsIGlobalObject* global = GetOwnerGlobal()) {
+  if (nsIGlobalObject* global = GetRelevantGlobal()) {
     return global->SerialEventTarget();
   }
   return GetCurrentSerialEventTarget();
@@ -1001,6 +999,18 @@ void AudioContext::SuspendFromChrome() {
   SuspendInternal(nullptr, Preferences::GetBool("dom.audiocontext.testing")
                                ? AudioContextOperationFlags::SendStateChange
                                : AudioContextOperationFlags::None);
+}
+
+void AudioContext::SuspendByMediaControl() {
+  // Offline contexts never register a media-control listener, so this should
+  // not be reachable for them.
+  MOZ_DIAGNOSTIC_ASSERT(!mIsOffline);
+  if (mIsShutDown || mCloseCalled) {
+    return;
+  }
+  // Tag the suspend as "by content" so that the page can resume.
+  mSuspendedByContent = true;
+  SuspendInternal(nullptr, AudioContextOperationFlags::SendStateChange);
 }
 
 void AudioContext::SuspendInternal(void* aPromise,
@@ -1313,7 +1323,7 @@ void AudioContext::ReportToConsole(uint32_t aErrorFlags,
   MOZ_ASSERT(aMsg);
   Document* doc = GetOwnerWindow() ? GetOwnerWindow()->GetExtantDoc() : nullptr;
   nsContentUtils::ReportToConsole(aErrorFlags, "Media"_ns, doc,
-                                  nsContentUtils::eDOM_PROPERTIES, aMsg);
+                                  PropertiesFile::DOM_PROPERTIES, aMsg);
 }
 
 BasicWaveFormCache::BasicWaveFormCache(uint32_t aSampleRate)

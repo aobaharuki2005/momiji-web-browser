@@ -1,4 +1,6 @@
 [DEFAULT]
+subsuite = "integration"
+tags = "os_integration"
 
 # Test for sendBeacon during pagehide on browser shutdown (bug 1931956)
 

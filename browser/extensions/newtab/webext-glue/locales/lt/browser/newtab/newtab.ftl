@@ -39,7 +39,7 @@ newtab-search-box-input =
     .placeholder = Ieškokite saityne
     .aria-label = Ieškokite saityne
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Pridėti ieškyklę
 newtab-topsites-add-shortcut-header = Naujas leistukas
@@ -237,9 +237,22 @@ newtab-error-fallback-refresh-link = Pabandykite iš naujo įkelti tinklalapį.
 
 newtab-custom-shortcuts-title = Leistukai
 newtab-custom-shortcuts-subtitle = Jūsų įrašytos arba lankomos svetainės
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Leistukai
     .description = Jūsų įrašytos arba lankomos svetainės
+newtab-custom-shortcuts-nova =
+    .label = Leistukai
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } eilutė
+            [few] { $num } eilutės
+           *[other] { $num } eilučių
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =

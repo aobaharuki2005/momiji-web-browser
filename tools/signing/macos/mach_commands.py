@@ -402,14 +402,17 @@ def auto_detect_channel(ctx, app):
     """Detects the channel of the provided app (nightly, release, etc.)
 
     Reads the CFBundleIdentifier from the provided apps Info.plist and
-    returns the appropriate channel string. Release and Beta builds use
-    org.mozilla.firefox for the CFBundleIdentifier. Nightly channel builds use
-    org.mozilla.nightly.
+    returns the appropriate channel string.
     """
+
     # The bundle IDs for different channels. We use these strings to
     # auto-detect the channel being signed. Different channels use
-    # different entitlement files.
+    # different entitlement files. Release and Beta builds both use
+    # org.mozilla.firefox.
     NIGHTLY_BUNDLEID = "org.mozilla.nightly"
+    NIGHTLY_DEBUG_BUNDLEID = "org.mozilla.nightlydebug"
+    NIGHTLY_UNOFFICIAL_BUNDLEID = "org.mozilla.nightlyunofficial"
+    NIGHTLY_UNOFFICIAL_DEBUG_BUNDLEID = "org.mozilla.nightlyunofficialdebug"
     DEVEDITION_BUNDLEID = "org.mozilla.firefoxdeveloperedition"
     # BETA uses the same bundle ID as Release
     RELEASE_BUNDLEID = "org.mozilla.firefox"
@@ -435,7 +438,12 @@ def auto_detect_channel(ctx, app):
         "Found bundle ID {bundleid}",
     )
 
-    if bundleid == NIGHTLY_BUNDLEID:
+    if bundleid in {
+        NIGHTLY_BUNDLEID,
+        NIGHTLY_DEBUG_BUNDLEID,
+        NIGHTLY_UNOFFICIAL_BUNDLEID,
+        NIGHTLY_UNOFFICIAL_DEBUG_BUNDLEID,
+    }:
         return "nightly"
     elif bundleid == DEVEDITION_BUNDLEID:
         return "devedition"
@@ -451,12 +459,24 @@ def auto_detect_channel(ctx, app):
             {"plist": info_plist},
             (
                 "Couldn't read bundle ID from {plist} or bundle ID "
-                f"({bundleid}) not in [{NIGHTLY_BUNDLEID}, {DEVEDITION_BUNDLEID}"
-                f", {RELEASE_BUNDLEID}]. You can try to specify the channel"
+                f"({bundleid}) not in [{NIGHTLY_BUNDLEID}, {NIGHTLY_DEBUG_BUNDLEID}"
+                f", {NIGHTLY_UNOFFICIAL_BUNDLEID}, {NIGHTLY_UNOFFICIAL_DEBUG_BUNDLEID}"
+                f", {DEVEDITION_BUNDLEID}, {RELEASE_BUNDLEID}]."
+                " You can try to specify the channel"
                 " manually with -c $CHANNEL"
             ),
         )
         sys.exit(1)
+
+
+# Simulate the resolution of the 'only-if-milestone-is-nightly' attribute in
+# 'hardened-sign-config' by taskgraph.
+def should_skip_on_channel(signing_group, channel):
+    if "only-if-milestone-is-nightly" not in signing_group:
+        return False
+    if not isinstance(signing_group["only-if-milestone-is-nightly"], bool):
+        raise ("Unexpected type for 'only-if-milestone-is-nightly'")
+    return signing_group["only-if-milestone-is-nightly"] and channel != "nightly"
 
 
 def sign_with_codesign(
@@ -476,6 +496,9 @@ def sign_with_codesign(
     ctx.log(logging.INFO, "macos-sign", {}, "Signing with codesign")
 
     for signing_group in signing_groups:
+        if should_skip_on_channel(signing_group, channel):
+            continue
+
         cs_cmd = ["codesign"]
         cs_cmd.append("--sign")
         cs_cmd.append(signing_identity)
@@ -625,6 +648,9 @@ def sign_with_rcodesign(
     temp_files_to_cleanup = []
 
     for signing_group in signing_groups:
+        if should_skip_on_channel(signing_group, channel):
+            continue
+
         # Ignore the 'deep' and 'force' setting for rcodesign
         group_runtime = "runtime" in signing_group and signing_group["runtime"]
 

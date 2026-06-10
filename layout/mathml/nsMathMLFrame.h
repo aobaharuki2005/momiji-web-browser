@@ -1,12 +1,11 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMathMLFrame_h___
-#define nsMathMLFrame_h___
+#ifndef nsMathMLFrame_h_
+#define nsMathMLFrame_h_
 
+#include "mozilla/dom/MathMLElement.h"
 #include "nsBoundingMetrics.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
@@ -53,8 +52,7 @@ class nsMathMLFrame : public nsIMathMLFrame {
 
   NS_IMETHOD
   Stretch(mozilla::gfx::DrawTarget* aDrawTarget,
-          nsStretchDirection aStretchDirection,
-          nsBoundingMetrics& aContainerSize,
+          StretchDirection aStretchDirection, nsBoundingMetrics& aContainerSize,
           mozilla::ReflowOutput& aDesiredStretchSize) override {
     return NS_OK;
   }
@@ -93,6 +91,9 @@ class nsMathMLFrame : public nsIMathMLFrame {
 
   bool IsMrowLike() override { return false; }
 
+  // TODO: Implement italic correction for mrow-like and mtext-like elements.
+  nscoord ItalicCorrection() override { return 0; }
+
   // helper to get the mEmbellishData of a frame
   // The MathML REC precisely defines an "embellished operator" as:
   // - an <mo> element;
@@ -109,22 +110,15 @@ class nsMathMLFrame : public nsIMathMLFrame {
   static void GetEmbellishDataFrom(nsIFrame* aFrame,
                                    nsEmbellishData& aEmbellishData);
 
-  // helper to get the presentation data of a frame. If aClimbTree is
-  // set to true and the frame happens to be surrounded by non-MathML
-  // helper frames needed for its support, we walk up the frame hierarchy
-  // until we reach a MathML ancestor or the <root> math element.
-  static void GetPresentationDataFrom(nsIFrame* aFrame,
-                                      nsPresentationData& aPresentationData,
-                                      bool aClimbTree = true);
-
   // utilities to parse and retrieve numeric values in CSS units
   // All values are stored in twips.
   // @pre  aLengthValue is the default length value of the attribute.
   // @post aLengthValue is the length value computed from the attribute.
-  static void ParseAndCalcNumericValue(const nsString& aString,
-                                       nscoord* aLengthValue, uint32_t aFlags,
-                                       float aFontSizeInflation,
-                                       nsIFrame* aFrame);
+  static void ParseAndCalcNumericValue(
+      const nsString& aString, nscoord* aLengthValue, float aFontSizeInflation,
+      nsIFrame* aFrame,
+      mozilla::dom::MathMLElement::ParseFlags aFlags =
+          mozilla::dom::MathMLElement::ParseFlags());
 
   static nscoord CalcLength(const nsCSSValue& aCSSValue,
                             float aFontSizeInflation, nsIFrame* aFrame);
@@ -272,7 +266,7 @@ class nsMathMLFrame : public nsIMathMLFrame {
    */
   void DisplayBar(mozilla::nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                   const nsRect& aRect, const mozilla::nsDisplayListSet& aLists,
-                  uint32_t aIndex = 0);
+                  uint16_t aIndex = 0);
 
   // information about the presentation policy of the frame
   nsPresentationData mPresentationData;
@@ -287,4 +281,4 @@ class nsMathMLFrame : public nsIMathMLFrame {
   nsPoint mReference;
 };
 
-#endif /* nsMathMLFrame_h___ */
+#endif /* nsMathMLFrame_h_ */

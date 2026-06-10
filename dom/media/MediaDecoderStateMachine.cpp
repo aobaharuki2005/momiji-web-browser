@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1044,7 +1042,9 @@ class MediaDecoderStateMachine::LoopingDecodingState
         "audioLoopingOffset=[%" PRId64 "], mAudioTrackDecodedDuration=[%" PRId64
         "]",
         AudioQueue().GetOffset().ToMicroseconds(),
-        mMaster->mAudioTrackDecodedDuration->ToMicroseconds());
+        mMaster->mAudioTrackDecodedDuration
+            ? mMaster->mAudioTrackDecodedDuration->ToMicroseconds()
+            : 0);
     if (!IsRequestingDataFromStartPosition(MediaData::Type::AUDIO_DATA)) {
       RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
     }
@@ -1068,7 +1068,9 @@ class MediaDecoderStateMachine::LoopingDecodingState
         "videoLoopingOffset=[%" PRId64 "], mVideoTrackDecodedDuration=[%" PRId64
         "]",
         VideoQueue().GetOffset().ToMicroseconds(),
-        mMaster->mVideoTrackDecodedDuration->ToMicroseconds());
+        mMaster->mVideoTrackDecodedDuration
+            ? mMaster->mVideoTrackDecodedDuration->ToMicroseconds()
+            : 0);
     if (!IsRequestingDataFromStartPosition(MediaData::Type::VIDEO_DATA)) {
       RequestDataFromStartPosition(TrackInfo::TrackType::kVideoTrack);
     }
@@ -1102,11 +1104,10 @@ class MediaDecoderStateMachine::LoopingDecodingState
             OwnerThread(), __func__,
             [this, isAudio, master = RefPtr{mMaster}]() mutable -> void {
               AUTO_PROFILER_LABEL(
-                  nsPrintfCString(
-                      "LoopingDecodingState::RequestDataFromStartPosition(%s)::"
-                      "SeekResolved",
-                      isAudio ? "audio" : "video")
-                      .get(),
+                  isAudio ? "LoopingDecodingState::"
+                            "RequestDataFromStartPosition(audio)::SeekResolved"
+                          : "LoopingDecodingState::"
+                            "RequestDataFromStartPosition(video)::SeekResolved",
                   MEDIA_PLAYBACK);
               if (auto& state = master->mStateObj;
                   state &&
@@ -1141,11 +1142,10 @@ class MediaDecoderStateMachine::LoopingDecodingState
             [this, isAudio, master = RefPtr{mMaster}](
                 const SeekRejectValue& aReject) mutable -> void {
               AUTO_PROFILER_LABEL(
-                  nsPrintfCString("LoopingDecodingState::"
-                                  "RequestDataFromStartPosition(%s)::"
-                                  "SeekRejected",
-                                  isAudio ? "audio" : "video")
-                      .get(),
+                  isAudio ? "LoopingDecodingState::"
+                            "RequestDataFromStartPosition(audio)::SeekRejected"
+                          : "LoopingDecodingState::"
+                            "RequestDataFromStartPosition(video)::SeekRejected",
                   MEDIA_PLAYBACK);
               if (auto& state = master->mStateObj;
                   state &&
@@ -1881,14 +1881,18 @@ class MediaDecoderStateMachine::AccurateSeekingState
   void HandleAudioWaited(MediaData::Type aType) override {
     MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking,
                "Seek shouldn't be finished");
-
+    if (mSeekRequest.Exists()) {
+      return;
+    }
     RequestAudioData();
   }
 
   void HandleVideoWaited(MediaData::Type aType) override {
     MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking,
                "Seek shouldn't be finished");
-
+    if (mSeekRequest.Exists()) {
+      return;
+    }
     RequestVideoData();
   }
 
@@ -2606,7 +2610,7 @@ class MediaDecoderStateMachine::BufferingState
     }
     if (mMaster->IsVideoDecoding() && !mMaster->HaveEnoughDecodedVideo() &&
         !mMaster->IsTrackingVideoData()) {
-      mMaster->RequestVideoData(TimeUnit());
+      mMaster->RequestVideoData(mMaster->GetMediaTime());
     }
 
     mMaster->ScheduleStateMachineIn(TimeUnit::FromMicroseconds(USECS_PER_S));
@@ -2631,7 +2635,7 @@ class MediaDecoderStateMachine::BufferingState
   void HandleVideoDecoded(VideoData* aVideo) override {
     mMaster->PushVideo(aVideo);
     if (!mMaster->HaveEnoughDecodedVideo()) {
-      mMaster->RequestVideoData(media::TimeUnit());
+      mMaster->RequestVideoData(mMaster->GetMediaTime());
     }
     // This might be the sample we need to exit buffering.
     // Schedule Step() to check it.
@@ -2641,7 +2645,7 @@ class MediaDecoderStateMachine::BufferingState
   void HandleAudioCanceled() override { mMaster->RequestAudioData(); }
 
   void HandleVideoCanceled() override {
-    mMaster->RequestVideoData(media::TimeUnit());
+    mMaster->RequestVideoData(mMaster->GetMediaTime());
   }
 
   void HandleWaitingForAudio() override {
@@ -2657,7 +2661,7 @@ class MediaDecoderStateMachine::BufferingState
   }
 
   void HandleVideoWaited(MediaData::Type aType) override {
-    mMaster->RequestVideoData(media::TimeUnit());
+    mMaster->RequestVideoData(mMaster->GetMediaTime());
   }
 
   void HandleEndOfAudio() override;
@@ -3365,12 +3369,12 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mMetadataManager.Disconnect();
   master->mOnMediaNotSeekable.Disconnect();
   master->mAudibleListener.DisconnectIfExists();
+  master->mPlaybackRateFallbackListener.DisconnectIfExists();
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   master->mStreamName.DisconnectIfConnected();
   master->mSinkDevice.DisconnectIfConnected();
-  master->mOutputCaptureState.DisconnectIfConnected();
-  master->mOutputDummyTrack.DisconnectIfConnected();
+  master->mOutputCaptureInfo.DisconnectIfConnected();
   master->mOutputTracks.DisconnectIfConnected();
   master->mOutputPrincipal.DisconnectIfConnected();
 
@@ -3409,8 +3413,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       mTotalBufferingDuration(TimeDuration::Zero()),
       INIT_MIRROR(mStreamName, nsAutoString()),
       INIT_MIRROR(mSinkDevice, nullptr),
-      INIT_MIRROR(mOutputCaptureState, MediaDecoder::OutputCaptureState::None),
-      INIT_MIRROR(mOutputDummyTrack, nullptr),
+      INIT_MIRROR(mOutputCaptureInfo,
+                  MediaDecoder::OutputCaptureInfo(
+                      MediaDecoder::OutputCaptureState::None)),
       INIT_MIRROR(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_MIRROR(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
       INIT_CANONICAL(mCanonicalOutputPrincipal, PRINCIPAL_HANDLE_NONE),
@@ -3441,9 +3446,7 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   // Initialize watchers.
   mWatchManager.Watch(mStreamName,
                       &MediaDecoderStateMachine::StreamNameChanged);
-  mWatchManager.Watch(mOutputCaptureState,
-                      &MediaDecoderStateMachine::UpdateOutputCaptured);
-  mWatchManager.Watch(mOutputDummyTrack,
+  mWatchManager.Watch(mOutputCaptureInfo,
                       &MediaDecoderStateMachine::UpdateOutputCaptured);
   mWatchManager.Watch(mOutputTracks,
                       &MediaDecoderStateMachine::UpdateOutputCaptured);
@@ -3463,19 +3466,30 @@ void MediaDecoderStateMachine::AudioAudibleChanged(bool aAudible) {
   mIsAudioDataAudible = aAudible;
 }
 
-MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
-  if (mOutputCaptureState != MediaDecoder::OutputCaptureState::None) {
-    DecodedStream* stream = new DecodedStream(
+void MediaDecoderStateMachine::OnPlaybackRateFallback() {
+  MOZ_ASSERT(OnTaskQueue());
+  mOnPlaybackEvent.Notify(MediaPlaybackEvent::PlaybackRateFallback);
+}
+
+already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateAudioSink() {
+  if (mOutputCaptureInfo.Ref().mState !=
+      MediaDecoder::OutputCaptureState::None) {
+    const auto& outputCaptureInfo = mOutputCaptureInfo.Ref();
+    RefPtr stream = MakeRefPtr<DecodedStream>(
         OwnerThread(),
-        mOutputCaptureState == MediaDecoder::OutputCaptureState::Capture
-            ? mOutputDummyTrack.Ref()
+        outputCaptureInfo.mState == MediaDecoder::OutputCaptureState::Capture
+            ? outputCaptureInfo.mDummyTrack
             : nullptr,
         mOutputTracks, CanonicalOutputPrincipal(), mVolume, mPlaybackRate,
-        mPreservesPitch, mAudioQueue, mVideoQueue);
+        mPreservesPitch, outputCaptureInfo.mShouldConfigAudioOutput,
+        outputCaptureInfo.mDevice, mAudioQueue, mVideoQueue);
     mAudibleListener.DisconnectIfExists();
     mAudibleListener = stream->AudibleEvent().Connect(
         OwnerThread(), this, &MediaDecoderStateMachine::AudioAudibleChanged);
-    return stream;
+    mPlaybackRateFallbackListener.DisconnectIfExists();
+    mPlaybackRateFallbackListener = stream->PlaybackRateFallbackEvent().Connect(
+        OwnerThread(), this, &MediaDecoderStateMachine::OnPlaybackRateFallback);
+    return stream.forget();
   }
 
   auto audioSinkCreator = [s = RefPtr<MediaDecoderStateMachine>(this), this]() {
@@ -3487,7 +3501,7 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
         mTaskQueue, this, &MediaDecoderStateMachine::AudioAudibleChanged);
     return audioSink;
   };
-  return new AudioSinkWrapper(
+  return MakeAndAddRef<AudioSinkWrapper>(
       mTaskQueue, mAudioQueue, std::move(audioSinkCreator), mVolume,
       mPlaybackRate, mPreservesPitch, mSinkDevice.Ref());
 }
@@ -3609,8 +3623,7 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder) {
   // Connect mirrors.
   aDecoder->CanonicalStreamName().ConnectMirror(&mStreamName);
   aDecoder->CanonicalSinkDevice().ConnectMirror(&mSinkDevice);
-  aDecoder->CanonicalOutputCaptureState().ConnectMirror(&mOutputCaptureState);
-  aDecoder->CanonicalOutputDummyTrack().ConnectMirror(&mOutputDummyTrack);
+  aDecoder->CanonicalOutputCaptureInfo().ConnectMirror(&mOutputCaptureInfo);
   aDecoder->CanonicalOutputTracks().ConnectMirror(&mOutputTracks);
   aDecoder->CanonicalOutputPrincipal().ConnectMirror(&mOutputPrincipal);
 
@@ -4426,9 +4439,12 @@ void MediaDecoderStateMachine::UpdateOutputCaptured() {
   AUTO_PROFILER_LABEL("MediaDecoderStateMachine::UpdateOutputCaptured",
                       MEDIA_PLAYBACK);
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT_IF(
-      mOutputCaptureState == MediaDecoder::OutputCaptureState::Capture,
-      mOutputDummyTrack.Ref());
+  MOZ_ASSERT_IF(mOutputCaptureInfo.Ref().mState ==
+                    MediaDecoder::OutputCaptureState::Capture,
+                mOutputCaptureInfo.Ref().mDummyTrack);
+
+  LOG("UpdateOutputCaptured, shouldConfigAudioOutput=%d",
+      static_cast<int>(mOutputCaptureInfo.Ref().mShouldConfigAudioOutput));
 
   // Reset these flags so they are consistent with the status of the sink.
   // TODO: Move these flags into MediaSink to improve cohesion so we don't need
@@ -4436,6 +4452,9 @@ void MediaDecoderStateMachine::UpdateOutputCaptured() {
   mAudioCompleted = false;
   mVideoCompleted = false;
 
+  // TODO: When it becomes necessary to remove audio output from a DecodedStream
+  // that already has an audio output set, we should remove the output directly
+  // instead of tearing down and recreating a new sink. See bug 2009488.
   // Don't create a new media sink if we're still suspending media sink.
   if (!mIsMediaSinkSuspended) {
     const bool wasPlaying = IsPlaying();
@@ -4454,7 +4473,7 @@ void MediaDecoderStateMachine::UpdateOutputCaptured() {
   // Don't buffer as much when audio is captured because we don't need to worry
   // about high latency audio devices.
   mAmpleAudioThreshold =
-      mOutputCaptureState != MediaDecoder::OutputCaptureState::None
+      mOutputCaptureInfo.Ref().mState != MediaDecoder::OutputCaptureState::None
           ? detail::AMPLE_AUDIO_THRESHOLD / 2
           : detail::AMPLE_AUDIO_THRESHOLD;
 

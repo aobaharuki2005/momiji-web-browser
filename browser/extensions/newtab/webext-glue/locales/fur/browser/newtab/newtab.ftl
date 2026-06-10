@@ -8,9 +8,13 @@
 newtab-page-title = Gnove schede
 newtab-settings-button =
     .title = Personalize la pagjine de tô gnove schede
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button =
     .title = Personalize cheste pagjine
+#  (developer note): @nova-cleanup(remove-string): Remove newtab-customize-panel-icon-button-label once Nova lands, will be using newtab-customize-panel-label instead
 newtab-customize-panel-icon-button-label = Personalize
+newtab-customize-panel-label =
+    .label = Personalize
 newtab-personalize-settings-icon-label =
     .title = Personalize Gnove schede
     .aria-label = Impostazions
@@ -23,6 +27,9 @@ newtab-personalize-dialog-label =
     .aria-label = Personalize
 newtab-logo-and-wordmark =
     .aria-label = { -brand-full-name }
+newtab-card-dismiss-button =
+    .title = Siere
+    .aria-label = Siere
 
 ## Search box component.
 
@@ -49,7 +56,7 @@ newtab-search-box-input =
     .placeholder = Cîr tal web
     .aria-label = Cîr tal web
 
-## Top Sites - General form dialog.
+## Clear text button for the URL and image URL input fields in the Top Sites form.
 
 newtab-topsites-add-search-engine-header = Zonte motôr di ricercje
 newtab-topsites-add-shortcut-header = Gnove scurte
@@ -69,6 +76,11 @@ newtab-topsites-url-validation = URL valit necessari
 newtab-topsites-image-url-label = URL di imagjin personalizade
 newtab-topsites-use-image-link = Dopre une imagjin personalizade…
 newtab-topsites-image-validation = No si à rivât a cjariâ la imagjin. Prove cuntun URL diferent.
+
+## Clear text button for the URL and image URL input fields in the Top Sites form.
+
+newtab-topsites-clear-input =
+    .aria-label = Nete test
 
 ## Top Sites - General form dialog buttons. These are verbs/actions.
 
@@ -136,6 +148,9 @@ newtab-menu-report = Segnale
 # Context menu option to personalize New Tab recommended stories by blocking a section of stories,
 # e.g. "Sports". "Block" is a verb here.
 newtab-menu-section-block = Bloche
+# "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
+# e.g. Following the travel section of stories.
+newtab-menu-section-unfollow-topic = Smet di sta daûr
 # "Follow", "unfollow", and "following" are social media terms that refer to subscribing to or unsubscribing from a section of stories.
 # e.g. Following the travel section of stories.
 newtab-menu-section-unfollow = Smet di sta daûr al argoment
@@ -304,9 +319,23 @@ newtab-error-fallback-refresh-link = Inzorne la pagjine par tornâ a provâ.
 
 newtab-custom-shortcuts-title = Scurtis
 newtab-custom-shortcuts-subtitle = Sîts che tu âs salvât o visitât
+#  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
     .label = Scurtis
     .description = Sîts che tu âs salvât o visitât
+newtab-custom-shortcuts-nova =
+    .label = Scurtis
+newtab-custom-row-description =
+    .description = Numar di riis
+# Variables
+#   $num (number) - Number of rows to display
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be using "row"/"rows" anymore for the dropdown
+newtab-custom-row-selector2 =
+    .label =
+        { $num ->
+            [one] { $num } rie
+           *[other] { $num } riis
+        }
 # Variables
 #   $num (number) - Number of rows to display
 newtab-custom-row-selector =
@@ -317,9 +346,12 @@ newtab-custom-row-selector =
 newtab-custom-sponsored-sites = Scurtis sponsorizadis
 newtab-custom-pocket-title = Conseâts di { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Contignûts ecezionâi curâts di { -pocket-brand-name }, part de famee { -brand-product-name }
+#  (developer note): @nova-cleanup(remove-string): Remove string once Nova lands. We won't be having a description under "Recommended stories" anymore
 newtab-custom-stories-toggle =
     .label = Storiis conseadis
     .description = Contignûts ecezionâl curât de famee di prodots { -brand-product-name }
+newtab-recommended-stories-toggle =
+    .label = Storiis conseadis
 newtab-custom-stories-personalized-toggle =
     .label = Storiis
 newtab-custom-stories-personalized-checkbox-label = Storiis personalizadis in base ae tô ativitât
@@ -330,18 +362,24 @@ newtab-custom-recent-subtitle = Une selezion di sîts e contignûts resints
 newtab-custom-weather-toggle =
     .label = Meteo
     .description = Previsions par vuê cuntune voglade
-newtab-custom-trending-search-toggle =
-    .label = Ricercjis di tindince
-    .description = Argoments popolârs e cirûts dispès
 newtab-custom-widget-weather-toggle =
     .label = Meteo
-newtab-custom-widget-trending-search-toggle =
-    .label = Ricercjis di tindince
 newtab-custom-widget-lists-toggle =
     .label = Listis
 newtab-custom-widget-timer-toggle =
     .label = Temporizadôr
+newtab-custom-widget-sports-toggle =
+    .label = Cope dal mont
+newtab-custom-widget-clock-toggle =
+    .label = Orloi
+newtab-custom-widget-sports-toggle2 =
+    .label = Sports
 newtab-custom-widget-section-title = Widgets
+newtab-custom-widget-section-toggle =
+    .label = Widgets
+newtab-widget-manage-title = Widgets
+newtab-widget-manage-widget-button =
+    .label = Gjestìs widgets
 # Tooltip for close button
 newtab-custom-close-menu-button =
     .title = Siere
@@ -353,8 +391,12 @@ newtab-custom-settings = Gjestìs plui impostazions
 
 newtab-wallpaper-title = Fonts
 newtab-wallpaper-reset = Ripristine predefinît
+#  (developer note): @nova-cleanup(remove-string): Remove old "Upload an image" string once Nova lands. The new "Add an image"  string will take over
 newtab-wallpaper-upload-image = Cjame une imagjin
+newtab-wallpaper-add-an-image = Zonte une imagjin
 newtab-wallpaper-custom-color = Sielç un colôr
+newtab-wallpaper-toggle-title =
+    .label = Fonts
 # Variables
 #   $file_size (number) - The number of the maximum image file size (in MB) that may be uploaded
 newtab-wallpaper-error-max-file-size = La imagjin e va fûr de dimension massime ametude ({ $file_size } MB). Prove a cjariâ un file plui piçul.
@@ -377,7 +419,9 @@ newtab-wallpaper-light-fox-anniversary = Une bolp intun cjamp jerbôs cuntun pae
 
 ## Solid Colors
 
+#  (developer note): @nova-cleanup(remove-string): Remove old "Solid colors" string once Nova lands. The simplified "Colors" string will take over
 newtab-wallpaper-category-title-colors = Colôr solit
+newtab-wallpaper-colors = Colôrs
 newtab-wallpaper-blue = Blu
 newtab-wallpaper-light-blue = Blu clâr
 newtab-wallpaper-light-purple = Viole clâr
@@ -468,7 +512,12 @@ newtab-weather-menu-change-location = Cambie localitât
 newtab-weather-change-location-search-input-placeholder =
     .placeholder = Cîr localitât
     .aria-label = Cîr localitât
+# "Current" refers to the user's physical/geographic location detected via geolocation.
+newtab-weather-change-location-search-use-current =
+    .label = Dopre la posizion atuâl
 newtab-weather-menu-weather-display = Visualizazion meteo
+newtab-weather-todays-forecast = Previsions par vuê
+newtab-weather-see-full-forecast = Viôt la prevision complete
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
 # - Detailed: Include simple information plus a short text summary: e.g. "Mostly cloudy"
@@ -491,8 +540,23 @@ newtab-weather-opt-in-not-now =
     .label = No cumò
 newtab-weather-opt-in-yes =
     .label = Sì
+newtab-weather-opt-in-headline = Viôt lis previsions meteorologjichis locâls
+newtab-weather-opt-in-use-location =
+    .label = Dopre posizion
+newtab-weather-opt-in-choose-location = Sielç posizion
 # We'll be showing static (fake) weather data if the user has not opted in to using their location
 newtab-weather-static-city = New York
+# "Highest" here refers to the highest temperature of the day
+newtab-weather-high =
+    .aria-label = Massime
+# "Lowest" here refers to the lowest temperature of the day
+newtab-weather-low =
+    .aria-label = Minime
+# Variables:
+#   $provider (string) - Service provider for weather data
+newtab-weather-see-forecast-description =
+    .title = Viôt lis previsions in { $provider }
+    .aria-description = { $provider } ∙ Sponsorizât
 
 ## Topic Labels
 
@@ -539,8 +603,16 @@ newtab-topic-selection-button-pick-interests = Sielç i tiei interès
 ## e.g. Following the travel section of stories.
 
 newtab-section-follow-button = Sta daûr
+# Variables:
+#   $topic (string) - Topic that the user can follow
+newtab-section-follow-button-label =
+    .aria-label = Sta daûr a { $topic }
 newtab-section-following-button = Tu stâs daûr
 newtab-section-unfollow-button = Smet di sta daûr
+# Variables:
+#   $topic (string) - Topic that the user is following and can unfollow
+newtab-section-unfollow-button-label =
+    .aria-label = Tu stâs daûr: smet di stâ daûr a { $topic }
 # A modal may appear next to the Follow button, directing users to try out the feature
 newtab-section-follow-highlight-title = Regole di fin il to feed
 newtab-section-follow-highlight-subtitle = Sta daûr dai argoments che ti interessin par scuvierzi di plui su ce che ti plâs.
@@ -552,6 +624,22 @@ newtab-section-follow-highlight-subtitle = Sta daûr dai argoments che ti intere
 newtab-section-block-button = Bloche
 newtab-section-blocked-button = Blocât
 newtab-section-unblock-button = Sbloche
+# Variables:
+#   $topic (string) - Name of topic that user is following
+newtab-section-follow-topic =
+    .aria-label = Sta daûr a { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is unfollowing
+newtab-section-unfollow-topic =
+    .aria-label = Smet di stâ daûr a { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is blocking
+newtab-section-block-topic =
+    .aria-label = Bloche { $topic }
+# Variables:
+#   $topic (string) - Name of topic that user is unblocking
+newtab-section-unblock-topic =
+    .aria-label = Sbloche { $topic }
 
 ## Confirmation modal for blocking a section
 
@@ -561,6 +649,7 @@ newtab-section-confirm-block-topic-p2 = I argoments blocâts no vignaran plui mo
 # Variables:
 #   $topic (string) - Name of topic that user is blocking
 newtab-section-block-topic-button = Bloche { $topic }
+newtab-section-block-cancel-button = Anule
 
 ## Strings for custom wallpaper highlight
 
@@ -582,6 +671,12 @@ newtab-new-user-custom-wallpaper-title = Sielç un fonts par personalizâ il to 
 newtab-new-user-custom-wallpaper-subtitle = Rint ogni gnove schede come se e fos cjase tô, cun fonts e colôrs personalizâts.
 newtab-new-user-custom-wallpaper-cta = Provilu daurman
 
+## Strings for Nova wallpaper feature highlight
+
+newtab-wallpaper-feature-highlight-title = A son rivâts gnûfs fonts
+newtab-wallpaper-feature-highlight-subtitle = Sielç il fonts che ti plâs di plui e rint familiâr ogni gnove schede.
+newtab-wallpaper-feature-highlight-cta = Sielç fonts
+
 ## Strings for download mobile highlight
 
 newtab-download-mobile-highlight-title = Discjame { -brand-product-name } par dispositîfs mobii
@@ -597,7 +692,7 @@ newtab-download-mobile-highlight-image =
 newtab-shortcuts-highlight-title = I tiei preferîts a puartade di man
 newtab-shortcuts-highlight-subtitle = Zonte une scurte par mantignî i tiei sîts preferîts a puartade di clic.
 
-## Strings for reporting ads and content
+## Strings for reporting issues with ads and content
 
 newtab-report-content-why-reporting-this =
     .label = Parcè stâstu segnalant cheste publicitât?
@@ -615,21 +710,27 @@ newtab-report-content-inappropriate-offensive =
     .label = Inadate o ofensive
 newtab-report-content-spam-misleading =
     .label = Spam o ingjanose
+newtab-report-content-requires-payment-subscription =
+    .label = Al domande il paiament o l'abonament
+newtab-report-content-requires-payment-subscription-learn-more = Par savê di plui
 newtab-report-cancel = Anule
 newtab-report-submit = Invie
 newtab-toast-thanks-for-reporting =
     .message = Graciis pe segnalazion.
-
-## Strings for trending searches
-
-newtab-trending-searches-show-trending =
-    .title = Mostre ricercjis di tindince
-newtab-trending-searches-hide-trending =
-    .title = Plate ricercjis di tindince
-newtab-trending-searches-learn-more = Plui informazions
-newtab-trending-searches-dismiss = Plate ricercjis di tindince
-# "Trending searches refers to popular searches from search engines
-newtab-trending-searches-title = Ricercjis di tindince
+newtab-toast-widgets-hidden =
+    .message = Selezione la icone a forme di lapis par tornâ a zontâ i widgets cuant che tu vuelis.
+# Variables:
+#   $topic (string) - Topic that the user has followed
+newtab-section-toast-follow =
+    .message = Cumò tu stâs daûr a { $topic }.
+# Variables:
+#   $topic (string) - Topic that the user has unfollowed
+newtab-section-toast-unfollow =
+    .message = No tu stâs plui daûr a { $topic }.
+# Variables:
+#   $topic (string) - Topic that the user has blocked
+newtab-section-toast-block =
+    .message = No tu viodarâs plui storiis su { $topic }.
 
 ## Strings for task / to-do list productivity widget
 
@@ -644,13 +745,20 @@ newtab-widget-lists-label-beta =
 # Variables:
 #   $number (number) - Amount of list items marked complete
 newtab-widget-lists-completed-list = Completadis ({ $number })
+newtab-widget-lists-celebration-headline = Biel lavôr
+newtab-widget-lists-celebration-subhead = Fat dut
 newtab-widget-task-list-menu-copy = Copie
 newtab-widget-lists-menu-edit = Modifiche non liste
+newtab-widget-lists-menu-edit2 =
+    .aria-label = Modifiche non liste
 newtab-widget-lists-menu-create = Cree gnove liste
 newtab-widget-lists-menu-delete = Elimine cheste liste
 newtab-widget-lists-menu-copy = Copie liste intes notis
-newtab-widget-lists-menu-hide = Plate dutis lis listis
 newtab-widget-lists-menu-learn-more = Plui informazions
+newtab-widget-lists-button-add-item = Zonte un element
+newtab-widget-lists-input-add-an-item2 =
+    .placeholder = Zonte un element
+    .aria-label = Zonte un element
 newtab-widget-lists-input-add-an-item =
     .placeholder = Zonte un element
 newtab-widget-lists-input-error = Inclût test par zontâ un element.
@@ -659,19 +767,78 @@ newtab-widget-lists-input-menu-move-up = Sposte in sù
 newtab-widget-lists-input-menu-move-down = Sposte in jù
 newtab-widget-lists-input-menu-delete = Elimine
 newtab-widget-lists-input-menu-edit = Modifiche
+newtab-widget-lists-input-menu-edit2 =
+    .aria-label = Modifiche element
+newtab-widget-lists-edit-clear =
+    .aria-label = Anule
+    .title = Anule
 # the + symbol emphasises the functionality of adding a new list
 newtab-widget-lists-dropdown-create =
     .label = + Cree une gnove liste
 newtab-widget-lists-name-label-default =
     .label = Liste di ativitâts
+newtab-widget-lists-name-label-checklist =
+    .label = Liste di control
 newtab-widget-lists-name-placeholder-default =
     .placeholder = Liste di ativitâts
+newtab-widget-lists-name-placeholder-checklist2 =
+    .placeholder = Liste di control
+    .aria-label = Modifiche non de liste
+# The placeholder value of the name field for a newly created list
+newtab-widget-lists-name-placeholder-new2 =
+    .placeholder = Gnove liste
+    .aria-label = Modifiche non liste
+newtab-widget-lists-name-placeholder-checklist =
+    .placeholder = Liste di control
 # The placeholder value of the name field for a newly created list
 newtab-widget-lists-name-placeholder-new =
     .placeholder = Gnove liste
+newtab-widget-section-title = Widgets
+newtab-widget-menu-hide = Plate widgets
+newtab-widget-menu-change-size = Cambie dimension
+# Parent label for a submenu in the widget menu that reorders the widget
+# among its siblings. "Left" and "Right" appear as items inside this submenu.
+newtab-widget-menu-move = Sposte
+# Submenu item under "Move"; moves the widget one position to the left.
+# RTL locales should translate this as "Right".
+newtab-widget-menu-move-left = A çampe
+# Submenu item under "Move"; moves the widget one position to the right.
+# RTL locales should translate this as "Left".
+newtab-widget-menu-move-right = A diestre
+newtab-widget-size-small = Piçule
+newtab-widget-size-medium = Medie
+newtab-widget-size-large = Grande
+# Tooltip for hide all widgets button
+newtab-widget-section-hide-all-button =
+    .title = Plate widgets
+    .aria-label = Plate ducj i widgets
+newtab-widget-section-maximize =
+    .title = Slargje widgets
+    .aria-label = Slargje ducj i widgets ae dimension massime
+newtab-widget-section-minimize =
+    .title = Minimize widgets
+    .aria-label = Strenç ducj i widgets ae dimension compate
+newtab-widget-section-menu-button =
+    .title = Menù widgets
+    .aria-label = Vierç menù dai widgets
+newtab-widget-add-widgets-button =
+    .aria-label = Zonte widget
+    .title = Zonte widget
+newtab-widget-section-menu-manage = Gjestìs widgets
+newtab-widget-section-menu-hide-all = Plate widgets
+newtab-widget-section-menu-learn-more = Plui informazions
+newtab-widget-section-feedback = Dânus la tô opinion
+# Button shown when additional widgets are hidden beyond the
+# first row, allowing users to show them.
+newtab-widget-section-show-more =
+    .label = Mostre altris widgets
+# Button shown when the widgets row is expanded to multiple rows,
+# allowing users to collapse it back to one row.
+newtab-widget-section-show-less =
+    .label = Mostre mancul widgets
+newtab-widget-lists-name-default = Liste di control
 
-## Strings for timer productivity widget
-## When the timer ends, a system notification may be shown. Depending on which mode the timer is in, that message would be shown
+## Strings introduced by the Nova redesign of the Timer widget
 
 newtab-widget-timer-notification-title = Temporizadôr
 newtab-widget-timer-notification-focus = Il timp par concentrâti al è finît. Ben fate. Ti coventie une pause?
@@ -689,14 +856,288 @@ newtab-widget-timer-reset =
     .title = Ripristine
 newtab-widget-timer-menu-notifications = Disative lis notifichis
 newtab-widget-timer-menu-notifications-on = Ative lis notifichis
-newtab-widget-timer-menu-hide = Plate temporizadôr
 newtab-widget-timer-menu-learn-more = Plui informazions
+# The title displays above a set of top news headlines.
+newtab-daily-briefing-card-title = Gnovis in evidence
+newtab-daily-briefing-card-menu-dismiss = Siere
+# Variables:
+#   $minutes (number) - Time since the feed has been refreshed
+newtab-daily-briefing-card-timestamp = Inzornât { $minutes }m indaûr
 newtab-widget-message-title = Reste concentrât doprant lis listis e il temporizadôr integrât
 # to-dos stands for "things to do".
 newtab-widget-message-copy = Di pro memoria svelts a listis di ativitâts cuotidianis, di sessions di concentrazion a pausis par rilassâsi — manten la atenzion e rispiete i timps.
+# One spot refers to a dedicated section on new tab to manage and use widgets
+newtab-widget-message-focus-forecasts-title = Un puest dulà concentrâsi, viodi lis previsions dal timp e tant altri
+newtab-widget-message-focus-forecasts-body = Fâs cori la tô zornade cui widgets di { -brand-product-name }. Bute un voli aes previsions dal timp, reste concentrât su lis tôs ativitâts o ten di voli l'orloi globâl.
+# "Make Firefox yours" refers to about:newtab. The call to action here ("Try it now")
+# is to customize the new tab page with a background image or color from
+# the built-in wallpaper collection or uploading your own image.
+newtab-promo-card-title-addons = Rint { -brand-product-name } pardabon to
+newtab-promo-card-body-addons = Sielç un fonts de nestre colezion opûr prodûs un to.
+newtab-promo-card-cta-addons = Provilu daurman
 newtab-promo-card-title = Prudele { -brand-product-name }
 newtab-promo-card-body = I nestris patrocinadôrs nus supuartin te nestre mission di fâ sù un web miôr
 newtab-promo-card-cta = Plui informazions
 newtab-promo-card-dismiss-button =
     .title = Siere
     .aria-label = Scarte e siere
+
+## Strings introduced by the Nova redesign of the Timer widget
+
+# Variables:
+#   $minutes (number) - The currently selected timer duration in minutes
+newtab-widget-timer-start-aria =
+    .aria-label =
+        { $minutes ->
+            [one] Invie il temporizadôr di { $minutes } minût
+           *[other] Invie il temporizadôr di { $minutes } minûts
+        }
+newtab-widget-timer-pause-aria =
+    .aria-label = Met in pause il temporizadôr
+# Variables:
+#   $minutes (number) - The currently selected timer duration in minutes
+newtab-widget-timer-spinbutton-name =
+    .aria-label =
+        { $minutes ->
+            [one] { $minutes } minût
+           *[other] { $minutes } minûts
+        }
+newtab-widget-timer-decrease-min =
+    .title = Diminuìs di 1 minût
+newtab-widget-timer-increase-min =
+    .title = Aumente di 1 minût
+newtab-widget-timer-mode-group =
+    .aria-label = Modalitât temporizadôr
+# Small label shown beneath the live time while the focus timer is running or paused.
+newtab-widget-timer-running-focus = Concentrazion
+# Small label shown beneath the live time while the break timer is running or paused.
+newtab-widget-timer-running-break = Pause
+# Context-menu item to hide the Timer widget. Replaces the shared "Hide widget"
+# copy with a widget-specific string per the Nova design.
+newtab-widget-timer-menu-hide = Plate temporizadôr
+# Heading shown inside the Timer widget after a focus session ends.
+newtab-widget-timer-celebration-heading-focus = Biel lavôr
+# Heading shown inside the Timer widget after a break session ends.
+newtab-widget-timer-celebration-heading-break = La tô pause e je finide
+# Message shown inside the Timer widget after a focus session ends.
+newtab-widget-timer-celebration-message-focus = Ti coventie une pause?
+# Message shown inside the Timer widget after a break session ends.
+newtab-widget-timer-celebration-message-break = Sêstu pront(e) a concentrâti?
+
+##
+
+newtab-sports-widget-menu-follow-teams = Sta daûr des scuadris
+newtab-sports-widget-menu-view-schedule = Viôt il calendari
+newtab-sports-widget-menu-view-upcoming = Visualize ce che al sta par rivâ
+newtab-sports-widget-menu-view-results = Viôt i risultâts
+# Milestone dates (e.g. group stage, semifinals, etc.). Refers to calendar dates.
+newtab-sports-widget-menu-key-dates = Datis impuartantis
+newtab-sports-widget-menu-learn-more = Plui informazions
+# “Keep tabs on” is an informal expression meaning to stay updated on, stay informed on, or regularly follow something (in this case, World Cup matches and updates).
+newtab-sports-widget-keep-tabs = Reste inzornât sui mondiâi
+newtab-sports-widget-get-updates = Ricêf inzornaments in timp reâl su lis partidis e ancjemò altri.
+newtab-sports-widget-view-schedule =
+    .label = Viôt il calendari
+newtab-sports-widget-follow-teams =
+    .label = Sta daûr des scuadris
+newtab-sports-widget-view-matches =
+    .label = Viôt partidis
+# Variables:
+#   $number (number) - Maximum number of teams a user can choose to follow in the team selection state
+newtab-sports-widget-follow-teams-title =
+    { $number ->
+        [one] Sta daûr fin a un massim di { $number } scuadre
+       *[other] Sta daûr fin a un massim di { $number } scuadris
+    }
+newtab-sports-widget-choose-wallpaper =
+    .label = Sielç un fonts
+newtab-sports-widget-skip = Salte
+newtab-sports-widget-search-country =
+    .placeholder = Cîr nazion
+    .aria-label = Cîr nazion
+newtab-sports-widget-cancel = Anule
+newtab-sports-widget-done-button =
+    .label = Fat
+# Heading for the list of streaming services available outside the user’s country/region.
+newtab-sports-widget-watch-available-other-regions = Altris regjons
+# Button that opens the provider’s stream page in a new tab.
+newtab-sports-widget-watch-play =
+    .aria-label = Vierç direte video
+    .title = Vierç direte video
+newtab-sports-widget-group-stage = Fase a zirons
+newtab-sports-widget-group-a = Grup A
+newtab-sports-widget-group-b = Grup B
+newtab-sports-widget-group-c = Grup C
+newtab-sports-widget-group-d = Grup D
+newtab-sports-widget-group-e = Grup E
+newtab-sports-widget-group-f = Grup F
+newtab-sports-widget-group-g = Grup G
+newtab-sports-widget-group-h = Grup H
+newtab-sports-widget-group-i = Grup I
+newtab-sports-widget-group-j = Grup J
+newtab-sports-widget-group-k = Grup K
+newtab-sports-widget-group-l = Grup L
+# The "LIVE" string is meant to be uppercase in English, but other languages and locales may vary in how they handle this.
+newtab-sports-widget-live = DIRETE
+newtab-custom-widget-live-refresh =
+    .title = Inzorne risultâts
+    .aria-label = Inzorne risultâts
+newtab-sports-widget-upcoming = Daûr a rivâ
+newtab-sports-widget-results = Risultâts
+newtab-sports-widget-semi-finals = Semifinâls
+newtab-sports-widget-bronze-finals = Finâl pal tierç puest
+# Final is the final match for 1st place.
+newtab-sports-widget-final = Finâl
+newtab-sports-widget-delayed = In ritart
+newtab-sports-widget-postponed = Posticipade
+newtab-sports-widget-suspended = Sospindude
+newtab-sports-widget-cancelled = Anulade
+newtab-sports-widget-information = Informazions su la partide
+newtab-sports-widget-no-live-data = In chest moment i dâts de partide in direte no si stan inzornant
+newtab-sports-widget-view-results-link = Viôt i risultâts
+newtab-sports-widget-third-place = Tierç puest
+newtab-sports-widget-champions = Campions
+newtab-sports-widget-world-cup-champions = Campions de Cope dal mont 2026
+# Variables:
+#   $date (Date) - The match start time
+newtab-sports-widget-match-time = { DATETIME($date, hour: "2-digit", minute: "2-digit") }
+newtab-sports-widget-match-full-time = Partide finide
+newtab-sports-widget-match-halftime = Interval
+newtab-sports-widget-match-extra-time = Timps suplementârs
+newtab-sports-widget-match-penalties = Rigôrs
+
+## Accessible labels for match rows in the sports widget. These are read by
+## screen readers to announce the match details and status.
+## Variables shared by all messages in this group:
+##   $homeTeam (String) - The full name of the home team (e.g. "Mexico")
+##   $awayTeam (String) - The full name of the away team (e.g. "Russia")
+
+# A finished match row (regular full-time result).
+# Variables:
+#   $homeScore (number) - The home team's regular-time score
+#   $awayScore (number) - The away team's regular-time score
+newtab-sports-widget-match-aria-label-results =
+    .aria-label = { $homeTeam }, { $homeScore } cuintri { $awayTeam }, { $awayScore }
+# A finished match row that went to a penalty shootout.
+# Parenthesized values are the shootout score.
+# Variables:
+#   $homeScore (number) - The home team's regular-time score
+#   $awayScore (number) - The away team's regular-time score
+#   $homePenalty (number) - The home team's penalty shootout score
+#   $awayPenalty (number) - The away team's penalty shootout score
+newtab-sports-widget-match-aria-label-results-penalties =
+    .aria-label = { $homeTeam }, { $homeScore } ({ $homePenalty }) cuintri { $awayTeam }, { $awayScore } ({ $awayPenalty })
+# A match that is currently in progress.
+# Variables:
+#   $homeScore (number) - The home team's current score
+#   $awayScore (number) - The away team's current score
+newtab-sports-widget-match-aria-label-now =
+    .aria-label = In direte: { $homeTeam }, { $homeScore } cuintri { $awayTeam }, { $awayScore }
+# An upcoming scheduled match row. Announces kickoff time and date.
+# Variables:
+#   $date (Date) - The scheduled kickoff date/time
+newtab-sports-widget-match-aria-label-upcoming =
+    .aria-label = { $homeTeam } cuintri { $awayTeam }, { DATETIME($date, hour: "numeric", minute: "numeric") }, { DATETIME($date, day: "numeric", month: "long") }
+# An upcoming match row whose status is "delayed".
+newtab-sports-widget-match-aria-label-upcoming-delayed =
+    .aria-label = { $homeTeam } cuintri { $awayTeam }, in ritart
+# An upcoming match row whose status is "postponed".
+newtab-sports-widget-match-aria-label-upcoming-postponed =
+    .aria-label = { $homeTeam } cuintri { $awayTeam }, posticipade
+# An upcoming match row whose status is "suspended".
+newtab-sports-widget-match-aria-label-upcoming-suspended =
+    .aria-label = { $homeTeam } cuintri { $awayTeam }, sospindude
+# An upcoming match row whose status is "cancelled".
+newtab-sports-widget-match-aria-label-upcoming-cancelled =
+    .aria-label = { $homeTeam } cuintri { $awayTeam }, anulade
+
+## Sports widget — team names (FIFA country codes)
+## Only includes names not adequately covered by standard country-code
+## internationalization tooling.
+
+newtab-sports-widget-team-name-label-bih =
+    .label = Bosgne e Erzegovine
+newtab-sports-widget-team-name-label-civ =
+    .label = Cueste di Avoli
+
+## Strings for activation window message variants. In certain experiment configurations,
+## the strings from these variants may be displayed in a message below the search input
+## for the first 48 hours of a new profile's lifetime. Some messages include buttons with
+## labels, but not all.
+
+newtab-activation-window-message-dismiss-button =
+    .title = Siere
+    .aria-label = Siere
+# "This space" refers to about:newtab. The call to action here ("make it your own")
+# is to customize newtab with a background image or colour, or by tweaking the
+# existing widgetry that appears on it.
+newtab-activation-window-message-customization-focus-header = Rint chest spazi pardabon to
+newtab-activation-window-message-customization-focus-message = Sielç un gnûf fonts, zonte scurtis ai tiei sîts web preferîts e reste inzornât cun lis storiis che ti interessin.
+newtab-activation-window-message-customization-focus-primary-button =
+    .label = Scomence a personalizâ
+# "This space" refers to about:newtab. The sentiment of "plays by your rules" is
+# meant to evoke the idea that newtab is malleable and customizable. The call to
+# action is to customize newtab with a background image or colour, or by tweaking
+# the existing widgetry that appears on it.
+newtab-activation-window-message-values-focus-header = Chest spazi al va daûr lis tôs regulis
+newtab-activation-window-message-values-focus-message = { -brand-product-name } ti lasse navigâ come che ti plâs, un mût plui personâl di scomençâ la zornade in rêt. Rint { -brand-product-name } pardabon to.
+
+## Strings for the Clock widget
+
+# Context menu item: toggle the clock card off.
+newtab-clock-widget-menu-hide = Plate orloi
+newtab-clock-widget-menu-learn-more = Plui informazions
+newtab-clock-widget-menu-edit = Modifiche i orlois
+newtab-clock-widget-menu-switch-to-12h = Passe al formât di 12 oris
+newtab-clock-widget-menu-switch-to-24h = Passe al formât di 24 oris
+newtab-clock-widget-label-your-clocks = I tiei orlois
+newtab-clock-widget-search-location-input =
+    .label = Posizion
+    .placeholder = Cîr une citât
+    .aria-label = Cîr une citât
+# "Nickname (optional)" refers to a custom, user-defined label for a saved location
+# (e.g., "Home", "Office", or "School") to make it easier to recognize.
+# Not to be translated as a legal name, username, or alias used for identity verification.
+newtab-clock-widget-input-nickname =
+    .label = Sorenon (facoltatîf)
+    .placeholder = Zonte un sorenon
+    .aria-label = Sorenon (facoltatîf)
+# "Add new clock" is an icon-only button in the widget toolbar — the
+# attributes are consumed as tooltip/screen-reader label only. The button
+# never renders visible text.
+newtab-clock-widget-button-add =
+    .title = Zonte gnûf orloi
+    .aria-label = Zonte gnûf orloi
+newtab-clock-widget-button-add-clock = Zonte
+newtab-clock-widget-button-cancel = Anule
+newtab-clock-widget-button-back =
+    .title = Indaûr
+    .aria-label = Indaûr
+newtab-clock-widget-button-edit-clock =
+    .title = Modifiche orloi
+    .aria-label = Modifiche orloi
+newtab-clock-widget-button-save = Salve
+newtab-clock-widget-button-remove-clock =
+    .title = Gjave orloi
+    .aria-label = Gjave orloi
+newtab-clock-widget-add-clock-form =
+    .aria-label = Zonte orloi
+newtab-clock-widget-edit-clock-form =
+    .aria-label = Modifiche orloi
+# "Search results" is the accessible label for the listbox dropdown that appears
+# below the location search field, listing matching cities as the user types.
+# It means "results of the search", not "search within the results".
+newtab-clock-widget-search-results =
+    .aria-label = Risultâts de ricercje
+# Shown in place of the search results when the user's query does not match any
+# supported city — e.g. typing a misspelled name or a place not in the IANA
+# time zone list.
+newtab-clock-widget-search-no-results = Nissune corispondence
+# "Open menu for clock" is an icon-only button in the widget toolbar — the
+# attributes are consumed as tooltip/screen-reader label only. The button
+# never renders visible text.
+newtab-clock-widget-menu-button =
+    .title = Vierç il menù pal orloi
+    .aria-label = Vierç il menù pal orloi
+# $nickname (String) - The user-defined nickname for a saved clock location (e.g., "Home", "Office").
+newtab-clock-widget-label-nickname-with-value = Sorenon: { $nickname }

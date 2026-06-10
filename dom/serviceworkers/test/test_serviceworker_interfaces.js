@@ -42,12 +42,15 @@ let wasmGlobalInterfaces = [
   { name: "Memory", insecureContext: true },
   { name: "Module", insecureContext: true },
   { name: "RuntimeError", insecureContext: true },
+  { name: "SuspendError", insecureContext: true, nightly: true },
+  { name: "Suspending", insecureContext: true, nightly: true },
   { name: "Table", insecureContext: true },
   { name: "Tag", insecureContext: true },
   { name: "compile", insecureContext: true },
   { name: "compileStreaming", insecureContext: true },
   { name: "instantiate", insecureContext: true },
   { name: "instantiateStreaming", insecureContext: true },
+  { name: "promising", insecureContext: true, nightly: true },
   { name: "validate", insecureContext: true },
 ];
 // IMPORTANT: Do not change this list without review from
@@ -404,6 +407,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "IDBOpenDBRequest",
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  "IDBRecord",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   "IDBRequest",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "IDBTransaction",
@@ -489,6 +494,10 @@ let interfaceNamesInGlobalScope = [
   "ReadableStreamDefaultController",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "ReadableStreamDefaultReader",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "ReportBody", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "ReportingObserver", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Request",
   // IMPORTANT: Do not change this list without review from a DOM peer!

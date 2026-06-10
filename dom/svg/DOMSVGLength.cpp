@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -83,8 +81,8 @@ void DOMSVGLength::CleanupWeakRefs() {
   // cycle collected), so we that don't leave behind a pointer to
   // free / soon-to-be-free memory.
   if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
-    MOZ_ASSERT(lengthList->mItems[mListIndex] == this,
-               "Clearing out the wrong list index...?");
+    MOZ_RELEASE_ASSERT(lengthList->mItems[mListIndex] == this,
+                       "Clearing out the wrong list index...?");
     lengthList->mItems[mListIndex] = nullptr;
   }
 
@@ -189,7 +187,8 @@ float DOMSVGLength::GetValue(ErrorResult& aRv) {
   }
 
   if (SVGLength::IsAbsoluteUnit(mUnit)) {
-    return SVGLength(mValue, mUnit).GetValueInPixels(nullptr, 0);
+    return SVGLength(mValue, mUnit)
+        .GetValueInPixels(nullptr, SVGLength::Axis::XY);
   }
 
   // else [SVGWG issue] Can't convert this length's value to user units
@@ -360,7 +359,7 @@ void DOMSVGLength::NewValueSpecifiedUnits(uint16_t aUnit, float aValue,
       return;
     }
     AutoChangeLengthListNotifier notifier(this);
-    internalItem.SetValueAndUnit(aValue, uint8_t(aUnit));
+    internalItem.SetValueAndUnit(aValue, aUnit);
     return;
   }
   mUnit = uint8_t(aUnit);
@@ -395,7 +394,8 @@ void DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv) {
     if (mUnit == aUnit) {
       return;
     }
-    val = SVGLength(mValue, mUnit).GetValueInSpecifiedUnit(aUnit, nullptr, 0);
+    val = SVGLength(mValue, mUnit)
+              .GetValueInSpecifiedUnit(aUnit, nullptr, SVGLength::Axis::XY);
   }
   if (!std::isfinite(val)) {
     aRv.ThrowTypeError<MSG_NOT_FINITE>("value");

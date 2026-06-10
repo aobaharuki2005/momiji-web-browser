@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -32,10 +30,10 @@ LayoutDeviceIntRect HeadlessScreenHelper::GetScreenRect() {
 HeadlessScreenHelper::HeadlessScreenHelper() {
   AutoTArray<RefPtr<Screen>, 1> screenList;
   LayoutDeviceIntRect rect = GetScreenRect();
-  auto ret =
-      MakeRefPtr<Screen>(rect, rect, 24, 24, 0, DesktopToLayoutDeviceScale(),
-                         CSSToLayoutDeviceScale(), 96.0f,
-                         Screen::IsPseudoDisplay::No, Screen::IsHDR::No);
+  auto ret = MakeRefPtr<Screen>(
+      rect, rect, 24, 24, 0, DesktopToLayoutDeviceScale(),
+      CSSToLayoutDeviceScale(), 96.0f, Screen::IsPseudoDisplay::No,
+      Screen::IsHDR::No, Screen::IsHDR::No);
   screenList.AppendElement(ret.forget());
   ScreenManager::Refresh(std::move(screenList));
 }

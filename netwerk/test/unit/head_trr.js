@@ -9,8 +9,11 @@
 /* import-globals-from head_channels.js */
 /* globals require, __dirname, global, Buffer, process, setTimeout */
 
-var { NodeHTTP2Server: TRRNodeHttp2Server, NodeServer: TRRNodeServer } =
-  ChromeUtils.importESModule("resource://testing-common/NodeServer.sys.mjs");
+var {
+  NodeHTTP2Server: TRRNodeHttp2Server,
+  NodeServer: TRRNodeServer,
+  NodeHTTPServer: TRRNodeHttpServer,
+} = ChromeUtils.importESModule("resource://testing-common/NodeServer.sys.mjs");
 
 const { AppConstants: TRRAppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
@@ -39,7 +42,6 @@ function trr_test_setup() {
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
-  Services.prefs.setBoolPref("network.trr.wait-for-portal", false);
   // don't confirm that TRR is working, just go!
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
   // some tests rely on the cache not being cleared on pref change.
@@ -67,7 +69,6 @@ function trr_clear_prefs() {
   Services.prefs.clearUserPref("network.trr.mode");
   Services.prefs.clearUserPref("network.trr.uri");
   Services.prefs.clearUserPref("network.trr.credentials");
-  Services.prefs.clearUserPref("network.trr.wait-for-portal");
   Services.prefs.clearUserPref("network.trr.allow-rfc1918");
   Services.prefs.clearUserPref("network.trr.useGET");
   Services.prefs.clearUserPref("network.trr.confirmationNS");
@@ -281,7 +282,8 @@ function answerHandler(req, resp) {
 /// queries global.dns_query_answers for available answers for the DNS query.
 function trrQueryHandler(req, resp) {
   let requestBody = Buffer.from("");
-  let method = req.headers[global.http2.constants.HTTP2_HEADER_METHOD];
+  let method =
+    req.method || req.headers[global.http2.constants.HTTP2_HEADER_METHOD];
   let contentLength = req.headers["content-length"];
 
   if (method == "POST") {
@@ -459,7 +461,7 @@ function dohHandler(req, res) {
             { key: "alpn", value: "h2" },
             { key: "ipv4hint", value: ["1.2.3.4", "5.6.7.8"] },
             { key: "echconfig", value: "abc..." },
-            { key: "ipv6hint", value: ["::1", "fe80::794f:6d2c:3d5e:7836"] },
+            { key: "ipv6hint", value: ["::1", "2001:db8::1"] },
             { key: "odoh", value: "def..." },
           ],
         },
@@ -1088,6 +1090,63 @@ class TRRServer extends TRRNodeHttp2Server {
   }
 }
 
+class PlainHttpTRRServer extends TRRNodeHttpServer {
+  /// Starts the server
+  /// @port - default 0
+  ///    when provided, will attempt to listen on that port.
+  async start(port = 0) {
+    await super.start(port);
+    await this.execute(`( () => {
+      // key: string "name/type"
+      // value: array [answer1, answer2]
+      global.dns_query_answers = {};
+
+      // key: domain
+      // value: a map containing {key: type, value: number of requests}
+      global.dns_query_counts = {};
+
+      global.gDoHPortsLog = [];
+      global.gDoHNewConnLog = {};
+      global.gDoHRequestCount = 0;
+
+      global.dnsPacket = require(\`\${__dirname}/../dns-packet\`);
+      global.ip = require(\`\${__dirname}/../node_ip\`);
+      global.url = require("url");
+      global.zlib = require("zlib");
+    })()`);
+    await this.registerPathHandler("/dns-query", trrQueryHandler);
+
+    await this.execute(getRequestCount);
+    await this.execute(`global.serverPort = ${this.port()}`);
+  }
+
+  /// @name : string - name we're providing answers for. eg: foo.example.com
+  /// @type : string - the DNS query type. eg: "A", "AAAA", "CNAME", etc
+  /// @response : a map containing the response
+  ///   answers: array of answers (hashmap) that dnsPacket can parse
+  ///    eg: [{
+  ///          name: "bar.example.com",
+  ///          ttl: 55,
+  ///          type: "A",
+  ///          flush: false,
+  ///          data: "1.2.3.4",
+  ///        }]
+  ///   additionals - array of answers (hashmap) to be added to the additional section
+  ///   delay: int - if not 0 the response will be sent with after `delay` ms.
+  ///   flags: int - flags to be set on the answer
+  ///   error: int - HTTP status. If truthy then the response will send this status
+  async registerDoHAnswers(name, type, response = {}) {
+    let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify(
+      response
+    )}`;
+    return this.execute(text);
+  }
+
+  async requestCount(domain, type) {
+    return this.execute(`getRequestCount("${domain}", "${type}")`);
+  }
+}
+
 // Implements a basic HTTP2 proxy server
 class TRRProxyCode {
   static async startServer(endServerPort) {
@@ -1163,9 +1222,10 @@ class TRRProxyCode {
         }
       });
       socket.on("error", error => {
-        throw new Error(
-          `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`
+        console.log(
+          `Error connecting to HTTP/2 server from proxy during CONNECT: ${error}`
         );
+        stream.close();
       });
     });
   }

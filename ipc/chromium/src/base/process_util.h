@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2009 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -96,12 +94,19 @@ void CloseProcessHandle(ProcessHandle process);
 ProcessId GetProcId(ProcessHandle process);
 
 #if defined(XP_UNIX)
+#  if defined(XP_MACOSX)
+// Sets all file descriptors to close on exec except for stdin, stdout
+// and stderr.
+// TODO(agl): remove this function
+// WARNING: do not use. It's inherently race-prone in the face of
+// multi-threading.
+void SetAllFDsToCloseOnExec();
+#  endif
 // Close all file descriptors, except for std{in,out,err} and those
 // for which the given function returns true.  Only call this function
 // in a child process where you know that there aren't any other
 // threads.
 void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int));
-
 typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
 typedef std::map<std::string, std::string> environment_map;
 

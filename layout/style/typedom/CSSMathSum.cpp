@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,6 +6,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CSSMathSumBinding.h"
 #include "mozilla/dom/CSSNumericArray.h"
@@ -19,8 +18,27 @@ namespace mozilla::dom {
 
 CSSMathSum::CSSMathSum(nsCOMPtr<nsISupports> aParent,
                        RefPtr<CSSNumericArray> aValues)
-    : CSSMathValue(std::move(aParent), ValueType::MathSum),
+    : CSSMathValue(std::move(aParent), NumericValueType::MathSum),
       mValues(std::move(aValues)) {}
+
+// static
+RefPtr<CSSMathSum> CSSMathSum::Create(nsCOMPtr<nsISupports> aParent,
+                                      const StyleMathSum& aMathSum) {
+  nsTArray<RefPtr<CSSNumericValue>> values;
+
+  for (const auto& value : aMathSum.values) {
+    // XXX Only supporting units for now
+    if (value.IsUnit()) {
+      const auto& unitValue = value.AsUnit();
+
+      values.AppendElement(CSSUnitValue::Create(aParent, unitValue));
+    }
+  }
+
+  auto array = MakeRefPtr<CSSNumericArray>(aParent, std::move(values));
+
+  return MakeRefPtr<CSSMathSum>(std::move(aParent), std::move(array));
+}
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSMathSum, CSSMathValue)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CSSMathSum, CSSMathValue, mValues)
@@ -45,15 +63,7 @@ already_AddRefed<CSSMathSum> CSSMathSum::Constructor(
   nsTArray<RefPtr<CSSNumericValue>> values;
 
   for (const OwningCSSNumberish& arg : aArgs) {
-    RefPtr<CSSNumericValue> value;
-
-    if (arg.IsDouble()) {
-      value = MakeRefPtr<CSSUnitValue>(global, arg.GetAsDouble(), "number"_ns);
-    } else {
-      MOZ_ASSERT(arg.IsCSSNumericValue());
-
-      value = arg.GetAsCSSNumericValue();
-    }
+    RefPtr<CSSNumericValue> value = CSSNumericValue::Create(global, arg);
 
     values.AppendElement(std::move(value));
   }
@@ -84,11 +94,7 @@ void CSSMathSum::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
 
   bool written = false;
 
-  for (uint32_t index = 0; index < mValues->Length(); index++) {
-    bool found;
-    CSSNumericValue* value = mValues->IndexedGetter(index, found);
-    MOZ_ASSERT(found);
-
+  for (const RefPtr<CSSNumericValue>& value : mValues->GetValues()) {
     if (value->IsCSSUnitValue()) {
       CSSUnitValue& unitValue = value->GetAsCSSUnitValue();
 
@@ -99,13 +105,38 @@ void CSSMathSum::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
       unitValue.ToCssTextWithProperty(aPropertyId, aDest);
       written = true;
     }
+
+    // TODO: Add support for other objects. See bug 2012324.
   }
 
   aDest.Append(")"_ns);
 }
 
-CSSMathSum& CSSStyleValue::GetAsCSSMathSum() {
-  MOZ_DIAGNOSTIC_ASSERT(mValueType == ValueType::MathSum);
+StyleMathSum CSSMathSum::ToStyleMathSum() const {
+  nsTArray<StyleNumericValue> values;
+
+  for (const RefPtr<CSSNumericValue>& value : mValues->GetValues()) {
+    if (value->IsCSSUnitValue()) {
+      CSSUnitValue& unitValue = value->GetAsCSSUnitValue();
+
+      values.AppendElement(
+          StyleNumericValue::Unit(unitValue.ToStyleUnitValue()));
+    }
+
+    // TODO: Add support for other objects. See bug 2012324.
+  }
+
+  return StyleMathSum{std::move(values)};
+}
+
+const CSSMathSum& CSSNumericValue::GetAsCSSMathSum() const {
+  MOZ_DIAGNOSTIC_ASSERT(mNumericValueType == NumericValueType::MathSum);
+
+  return *static_cast<const CSSMathSum*>(this);
+}
+
+CSSMathSum& CSSNumericValue::GetAsCSSMathSum() {
+  MOZ_DIAGNOSTIC_ASSERT(mNumericValueType == NumericValueType::MathSum);
 
   return *static_cast<CSSMathSum*>(this);
 }

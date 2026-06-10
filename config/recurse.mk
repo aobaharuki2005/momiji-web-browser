@@ -162,12 +162,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 recurse_pre-export: mobile/android/pre-export
 endif
 
-# CSS2Properties.webidl needs ServoCSSPropList.py from layout/style
-dom/bindings/export: layout/style/ServoCSSPropList.py
-
-# Various telemetry histogram files need ServoCSSPropList.py from layout/style
-toolkit/components/telemetry/export: layout/style/ServoCSSPropList.py
-
 ifeq ($(TARGET_ENDIANNESS),big)
 config/external/icu/data/target-objects: config/external/icu/data/$(MDDEPDIR)/icudt$(MOZ_ICU_VERSION)b.dat.stub
 config/external/icu/data/$(MDDEPDIR)/icudt$(MOZ_ICU_VERSION)b.dat.stub: config/external/icu/icupkg/host
@@ -175,7 +169,7 @@ endif
 
 ifdef ENABLE_CLANG_PLUGIN
 # Only target rules use the clang plugin.
-$(filter %/target %/target-objects,$(filter-out config/export config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets))) security/rlbox/pre-compile media/libsoundtouch/src/pre-compile: build/clang-plugin/host build/clang-plugin/tests/target-objects
+$(filter %/target %/target-objects,$(filter-out config/export config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets))) security/rlbox/pre-compile: build/clang-plugin/host build/clang-plugin/tests/target-objects
 build/clang-plugin/tests/target-objects: build/clang-plugin/host
 # clang-plugin tests require js-confdefs.h on js standalone builds and mozilla-config.h on
 # other builds, because they are -include'd.
@@ -193,8 +187,8 @@ endif
 # Interdependencies that moz.build world don't know about yet for compilation.
 # Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
 ifdef MOZ_USING_WASM_SANDBOXING
-dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects: security/rlbox/pre-compile
-dom/media/target-objects dom/media/mediasink/target-objects: media/libsoundtouch/src/pre-compile
+security/rlbox/pre-compile: config/external/wasm2c_sandbox_compiler/host
+dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects dom/media/target-objects dom/media/mediasink/target-objects: security/rlbox/pre-compile
 endif
 
 # Most things are built during compile (target/host), but some things happen during export

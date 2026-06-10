@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -82,11 +80,12 @@ nsIWidget* nsWebBrowser::EnsureWidget() {
 }
 
 /* static */
-already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
-    nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
-    dom::BrowsingContext* aBrowsingContext,
-    dom::WindowGlobalChild* aInitialWindowChild,
-    nsIOpenWindowInfo* aOpenWindowInfo) {
+nsresult nsWebBrowser::Create(nsIWebBrowserChrome* aContainerWindow,
+                              nsIWidget* aParentWidget,
+                              dom::BrowsingContext* aBrowsingContext,
+                              dom::WindowGlobalChild* aInitialWindowChild,
+                              nsIOpenWindowInfo* aOpenWindowInfo,
+                              nsWebBrowser** aWebBrowser) {
   MOZ_ASSERT(aOpenWindowInfo, "Must have openwindowinfo");
   MOZ_ASSERT_IF(aInitialWindowChild,
                 aInitialWindowChild->BrowsingContext() == aBrowsingContext);
@@ -98,12 +97,12 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
       aBrowsingContext->IsContent() ? typeContentWrapper : typeChromeWrapper);
 
   // nsWebBrowser::SetContainer also calls nsWebBrowser::EnsureDocShellTreeOwner
-  NS_ENSURE_SUCCESS(browser->SetContainerWindow(aContainerWindow), nullptr);
-  NS_ENSURE_SUCCESS(browser->SetParentWidget(aParentWidget), nullptr);
+  MOZ_TRY(browser->SetContainerWindow(aContainerWindow));
+  MOZ_TRY(browser->SetParentWidget(aParentWidget));
 
   nsCOMPtr<nsIWidget> docShellParentWidget = browser->EnsureWidget();
   if (NS_WARN_IF(!docShellParentWidget)) {
-    return nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   uint64_t outerWindowId =
@@ -112,7 +111,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   RefPtr<nsDocShell> docShell =
       nsDocShell::Create(aBrowsingContext, outerWindowId);
   if (NS_WARN_IF(!docShell)) {
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
   browser->SetDocShell(docShell);
   MOZ_ASSERT(browser->mDocShell == docShell);
@@ -139,16 +138,14 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   // events from subframes. To solve that we install our own chrome event
   // handler that always gets called (even for subframes) for any bubbling
   // event.
-  nsresult rv = docShell->InitWindow(docShellParentWidget, 0, 0, 0, 0,
-                                     aOpenWindowInfo, aInitialWindowChild);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  MOZ_TRY(docShell->InitWindow(docShellParentWidget, 0, 0, 0, 0,
+                               aOpenWindowInfo, aInitialWindowChild));
 
   docShellTreeOwner->AddToWatcher();  // evil twin of Remove in SetDocShell(0)
   docShellTreeOwner->AddChromeListeners();
 
-  return browser.forget();
+  browser.forget(aWebBrowser);
+  return NS_OK;
 }
 
 void nsWebBrowser::InternalDestroy() {
@@ -508,11 +505,10 @@ nsWebBrowser::FixupAndLoadURIStringFromScript(
 }
 
 NS_IMETHODIMP
-nsWebBrowser::ResumeRedirectedLoad(uint64_t aIdentifier,
-                                   int32_t aHistoryIndex) {
+nsWebBrowser::ResumeRedirectedLoad(uint64_t aIdentifier) {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShell->ResumeRedirectedLoad(aIdentifier, aHistoryIndex);
+  return mDocShell->ResumeRedirectedLoad(aIdentifier);
 }
 
 NS_IMETHODIMP
@@ -916,7 +912,6 @@ nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
   int32_t doc_y = aY;
 
   // We also need to resize our widget then.
-  // Now reposition/ resize the doc
   NS_ENSURE_SUCCESS(
       mDocShell->SetPositionAndSize(doc_x, doc_y, aCX, aCY, aFlags),
       NS_ERROR_FAILURE);
@@ -988,15 +983,21 @@ nsWebBrowser::SetVisibility(bool aVisibility) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
+nsWebBrowser::GetEnabled(bool* aEnabled) {
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
-nsWebBrowser::SetEnabled(bool aEnabled) { return NS_ERROR_FAILURE; }
+nsWebBrowser::SetEnabled(bool aEnabled) {
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsWebBrowser::GetMainWidget(nsIWidget** aMainWidget) {
   NS_ENSURE_ARG_POINTER(aMainWidget);
+
   NS_IF_ADDREF(*aMainWidget = mParentWidget);
+
   return NS_OK;
 }
 

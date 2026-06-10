@@ -29,6 +29,7 @@ object SupportUtils {
     const val WHATS_NEW_URL = "https://www.mozilla.org/firefox/android/notes"
     const val FXACCOUNT_SUMO_URL = "https://support.mozilla.org/kb/access-mozilla-services-firefox-account"
     const val ANDROID_SUPPORT_SUMO_URL = "mzl.la/AndroidSupport"
+    const val RELAY_MANAGE_URL = "https://relay.firefox.com"
 
     // This is locale-less on purpose so that the content negotiation happens on the AMO side because the current
     // user language might not be supported by AMO and/or the language might not be exactly what AMO is expecting
@@ -42,6 +43,7 @@ object SupportUtils {
         TRACKING_PROTECTION("tracking-protection-firefox-android"),
         TOTAL_COOKIE_PROTECTION("enhanced-tracking-protection-android"),
         OPT_OUT_STUDIES("how-opt-out-studies-firefox-android"),
+        REMOTE_IMPROVEMENTS("remote-improvements"),
         SEND_TABS("send-tab-preview"),
         SET_AS_DEFAULT_BROWSER("make-firefox-default-browser-android"),
         SEARCH_SUGGESTION("how-search-firefox-preview"),
@@ -58,20 +60,23 @@ object SupportUtils {
         UNSIGNED_ADDONS("unsigned-addons"),
         FX_SUGGEST("search-suggestions-firefox"),
         TRANSLATIONS("android-translation"),
+        AI_CONTROLS("android-ai-controls"),
         MANAGE_OPTIONAL_EXTENSION_PERMISSIONS("manage-optional-permissions-android-extensions"),
         EXTENSION_PERMISSIONS("extension-permissions"),
-        FIND_INSTALL_ADDONS("add-ons-firefox-android"),
         CRASH_REPORTS("mobile-crash-reports"),
         TECHNICAL_AND_INTERACTION_DATA("mobile-technical-and-interaction-data"),
         USAGE_PING_SETTINGS("usage-ping-settings-mobile"),
         MARKETING_DATA("mobile-marketing-data"),
         REQUESTED_CRASH_MINIDUMP("unsent-crash-reports-in-firefox-android"),
         TERMS_OF_USE("firefox-terms-of-use-faq"),
+        RELAY("relay-masks-android"),
+        VPN("mobile-android-vpn"),
 
         /**
          * SUMO page for Local Network Access & Local Device Access permissions
          */
         LOCAL_NETWORK_AND_DEVICE_ACCESS("control-personal-device-local-network-permissions-firefox-android"),
+        PAGE_SUMMARIZATION("summarize-pages-android"),
     }
 
     enum class MozillaPage(internal val path: String) {

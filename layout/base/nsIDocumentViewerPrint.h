@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIDocumentViewerPrint_h___
-#define nsIDocumentViewerPrint_h___
+#ifndef nsIDocumentViewerPrint_h_
+#define nsIDocumentViewerPrint_h_
 
 #include "nsISupports.h"
 
@@ -61,4 +59,4 @@ class nsIDocumentViewerPrint : public nsISupports {
   void SetPrintPreviewPresentation(nsPresContext* aPresContext, \
                                    mozilla::PresShell* aPresShell) override;
 
-#endif /* nsIDocumentViewerPrint_h___ */
+#endif /* nsIDocumentViewerPrint_h_ */

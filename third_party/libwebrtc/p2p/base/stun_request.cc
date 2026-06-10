@@ -15,11 +15,12 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "api/array_view.h"
+#include "absl/strings/string_view.h"
 #include "api/environment/environment.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
@@ -31,6 +32,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_encode.h"
+#include "rtc_base/string_utils.h"
 
 namespace webrtc {
 
@@ -53,7 +55,7 @@ const int STUN_MAX_RTO = 8000;  // milliseconds, or 5 doublings
 
 StunRequestManager::StunRequestManager(
     TaskQueueBase* thread,
-    std::function<void(const void*, size_t, StunRequest*)> send_packet)
+    std::function<void(std::span<const uint8_t>, StunRequest*)> send_packet)
     : thread_(thread), send_packet_(std::move(send_packet)) {}
 
 StunRequestManager::~StunRequestManager() = default;
@@ -121,8 +123,28 @@ bool StunRequestManager::CheckResponse(StunMessage* msg) {
   bool skip_integrity_checking =
       (request->msg()->integrity() == StunMessage::IntegrityStatus::kNotSet);
   if (!request->AuthenticationRequired()) {
-    // This is a STUN_BINDING to from stun_port.cc or
-    // the initial (unauthenticated) TURN_ALLOCATE_REQUEST.
+    if (request->type() != STUN_BINDING_REQUEST) {
+      if (msg->type() == GetStunSuccessResponseType(request->type())) {
+        RTC_LOG(LS_WARNING)
+            << "Discarding unauthenticated success response (0x"
+            << ToHex(msg->type()) << ") to TURN request of type 0x"
+            << ToHex(request->type())
+            << ", id=" << hex_encode(msg->transaction_id());
+        return false;
+      }
+      if (msg->type() == GetStunErrorResponseType(request->type())) {
+        int error_code = msg->GetErrorCodeValue();
+        if (error_code != STUN_ERROR_UNAUTHORIZED &&
+            error_code != STUN_ERROR_TRY_ALTERNATE) {
+          RTC_LOG(LS_WARNING)
+              << "Discarding unauthenticated error response with code "
+              << error_code << " to TURN request of type 0x"
+              << ToHex(request->type())
+              << ", id=" << hex_encode(msg->transaction_id());
+          return false;
+        }
+      }
+    }
   } else if (skip_integrity_checking) {
     // TODO(chromium:1177125): Remove below!
     // This indicates lazy test writing (not adding integrity attribute).
@@ -190,25 +212,24 @@ bool StunRequestManager::empty() const {
   return requests_.empty();
 }
 
-bool StunRequestManager::CheckResponse(const char* data, size_t size) {
+bool StunRequestManager::CheckResponse(std::span<const uint8_t> payload) {
   RTC_DCHECK_RUN_ON(thread_);
   // Check the appropriate bytes of the stream to see if they match the
   // transaction ID of a response we are expecting.
 
-  if (size < 20)
+  if (payload.size() < 20)
     return false;
 
-  std::string id;
-  id.append(data + kStunTransactionIdOffset, kStunTransactionIdLength);
-
+  absl::string_view id(
+      reinterpret_cast<const char*>(payload.data()) + kStunTransactionIdOffset,
+      kStunTransactionIdLength);
   RequestMap::iterator iter = requests_.find(id);
   if (iter == requests_.end())
     return false;
 
   // Parse the STUN message and continue processing as usual.
 
-  ByteBufferReader buf(
-      MakeArrayView(reinterpret_cast<const uint8_t*>(data), size));
+  ByteBufferReader buf(payload);
   std::unique_ptr<StunMessage> response(iter->second->msg_->CreateNew());
   if (!response->Read(&buf)) {
     RTC_LOG(LS_WARNING) << "Failed to read STUN response " << hex_encode(id);
@@ -223,11 +244,10 @@ void StunRequestManager::OnRequestTimedOut(StunRequest* request) {
   requests_.erase(request->id());
 }
 
-void StunRequestManager::SendPacket(const void* data,
-                                    size_t size,
+void StunRequestManager::SendPacket(std::span<const uint8_t> data,
                                     StunRequest* request) {
   RTC_DCHECK_EQ(this, request->manager());
-  send_packet_(data, size, request);
+  send_packet_(data, request);
 }
 
 StunRequest::StunRequest(const Environment& env, StunRequestManager& manager)
@@ -281,7 +301,7 @@ void StunRequest::SendInternal() {
 
   ByteBufferWriter buf;
   msg_->Write(&buf);
-  manager_.SendPacket(buf.Data(), buf.Length(), this);
+  manager_.SendPacket(buf.DataView(), this);
 
   OnSent();
   SendDelayed(TimeDelta::Millis(resend_delay()));

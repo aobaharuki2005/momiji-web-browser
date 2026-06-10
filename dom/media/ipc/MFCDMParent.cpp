@@ -100,7 +100,7 @@ DEFINE_PROPERTYKEY(EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID, 0x1218a3e2, 0xcfb0,
 MOZ_RUNINIT static StaticDataMutex<
     nsTHashMap<nsStringHashKey, ComPtr<IMFContentDecryptionModuleFactory>>>
     sFactoryMap("sFactoryMap");
-MOZ_RUNINIT static StaticDataMutex<CopyableTArray<MFCDMCapabilitiesIPDL>>
+constinit static StaticDataMutex<CopyableTArray<MFCDMCapabilitiesIPDL>>
     sCapabilities("sCapabilities");
 MOZ_RUNINIT static StaticDataMutex<ComPtr<IUnknown>> sMediaEngineClassFactory(
     "sMediaEngineClassFactory");
@@ -430,7 +430,6 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
     MFCDM_PARENT_LOG("%s", msg.get());
     PROFILER_MARKER_TEXT("MFCDMParent::Ctor", MEDIA_PLAYBACK, {}, msg);
   }
-  mIPDLSelfRef = this;
   Register();
 
   mKeyMessageListener = mKeyMessageEvents.Connect(
@@ -443,6 +442,77 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
                                           &MFCDMParent::SendOnSessionClosed);
 
   RETURN_VOID_IF_FAILED(GetOrCreateFactory(mKeySystem, mFactory));
+}
+
+void MFCDMParent::OnHardwareContextReset() {
+  ASSERT_CDM_ACCESS_ON_MANAGER_THREAD();
+  MFCDM_PARENT_LOG("OnHardwareContextReset");
+  // All CDM sessions are in an invalid state after a hardware context reset.
+  // Close them so the content process can re-request keys.
+  for (auto& iter : mSessions) {
+    iter.second->Close(
+        dom::MediaKeySessionClosedReason::Hardware_context_reset);
+  }
+  mSessions.clear();
+  if (MFCDMProxy* proxy = GetMFCDMProxy()) {
+    proxy->OnHardwareContextReset();
+  }
+  // The underlying CDM object is invalidated by the hardware reset. Recreate it
+  // so the new MFMediaEngineParent can attach to a valid CDM after recovery.
+  if (mInitParams.isSome()) {
+    HRESULT rv = RecreateCDM();
+    if (FAILED(rv)) {
+      MFCDM_PARENT_LOG("Failed to recreate CDM after hardware reset, hr=%lx",
+                       rv);
+    }
+  }
+}
+
+HRESULT MFCDMParent::RecreateCDM() {
+  ASSERT_CDM_ACCESS_ON_MANAGER_THREAD();
+  MOZ_ASSERT(mInitParams.isSome());
+  MFCDM_PARENT_LOG("Recreating CDM");
+
+  MutexAutoLock lock(Mutex());
+  mCDMAccessLock.NoteExclusiveAccess();
+  if (mCDM) {
+    auto rv = mCDM->SetPMPHostApp(nullptr);
+    if (FAILED(rv)) {
+      MFCDM_PARENT_LOG("Failed to clear PMP Host App, rv=%lx", rv);
+    }
+  }
+  mCDMProxy = nullptr;
+  mCDM.Reset();
+  mPMPHostWrapper.Reset();
+
+  MFCDM_RETURN_IF_FAILED(CreateContentDecryptionModule(
+      mFactory, MapKeySystem(mKeySystem), *mInitParams, mCDM));
+  if (!mCDM) {
+    return E_FAIL;
+  }
+  mCDMProxy = new MFCDMProxy(mCDM.Get(), mId);
+
+  MFCDM_RETURN_IF_FAILED(SetupPMPHostApp());
+
+  return S_OK;
+}
+
+HRESULT MFCDMParent::SetupPMPHostApp() {
+  if (!IsPlayReadyKeySystemAndSupported(mKeySystem)) {
+    return S_OK;
+  }
+  ComPtr<IMFPMPHost> pmpHost;
+  ComPtr<IMFGetService> cdmService;
+  MFCDM_RETURN_IF_FAILED(mCDM.As(&cdmService));
+  MFCDM_RETURN_IF_FAILED(cdmService->GetService(
+      MF_CONTENTDECRYPTIONMODULE_SERVICE, IID_PPV_ARGS(&pmpHost)));
+  MFCDM_RETURN_IF_FAILED(
+      SUCCEEDED(MakeAndInitialize<MFPMPHostWrapper>(&mPMPHostWrapper, pmpHost))
+          ? S_OK
+          : E_FAIL);
+  MFCDM_RETURN_IF_FAILED(mCDM->SetPMPHostApp(mPMPHostWrapper.Get()));
+  MFCDM_PARENT_LOG("Set PMPHostWrapper on CDM!");
+  return S_OK;
 }
 
 void MFCDMParent::ShutdownCDM() {
@@ -465,9 +535,9 @@ void MFCDMParent::ShutdownCDM() {
   MFCDM_PARENT_LOG("Shutdown CDM completed");
 }
 
-void MFCDMParent::Destroy() {
+void MFCDMParent::ActorDestroy(ActorDestroyReason aWhy) {
   ASSERT_CDM_ACCESS_READ_ONLY_ON_MANAGER_THREAD();
-  PROFILER_MARKER_UNTYPED("MFCDMParent::Destroy", MEDIA_PLAYBACK);
+  PROFILER_MARKER_UNTYPED("MFCDMParent::ActorDestroy", MEDIA_PLAYBACK);
   mKeyMessageEvents.DisconnectAll();
   mKeyChangeEvents.DisconnectAll();
   mExpirationEvents.DisconnectAll();
@@ -486,7 +556,6 @@ void MFCDMParent::Destroy() {
     iter.second->Close(dom::MediaKeySessionClosedReason::Closed_by_application);
   }
   mSessions.clear();
-  mIPDLSelfRef = nullptr;
 }
 
 MFCDMParent::~MFCDMParent() {
@@ -947,9 +1016,11 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     return;
   }
 
-  // HWDRM is blocked by gfx downloadable blocklist.
+  // HWDRM is blocked by gfx downloadable blocklist. Skip the check when using
+  // the mock CDM for testing, since the blocklist doesn't apply there.
   if (isHardwareDecryption && gfx::gfxVars::IsInitialized() &&
-      !gfx::gfxVars::UseWMFHWDWM()) {
+      !gfx::gfxVars::UseWMFHWDWM() &&
+      !StaticPrefs::media_eme_wmf_use_mock_cdm_for_external_cdms()) {
     MFCDM_PARENT_SLOG("Block HWDRM for %s",
                       NS_ConvertUTF16toUTF8(aKeySystem).get());
     return;
@@ -1249,24 +1320,11 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
     PROFILER_MARKER_UNTYPED("MFCDMParent::RecvInit(created CDM)",
                             MEDIA_PLAYBACK);
     // This is only required by PlayReady.
-    if (IsPlayReadyKeySystemAndSupported(mKeySystem)) {
-      ComPtr<IMFPMPHost> pmpHost;
-      ComPtr<IMFGetService> cdmService;
-      MFCDM_REJECT_IF_FAILED(mCDM.As(&cdmService), NS_ERROR_FAILURE);
-      MFCDM_REJECT_IF_FAILED(
-          cdmService->GetService(MF_CONTENTDECRYPTIONMODULE_SERVICE,
-                                 IID_PPV_ARGS(&pmpHost)),
-          NS_ERROR_FAILURE);
-      MFCDM_REJECT_IF_FAILED(SUCCEEDED(MakeAndInitialize<MFPMPHostWrapper>(
-                                 &mPMPHostWrapper, pmpHost)),
-                             NS_ERROR_FAILURE);
-      MFCDM_REJECT_IF_FAILED(mCDM->SetPMPHostApp(mPMPHostWrapper.Get()),
-                             NS_ERROR_FAILURE);
-      MFCDM_PARENT_LOG("Set PMPHostWrapper on CDM!");
-    }
+    MFCDM_REJECT_IF_FAILED(SetupPMPHostApp(), NS_ERROR_FAILURE);
   }
 
   mIsInited = true;
+  mInitParams = Some(aParams);
   aResolver(MFCDMInitIPDL{mId});
   return IPC_OK();
 }
@@ -1498,6 +1556,37 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetStatusForPolicy(
             resolver(aRv.ResolveValue());
           });
   return IPC_OK();
+}
+
+RefPtr<GenericPromise> MFCDMParent::WaitForHDCPSettleAfterReset() {
+  ASSERT_CDM_ACCESS_READ_ONLY_ON_MANAGER_THREAD();
+  nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
+  if (NS_FAILED(NS_CreateBackgroundTaskQueue(
+          __func__, getter_AddRefs(backgroundTaskQueue)))) {
+    MFCDM_PARENT_LOG(
+        "Failed to create background task queue for HDCP settle check");
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+  RefPtr<GenericPromise::Private> p = new GenericPromise::Private(__func__);
+  // Capture key system and manager thread by value so this check runs
+  // independently of the CDM lifetime — the CDM may be destroyed during
+  // hardware reset recovery before the check completes.
+  nsString keySystem = mKeySystem;
+  RefPtr<nsISerialEventTarget> managerThread = mManagerThread;
+  nsresult rv = backgroundTaskQueue->Dispatch(
+      NS_NewRunnableFunction(__func__, [keySystem, managerThread, p] {
+        auto result = IsHDCPVersionSupported(keySystem, dom::HDCPVersion::_2_2,
+                                             managerThread);
+        MFCDM_PARENT_SLOG("HDCP 2.2 settle check after hardware reset: %s",
+                          result == NS_OK ? "ready" : "not ready");
+        p->Resolve(true, __func__);
+      }));
+  if (NS_FAILED(rv)) {
+    MFCDM_PARENT_LOG("Failed to dispatch HDCP settle check, rv=%x",
+                     static_cast<uint32_t>(rv));
+    p->Reject(rv, __func__);
+  }
+  return p;
 }
 
 void MFCDMParent::ConnectSessionEvents(MFCDMSession* aSession) {

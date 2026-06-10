@@ -1,6 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * vim: ts=4 sw=4 expandtab:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -21,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 /**
  * Class is used to access and manipulate Gecko preferences through GeckoView.
@@ -44,9 +43,10 @@ public class GeckoPreferenceController {
    * @return The typed Gecko preference that corresponds to this value. Will return exceptionally if
    *     a deserialization issue occurs.
    */
-  @AnyThread
+  @HandlerThread
   public static @NonNull GeckoResult<GeckoPreference<?>> getGeckoPref(
       @NonNull final String prefName) {
+    ThreadUtils.assertOnHandlerThread();
     final GeckoBundle bundle = new GeckoBundle(1);
     bundle.putStringArray("prefs", List.of(prefName));
     return EventDispatcher.getInstance()
@@ -77,9 +77,10 @@ public class GeckoPreferenceController {
    * @return A list of retrieved typed Gecko preferences. Will return exceptionally if a
    *     deserialization issue occurs.
    */
-  @AnyThread
+  @HandlerThread
   public static @NonNull GeckoResult<List<GeckoPreference<?>>> getGeckoPrefs(
       @NonNull final List<String> prefNames) {
+    ThreadUtils.assertOnHandlerThread();
     final GeckoBundle bundle = new GeckoBundle(1);
     bundle.putStringArray("prefs", prefNames);
     return EventDispatcher.getInstance()
@@ -111,9 +112,10 @@ public class GeckoPreferenceController {
    *     profile.
    * @return Will return a GeckoResult when the pref is set or else complete exceptionally.
    */
-  @AnyThread
+  @HandlerThread
   public static @NonNull GeckoResult<Void> setGeckoPref(
       @NonNull final String prefName, @NonNull final String value, @PrefBranch final int branch) {
+    ThreadUtils.warnOnHandlerThread();
     final var pref = SetGeckoPreference.setStringPref(prefName, value, branch);
     final GeckoBundle requestBundle = new GeckoBundle(1);
     requestBundle.putBundleArray("prefs", List.of(pref.toBundle()));
@@ -142,9 +144,10 @@ public class GeckoPreferenceController {
    *     profile.
    * @return Will return a GeckoResult when the pref is set or else complete exceptionally.
    */
-  @AnyThread
+  @HandlerThread
   public static @NonNull GeckoResult<Void> setGeckoPref(
       @NonNull final String prefName, @NonNull final Integer value, @PrefBranch final int branch) {
+    ThreadUtils.warnOnHandlerThread();
     final var pref = SetGeckoPreference.setIntPref(prefName, value, branch);
     final GeckoBundle requestBundle = new GeckoBundle(1);
     requestBundle.putBundleArray("prefs", List.of(pref.toBundle()));
@@ -173,9 +176,10 @@ public class GeckoPreferenceController {
    *     profile.
    * @return Will return a GeckoResult when the pref is set or else complete exceptionally.
    */
-  @AnyThread
+  @HandlerThread
   public static @NonNull GeckoResult<Void> setGeckoPref(
       @NonNull final String prefName, @NonNull final Boolean value, @PrefBranch final int branch) {
+    ThreadUtils.warnOnHandlerThread();
     final var pref = SetGeckoPreference.setBoolPref(prefName, value, branch);
     final GeckoBundle requestBundle = new GeckoBundle(1);
     requestBundle.putBundleArray("prefs", List.of(pref.toBundle()));
@@ -220,9 +224,10 @@ public class GeckoPreferenceController {
    * @param prefs A list of {@link SetGeckoPreference} to set.
    * @return A Map of preference names (key) and if they successfully set (values).
    */
-  @AnyThread
+  @HandlerThread
   public static @NonNull GeckoResult<Map<String, Boolean>> setGeckoPrefs(
       @NonNull final List<SetGeckoPreference<?>> prefs) {
+    ThreadUtils.assertOnHandlerThread();
     final List<GeckoBundle> itemBundles = new ArrayList<>(prefs.size());
     for (final SetGeckoPreference<?> pref : prefs) {
       itemBundles.add(pref.toBundle());
@@ -269,8 +274,9 @@ public class GeckoPreferenceController {
    * @param prefName The name of the preference to clear. e.g., "some.pref.item".
    * @return Will return a GeckoResult once the pref is cleared.
    */
-  @AnyThread
+  @HandlerThread
   public static @NonNull GeckoResult<Void> clearGeckoUserPref(@NonNull final String prefName) {
+    ThreadUtils.warnOnHandlerThread();
     final GeckoBundle bundle = new GeckoBundle(1);
     bundle.putString("pref", prefName);
     return EventDispatcher.getInstance().queryVoid(CLEAR_PREF, bundle);
@@ -289,7 +295,7 @@ public class GeckoPreferenceController {
      * @return The GeckoResult will complete with the current preference value when observation is
      *     set.
      */
-    @AnyThread
+    @HandlerThread
     public static @NonNull GeckoResult<Void> registerPreference(
         @NonNull final String preferenceName) {
       return registerPreferences(List.of(preferenceName));
@@ -303,9 +309,10 @@ public class GeckoPreferenceController {
      * @return The GeckoResult will complete with the current preference value when observation is
      *     set.
      */
-    @AnyThread
+    @HandlerThread
     public static @NonNull GeckoResult<Void> registerPreferences(
         @NonNull final List<String> preferenceNames) {
+      ThreadUtils.warnOnHandlerThread();
       final GeckoBundle bundle = new GeckoBundle();
       bundle.putStringArray("prefs", preferenceNames);
       return EventDispatcher.getInstance().queryVoid(REGISTER_PREF, bundle);
@@ -349,7 +356,7 @@ public class GeckoPreferenceController {
        *
        * @param observedGeckoPreference The new Gecko preference value that was recently observed.
        */
-      @AnyThread
+      @HandlerThread
       default void onGeckoPreferenceChange(
           @NonNull final GeckoPreference<?> observedGeckoPreference) {}
     }

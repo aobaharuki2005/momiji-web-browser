@@ -1,17 +1,14 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * Any copyright is dedicated to the Public Domain.
+/* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 package org.mozilla.geckoview.test
 
 import android.content.ClipDescription
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.text.InputType
 import android.text.SpannableString
-import android.text.SpannedString
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.BaseInputConnection
@@ -26,6 +23,7 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.Assume.assumeThat
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +53,19 @@ class TextInputDelegateTest : BaseSessionTest() {
     @field:Parameter(0)
     @JvmField
     var id: String = ""
+
+    @Before
+    fun setup() {
+        // Disable the DOM security feature that filters key events immediately
+        // after navigation. Our tests otherwise may lose events if they send
+        // too fast.
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "dom.input_events.security.minTimeElapsedInMS" to 0,
+                "dom.input_events.security.minNumTicks" to 0,
+            ),
+        )
+    }
 
     private var textContent: String
         get() = when (id) {
@@ -297,7 +308,6 @@ class TextInputDelegateTest : BaseSessionTest() {
         })
     }
 
-    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @Test fun restartInput_temporaryFocus() {
         // Our user action trick doesn't work for design-mode, so we can't test that here.
         assumeThat("Not in designmode", id, not(equalTo("#designmode")))
@@ -586,12 +596,6 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertTextAndSelection(message, ic, expected, value, value, checkGecko)
 
     private fun setupContent(content: String) {
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
-                "dom.select_events.textcontrols.enabled" to true,
-            ),
-        )
-
         mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
 
         mainSession.loadTestPath(INPUTS_PATH)
@@ -672,7 +676,6 @@ class TextInputDelegateTest : BaseSessionTest() {
         )
     }
 
-    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     // Test deleteSurroundingText
     @WithDisplay(width = 512, height = 512)
     // Child process updates require having a display.
@@ -1017,15 +1020,10 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     // Bug 1133802, duplication when setting the same composing text more than once.
-    @Ignore
-    // Disable for frequent failures.
     @WithDisplay(width = 512, height = 512)
     // Child process updates require having a display.
     @Test
     fun inputConnection_bug1133802() {
-        // TODO:
-        // Disable this test for frequent failures. We consider another way to
-        // wait/ignore event handling.
         setupContent("")
 
         val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
@@ -1092,7 +1090,6 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     // Bug 1275371 - shift+backspace should not forward delete on Android.
-    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1988041")
     @WithDisplay(width = 512, height = 512)
     // Child process updates require having a display.
     @Test
@@ -1230,12 +1227,14 @@ class TextInputDelegateTest : BaseSessionTest() {
                     "#input" ->
                         InputType.TYPE_CLASS_TEXT or
                             InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
-                            InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE
+                            InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE or
+                            InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT
                     else ->
                         InputType.TYPE_CLASS_TEXT or
                             InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
                             InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
-                            InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE
+                            InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE or
+                            InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT
                 },
             ),
         )
@@ -1294,7 +1293,8 @@ class TextInputDelegateTest : BaseSessionTest() {
                             InputType.TYPE_CLASS_TEXT or
                                 InputType.TYPE_TEXT_FLAG_AUTO_CORRECT or
                                 InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE or
-                                InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                                InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                                InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT
                         "#tel1" -> InputType.TYPE_CLASS_PHONE
                         "#url1" ->
                             InputType.TYPE_CLASS_TEXT or
@@ -1778,5 +1778,58 @@ class TextInputDelegateTest : BaseSessionTest() {
         processChildEvents()
         assertText("text isn't changed", ic, "[***]")
         assertSelection("selection isn't collapsed", ic, 1, 4)
+    }
+
+    // Bug 1563640 - SwiftKey commits empty text with setComposingRegion after enter key
+    @WithDisplay(width = 512, height = 512)
+    @Test
+    fun swiftKeyUsesSetComposingRegionAfterEnterKey() {
+        assumeThat("textarea only", id, equalTo("#textarea"))
+
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        pressKey(ic, KeyEvent.KEYCODE_B)
+        pressKey(ic, KeyEvent.KEYCODE_A)
+        pressKey(ic, KeyEvent.KEYCODE_R)
+        pressKey(ic, KeyEvent.KEYCODE_SPACE)
+        assertSelection("Can set selection to range", ic, 4, 4)
+
+        // After SwiftKey sends enter key, it calls setComposingRegion then finishComposingText to commit empty text.
+        val promise =
+            mainSession.evaluatePromiseJS(
+                """
+                new Promise(r => window.addEventListener('keyup', r, { once: true }))
+                """.trimIndent(),
+            )
+        ic.beginBatchEdit()
+        pressKeyNoWait(ic, KeyEvent.KEYCODE_ENTER)
+        ic.setComposingRegion(4, 4)
+        ic.finishComposingText()
+        ic.endBatchEdit()
+        promise.value
+
+        assertSelection("selection moves by enter key", ic, 5, 5)
+    }
+
+    // Bug 2038467 - Samsung Keyboard doesn't use batch mode when setting both composing range and composing text
+    // at once.
+    @WithDisplay(width = 512, height = 512)
+    @Test
+    fun inputConnection_samsungKeyboard_email() {
+        assumeThat("input only", id, equalTo("#input"))
+
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        // Emulate Samsung Keyboard's InputConnection API calls on <input type="email">
+        commitText(ic, "foo@", 1)
+        ic.setComposingRegion(0, 4)
+        ic.setComposingText("foo@1", 1)
+        ic.setComposingText("foo@12", 1)
+        finishComposingText(ic)
+        processChildEvents()
+
+        assertText("committed text is \"foo@12\"", ic, "foo@12")
     }
 }

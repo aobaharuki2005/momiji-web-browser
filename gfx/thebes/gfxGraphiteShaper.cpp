@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -58,16 +57,22 @@ gfxGraphiteShaper::~gfxGraphiteShaper() {
   mFont->GetFontEntry()->ReleaseGrFace(mGrFace);
 }
 
+#ifdef GFX_FONT_USE_THREAD_LOCAL
 /*static*/
 thread_local gfxGraphiteShaper::CallbackData*
     gfxGraphiteShaper::tl_GrGetAdvanceData = nullptr;
+#endif
 
 /*static*/
 tainted_opaque_gr<float> gfxGraphiteShaper::GrGetAdvance(
     rlbox_sandbox_gr& sandbox,
     tainted_opaque_gr<const void*> /* appFontHandle */,
     tainted_opaque_gr<uint16_t> t_glyphid) {
-  CallbackData* cb = tl_GrGetAdvanceData;
+#ifdef GFX_FONT_USE_THREAD_LOCAL
+    CallbackData* cb = tl_GrGetAdvanceData;
+#else
+  struct CallbackData* cb = tl_GrGetAdvanceData();
+#endif
   if (!cb) {
     // GrGetAdvance callback called unexpectedly. Just return safe value.
     tainted_gr<float> ret = 0;
@@ -128,8 +133,7 @@ static inline size_t CountUnicodes(const char16_t* aText, uint32_t aLength) {
   return total;
 }
 
-bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
-                                  const char16_t* aText, uint32_t aOffset,
+bool gfxGraphiteShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
                                   uint32_t aLength, Script aScript,
                                   nsAtom* aLanguage, bool aVertical,
                                   RoundingFlags aRounding,
@@ -174,8 +178,8 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
     // determine whether petite-caps falls back to small-caps
     if (style->variantCaps != NS_FONT_VARIANT_CAPS_NORMAL) {
       switch (style->variantCaps) {
-        case NS_FONT_VARIANT_CAPS_ALLPETITE:
-        case NS_FONT_VARIANT_CAPS_PETITECAPS:
+        case NS_FONT_VARIANT_CAPS_ALL_PETITE_CAPS:
+        case NS_FONT_VARIANT_CAPS_PETITE_CAPS:
           bool synLower, synUpper;
           mFont->SupportsVariantCaps(aScript, style->variantCaps,
                                      mFallbackToSmallCaps, synLower, synUpper);
@@ -234,10 +238,12 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
   auto clean_txt = MakeScopeExit([&] { mSandbox->free_in_sandbox(t_aText); });
 
   rlbox::memcpy(*mSandbox, t_aText, aText, aLength * sizeof(char16_t));
-
+#ifdef GFX_FONT_USE_THREAD_LOCAL
   tl_GrGetAdvanceData = &mCallbackData;
   auto clean_adv_data = MakeScopeExit([&] { tl_GrGetAdvanceData = nullptr; });
-
+#else
+  pthread_setspecific(lckey_shaper,  &mCallbackData);
+#endif
   tainted_gr<gr_segment*> seg =
       sandbox_invoke(*mSandbox, gr_make_seg, mGrFont, t_mGrFace, 0, grFeatures,
                      gr_utf16, t_aText, numChars, grBidi);

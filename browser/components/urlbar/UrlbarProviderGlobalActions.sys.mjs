@@ -33,7 +33,7 @@ const TIMES_SHOWN_PREF = "quickactions.timesShownOnboardingLabel";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
 });
 
 import { ActionsProviderQuickActions } from "moz-src:///browser/components/urlbar/ActionsProviderQuickActions.sys.mjs";
@@ -57,10 +57,18 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
-  async isActive(_queryContext) {
+  /**
+   * Whether this provider should be invoked for the given context.
+   * If this method returns false, the providers manager won't start a query
+   * with this provider, to save on resources.
+   *
+   * @param {UrlbarQueryContext} queryContext The query context object
+   */
+  async isActive(queryContext) {
     return (
       (lazy.UrlbarPrefs.get(SCOTCH_BONNET_PREF) ||
-        lazy.UrlbarPrefs.get(ACTIONS_PREF)) &&
+        lazy.UrlbarPrefs.get(ACTIONS_PREF) ||
+        queryContext.sapName == "searchbar") &&
       lazy.UrlbarPrefs.get(QUICK_ACTIONS_PREF)
     );
   }
@@ -121,19 +129,13 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
     addCallback(this, result);
   }
 
-  onSelection(result, element) {
-    let key = element.dataset.action;
-    let action = result.payload.actionsResults.find(a => a.key == key);
-    action.onSelection?.(result, element);
-  }
-
-  onEngagement(queryContext, controller, details) {
+  async onEngagement(queryContext, controller, details) {
     let key = details.element.dataset.action;
     let action = details.result.payload.actionsResults.find(a => a.key == key);
-    let options = action.onPick(queryContext, controller);
-    if (options?.focusContent) {
-      details.element.ownerGlobal.gBrowser.selectedBrowser.focus();
-    }
+    let provider = globalActionsProviders.find(
+      p => p.name == action.providerName
+    );
+    provider.onPick(queryContext, controller, action);
     controller.view.close();
   }
 

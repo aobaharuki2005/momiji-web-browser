@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -96,6 +94,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mStorageAccess(StorageAccess::eDeny),
       mUseRegularPrincipal(false),
       mUsingStorageAccess(false),
+      mSerialAllowed(true),
       mServiceWorkersTestingInWindow(false),
       mShouldResistFingerprinting(false),
       mIsThirdPartyContext(true),
@@ -113,8 +112,8 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
   mCSP = aCsp;
 
   if (mCSP) {
-    Result<UniquePtr<WorkerCSPContext>, nsresult> ctx =
-        WorkerCSPContext::CreateFromCSP(aCsp);
+    Result<UniquePtr<OffThreadCSPContext>, nsresult> ctx =
+        OffThreadCSPContext::CreateFromCSP(aCsp);
     if (NS_WARN_IF(ctx.isErr())) {
       return ctx.unwrapErr();
     }
@@ -378,7 +377,7 @@ WorkerLoadInfo::InterfaceRequestor::InterfaceRequestor(
       callbacks->GetInterface(NS_GET_IID(nsILoadContext),
                               getter_AddRefs(baseContext));
     }
-    mOuterRequestor = callbacks;
+    mOuterRequestor = std::move(callbacks);
   }
 
   mLoadContext = new LoadContext(aPrincipal, baseContext);

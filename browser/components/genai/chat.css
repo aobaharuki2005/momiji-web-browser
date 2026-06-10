@@ -51,6 +51,8 @@ browser {
     flex: 1;
     height: var(--button-size-icon);
     margin-block: var(--space-xsmall);
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &:hover {
       background-color: var(--button-background-color-ghost-hover);
@@ -67,7 +69,6 @@ browser {
   position: relative;
   z-index: 1;
 
-  /* stylelint-disable-next-line media-query-no-invalid */
   @media not -moz-pref("sidebar.revamp") {
     display: none;
   }
@@ -87,8 +88,8 @@ browser {
 
   .onboardingContainer {
     height: unset;
-    margin: var(--space-large);
-    margin-top: max(36px, 10vh - 31px);
+    margin: auto var(--space-large);
+    min-height: unset;
   }
 
   .screen {
@@ -117,7 +118,6 @@ browser {
   .tiles-single-select-container {
     margin-top: 0;
 
-    /* stylelint-disable-next-line media-query-no-invalid */
     @media not -moz-pref("browser.ml.chat.onboarding.unresponsive") {
       --fade-height: 20px;
       --fade-padding: 8px;
@@ -249,13 +249,11 @@ browser {
     top: 4px;
     z-index: 1;
 
-    /* stylelint-disable-next-line media-query-no-invalid */
     @media not -moz-pref("browser.ml.chat.page.footerBadge") {
       display: none;
     }
   }
 
-  /* stylelint-disable-next-line media-query-no-invalid */
   @media (not -moz-pref("browser.ml.chat.page")) or -moz-pref("browser.ml.chat.provider", "") {
     display: none;
   }

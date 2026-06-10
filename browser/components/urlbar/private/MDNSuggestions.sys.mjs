@@ -9,14 +9,15 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
 });
 
 const RESULT_MENU_COMMAND = {
+  DISMISS: "dismiss",
   MANAGE: "manage",
   NOT_INTERESTED: "not_interested",
-  NOT_RELEVANT: "not_relevant",
+  SHOW_LESS_FREQUENTLY: "show_less_frequently",
 };
 
 /**
@@ -39,10 +40,17 @@ export class MDNSuggestions extends SuggestProvider {
     return "Mdn";
   }
 
-  async makeResult(queryContext, suggestion) {
+  async makeResult(queryContext, suggestion, searchString) {
     if (!this.isEnabled) {
       // The feature is disabled on the client, but Merino may still return
       // mdn suggestions anyway, and we filter them out here.
+      return null;
+    }
+
+    if (
+      this.showLessFrequentlyCount &&
+      searchString.length < this.#minKeywordLength
+    ) {
       return null;
     }
 
@@ -59,16 +67,16 @@ export class MDNSuggestions extends SuggestProvider {
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
       isBestMatch: true,
-      showFeedbackMenu: true,
+      isBottomUrlSuggestion: true,
       payload: {
         icon: "chrome://global/skin/icons/mdn.svg",
         url: url.href,
         originalUrl: suggestion.url,
         title: suggestion.title,
+        subtitleL10n: { id: "urlbar-result-mdn-subtitle" },
         description: suggestion.description,
-        shouldShowUrl: true,
         bottomTextL10n: {
-          id: "firefox-suggest-mdn-bottom-text",
+          id: "urlbar-result-suggestion-recommended",
         },
       },
       highlights: {
@@ -84,25 +92,30 @@ export class MDNSuggestions extends SuggestProvider {
    * commands automatically handled by the urlbar, like "help".
    */
   getResultCommands() {
-    return /** @type {UrlbarResultCommand[]} */ ([
+    /** @type {UrlbarResultCommand[]} */
+    const commands = [];
+
+    if (this.canShowLessFrequently) {
+      commands.push({
+        name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
+        l10n: {
+          id: "urlbar-result-menu-show-less-frequently",
+        },
+      });
+    }
+
+    commands.push(
       {
+        name: RESULT_MENU_COMMAND.DISMISS,
+        l10n: {
+          id: "urlbar-result-menu-dismiss-suggestion",
+        },
+      },
+      {
+        name: RESULT_MENU_COMMAND.NOT_INTERESTED,
         l10n: {
           id: "firefox-suggest-command-dont-show-mdn",
         },
-        children: [
-          {
-            name: RESULT_MENU_COMMAND.NOT_RELEVANT,
-            l10n: {
-              id: "firefox-suggest-command-not-relevant",
-            },
-          },
-          {
-            name: RESULT_MENU_COMMAND.NOT_INTERESTED,
-            l10n: {
-              id: "firefox-suggest-command-not-interested",
-            },
-          },
-        ],
       },
       { name: "separator" },
       {
@@ -110,19 +123,20 @@ export class MDNSuggestions extends SuggestProvider {
         l10n: {
           id: "urlbar-result-menu-manage-firefox-suggest",
         },
-      },
-    ]);
+      }
+    );
+
+    return commands;
   }
 
-  onEngagement(queryContext, controller, details, _searchString) {
+  onEngagement(queryContext, controller, details, searchString) {
     let { result } = details;
     switch (details.selType) {
       case RESULT_MENU_COMMAND.MANAGE:
         // "manage" is handled by UrlbarInput, no need to do anything here.
         break;
       // selType == "dismiss" when the user presses the dismiss key shortcut.
-      case "dismiss":
-      case RESULT_MENU_COMMAND.NOT_RELEVANT:
+      case RESULT_MENU_COMMAND.DISMISS:
         lazy.QuickSuggest.dismissResult(result);
         result.acknowledgeDismissalL10n = {
           id: "firefox-suggest-dismissal-acknowledgment-one-mdn",
@@ -136,6 +150,41 @@ export class MDNSuggestions extends SuggestProvider {
         };
         controller.removeResult(result);
         break;
+      case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
+        controller.view.acknowledgeFeedback(result);
+        this.incrementShowLessFrequentlyCount();
+        if (!this.canShowLessFrequently) {
+          controller.view.invalidateResultMenuCommands();
+        }
+        lazy.UrlbarPrefs.set("mdn.minKeywordLength", searchString.length + 1);
+        break;
     }
+  }
+
+  incrementShowLessFrequentlyCount() {
+    if (this.canShowLessFrequently) {
+      lazy.UrlbarPrefs.set(
+        "mdn.showLessFrequentlyCount",
+        this.showLessFrequentlyCount + 1
+      );
+    }
+  }
+
+  get showLessFrequentlyCount() {
+    const count = lazy.UrlbarPrefs.get("mdn.showLessFrequentlyCount") || 0;
+    return Math.max(count, 0);
+  }
+
+  get canShowLessFrequently() {
+    const cap =
+      lazy.UrlbarPrefs.get("mdn.showLessFrequentlyCap") ||
+      lazy.QuickSuggest.config.showLessFrequentlyCap ||
+      0;
+    return !cap || this.showLessFrequentlyCount < cap;
+  }
+
+  get #minKeywordLength() {
+    let minLength = lazy.UrlbarPrefs.get("mdn.minKeywordLength");
+    return Math.max(minLength, 0);
   }
 }

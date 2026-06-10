@@ -16,6 +16,7 @@ import mozilla.components.browser.engine.gecko.ext.geckoTrackingProtectionPermis
 import mozilla.components.browser.engine.gecko.ext.isExcludedForTrackingProtection
 import mozilla.components.browser.engine.gecko.permission.geckoContentPermission
 import mozilla.components.browser.engine.gecko.translate.GeckoTranslationUtils.intoTranslationError
+import mozilla.components.browser.engine.gecko.util.FakeEngineDownloadDelegate
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
@@ -56,7 +57,6 @@ import mozilla.components.test.ReflectionUtils
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -104,6 +104,8 @@ import org.robolectric.Shadows.shadowOf
 import java.io.IOException
 import java.security.Principal
 import java.security.cert.X509Certificate
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 
 typealias GeckoAntiTracking = ContentBlocking.AntiTracking
 typealias GeckoSafeBrowsing = ContentBlocking.SafeBrowsing
@@ -337,6 +339,11 @@ class GeckoEngineSessionTest {
             mock(),
             geckoSessionProvider = geckoSessionProvider,
             privateMode = true,
+            defaultSettings = DefaultSettings(
+                downloadDelegate = FakeEngineDownloadDelegate(
+                    guessFileName = { _, _, _ -> "image name.png" },
+                ),
+            ),
         )
 
         val observer: EngineSession.Observer = mock()
@@ -376,6 +383,11 @@ class GeckoEngineSessionTest {
             mock(),
             geckoSessionProvider = geckoSessionProvider,
             privateMode = true,
+            defaultSettings = DefaultSettings(
+                downloadDelegate = FakeEngineDownloadDelegate(
+                    guessFileName = { _, _, _ -> "image image.png" },
+                ),
+            ),
         )
 
         val observer: EngineSession.Observer = mock()
@@ -416,6 +428,11 @@ class GeckoEngineSessionTest {
             mock(),
             geckoSessionProvider = geckoSessionProvider,
             privateMode = true,
+            defaultSettings = DefaultSettings(
+                downloadDelegate = FakeEngineDownloadDelegate(
+                    guessFileName = { _, _, _ -> "image.png" },
+                ),
+            ),
         )
 
         val observer: EngineSession.Observer = mock()
@@ -453,6 +470,11 @@ class GeckoEngineSessionTest {
             mock(),
             geckoSessionProvider = geckoSessionProvider,
             privateMode = true,
+            defaultSettings = DefaultSettings(
+                downloadDelegate = FakeEngineDownloadDelegate(
+                    guessFileName = { _, _, _ -> "image.png" },
+                ),
+            ),
         )
 
         val observer: EngineSession.Observer = mock()
@@ -2419,8 +2441,6 @@ class GeckoEngineSessionTest {
             altText,
             typeStr,
             srcUri,
-            // textContent =
-            null,
             // linkText =
             null,
         )
@@ -2599,6 +2619,41 @@ class GeckoEngineSessionTest {
 
         engineSession.toggleDesktopMode(false, reload = true)
         verify(engineSession, atLeastOnce()).reload()
+    }
+
+    @Test
+    fun `toggleDesktopMode should reload pageLoadingUrl after redirect sequence`() {
+        val initialUrl = "https://example.com"
+        val redirectedUrl = "https://redirected.com"
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        progressDelegate.value.onPageStart(geckoSession, initialUrl)
+        navigationDelegate.value.onLocationChange(geckoSession, redirectedUrl, emptyList(), false)
+
+        engineSession.toggleDesktopMode(true, reload = true)
+        verify(geckoSession).load(
+            GeckoSession.Loader()
+                .uri(initialUrl)
+                .flags(LoadUrlFlags.LOAD_FLAGS_REPLACE_HISTORY),
+        )
+    }
+
+    @Test
+    fun `toggleDesktopMode should call reload when redirect location change has user gesture`() {
+        val initialUrl = "https://example.com"
+        val redirectedUrl = "https://redirected.com"
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        progressDelegate.value.onPageStart(geckoSession, initialUrl)
+        navigationDelegate.value.onLocationChange(geckoSession, redirectedUrl, emptyList(), true)
+
+        engineSession.toggleDesktopMode(true, reload = true)
+        verify(geckoSession).reload(LoadUrlFlags.NONE)
+        verify(geckoSession, never()).load(any())
     }
 
     @Test
@@ -3001,11 +3056,9 @@ class GeckoEngineSessionTest {
         // Specifically defined unknown error thrown by the translations engine
         val geckoUnknownError = TranslationsException(TranslationsException.ERROR_UNKNOWN)
         val unknownError = geckoUnknownError.intoTranslationError()
-        assertTrue(
-            unknownError is TranslationError.UnknownError,
-        )
+        assertIs<TranslationError.UnknownError>(unknownError)
         assertEquals(
-            (unknownError as TranslationError.UnknownError).cause,
+            unknownError.cause,
             geckoUnknownError,
         )
         assertEquals(
@@ -3024,12 +3077,9 @@ class GeckoEngineSessionTest {
         // Something really unexpected was thrown
         val unexpectedUnknownError = Exception("Something very unexpected")
         val unexpectedUnknown = unexpectedUnknownError.intoTranslationError()
-        assertTrue(
-            unexpectedUnknown is
-            TranslationError.UnknownError,
-        )
+        assertIs<TranslationError.UnknownError>(unexpectedUnknown)
         assertEquals(
-            (unexpectedUnknown as TranslationError.UnknownError).cause,
+            unexpectedUnknown.cause,
             unexpectedUnknownError,
         )
         assertEquals(
@@ -3066,10 +3116,7 @@ class GeckoEngineSessionTest {
 
         val notSupported =
             TranslationsException(TranslationsException.ERROR_ENGINE_NOT_SUPPORTED).intoTranslationError()
-        assertTrue(
-            notSupported is
-            TranslationError.EngineNotSupportedError,
-        )
+        assertIs<TranslationError.EngineNotSupportedError>(notSupported)
         assertEquals(
             notSupported.errorName,
             "engine-not-supported",
@@ -3081,10 +3128,7 @@ class GeckoEngineSessionTest {
 
         val couldNotTranslate =
             TranslationsException(TranslationsException.ERROR_COULD_NOT_TRANSLATE).intoTranslationError()
-        assertTrue(
-            couldNotTranslate is
-            TranslationError.CouldNotTranslateError,
-        )
+        assertIs<TranslationError.CouldNotTranslateError>(couldNotTranslate)
         assertEquals(
             couldNotTranslate.errorName,
             "could-not-translate",
@@ -3096,10 +3140,7 @@ class GeckoEngineSessionTest {
 
         val couldNotRestore =
             TranslationsException(TranslationsException.ERROR_COULD_NOT_RESTORE).intoTranslationError()
-        assertTrue(
-            couldNotRestore is
-            TranslationError.CouldNotRestoreError,
-        )
+        assertIs<TranslationError.CouldNotRestoreError>(couldNotRestore)
         assertEquals(
             couldNotRestore.errorName,
             "could-not-restore",
@@ -3111,10 +3152,7 @@ class GeckoEngineSessionTest {
 
         val couldNotLoadLanguages =
             TranslationsException(TranslationsException.ERROR_COULD_NOT_LOAD_LANGUAGES).intoTranslationError()
-        assertTrue(
-            couldNotLoadLanguages is
-            TranslationError.CouldNotLoadLanguagesError,
-        )
+        assertIs<TranslationError.CouldNotLoadLanguagesError>(couldNotLoadLanguages)
         assertEquals(
             couldNotLoadLanguages.errorName,
             "could-not-load-languages",
@@ -3126,10 +3164,7 @@ class GeckoEngineSessionTest {
 
         val languageNotSupported =
             TranslationsException(TranslationsException.ERROR_LANGUAGE_NOT_SUPPORTED).intoTranslationError()
-        assertTrue(
-            languageNotSupported is
-            TranslationError.LanguageNotSupportedError,
-        )
+        assertIs<TranslationError.LanguageNotSupportedError>(languageNotSupported)
         assertEquals(
             languageNotSupported.errorName,
             "language-not-supported",
@@ -3141,10 +3176,7 @@ class GeckoEngineSessionTest {
 
         val couldNotRetrieve =
             TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_RETRIEVE).intoTranslationError()
-        assertTrue(
-            couldNotRetrieve is
-            TranslationError.ModelCouldNotRetrieveError,
-        )
+        assertIs<TranslationError.ModelCouldNotRetrieveError>(couldNotRetrieve)
         assertEquals(
             couldNotRetrieve.errorName,
             "model-could-not-retrieve",
@@ -3156,10 +3188,7 @@ class GeckoEngineSessionTest {
 
         val couldNotDelete =
             TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_DELETE).intoTranslationError()
-        assertTrue(
-            couldNotDelete is
-            TranslationError.ModelCouldNotDeleteError,
-        )
+        assertIs<TranslationError.ModelCouldNotDeleteError>(couldNotDelete)
         assertEquals(
             couldNotDelete.errorName,
             "model-could-not-delete",
@@ -3171,10 +3200,7 @@ class GeckoEngineSessionTest {
 
         val couldNotDownload =
             TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_DOWNLOAD).intoTranslationError()
-        assertTrue(
-            couldNotDownload is
-            TranslationError.ModelCouldNotDownloadError,
-        )
+        assertIs<TranslationError.ModelCouldNotDownloadError>(couldNotDownload)
         assertEquals(
             couldNotDownload.errorName,
             "model-could-not-download",
@@ -3186,10 +3212,7 @@ class GeckoEngineSessionTest {
 
         val languageRequired =
             TranslationsException(TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED).intoTranslationError()
-        assertTrue(
-            languageRequired is
-            TranslationError.ModelLanguageRequiredError,
-        )
+        assertIs<TranslationError.ModelLanguageRequiredError>(languageRequired)
         assertEquals(
             languageRequired.errorName,
             "model-language-required",
@@ -3201,10 +3224,7 @@ class GeckoEngineSessionTest {
 
         val downloadRequired =
             TranslationsException(TranslationsException.ERROR_MODEL_DOWNLOAD_REQUIRED).intoTranslationError()
-        assertTrue(
-            downloadRequired is
-            TranslationError.ModelDownloadRequiredError,
-        )
+        assertIs<TranslationError.ModelDownloadRequiredError>(downloadRequired)
         assertEquals(
             downloadRequired.errorName,
             "model-download-required",
@@ -3719,7 +3739,7 @@ class GeckoEngineSessionTest {
         progressDelegate.value.onSessionStateChange(mock(), state)
 
         assertNotNull(observedState)
-        assertTrue(observedState is GeckoEngineSessionState)
+        assertIs<GeckoEngineSessionState>(observedState)
 
         val actualState = (observedState as GeckoEngineSessionState).actualState
         assertEquals(state, actualState)
@@ -4149,9 +4169,9 @@ class GeckoEngineSessionTest {
         assertNull(observedFallbackUrl)
         assertNull(observedAppName)
         assertNotNull(observedTriggeredByRedirect)
-        assertTrue(observedTriggeredByRedirect!!)
+        assertTrue(observedTriggeredByRedirect)
         assertNotNull(observedTriggeredByWebContent)
-        assertFalse(observedTriggeredByWebContent!!)
+        assertFalse(observedTriggeredByWebContent)
         assertEquals("sample:about", observedOnLoadRequestUrl)
 
         navigationDelegate.value.onLoadRequest(
@@ -4362,7 +4382,7 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onNewSession(mock(), "mozilla.org")
 
         assertNotNull(receivedWindowRequest)
-        assertEquals("mozilla.org", receivedWindowRequest!!.url)
+        assertEquals("mozilla.org", receivedWindowRequest.url)
         assertEquals(WindowRequest.Type.OPEN, receivedWindowRequest.type)
     }
 
@@ -4385,7 +4405,7 @@ class GeckoEngineSessionTest {
         contentDelegate.value.onCloseRequest(geckoSession)
 
         assertNotNull(receivedWindowRequest)
-        assertSame(engineSession, receivedWindowRequest!!.prepare())
+        assertSame(engineSession, receivedWindowRequest.prepare())
         assertEquals(WindowRequest.Type.CLOSE, receivedWindowRequest.type)
     }
 
@@ -4420,7 +4440,7 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        val unparsedIssuerName = "Verified By: CN=Digicert SHA2 Extended Validation Server CA,OU=www.digicert.com,O=DigiCert Inc,C=US"
+        val unparsedIssuerName = "CN=Digicert SHA2 Extended Validation Server CA,OU=www.digicert.com,O=DigiCert Inc,C=US"
         val parsedIssuerName = "DigiCert Inc"
         val certificate: X509Certificate = mock()
         val principal: Principal = mock()
@@ -4435,7 +4455,10 @@ class GeckoEngineSessionTest {
 
     @Test
     fun `certificate issuer is parsed and provided onSecurityChange with null arg`() {
-        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+            )
 
         var observedIssuer: String? = null
         var observedCertificate: X509Certificate? = null
@@ -4452,36 +4475,6 @@ class GeckoEngineSessionTest {
 
         val unparsedIssuerName = null
         val parsedIssuerName = null
-        val certificate: X509Certificate = mock()
-        val principal: Principal = mock()
-        whenever(principal.name).thenReturn(unparsedIssuerName)
-        whenever(certificate.issuerDN).thenReturn(principal)
-
-        val securityInformation = MockSecurityInformation(certificate = certificate)
-        progressDelegate.value.onSecurityChange(mock(), securityInformation)
-        assertEquals(parsedIssuerName, observedIssuer)
-        assertEquals(certificate, observedCertificate)
-    }
-
-    @Test
-    fun `pattern-breaking certificate issuer isnt parsed and returns original name `() {
-        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
-
-        var observedIssuer: String? = null
-        var observedCertificate: X509Certificate? = null
-        engineSession.register(
-            object : EngineSession.Observer {
-                override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?, certificate: X509Certificate?) {
-                    observedIssuer = issuer
-                    observedCertificate = certificate
-                }
-            },
-        )
-
-        captureDelegates()
-
-        val unparsedIssuerName = "pattern breaking cert"
-        val parsedIssuerName = "pattern breaking cert"
         val certificate: X509Certificate = mock()
         val principal: Principal = mock()
         whenever(principal.name).thenReturn(unparsedIssuerName)
@@ -4649,6 +4642,11 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(
             runtime = mock(),
             geckoSessionProvider = geckoSessionProvider,
+            defaultSettings = DefaultSettings(
+                downloadDelegate = FakeEngineDownloadDelegate(
+                    guessFileName = { _, _, _ -> "Mozilla.pdf" },
+                ),
+            ),
         ).apply {
             currentUrl = "https://mozilla.org"
             currentTitle = "Mozilla"
@@ -4787,6 +4785,27 @@ class GeckoEngineSessionTest {
         })
         engineSession.requestPrintContent()
         shadowOf(getMainLooper()).idle()
+    }
+
+    @Test
+    fun `processBackPressed`() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+
+        val ruleResult = GeckoResult<Boolean>()
+        whenever(geckoSession.processBackPressed()).thenReturn(ruleResult)
+
+        var onResultCalled = false
+        engineSession.processBackPressed(
+            onResult = { onResultCalled = true },
+        )
+
+        ruleResult.complete(true)
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onResultCalled)
     }
 
     private fun mockGeckoSession(): GeckoSession {

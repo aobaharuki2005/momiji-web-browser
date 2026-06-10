@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -426,7 +424,7 @@ constexpr uint64_t CanonicalizedNaNSignificand = 0x8000000000000;
 #endif
 
 #if defined(JS_RUNTIME_CANONICAL_NAN)
-extern uint64_t CanonicalizedNaNBits;
+extern JS_PUBLIC_API uint64_t CanonicalizedNaNBits;
 #else
 constexpr uint64_t CanonicalizedNaNBits =
     mozilla::SpecificNaNBits<double, detail::CanonicalizedNaNSignBit,
@@ -839,12 +837,13 @@ class Value {
   }
 
   // Like isMagic, but without the release assertion.
+  // Note that in release builds this will return *false* for
+  // non-matching magic values, because it is generally safer to
+  // ignore an unexpected magic value than to misinterpret it. See bug
+  // 2032226.
   bool isMagicNoReleaseCheck(JSWhyMagic why) const {
-    if (!isMagic()) {
-      return false;
-    }
-    MOZ_ASSERT(whyMagic() == why);
-    return true;
+    MOZ_ASSERT_IF(isMagic(), whyMagic() == why);
+    return asBits_ == bitsFromTagAndPayload(JSVAL_TAG_MAGIC, uint32_t(why));
   }
 
   JS::TraceKind traceKind() const {

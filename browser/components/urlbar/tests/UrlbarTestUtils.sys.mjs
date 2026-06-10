@@ -1,7 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * @import { PanelList,  PanelItem } from "chrome://global/content/elements/panel-list.mjs"
+ */
+
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
   UrlbarProvider,
@@ -21,6 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   UrlbarController:
     "moz-src:///browser/components/urlbar/UrlbarController.sys.mjs",
@@ -28,7 +34,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "clipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  Ci.nsIClipboardHelper
+);
 
 /**
  * Utility class for testing <html:moz-urlbar> elements.
@@ -40,8 +54,6 @@ class UrlbarInputTestUtils {
   constructor(getUrlbarInputForWindow) {
     this.#urlbar = getUrlbarInputForWindow;
   }
-
-  #urlbar;
 
   /**
    * This maps the categories used by the FX_SEARCHBAR_SELECTED_RESULT_METHOD
@@ -101,10 +113,18 @@ class UrlbarInputTestUtils {
    * @param {ChromeWindow} win The window containing the urlbar
    */
   async promiseSearchComplete(win) {
-    let waitForQuery = () => {
-      return this.promisePopupOpen(win, () => {}).then(
-        () => this.#urlbar(win).lastQueryContextPromise
-      );
+    let waitForQuery = async () => {
+      await this.promisePopupOpen(win, () => {});
+      // Re-read `lastQueryContextPromise` after each await in case the query
+      // was restarted (e.g., by the `reopenOnBlur` mechanism in
+      // `promiseAutocompleteResultPopup`), and wait for the latest query.
+      let promise;
+      let context;
+      do {
+        promise = this.#urlbar(win).lastQueryContextPromise;
+        context = await promise;
+      } while (this.#urlbar(win).lastQueryContextPromise !== promise);
+      return context;
     };
     /** @type {UrlbarQueryContext} */
     let context = await waitForQuery();
@@ -250,6 +270,16 @@ class UrlbarInputTestUtils {
     return this.getRowAt(win, resultIndex).querySelector(
       `.urlbarView-button-${buttonName}`
     );
+  }
+
+  /**
+   * Returns the UrlbarInput input element for the requested window.
+   *
+   * @param {ChromeWindow} window
+   * @returns {UrlbarInput}
+   */
+  getUrlbar(window) {
+    return this.#urlbar(window);
   }
 
   /**
@@ -533,6 +563,43 @@ class UrlbarInputTestUtils {
   }
 
   /**
+   * Finds a non-autofill result matching the given URL and type in the
+   * currently open results panel, selects it with arrow keys, and presses
+   * Enter to load it. The search must be complete before calling this, since
+   * it starts with a synchronous getResultCount call.
+   *
+   * @param {ChromeWindow} win The window containing the urlbar.
+   * @param {string} url The URL to match against the result's payload.
+   * @param {number} [type] The UrlbarUtils.RESULT_TYPE to match.
+   *   Defaults to RESULT_TYPE.URL.
+   */
+  async pickResultAndWaitForLoad(win, url, type = UrlbarUtils.RESULT_TYPE.URL) {
+    let resultCount = this.getResultCount(win);
+    let targetIndex = -1;
+    for (let i = 0; i < resultCount; i++) {
+      let d = await this.getDetailsOfResultAt(win, i);
+      if (
+        !d.autofill &&
+        d.result.payload.url === url &&
+        d.result.type === type
+      ) {
+        targetIndex = i;
+        break;
+      }
+    }
+    this.Assert.notEqual(targetIndex, -1, "Should find the result in panel");
+
+    let loadPromise = lazy.BrowserTestUtils.browserLoaded(
+      win.gBrowser.selectedBrowser
+    );
+    while (this.getSelectedRowIndex(win) !== targetIndex) {
+      this.EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    }
+    this.EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    await loadPromise;
+  }
+
+  /**
    * Returns true if the oneOffSearchButtons are visible.
    *
    * @param {ChromeWindow} win The window containing the urlbar
@@ -798,8 +865,8 @@ class UrlbarInputTestUtils {
    * Open the input field context menu and run a task on it.
    *
    * @param {ChromeWindow} win the current window
-   * @param {Function} task a task function to run, gets the contextmenu popup
-   *        as argument.
+   * @param {(popup: MozMenuPopup) => Promise<void>|void} task
+   *   A task function to run. Gets the contextmenu popup as argument.
    */
   async withContextMenu(win, task) {
     let textBox = this.#urlbar(win).querySelector("moz-input-box");
@@ -829,6 +896,54 @@ class UrlbarInputTestUtils {
         await closePromise;
       }
     }
+  }
+
+  /**
+   * Opens the moz-urlbar context menu by synthesizing a click.
+   * Activates a menu item that is specified by an id.
+   *
+   * @param {ChromeWindow} win
+   *   The current window.
+   * @param {string} anonid
+   *   Identifier of a menu item of the url bar context menu.
+   * @returns {Promise<void>}
+   *   The menuitem that has the corresponding identifier.
+   */
+  async activateContextMenuItem(win, anonid) {
+    await this.withContextMenu(win, popup => {
+      let mozInputBox = popup.parentNode;
+      let menuitem = mozInputBox.getMenuItem(anonid);
+      this.Assert.ok(
+        lazy.BrowserTestUtils.isVisible(menuitem),
+        "Menu item is visible"
+      );
+      this.Assert.ok(
+        lazy.BrowserTestUtils.isVisible(menuitem),
+        "Menu item is visible"
+      );
+      this.Assert.ok(!menuitem.disabled, "Menu item enabled");
+      menuitem.closest("menupopup").activateItem(menuitem);
+    });
+  }
+
+  /**
+   * Opens the moz-urlbar context menu by synthesizing a click.
+   * Returns a menu item that is specified by an id.
+   *
+   * @param {ChromeWindow} win
+   *   The current window.
+   * @param {string} anonid
+   *   Identifier of a menu item of the url bar context menu.
+   * @returns {Promise<MozMenuItem>}
+   *   The menuitem that has the corresponding identifier.
+   */
+  async getContextMenuItem(win, anonid) {
+    let menuitem;
+    await this.withContextMenu(win, popup => {
+      let mozInputBox = popup.parentNode;
+      menuitem = mozInputBox.getMenuItem(anonid);
+    });
+    return menuitem;
   }
 
   /**
@@ -879,7 +994,9 @@ class UrlbarInputTestUtils {
       let keywordEnabled = Services.prefs.getBoolPref("keyword.enabled");
 
       let expectedPlaceholder;
-      if (keywordEnabled && engineName) {
+      if (this.#urlbar(window).sapName == "searchbar") {
+        expectedPlaceholder = { id: "searchbar-input" };
+      } else if (keywordEnabled && engineName) {
         expectedPlaceholder = {
           id: "urlbar-placeholder-with-name",
           args: { name: engineName },
@@ -914,7 +1031,7 @@ class UrlbarInputTestUtils {
 
     let isGeneralPurposeEngine = false;
     if (expectedSearchMode.engineName) {
-      let engine = Services.search.getEngineByName(
+      let engine = lazy.SearchService.getEngineByName(
         expectedSearchMode.engineName
       );
       isGeneralPurposeEngine = engine.isGeneralPurposeEngine;
@@ -1029,7 +1146,7 @@ class UrlbarInputTestUtils {
             "Search mode result matches engine name."
           );
         } else {
-          let engine = Services.search.getEngineByName(
+          let engine = lazy.SearchService.getEngineByName(
             expectedSearchMode.engineName
           );
           let engineRootDomain =
@@ -1077,7 +1194,7 @@ class UrlbarInputTestUtils {
     let buttons = oneOffs.getSelectableButtons(true);
     if (!searchMode) {
       searchMode = { engineName: buttons[0].engine.name };
-      let engine = Services.search.getEngineByName(searchMode.engineName);
+      let engine = lazy.SearchService.getEngineByName(searchMode.engineName);
       if (engine.isGeneralPurposeEngine) {
         searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
       }
@@ -1142,7 +1259,7 @@ class UrlbarInputTestUtils {
     if (Services.prefs.getBoolPref("browser.urlbar.trimURLs")) {
       return lazy.UrlbarPrefs.getScotchBonnetPref("trimHttps")
         ? "https://"
-        : "http://"; // eslint-disable-this-line @microsoft/sdl/no-insecure-url
+        : "http://"; // eslint-disable-line @microsoft/sdl/no-insecure-url
     }
     return "";
   }
@@ -1170,25 +1287,12 @@ class UrlbarInputTestUtils {
     { backspace, clickClose, waitForSearch = true } = {}
   ) {
     let urlbar = this.#urlbar(window);
-    // If the Urlbar is not extended, ignore the clickClose parameter. The close
-    // button is not clickable in this state. This state might be encountered on
-    // Linux, where prefers-reduced-motion is enabled in automation.
-    if (!urlbar.hasAttribute("breakout-extend") && clickClose) {
-      if (waitForSearch) {
-        let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-        urlbar.searchMode = null;
-        await searchPromise;
-      } else {
-        urlbar.searchMode = null;
-      }
-      return;
-    }
-
     if (!backspace && !clickClose) {
       backspace = true;
     }
 
     if (backspace) {
+      urlbar.focus();
       let urlbarValue = urlbar.value;
       urlbar.selectionStart = urlbar.selectionEnd = 0;
       if (waitForSearch) {
@@ -1262,11 +1366,25 @@ class UrlbarInputTestUtils {
    * @returns {UrlbarController} A new controller.
    */
   newMockController(options = {}) {
+    let sapName = options.sapName || "urlbar";
+    // Ensure a sapName is defined, as otherwise we'd not get the same
+    // ProvidersManager instance across tests.
+    if (options.input && !options.input.sapName) {
+      Object.defineProperty(options.input, "sapName", {
+        get() {
+          return sapName;
+        },
+        configurable: true,
+      });
+    }
     return new lazy.UrlbarController(
       Object.assign(
         {
           input: {
             isPrivate: false,
+            get sapName() {
+              return sapName;
+            },
             onFirstResult() {
               return false;
             },
@@ -1435,33 +1553,82 @@ class UrlbarInputTestUtils {
     );
   }
 
+  /**
+   * @param {ChromeWindow} win
+   *   The search mode switcher's window.
+   * @returns {PanelList}
+   *   The search mode switcher popup.
+   */
   searchModeSwitcherPopup(win) {
-    return this.#urlbar(win).querySelector(".searchmode-switcher-popup");
+    return this.#urlbar(win).querySelector(".searchmode-switcher-panel-list");
   }
 
-  async openSearchModeSwitcher(win) {
+  /**
+   * Opens the search mode switcher and returns the popup.
+   *
+   * @param {ChromeWindow} win
+   *   The search mode switcher's window.
+   * @param {?Function} [openFn]
+   * Function to be used to open the popup. If not supplied,
+   * it will default to a opening the popup directly.
+   * @returns {Promise<PanelList>}
+   *   The search mode switcher popup.
+   */
+  async openSearchModeSwitcher(win, openFn = null) {
     let popup = this.searchModeSwitcherPopup(win);
     let button = this.#urlbar(win).querySelector(".searchmode-switcher");
     this.Assert.ok(lazy.BrowserTestUtils.isVisible(button));
     await this.EventUtils.promiseElementReadyForUserInput(button, win);
 
-    let promiseMenuOpen = lazy.BrowserTestUtils.waitForPopupEvent(
-      popup,
-      "shown"
-    );
+    let promisePanelOpen = lazy.BrowserTestUtils.waitForEvent(popup, "shown");
     let rebuildPromise = lazy.BrowserTestUtils.waitForEvent(popup, "rebuild");
-    // Ensure the pop-up opens.
-    button.open = true;
-    await Promise.all([promiseMenuOpen, rebuildPromise]);
+    if (openFn) {
+      await openFn();
+    } else {
+      button.focus();
+      await lazy.BrowserTestUtils.waitForCondition(
+        () => !button.hasAttribute("aria-hidden")
+      );
+      button.click();
+    }
+    await Promise.all([promisePanelOpen, rebuildPromise]);
 
     return popup;
   }
 
+  /**
+   * @param {ChromeWindow} win
+   *   The search mode switcher's window.
+   * @returns {Promise<void>}
+   *   Resolved when the search mode switcher popup is hidden.
+   */
   searchModeSwitcherPopupClosed(win) {
-    return lazy.BrowserTestUtils.waitForPopupEvent(
+    return lazy.BrowserTestUtils.waitForEvent(
       this.searchModeSwitcherPopup(win),
       "hidden"
     );
+  }
+
+  /**
+   * @param {ChromeWindow} win
+   *   The search mode switcher's window.
+   * @param {string} selector
+   *   A CSS selector for the panel-item that should be activated.
+   * @returns {Promise<void>}
+   *   Resolved when the search mode switcher popup is hidden.
+   */
+  async activateSearchModeSwitcherItem(win, selector) {
+    this.info("Opening search mode switcher.");
+    let panelList = await this.openSearchModeSwitcher(win);
+    let panelItem = /**@type {PanelItem}*/ (panelList.querySelector(selector));
+    if (!panelItem || panelItem.localName != "panel-item") {
+      throw new Error("No matches for selector");
+    }
+    this.info("Clicking panel-item.");
+    let popupHidden = this.searchModeSwitcherPopupClosed(win);
+    panelItem.click();
+    await popupHidden;
+    this.info("Search mode switcher closed.");
   }
 
   /**
@@ -1472,17 +1639,16 @@ class UrlbarInputTestUtils {
    */
   getSearchModeSwitcherIcon(win) {
     let searchModeSwitcherButton = this.#urlbar(win).querySelector(
-      ".searchmode-switcher-icon"
+      ".searchmode-switcher"
     );
-
-    // match and capture the URL inside `url("...")`
-    let re = /url\("([^"]+)"\)/;
-    let { listStyleImage } = win.getComputedStyle(searchModeSwitcherButton);
-    return listStyleImage.match(re)?.[1] ?? null;
+    return searchModeSwitcherButton.getAttribute("iconsrc");
   }
 
   async openTrustPanel(win) {
     let btn = win.document.getElementById("trust-icon");
+    if (!btn.checkVisibility()) {
+      btn = win.document.getElementById("identity-icon-box");
+    }
     let popupShown = lazy.BrowserTestUtils.waitForEvent(
       win.document,
       "popupshown"
@@ -1515,7 +1681,11 @@ class UrlbarInputTestUtils {
     let target = menupopup.querySelector(targetSelector);
     let selected;
     for (let i = 0; i < menupopup.children.length; i++) {
-      this.EventUtils.synthesizeKey("KEY_ArrowDown", {}, menupopup.ownerGlobal);
+      this.EventUtils.synthesizeKey(
+        "KEY_ArrowDown",
+        {},
+        menupopup.documentGlobal
+      );
       await lazy.BrowserTestUtils.waitForCondition(() => {
         let current = menupopup.querySelector("[_moz-menuactive]");
         if (selected != current) {
@@ -1529,6 +1699,127 @@ class UrlbarInputTestUtils {
       }
     }
   }
+
+  /**
+   * Selects the urlbar input and pastes the string into it.
+   *
+   * @param {string} str
+   *   The string to paste.
+   * @param {ChromeWindow} win
+   */
+  async selectAndPaste(str, win) {
+    await this.SimpleTest.promiseClipboardChange(str, () => {
+      lazy.clipboardHelper.copyString(str);
+    });
+    this.#urlbar(win).select();
+    win.document.commandDispatcher
+      .getControllerForCommand("cmd_paste")
+      .doCommand("cmd_paste");
+  }
+
+  /**
+   * Simulates selecting by dragging within the urlbar input.
+   *
+   * @param {number} fromX
+   * @param {number} toX
+   * @param {ChromeWindow} win
+   * @returns {Promise<Event>}
+   *   Resolves to the mouseup event.
+   */
+  selectWithMouseDrag(fromX, toX, win) {
+    let target = this.#urlbar(win).inputField;
+    let rect = target.getBoundingClientRect();
+    let promise = lazy.BrowserTestUtils.waitForEvent(target, "mouseup");
+    this.EventUtils.synthesizeMouse(
+      target,
+      fromX,
+      rect.height / 2,
+      { type: "mousemove" },
+      target.documentGlobal
+    );
+    this.EventUtils.synthesizeMouse(
+      target,
+      fromX,
+      rect.height / 2,
+      { type: "mousedown" },
+      target.documentGlobal
+    );
+    this.EventUtils.synthesizeMouse(
+      target,
+      toX,
+      rect.height / 2,
+      { type: "mousemove" },
+      target.documentGlobal
+    );
+    this.EventUtils.synthesizeMouse(
+      target,
+      toX,
+      rect.height / 2,
+      { type: "mouseup" },
+      target.documentGlobal
+    );
+    return promise;
+  }
+
+  /**
+   * Simulates selecting by double-clicking within the urlbar input.
+   *
+   * @param {number} offsetX
+   *   The x based location within the input field to double-click.
+   * @param {ChromeWindow} win
+   * @returns {Promise<Event>}
+   *   Resolves to the dblclick event.
+   */
+  selectWithDoubleClick(offsetX, win) {
+    let target = this.#urlbar(win).inputField;
+    let rect = target.getBoundingClientRect();
+    let promise = lazy.BrowserTestUtils.waitForEvent(target, "dblclick");
+    this.EventUtils.synthesizeMouse(target, offsetX, rect.height / 2, {
+      clickCount: 1,
+    });
+    this.EventUtils.synthesizeMouse(target, offsetX, rect.height / 2, {
+      clickCount: 2,
+    });
+    return promise;
+  }
+
+  /**
+   * Stubs `UrlbarUtils._zonedDateTimeISO()`. Helpful for tests that use
+   * `UrlbarUtils.formatDate()`.
+   *
+   * Browser tests should call this again with a falsey value during cleanup to
+   * remove the stub.
+   *
+   * @param {?string} nowStr
+   *   A string that will be passed to `Temporal.ZonedDateTime.from()`. It should
+   *   include a time zone offset. e.g.: "2025-05-11T00:00:00-07:00[-07:00]"
+   *   A falsey value removes the stub.
+   * @returns {typeof Temporal.ZonedDateTime}
+   *   The fake "now" date as a `ZonedDateTime`.
+   */
+  stubNowZonedDateTime(nowStr) {
+    if (!nowStr) {
+      this.#zonedDateTimeISOStub?.restore();
+      this.#zonedDateTimeISOStub = null;
+      return null;
+    }
+
+    if (!this.#zonedDateTimeISOStub) {
+      this.#zonedDateTimeISOStub = lazy.sinon.stub(
+        UrlbarUtils,
+        "_zonedDateTimeISO"
+      );
+    }
+
+    let global = Cu.getGlobalForObject(UrlbarUtils);
+    let zonedNow = global.Temporal.ZonedDateTime.from(nowStr);
+    this.#zonedDateTimeISOStub.returns(zonedNow);
+
+    return zonedNow;
+  }
+
+  #urlbar;
+  #zonedDateTimeISOStub;
 }
 
 UrlbarInputTestUtils.prototype.formHistory = {

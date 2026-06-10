@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -16,6 +14,7 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
+#include <bit>
 #ifndef XP_LINUX
 // We still support libstd++ versions without codecvt support on Linux.
 //
@@ -228,9 +227,11 @@ char32_t JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length) {
   return Utf8ToOneUcs4CharImpl(utf8Buffer, utf8Length);
 }
 
-static void ReportInvalidCharacter(JSContext* cx, uint32_t offset) {
-  char buffer[10];
-  SprintfLiteral(buffer, "%u", offset);
+static void ReportInvalidCharacter(JSContext* cx, size_t offset) {
+  // Max roundtrip digits, +1 to include largest numbers, +1 for null terminator
+  constexpr size_t BUFFER_LENGTH = std::numeric_limits<size_t>::digits10 + 2;
+  char buffer[BUFFER_LENGTH];
+  SprintfLiteral(buffer, "%zu", offset);
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_MALFORMED_UTF8_CHAR, buffer);
 }
@@ -278,7 +279,7 @@ template <OnUTF8Error ErrorAction, typename OutputFn>
 static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars& src,
                                OutputFn dst) {
   size_t srclen = src.length();
-  for (uint32_t i = 0; i < srclen; i++) {
+  for (size_t i = 0; i < srclen; i++) {
     uint32_t v = uint32_t(src[i]);
     if (!(v & 0x80)) {
       // ASCII code unit.  Simple copy.
@@ -310,12 +311,7 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars& src,
   } while (0)
 
       // Non-ASCII code unit. Determine its length in bytes (n).
-      //
-      // Avoid undefined behavior from passing in 0
-      // (https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html#index-_005f_005fbuiltin_005fclz)
-      // by turning on the low bit so that 0xff will set n=31-24=7, which will
-      // be detected as an invalid character.
-      uint32_t n = mozilla::CountLeadingZeroes32(~int8_t(src[i]) | 0x1) - 24;
+      uint32_t n = std::countl_one(src[i]);
 
       // Check the leading byte.
       if (n < 2 || n > 4) {
@@ -400,7 +396,7 @@ static void CopyAndInflateUTF8IntoBuffer(JSContext* cx, const UTF8Chars& src,
   if (allASCII) {
     size_t srclen = src.length();
     MOZ_ASSERT(outlen == srclen);
-    for (uint32_t i = 0; i < srclen; i++) {
+    for (size_t i = 0; i < srclen; i++) {
       dst[i] = CharT(src[i]);
     }
   } else {
@@ -536,21 +532,14 @@ bool GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars& utf8,
 
 template <typename CharT>
 bool UTF8EqualsChars(const JS::UTF8Chars& utfChars, const CharT* chars) {
+  static_assert(std::is_same_v<CharT, JS::Latin1Char> ||
+                std::is_same_v<CharT, char16_t>);
+
   size_t ind = 0;
   bool isEqual = true;
 
   auto checkEqual = [&isEqual, &ind, chars](char16_t c) -> LoopDisposition {
-#ifdef DEBUG
-    JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
-    UpdateSmallestEncodingForChar(c, &encoding);
-    if (std::is_same_v<CharT, JS::Latin1Char>) {
-      MOZ_ASSERT(encoding <= JS::SmallestEncoding::Latin1);
-    } else if (!std::is_same_v<CharT, char16_t>) {
-      MOZ_CRASH("Invalid character type in UTF8EqualsChars");
-    }
-#endif
-
-    if (CharT(c) != chars[ind]) {
+    if (c != char16_t(chars[ind])) {
       isEqual = false;
       return LoopDisposition::Break;
     }
@@ -559,7 +548,7 @@ bool UTF8EqualsChars(const JS::UTF8Chars& utfChars, const CharT* chars) {
     return LoopDisposition::Continue;
   };
 
-  // To get here, you must have checked your work.
+  // The caller must have already validated UTF-8 well-formedness.
   InflateUTF8ToUTF16<OnUTF8Error::Crash>(/* cx = */ nullptr, utfChars,
                                          checkEqual);
 

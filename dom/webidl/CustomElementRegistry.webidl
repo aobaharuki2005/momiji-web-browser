@@ -5,6 +5,8 @@
 // https://html.spec.whatwg.org/#dom-window-customelements
 [Exposed=Window]
 interface CustomElementRegistry {
+  [Pref="dom.scoped-custom-element-registries.enabled"] constructor();
+
   [CEReactions, Throws, UseCounter]
   undefined define(DOMString name, CustomElementConstructor constructor,
                    optional ElementDefinitionOptions options = {});

@@ -122,15 +122,14 @@ export class BackupUIParent extends JSWindowActorParent {
    *   Returns either a success object, a file details object, or null.
    */
   async receiveMessage(message) {
-    let currentWindowGlobal = this.browsingContext.currentWindowGlobal;
+    let windowGlobal = this.manager;
     // The backup spotlights can be embedded in less privileged content pages, so let's
     // make sure that any messages from content are coming from the privileged
     // about content process type
     if (
-      !currentWindowGlobal ||
-      (!currentWindowGlobal.isInProcess &&
-        this.browsingContext.currentRemoteType !=
-          lazy.E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE)
+      !windowGlobal ||
+      (!windowGlobal.isInProcess &&
+        windowGlobal.remoteType != lazy.E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE)
     ) {
       lazy.logConsole.debug(
         "BackupUIParent: received message from the wrong content process type."
@@ -144,9 +143,9 @@ export class BackupUIParent extends JSWindowActorParent {
       return await this.#triggerCreateBackup({ reason: "manual" });
     } else if (message.name == "EnableScheduledBackups") {
       try {
-        let { parentDirPath, password } = message.data;
+        let { parentDirPath, password, source } = message.data;
         if (parentDirPath) {
-          this.#bs.setParentDirPath(parentDirPath);
+          await this.#bs.setParentDirPath(parentDirPath);
         }
 
         if (password) {
@@ -159,21 +158,19 @@ export class BackupUIParent extends JSWindowActorParent {
           await this.#bs.enableEncryption(password);
           Glean.browserBackup.passwordAdded.record();
         }
-        this.#bs.setScheduledBackups(true);
+        this.#bs.setScheduledBackups(true, source);
       } catch (e) {
         lazy.logConsole.error(`Failed to enable scheduled backups`, e);
         return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
       }
-      /**
-       * TODO: (Bug 1900125) we should create a backup at the specified dir path once we turn on
-       * scheduled backups. The backup folder in the chosen directory should contain
-       * the archive file, which we create using BackupService.createArchive implemented in
-       * Bug 1897498.
-       */
+
+      // Don't block the return on createBackup
+      this.#triggerCreateBackup({ reason: "first" });
       return { success: true };
     } else if (message.name == "DisableScheduledBackups") {
+      let { source } = message.data;
       await this.#bs.cleanupBackupFiles();
-      this.#bs.setScheduledBackups(false);
+      this.#bs.setScheduledBackups(false, source);
     } else if (message.name == "ShowFilepicker") {
       let { win, filter, existingBackupPath } = message.data;
 
@@ -190,12 +187,11 @@ export class BackupUIParent extends JSWindowActorParent {
 
       if (existingBackupPath) {
         try {
-          let folder = (await IOUtils.getFile(existingBackupPath)).parent;
-          if (folder.exists()) {
-            fp.displayDirectory = folder;
-          }
+          let folder = await IOUtils.getFile(existingBackupPath);
+          // IOUtils.getFile creates the parent directory, so it should exist.
+          fp.displayDirectory = folder.parent;
         } catch (_) {
-          // If the file can not be found we will skip setting the displayDirectory.
+          // If the path isn't valid, don't bother setting the displayDirectory.
         }
       }
 
@@ -223,16 +219,26 @@ export class BackupUIParent extends JSWindowActorParent {
          * TODO: (Bug 1905156) display a localized version of error in the restore dialog.
          */
       }
+    } else if (message.name == "FindBackupsInWellKnownLocations") {
+      let { source } = message.data;
+      await this.#bs.findBackupsInWellKnownLocations({
+        validateFile: true,
+        source,
+      });
     } else if (message.name == "RestoreFromBackupChooseFile") {
       const window = this.browsingContext.topChromeWindow;
       this.#bs.filePickerForRestore(window);
     } else if (message.name == "RestoreFromBackupFile") {
-      let { backupFile, backupPassword } = message.data;
+      let { backupFile, backupPassword, restoreType, source } = message.data;
       try {
         await this.#bs.recoverFromBackupArchive(
           backupFile,
           backupPassword,
-          true /* shouldLaunch */
+          true /* shouldLaunchOrQuit */,
+          undefined,
+          undefined,
+          restoreType === "replace" /* replaceCurrentProfile */,
+          source
         );
       } catch (e) {
         lazy.logConsole.error(`Failed to restore file: ${backupFile}`, e);
@@ -268,8 +274,8 @@ export class BackupUIParent extends JSWindowActorParent {
     } else if (message.name == "ShowBackupLocation") {
       this.#bs.showBackupLocation();
     } else if (message.name == "EditBackupLocation") {
-      const window = this.browsingContext.topChromeWindow;
-      this.#bs.editBackupLocation(window);
+      const path = message.data?.path;
+      this.#bs.editBackupLocation(path);
     } else if (message.name == "QuitCurrentProfile") {
       // Notify windows that a quit has been requested.
       let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(

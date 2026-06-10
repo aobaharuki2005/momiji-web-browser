@@ -11,7 +11,7 @@ async function test_sidebar_hidden_on_popup() {
   await SpecialPowers.pushPrefEnv({
     set: [[VERTICAL_TABS_PREF, true]],
   });
-  await waitForTabstripOrientation("vertical");
+  await SidebarTestUtils.waitForTabstripOrientation(window, "vertical");
   const win = await BrowserTestUtils.openNewBrowserWindow();
   const { document } = win;
 
@@ -44,8 +44,8 @@ async function test_sidebar_hidden_on_popup() {
 
   const menubar = popup.document.getElementById("viewSidebarMenu");
   ok(
-    Array.from(menubar.childNodes).every(
-      menuItem => menuItem.getAttribute("disabled") == "true"
+    Array.from(menubar.childNodes).every(menuItem =>
+      menuItem.hasAttribute("disabled")
     ),
     "All View > Sidebar menu items are disabled on popup"
   );

@@ -1,13 +1,10 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 : */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ParentChannelWrapper.h"
 #include "mozilla/net/HttpBaseChannel.h"
-#include "mozilla/net/UrlClassifierCommon.h"
+#include "mozilla/net/ChannelClassifierUtils.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsIViewSourceChannel.h"
 #include "nsNetUtil.h"
@@ -23,6 +20,10 @@ NS_IMPL_ISUPPORTS(ParentChannelWrapper, nsIParentChannel, nsIStreamListener,
 void ParentChannelWrapper::Register(uint64_t aRegistrarId) {
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
+  if (!registrar) {
+    // Shutdown is in progress.
+    return;
+  }
   nsCOMPtr<nsIChannel> dummy;
   MOZ_ALWAYS_SUCCEEDS(
       NS_LinkRedirectChannels(aRegistrarId, this, getter_AddRefs(dummy)));
@@ -81,7 +82,7 @@ ParentChannelWrapper::SetClassifierMatchedTrackingInfo(
 NS_IMETHODIMP
 ParentChannelWrapper::NotifyClassificationFlags(uint32_t aClassificationFlags,
                                                 bool aIsThirdParty) {
-  UrlClassifierCommon::SetClassificationFlagsHelper(
+  ChannelClassifierUtils::SetClassificationFlagsHelper(
       mChannel, aClassificationFlags, aIsThirdParty);
   return NS_OK;
 }

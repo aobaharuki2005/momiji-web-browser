@@ -1,15 +1,11 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* constants used in the style struct data provided by ComputedStyle */
 
-#ifndef nsStyleConsts_h___
-#define nsStyleConsts_h___
-
-#include <inttypes.h>
+#ifndef nsStyleConsts_h_
+#define nsStyleConsts_h_
 
 #include "X11UndefineNone.h"
 #include "gfxFontConstants.h"
@@ -55,7 +51,7 @@ enum class StyleBoxPack : uint8_t {
 };
 
 // box-sizing
-enum class StyleBoxSizing : uint8_t { Content, Border };
+enum class StyleBoxSizing : uint8_t { ContentBox, BorderBox };
 
 // box-shadow
 enum class StyleBoxShadowType : uint8_t {
@@ -385,7 +381,7 @@ enum class StyleTextOrientation : uint8_t {
 
 // Whether flexbox visibility: collapse items use legacy -moz-box behavior or
 // not.
-enum class StyleMozBoxCollapse : uint8_t {
+enum class StyleBoxCollapse : uint8_t {
   Flex,
   Legacy,
 };
@@ -431,19 +427,6 @@ enum class StyleImeMode : uint8_t {
 enum class StyleWindowShadow : uint8_t {
   Auto,
   None,
-};
-
-// dominant-baseline
-enum class StyleDominantBaseline : uint8_t {
-  Auto,
-  Ideographic,
-  Alphabetic,
-  Hanging,
-  Mathematical,
-  Central,
-  Middle,
-  TextAfterEdge,
-  TextBeforeEdge,
 };
 
 // mask-type
@@ -536,4 +519,4 @@ enum class StyleScrollBehavior : uint8_t {
 
 }  // namespace mozilla
 
-#endif /* nsStyleConsts_h___ */
+#endif /* nsStyleConsts_h_ */

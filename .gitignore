@@ -17,6 +17,7 @@ tags
 *.gcov
 *.tsbuildinfo
 compile_commands.json
+ccache.conf
 
 # emacs backup files in any directory.
 # lint-ignore-next-line: syntax-difference
@@ -46,6 +47,13 @@ ID
 !third_party/python/**/*.egg-info
 # lint-ignore-next-line: syntax-difference
 !testing/web-platform/tests/tools/third_party/**/*.egg-info
+
+# Still add Cargo.toml.orig and dotfiles in third_party/rust because cargo
+# vendored crates contain those files, which some other rules ignore.
+# lint-ignore-next-line: syntax-difference
+!third_party/rust/**/Cargo.toml.orig
+# lint-ignore-next-line: syntax-difference
+!third_party/rust/**/.*
 
 # Ignore pywebsocket3 intermediate files.
 testing/web-platform/tests/tools/third_party/pywebsocket3/pywebsocket3.egg-info
@@ -197,7 +205,6 @@ remote/test/puppeteer/docs/puppeteer.api.json
 remote/test/puppeteer/experimental/
 remote/test/puppeteer/lib/
 remote/test/puppeteer/node_modules/
-remote/test/puppeteer/package-lock.json
 remote/test/puppeteer/packages/browsers/src/generated
 remote/test/puppeteer/packages/ng-schematics/test/build
 remote/test/puppeteer/packages/puppeteer/**/README.md
@@ -241,7 +248,6 @@ mobile/android/**/.gradle
 mobile/android/**/build
 mobile/android/**/.kotlin
 mobile/android/**/bin
-mobile/android/**/generated
 
 # app-services build artifacts.
 services/app-services/tools/nimbus-gradle-plugin/.gradle
@@ -264,6 +270,9 @@ mobile/ios/GeckoTestBrowser/GeckoTestBrowser.xcodeproj/xcuserdata
 /dom/base/rust/target/
 /servo/components/style/target/
 /dom/webgpu/tests/cts/vendor/target/
+/third_party/application-services/**/target/
+/third_party/application-services/**/Cargo.lock
+/tools/update-verify/marannon/target/
 
 # Ignore mozharness execution files
 testing/mozharness/.tox/
@@ -326,6 +335,9 @@ lextab.py
 .vs/
 .vscode/
 *.user
+
+# Ignore Zed editor configuration files.
+.zed/
 
 # Thunderbird source tree
 /comm/
@@ -395,7 +407,14 @@ toolkit/crashreporter/minidump-analyzer/target/
 
 # Ignore personal preferences files
 CLAUDE.local.md
-.claude/settings.local.json
+**/.claude/settings.local.json
+
+# Ignore claude scheduled task lock file
+**/.claude/scheduled_tasks.lock
+
+# Ignore Claude Code worktrees
+**/.claude/worktrees/
+.worktreeinclude
 
 # Ignore .json.gz (typically profiles) in the root directory
 # lint-ignore-next-line: git-only

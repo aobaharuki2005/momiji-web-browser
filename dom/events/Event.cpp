@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -27,6 +25,8 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/ViewportUtils.h"
+#include "mozilla/dom/CSSAnimation.h"
+#include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/FragmentOrElement.h"
@@ -108,7 +108,7 @@ void Event::InitPresContextData(nsPresContext* aPresContext) {
   mPresContext = aPresContext;
   // Get the explicit original target (if it's anonymous make it null)
   {
-    nsIContent* content = GetTargetFromFrame();
+    nsIContent* content = GetExplicitTargetFromFrame();
     if (content && !content->IsInNativeAnonymousSubtree()) {
       mExplicitOriginalTarget = content;
     } else {
@@ -159,6 +159,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
         inputEvent->mTargetRanges.Clear();
         break;
       }
+      case eAnimationEventClass:
+        tmp->mEvent->AsAnimationEvent()->mAnimation = nullptr;
+        break;
+      case eTransitionEventClass:
+        tmp->mEvent->AsTransitionEvent()->mAnimation = nullptr;
+        break;
       default:
         break;
     }
@@ -169,7 +175,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
     }
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExplicitOriginalTarget);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -197,6 +203,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
         NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
             mEvent->AsEditorInputEvent()->mTargetRanges);
         break;
+      case eAnimationEventClass:
+        NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+            mEvent->AsAnimationEvent()->mAnimation);
+        break;
+      case eTransitionEventClass:
+        NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+            mEvent->AsTransitionEvent()->mAnimation);
+        break;
       default:
         break;
     }
@@ -209,7 +223,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
     }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExplicitOriginalTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Event)
@@ -279,7 +293,7 @@ already_AddRefed<Document> Event::GetDocument() const {
     return nullptr;
   }
 
-  nsIGlobalObject* global = eventTarget->GetOwnerGlobal();
+  nsIGlobalObject* global = eventTarget->GetRelevantGlobal();
   if (!global) {
     return nullptr;
   }
@@ -306,7 +320,7 @@ void Event::ComposedPath(nsTArray<RefPtr<EventTarget>>& aPath) {
 //
 // Get the actual event target node (may have been retargeted for mouse events)
 //
-nsIContent* Event::GetTargetFromFrame() {
+nsIContent* Event::GetExplicitTargetFromFrame() {
   if (!mPresContext) {
     return nullptr;
   }
@@ -317,8 +331,8 @@ nsIContent* Event::GetTargetFromFrame() {
     return nullptr;
   }
 
-  // get the real content
-  return targetFrame->GetContentForEvent(mEvent);
+  // Get the real content rather than proper event target node for mEvent
+  return targetFrame->GetExplicitEventTargetContent(mEvent);
 }
 
 EventTarget* Event::GetExplicitOriginalTarget() const {
@@ -371,7 +385,7 @@ bool Event::ShouldIgnoreChromeEventTargetListener() const {
   if (NS_WARN_IF(!et)) {
     return false;
   }
-  nsIGlobalObject* global = et->GetOwnerGlobal();
+  nsIGlobalObject* global = et->GetRelevantGlobal();
   if (NS_WARN_IF(!global)) {
     return false;
   }
@@ -469,8 +483,8 @@ void Event::PreventDefault(JSContext* aCx, CallerType aCallerType) {
 void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
                                    nsIPrincipal* aPrincipal) {
   if (mEvent->mFlags.mInPassiveListener) {
-    if (mOwner) {
-      if (nsPIDOMWindowInner* win = mOwner->GetAsInnerWindow()) {
+    if (mGlobal) {
+      if (nsPIDOMWindowInner* win = mGlobal->GetAsInnerWindow()) {
         if (Document* doc = win->GetExtantDoc()) {
           if (!doc->HasWarnedAbout(
                   Document::ePreventDefaultFromPassiveListener)) {
@@ -781,7 +795,7 @@ const char16_t* Event::GetEventName(EventMessage aEventType) {
 #define MESSAGE_TO_EVENT(name_, _message, _type, _struct) \
   case _message:                                          \
     return u"" #name_;
-#include "mozilla/EventNameList.h"
+#include "mozilla/EventNameList.inc"
 #undef MESSAGE_TO_EVENT
     default:
       break;
@@ -825,11 +839,11 @@ double Event::TimeStamp() {
   }
 
   if (mIsMainThreadEvent) {
-    if (NS_WARN_IF(!mOwner)) {
+    if (NS_WARN_IF(!mGlobal)) {
       return 0.0;
     }
 
-    nsPIDOMWindowInner* win = mOwner->GetAsInnerWindow();
+    nsPIDOMWindowInner* win = mGlobal->GetAsInnerWindow();
     if (NS_WARN_IF(!win)) {
       return 0.0;
     }
@@ -841,7 +855,7 @@ double Event::TimeStamp() {
 
     double ret =
         perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
-    MOZ_ASSERT(mOwner->PrincipalOrNull());
+    MOZ_ASSERT(mGlobal->PrincipalOrNull());
 
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         ret, perf->GetRandomTimelineSeed(), perf->GetRTPCallerType());
@@ -899,25 +913,25 @@ bool Event::Deserialize(IPC::MessageReader* aReader) {
 }
 
 void Event::SetOwner(EventTarget* aOwner) {
-  mOwner = nullptr;
+  mGlobal = nullptr;
 
   if (!aOwner) {
     return;
   }
 
   if (nsINode* n = aOwner->GetAsNode()) {
-    mOwner = n->OwnerDoc()->GetScopeObject();
+    mGlobal = n->OwnerDoc()->GetScopeObject();
     return;
   }
 
   if (nsPIDOMWindowInner* w = aOwner->GetAsInnerWindow()) {
-    mOwner = w->AsGlobal();
+    mGlobal = w->AsGlobal();
     return;
   }
 
   nsCOMPtr<DOMEventTargetHelper> eth = do_QueryInterface(aOwner);
   if (eth) {
-    mOwner = eth->GetParentObject();
+    mGlobal = eth->GetParentObject();
     return;
   }
 

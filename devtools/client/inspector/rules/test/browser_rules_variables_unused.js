@@ -66,7 +66,7 @@ add_task(async function testHiddenUnusedVariables() {
   await selectNode("h1", inspector);
 
   info("Check that elementStyle.usedVariables has the expected data");
-  Assert.deepEqual(Array.from(view._elementStyle.usedVariables), [
+  Assert.deepEqual(Array.from(view.elementStyle.usedVariables), [
     // in `h1 -> width`
     "--foobar",
     // in `h1 -> width`
@@ -131,8 +131,8 @@ add_task(async function testHiddenUnusedVariables() {
   ok(!!showUnusedVariablesButton, "Show unused variables button is displayed");
 
   info("Check that the button doesn't prevent the usual keyboard navigation");
-  const h1RuleEditor = getRuleViewRuleEditor(view, 1);
-  const whereH1RuleEditor = getRuleViewRuleEditor(view, 2);
+  const h1RuleEditor = getRuleViewRuleEditorAt(view, 1);
+  const whereH1RuleEditor = getRuleViewRuleEditorAt(view, 2);
 
   await focusNewRuleViewProperty(h1RuleEditor);
 

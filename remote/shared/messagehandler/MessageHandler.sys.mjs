@@ -155,24 +155,26 @@ export class MessageHandler extends EventEmitter {
   }
 
   /**
-   * Check if the provided context matches provided contextDescriptor.
+   * Check if any of the provided contexts match the provided contextDescriptor.
    *
-   * @param {BrowsingContext} browsingContext
-   *     The browsing context to verify.
+   * @param {Array<BrowsingContext>} browsingContexts
+   *     The browsing contexts to verify.
    * @param {ContextDescriptor} contextDescriptor
    *     The context descriptor to match.
    *
    * @returns {boolean}
-   *     Return "true" if the context matches the context descriptor,
+   *     Return "true" if any context matches the context descriptor,
    *     "false" otherwise.
    */
-  contextMatchesDescriptor(browsingContext, contextDescriptor) {
+  contextsMatchDescriptor(browsingContexts, contextDescriptor) {
     return (
       contextDescriptor.type === ContextDescriptorType.All ||
       (contextDescriptor.type === ContextDescriptorType.TopBrowsingContext &&
-        contextDescriptor.id === browsingContext.browserId) ||
+        browsingContexts.some(bc => contextDescriptor.id === bc.browserId)) ||
       (contextDescriptor.type === ContextDescriptorType.UserContext &&
-        contextDescriptor.id === browsingContext.originAttributes.userContextId)
+        browsingContexts.some(
+          bc => contextDescriptor.id === bc.originAttributes.userContextId
+        ))
     );
   }
 
@@ -186,23 +188,24 @@ export class MessageHandler extends EventEmitter {
    *     form [module name].[event name].
    * @param {object} data
    *     The event's data.
-   * @param {ContextInfo=} contextInfo
-   *     The event's context info, used to identify the origin of the event.
+   * @param {Array<ContextInfo>=} relatedContexts
+   *     The event's related contexts info, used to identify the navigables
+   *     related to the event.
    *     If not provided, the context info of the current MessageHandler will be
-   *     used.
+   *     used as single related context info.
    */
-  emitEvent(name, data, contextInfo) {
-    // If no contextInfo field is provided on the event, extract it from the
+  emitEvent(name, data, relatedContexts) {
+    // If no relatedContexts field is provided on the event, extract it from the
     // MessageHandler instance.
-    contextInfo = contextInfo || this.#getContextInfo();
+    relatedContexts = relatedContexts || [this.#getContextInfo()];
 
     // Events are emitted both under their own name for consumers listening to
     // a specific and as `message-handler-event` for consumers which need to
     // catch all events.
-    this.emit(name, data, contextInfo);
+    this.emit(name, data, relatedContexts);
     this.emit("message-handler-event", {
       name,
-      contextInfo,
+      relatedContexts,
       data,
       sessionId: this.sessionId,
     });
@@ -232,6 +235,8 @@ export class MessageHandler extends EventEmitter {
    *     Optional command parameters.
    * @property {CommandDestination} destination
    *     The destination describing a debuggable context.
+   * @property {boolean=} fromContentProcess
+   *     Optional. Should be set on commands originating from content processes.
    * @property {boolean=} retryOnAbort
    *     Optional. When true, commands will be retried upon AbortError, which
    *     can occur when the underlying JSWindowActor pair is destroyed.
@@ -266,7 +271,8 @@ export class MessageHandler extends EventEmitter {
    *     command once it has been executed.
    */
   handleCommand(command) {
-    const { moduleName, commandName, params, destination } = command;
+    const { moduleName, commandName, fromContentProcess, params, destination } =
+      command;
     lazy.logger.trace(
       `Received command ${moduleName}.${commandName} for destination ${destination.type}`
     );
@@ -278,7 +284,7 @@ export class MessageHandler extends EventEmitter {
     }
 
     const module = this.#moduleCache.getModuleInstance(moduleName, destination);
-    if (module && module.supportsMethod(commandName)) {
+    if (module && module.supportsMethod(commandName, fromContentProcess)) {
       return module[commandName](params, destination);
     }
 

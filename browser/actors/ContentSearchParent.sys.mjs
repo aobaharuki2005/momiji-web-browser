@@ -9,14 +9,21 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry:
     "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  ConfigSearchEngine:
+    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
   DEFAULT_FORM_HISTORY_PARAM:
     "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchSuggestionController:
     "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
 });
+
+/**
+ * @import {SearchEngine} from "moz-src:///toolkit/components/search/SearchEngine.sys.mjs"
+ */
 
 const MAX_LOCAL_SUGGESTIONS = 3;
 const MAX_SUGGESTIONS = 6;
@@ -209,9 +216,9 @@ export let ContentSearch = {
       "searchString",
       "healthReportKey",
     ]);
-    let engine = Services.search.getEngineByName(data.engineName);
+    let engine = lazy.SearchService.getEngineByName(data.engineName);
     let submission = engine.getSubmission(data.searchString, "");
-    let win = browser.ownerGlobal;
+    let win = browser.documentGlobal;
     if (!win) {
       // The browser may have been closed between the time its content sent the
       // message and the time we handle it.
@@ -257,7 +264,7 @@ export let ContentSearch = {
   },
 
   async getSuggestions(engineName, searchString, browser) {
-    let engine = Services.search.getEngineByName(engineName);
+    let engine = lazy.SearchService.getEngineByName(engineName);
     if (!engine) {
       throw new Error("Unknown engine name: " + engineName);
     }
@@ -348,12 +355,12 @@ export let ContentSearch = {
       currentPrivateEngine: await this._currentEngineObj(true),
     };
 
-    for (let engine of await Services.search.getVisibleEngines()) {
+    for (let engine of await lazy.SearchService.getVisibleEngines()) {
       state.engines.push({
         name: engine.name,
         iconData: await this._getEngineIconURL(engine),
         hidden: engine.hideOneOffButton,
-        isConfigEngine: engine.isConfigEngine,
+        isConfigEngine: engine instanceof lazy.ConfigSearchEngine,
       });
     }
 
@@ -446,14 +453,14 @@ export let ContentSearch = {
   },
 
   _onMessageSetCurrentEngine({ data }) {
-    Services.search.setDefault(
-      Services.search.getEngineByName(data),
-      Ci.nsISearchService.CHANGE_REASON_USER_SEARCHBAR
+    lazy.SearchService.setDefault(
+      lazy.SearchService.getEngineByName(data),
+      lazy.SearchService.CHANGE_REASON.USER_SEARCHBAR
     );
   },
 
   _onMessageManageEngines({ browser }) {
-    browser.ownerGlobal.openPreferences("paneSearch");
+    browser.documentGlobal.openPreferences("paneSearch");
   },
 
   async _onMessageGetSuggestions({ actor, browser, data }) {
@@ -482,7 +489,7 @@ export let ContentSearch = {
   },
 
   _onMessageSpeculativeConnect({ browser, data: engineName }) {
-    let engine = Services.search.getEngineByName(engineName);
+    let engine = lazy.SearchService.getEngineByName(engineName);
     if (!engine) {
       throw new Error("Unknown engine name: " + engineName);
     }
@@ -495,13 +502,13 @@ export let ContentSearch = {
   },
 
   _onMessageSearchHandoff({ browser, data, actor }) {
-    let win = browser.ownerGlobal;
+    let win = browser.documentGlobal;
     let text = data.text;
     let urlBar = win.gURLBar;
     let inPrivateBrowsing = lazy.PrivateBrowsingUtils.isBrowserPrivate(browser);
     let searchEngine = inPrivateBrowsing
-      ? Services.search.defaultPrivateEngine
-      : Services.search.defaultEngine;
+      ? lazy.SearchService.defaultPrivateEngine
+      : lazy.SearchService.defaultEngine;
     let isFirstChange = true;
 
     // It's possible that this is a handoff from about:home / about:newtab,
@@ -560,20 +567,23 @@ export let ContentSearch = {
       const forceSuppressFocusBorder = ev?.type === "mousedown";
       urlBar.removeHiddenFocus(forceSuppressFocusBorder);
 
-      urlBar.removeEventListener("keydown", onKeydown);
-      urlBar.removeEventListener("mousedown", onDone);
-      urlBar.removeEventListener("blur", onDone);
-      urlBar.removeEventListener("compositionstart", checkFirstChange);
-      urlBar.removeEventListener("paste", checkFirstChange);
+      urlBar.inputField.removeEventListener("keydown", onKeydown);
+      urlBar.inputField.removeEventListener("mousedown", onDone);
+      urlBar.inputField.removeEventListener("blur", onDone);
+      urlBar.inputField.removeEventListener(
+        "compositionstart",
+        checkFirstChange
+      );
+      urlBar.inputField.removeEventListener("paste", checkFirstChange);
 
       actor.sendAsyncMessage("ShowSearch");
     };
 
-    urlBar.addEventListener("keydown", onKeydown);
-    urlBar.addEventListener("mousedown", onDone);
-    urlBar.addEventListener("blur", onDone);
-    urlBar.addEventListener("compositionstart", checkFirstChange);
-    urlBar.addEventListener("paste", checkFirstChange);
+    urlBar.inputField.addEventListener("keydown", onKeydown);
+    urlBar.inputField.addEventListener("mousedown", onDone);
+    urlBar.inputField.addEventListener("blur", onDone);
+    urlBar.inputField.addEventListener("compositionstart", checkFirstChange);
+    urlBar.inputField.addEventListener("paste", checkFirstChange);
   },
 
   async _onObserve(eventItem) {
@@ -626,14 +636,14 @@ export let ContentSearch = {
   },
 
   async _currentEngineObj(usePrivate) {
-    let engine =
-      Services.search[usePrivate ? "defaultPrivateEngine" : "defaultEngine"];
-    let obj = {
+    let engine = usePrivate
+      ? await lazy.SearchService.getDefaultPrivate()
+      : await lazy.SearchService.getDefault();
+    return {
       name: engine.name,
       iconData: await this._getEngineIconURL(engine),
-      isConfigEngine: engine.isConfigEngine,
+      isConfigEngine: engine instanceof lazy.ConfigSearchEngine,
     };
-    return obj;
   },
 
   /**
@@ -650,7 +660,7 @@ export let ContentSearch = {
    * Converts the engine's icon into a URL or an ArrayBuffer for passing to the
    * content process.
    *
-   * @param {nsISearchEngine} engine
+   * @param {SearchEngine} engine
    *   The engine to get the icon for.
    * @returns {string|iconData}
    *   The icon's URL or an iconData object containing the icon data.
@@ -701,7 +711,7 @@ export let ContentSearch = {
 
   _initService() {
     if (!this._initServicePromise) {
-      this._initServicePromise = Services.search.init();
+      this._initServicePromise = lazy.SearchService.init();
     }
     return this._initServicePromise;
   },

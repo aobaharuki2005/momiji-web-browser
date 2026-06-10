@@ -2,6 +2,7 @@
 import {
   AboutPreferences,
   PREFERENCES_LOADED_EVENT,
+  PREFERENCES_LOADED_EVENT_SUBPANE,
 } from "lib/AboutPreferences.sys.mjs";
 import { actionTypes as at, actionCreators as ac } from "common/Actions.mjs";
 import { GlobalOverrider } from "test/unit/utils";
@@ -26,6 +27,9 @@ describe("AboutPreferences Feed", () => {
     globals.set("NimbusFeatures", {
       newtab: { getAllVariables: sandbox.stub() },
     });
+    globals.set("Management", {
+      asyncLoadSettingsModules: sandbox.stub(),
+    });
   });
   afterEach(() => {
     globals.restore();
@@ -49,26 +53,26 @@ describe("AboutPreferences Feed", () => {
     it("should call .openPreferences on SETTINGS_OPEN", () => {
       const action = {
         type: at.SETTINGS_OPEN,
-        _target: { browser: { ownerGlobal: { openPreferences: sinon.spy() } } },
+        _target: {
+          window: { openPreferences: sinon.spy() },
+        },
       };
       instance.onAction(action);
-      assert.calledOnce(action._target.browser.ownerGlobal.openPreferences);
+      assert.calledOnce(action._target.window.openPreferences);
     });
     it("should call .BrowserAddonUI.openAddonsMgr with the extension id on OPEN_WEBEXT_SETTINGS", () => {
       const action = {
         type: at.OPEN_WEBEXT_SETTINGS,
         data: "foo",
         _target: {
-          browser: {
-            ownerGlobal: {
-              BrowserAddonUI: { openAddonsMgr: sinon.spy() },
-            },
+          window: {
+            BrowserAddonUI: { openAddonsMgr: sinon.spy() },
           },
         },
       };
       instance.onAction(action);
       assert.calledWith(
-        action._target.browser.ownerGlobal.BrowserAddonUI.openAddonsMgr,
+        action._target.window.BrowserAddonUI.openAddonsMgr,
         "addons://detail/foo"
       );
     });
@@ -92,11 +96,16 @@ describe("AboutPreferences Feed", () => {
 
       instance.init();
 
-      assert.calledOnce(Services.obs.addObserver);
+      assert.calledTwice(Services.obs.addObserver);
       assert.calledWith(
         Services.obs.addObserver,
         instance,
         PREFERENCES_LOADED_EVENT
+      );
+      assert.calledWith(
+        Services.obs.addObserver,
+        instance,
+        PREFERENCES_LOADED_EVENT_SUBPANE
       );
     });
     it("should stop watching on uninit", () => {
@@ -104,11 +113,16 @@ describe("AboutPreferences Feed", () => {
 
       instance.uninit();
 
-      assert.calledOnce(Services.obs.removeObserver);
+      assert.calledTwice(Services.obs.removeObserver);
       assert.calledWith(
         Services.obs.removeObserver,
         instance,
         PREFERENCES_LOADED_EVENT
+      );
+      assert.calledWith(
+        Services.obs.removeObserver,
+        instance,
+        PREFERENCES_LOADED_EVENT_SUBPANE
       );
     });
     it("should try to render on event", async () => {
@@ -135,6 +149,195 @@ describe("AboutPreferences Feed", () => {
 
       // Show or hide the "Restore defaults" button depending on prefs
       assert.calledOnce(toggleRestoreDefaults);
+    });
+
+    describe("when browser.settings-redesign.enabled is true", () => {
+      let registerGroups;
+      let getSettingGroup;
+
+      beforeEach(() => {
+        sandbox.stub(Services.prefs, "getBoolPref").returns(true);
+        registerGroups = sandbox.stub();
+        getSettingGroup = sandbox.stub();
+        getSettingGroup
+          .withArgs("homepage")
+          .onFirstCall()
+          .throws(new Error("Not yet registered"));
+        getSettingGroup.withArgs("homepage").onSecondCall().returns(true);
+        // SettingGroupManager lives on the preferences window object.
+        globals.set("SettingGroupManager", {
+          registerGroups,
+          get: getSettingGroup,
+        });
+        // Stub the setup methods so we can focus on the routing logic in observe().
+        sandbox.stub(instance, "_registerPreferences");
+        sandbox.stub(instance, "_setupHomepageGroup").returns({});
+        sandbox.stub(instance, "_setupCustomHomepageGroup").returns({});
+        sandbox.stub(instance, "_setupHomeGroup").returns({});
+      });
+
+      it("should call SettingGroupManager.registerGroups with homepage, customHomepage, and home", async () => {
+        await instance.observe(window);
+
+        assert.calledOnce(registerGroups);
+        assert.hasAllKeys(registerGroups.firstCall.args[0], [
+          "homepage",
+          "customHomepage",
+          "home",
+        ]);
+      });
+
+      it("should not call renderPreferenceSection or toggleRestoreDefaults", async () => {
+        // The redesign path returns early; legacy DOM rendering must not run.
+        await instance.observe(window);
+
+        assert.notCalled(renderPreferenceSection);
+        assert.notCalled(toggleRestoreDefaults);
+      });
+
+      it("should not register a second time when observe fires again for the same window", async () => {
+        await instance.observe(window, PREFERENCES_LOADED_EVENT);
+        await instance.observe(window, PREFERENCES_LOADED_EVENT_SUBPANE);
+
+        assert.calledOnce(instance._registerPreferences);
+        assert.calledOnce(registerGroups);
+      });
+    });
+  });
+
+  describe("#_registerPreferences", () => {
+    it("should call Preferences.addAll once with all pref ids", () => {
+      const addAll = sandbox.stub();
+
+      instance._registerPreferences({ Preferences: { addAll } });
+
+      assert.calledOnce(addAll);
+      // Spot-check prefs from the beginning, middle, and end of the list.
+      const [prefs] = addAll.firstCall.args;
+      assert.isArray(prefs);
+      assert.isTrue(
+        prefs.some(
+          p => p.id === "browser.newtabpage.activity-stream.showSearch"
+        )
+      );
+      assert.isTrue(
+        prefs.some(
+          p => p.id === "browser.newtabpage.activity-stream.feeds.topsites"
+        )
+      );
+      assert.isTrue(
+        prefs.some(
+          p =>
+            p.id ===
+            "browser.newtabpage.activity-stream.section.highlights.includeVisited"
+        )
+      );
+      assert.isTrue(
+        prefs.some(
+          p =>
+            p.id === "browser.newtabpage.activity-stream.hideLogo" &&
+            p.type === "bool" &&
+            p.inverted === true
+        )
+      );
+    });
+  });
+
+  describe("#_setupHomeGroup", () => {
+    let addSetting;
+    let Preferences;
+
+    beforeEach(() => {
+      addSetting = sandbox.stub();
+      Preferences = { addSetting };
+    });
+
+    it("should register weather against showWeather prefs when Nova is disabled", () => {
+      sandbox
+        .stub(Services.prefs, "getBoolPref")
+        .withArgs("browser.newtabpage.activity-stream.nova.enabled", false)
+        .returns(false);
+
+      instance._setupHomeGroup({ Preferences });
+
+      const calls = addSetting.args.map(([{ id, pref }]) => ({ id, pref }));
+      assert.isTrue(
+        calls.some(
+          c =>
+            c.id === "weather" &&
+            c.pref === "browser.newtabpage.activity-stream.showWeather"
+        )
+      );
+      assert.isFalse(
+        calls.some(
+          c =>
+            c.pref ===
+            "browser.newtabpage.activity-stream.widgets.weather.enabled"
+        )
+      );
+    });
+
+    it("should register weather against widgets.weather.enabled when Nova is enabled", () => {
+      sandbox
+        .stub(Services.prefs, "getBoolPref")
+        .withArgs("browser.newtabpage.activity-stream.nova.enabled", false)
+        .returns(true);
+
+      instance._setupHomeGroup({ Preferences });
+
+      const calls = addSetting.args.map(([{ id, pref }]) => ({ id, pref }));
+      assert.isTrue(
+        calls.some(
+          c =>
+            c.id === "weather" &&
+            c.pref ===
+              "browser.newtabpage.activity-stream.widgets.weather.enabled"
+        )
+      );
+      assert.isFalse(
+        calls.some(
+          c => c.pref === "browser.newtabpage.activity-stream.showWeather"
+        )
+      );
+    });
+  });
+
+  describe("PREFS_FOR_SETTINGS (legacy path, settings-redesign disabled)", () => {
+    let renderStub;
+
+    beforeEach(() => {
+      renderStub = sandbox.stub(instance, "renderPreferenceSection");
+      sandbox.stub(instance, "toggleRestoreDefaults");
+    });
+
+    it("uses showWeather pref when Nova is disabled", () => {
+      sandbox
+        .stub(Services.prefs, "getBoolPref")
+        .withArgs("browser.newtabpage.activity-stream.nova.enabled", false)
+        .returns(false);
+
+      instance.observe(window);
+
+      const weatherSection = renderStub.args
+        .map(([s]) => s)
+        .find(s => s && s.id === "weather");
+      assert.isDefined(weatherSection);
+      assert.equal(weatherSection.pref.feed, "showWeather");
+    });
+
+    it("uses widgets.weather.enabled pref when Nova is enabled", () => {
+      sandbox
+        .stub(Services.prefs, "getBoolPref")
+        .withArgs("browser.newtabpage.activity-stream.nova.enabled", false)
+        .returns(true);
+
+      instance.observe(window);
+
+      const weatherSection = renderStub.args
+        .map(([s]) => s)
+        .find(s => s && s.id === "weather");
+      assert.isDefined(weatherSection);
+      assert.equal(weatherSection.pref.feed, "widgets.weather.enabled");
     });
   });
 

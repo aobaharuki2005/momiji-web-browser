@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,8 +19,6 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StickyTimeDuration.h"
 #include "nsThreadSyncDispatch.h"
-
-#include <mutex>
 
 using namespace mozilla;
 
@@ -209,7 +205,12 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
       mThreadNaming.GetNextThreadName(mName), getter_AddRefs(thread), this,
       {.stackSize = mStackSize, .blockDispatch = true});
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_UNEXPECTED;
+    if (mThreads.IsEmpty()) {
+      MOZ_CRASH(
+          "nsThreadPool::PutEvent() - Failed to create a new thread when pool "
+          "is empty");
+    }
+    return NS_OK;
   }
 
   mThreads.AppendObject(thread);
@@ -451,6 +452,10 @@ nsThreadPool::Run() {
   MOZ_ASSERT(gCurrentThreadPool.get() == this);
   gCurrentThreadPool.set(nullptr);
 
+  // Clear the thread's back-pointer into this pool so that the profiler's
+  // SamplerThread stops using it for this thread.
+  static_cast<nsThread*>(current.get())->SetPoolThreadFreePtr(nullptr);
+
   if (shutdownThreadOnExit) {
     ShutdownThread(current);
   }
@@ -502,6 +507,10 @@ nsThreadPool::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
     return NS_ERROR_UNEXPECTED;
   }
   return mShutdownTasks.RemoveTask(aTask);
+}
+
+nsIEventTarget::FeatureFlags nsThreadPool::GetFeatures() {
+  return SUPPORTS_SHUTDOWN_TASKS | SUPPORTS_SHUTDOWN_TASK_DISPATCH;
 }
 
 NS_IMETHODIMP_(bool)

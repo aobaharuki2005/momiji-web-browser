@@ -2,7 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { SearchModeSwitcher } from "chrome://browser/content/urlbar/SearchModeSwitcher.mjs";
+import { UrlbarEventBufferer } from "chrome://browser/content/urlbar/UrlbarEventBufferer.mjs";
+import { UrlbarView } from "chrome://browser/content/urlbar/UrlbarView.mjs";
 import { createEditor } from "chrome://browser/content/urlbar/SmartbarInputUtils.mjs";
+import { UrlbarShared } from "chrome://browser/content/urlbar/UrlbarShared.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/ai-website-chip.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/input-cta.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/input-model-select.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/memories-icon-button.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/context-icon-button.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/smartwindow-panel-list.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/website-chip-container.mjs";
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -13,7 +31,16 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 
 /**
- * @import {UrlbarSearchOneOffs} from "moz-src:///browser/components/urlbar/UrlbarSearchOneOffs.sys.mjs"
+ * @import { UrlbarSearchOneOffs } from "moz-src:///browser/components/urlbar/UrlbarSearchOneOffs.sys.mjs"
+ * @import { SearchEngine } from "moz-src:///toolkit/components/search/SearchEngine.sys.mjs"
+ * @import { SmartbarAction } from "moz-src:///browser/components/aiwindow/ui/components/input-cta/input-cta.mjs"
+ * @import { WebsiteChipContainer } from "chrome://browser/content/aiwindow/components/website-chip-container.mjs"
+ * @import { AIWindow } from "moz-src:///browser/components/aiwindow/ui/components/ai-window/ai-window.mjs"
+ * @import { WindowMode } from "moz-src:///browser/components/urlbar/content/UrlbarInput.mjs"
+ */
+
+/**
+ * @typedef {"fullpage" | "sidebar" | "urlbar"} SapLocation
  */
 
 const lazy = XPCOMUtils.declareLazy({
@@ -22,6 +49,8 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  ConfigSearchEngine:
+    "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
   ExtensionSearchHandler:
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
@@ -29,16 +58,13 @@ const lazy = XPCOMUtils.declareLazy({
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ReaderMode: "moz-src:///toolkit/components/reader/ReaderMode.sys.mjs",
-  SearchModeSwitcher:
-    "moz-src:///browser/components/urlbar/SearchModeSwitcher.sys.mjs",
+  SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   SmartbarInputController:
     "chrome://browser/content/urlbar/SmartbarInputController.mjs",
   UrlbarController:
     "moz-src:///browser/components/urlbar/UrlbarController.sys.mjs",
-  UrlbarEventBufferer:
-    "moz-src:///browser/components/urlbar/UrlbarEventBufferer.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarQueryContext:
     "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
@@ -48,12 +74,9 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarSearchUtils:
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
-  UrlbarTokenizer:
-    "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
   UrlbarValueFormatter:
     "moz-src:///browser/components/urlbar/UrlbarValueFormatter.sys.mjs",
-  UrlbarView: "moz-src:///browser/components/urlbar/UrlbarView.sys.mjs",
   UrlbarSearchTermsPersistence:
     "moz-src:///browser/components/urlbar/UrlbarSearchTermsPersistence.sys.mjs",
   UrlUtils: "resource://gre/modules/UrlUtils.sys.mjs",
@@ -70,13 +93,35 @@ const lazy = XPCOMUtils.declareLazy({
     default: false,
   },
   logger: () => lazy.UrlbarUtils.getLogger({ prefix: "SmartbarInput" }),
+  getCurrentTabUrl:
+    "moz-src:///browser/components/aiwindow/ui/modules/ChatUtils.sys.mjs",
 });
 
 const UNLIMITED_MAX_RESULTS = 99;
+const MAX_INPUT_LENGTH = 32000;
 
 let getBoundsWithoutFlushing = element =>
-  element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
+  element.documentGlobal.windowUtils.getBoundsWithoutFlushing(element);
 let px = number => number.toFixed(2) + "px";
+
+/**
+ * A website context entry used to render website chips.
+ *
+ * @typedef {object} ContextWebsite
+ * @property {string} type
+ *   The source kind; tab|currentTab
+ * @property {string} url
+ *   URL of the website.
+ * @property {string} label
+ *   Label shown in the chip.
+ * @property {string} [iconSrc]
+ *   Icon URI. When missing or empty, falls back to the favicon from Places
+ *   via `getIconForUrl`.
+ * @property {boolean} [historyDeleted]
+ *   Whether the URL has been removed from browsing history.
+ */
+
+const MAX_CONTEXT_WEBSITES = 5;
 
 /**
  * Implements the text input part of the address bar UI.
@@ -84,64 +129,66 @@ let px = number => number.toFixed(2) + "px";
 export class SmartbarInput extends HTMLElement {
   static get #markup() {
     return `
-      <hbox class="urlbar-background"/>
-      <hbox class="urlbar-input-container"
-            flex="1"
+      <html:div class="urlbar-background"/>
+      <html:website-chip-container class="smartbar-context-chips-header" hidden="true"></html:website-chip-container>
+      <html:div class="urlbar-input-container"
             pageproxystate="invalid">
-        <moz-urlbar-slot name="remote-control-box"> </moz-urlbar-slot>
-        <toolbarbutton id="urlbar-searchmode-switcher"
-                       class="searchmode-switcher chromeclass-toolbar-additional"
-                       align="center"
-                       aria-expanded="false"
-                       aria-haspopup="menu"
-                       tooltip="dynamic-shortcut-tooltip"
-                       data-l10n-id="urlbar-searchmode-default"
-                       type="menu">
-          <image class="searchmode-switcher-icon toolbarbutton-icon"/>
-          <image class="searchmode-switcher-dropmarker toolbarbutton-icon toolbarbutton-combined-buttons-dropmarker"
-                 data-l10n-id="urlbar-searchmode-dropmarker" />
-          <menupopup class="searchmode-switcher-popup toolbar-menupopup"
-                     consumeoutsideclicks="false">
-            <label class="searchmode-switcher-popup-description"
-                   data-l10n-id="urlbar-searchmode-popup-description"
-                   role="heading" />
-            <menuseparator/>
-            <menuseparator class="searchmode-switcher-popup-footer-separator"/>
-            <menuitem class="searchmode-switcher-popup-search-settings-button menuitem-iconic"
-                      data-action="openpreferences"
-                      image="chrome://global/skin/icons/settings.svg"
-                      data-l10n-id="urlbar-searchmode-popup-search-settings-menuitem"/>
-          </menupopup>
-        </toolbarbutton>
-        <box class="searchmode-switcher-chicklet">
-          <label class="searchmode-switcher-title" />
-          <toolbarbutton class="searchmode-switcher-close toolbarbutton-icon close-button"
-                         data-action="exitsearchmode"
-                         role="button"
-                         data-l10n-id="urlbar-searchmode-exit-button" />
-        </box>
-        <moz-urlbar-slot name="site-info"> </moz-urlbar-slot>
+        <html:moz-urlbar-slot name="remote-control-box" />
+
+        <html:moz-button class="searchmode-switcher chromeclass-toolbar-additional"
+                         iconsrc="chrome://global/skin/icons/search-glass.svg"
+                         title="More options"
+                         aria-label="More options"
+                         data-l10n-id="urlbar-searchmode-default2"
+                         tabindex="-1"
+                         role="combobox">
+          <!-- This span has no purpose other than making the moz-button think
+               it contains text even when searchmode-switcher-title is hidden. -->
+          <html:span class="urlbar-visually-hidden" aria-hidden="true">a</html:span>
+          <html:span class="searchmode-switcher-content">
+            <html:img class="searchmode-switcher-dropmarker"
+                      data-l10n-id="urlbar-searchmode-dropmarker2"
+                      draggable="false" />
+            <html:span class="searchmode-switcher-title" />
+            <html:button class="searchmode-switcher-close toolbarbutton-icon close-button"
+                         data-l10n-id="urlbar-searchmode-exit-button2"
+                         tabindex="-1"
+                         keyNav="false" />
+          </html:span>
+        </html:moz-button>
+        <!-- In XUL windows, this will be wrapped in a panel with class="searchmode-switcher-panel". -->
+        <html:panel-list class="searchmode-switcher-panel-list">
+          <html:span class="searchmode-switcher-panel-description" role="heading" />
+${
+  Services.prefs.getBoolPref("browser.nova.enabled", false)
+    ? '<html:hr class="searchmode-switcher-panel-installed-engine-separator"/><html:hr class="searchmode-switcher-panel-footer-separator"/>'
+    : '<html:hr/><html:hr class="searchmode-switcher-panel-installed-engine-separator searchmode-switcher-panel-footer-separator"/>'
+}
+        </html:panel-list>
+
+        <html:moz-urlbar-slot name="site-info" />
         <moz-input-box tooltip="aHTMLTooltip"
                        class="urlbar-input-box"
-                       flex="1"
-                       role="combobox"
-                       aria-owns="urlbar-results">
+                       flex="1">
           <html:input id="urlbar-scheme"
                       required="required"/>
           <html:input id="urlbar-input"
                       class="urlbar-input textbox-input"
                       aria-controls="urlbar-results"
+                      role="combobox"
                       aria-autocomplete="both"
                       inputmode="mozAwesomebar"
                       data-l10n-id="smartbar-placeholder"/>
         </moz-input-box>
-        <moz-urlbar-slot name="revert-button"> </moz-urlbar-slot>
-        <image class="urlbar-icon urlbar-go-button"
+        <html:smartwindow-panel-list></html:smartwindow-panel-list>
+        <html:moz-urlbar-slot name="revert-button" />
+        <html:img class="urlbar-icon urlbar-go-button"
                role="button"
-               data-l10n-id="urlbar-go-button"/>
-        <moz-urlbar-slot name="page-actions" hidden=""> </moz-urlbar-slot>
-      </hbox>
-      <vbox class="urlbarView"
+               keyNav="false"
+               data-l10n-id="urlbar-go-button2"/>
+        <html:moz-urlbar-slot name="page-actions" hidden="" />
+      </html:div>
+      <html:div class="urlbarView"
             context=""
             role="group"
             tooltip="aHTMLTooltip">
@@ -154,10 +201,19 @@ export class SmartbarInput extends HTMLElement {
         </html:div>
         <menupopup class="urlbarView-result-menu"
                    consumeoutsideclicks="false"/>
-        <hbox class="search-one-offs"
-              includecurrentengine="true"
-              disabletab="true"/>
-      </vbox>`;
+        <html:moz-urlbar-slot name="search-one-offs" />
+      </html:div>
+      <html:div class="smartbar-button-container">
+        <html:context-icon-button></html:context-icon-button>
+        <html:memories-icon-button></html:memories-icon-button>
+        <html:input-model-select></html:input-model-select>
+        <html:input-cta action=""></html:input-cta>
+      </html:div>
+    `;
+  }
+
+  static get observedAttributes() {
+    return ["open"];
   }
 
   /**
@@ -198,8 +254,6 @@ export class SmartbarInput extends HTMLElement {
     "selectionchange",
   ];
 
-  static #validSmartbarModes = ["chat", "search", "navigate"];
-
   #allowBreakout = false;
   #gBrowserListenersAdded = false;
   #breakoutBlockerCount = 0;
@@ -212,20 +266,50 @@ export class SmartbarInput extends HTMLElement {
    * `smartbar` nor `urlbar`.
    */
   #isSmartbarMode = false;
-  #sapName = "";
+  /**
+   * The search access point name of the SmartbarInput for use with telemetry or
+   * logging, e.g. `urlbar`, `searchbar`.
+   *
+   * @type {"searchbar"|"smartbar"|"urlbar"}
+   */
+  #sapName;
+  #scrollAnimationId = null;
+  #smartbarAction = "";
+  #smartbarActionPending = false;
+  // Stores the smartbar action in effect before generation started, so it can
+  // be restored when generation ends or is stopped.
+  #smartbarActionSaved = "";
+  #detectedIntent = "";
+  #smartbarAssistantIsGenerating = false;
   #smartbarEditor = null;
   #smartbarInputController = null;
-  #smartbarMode = "search";
   _userTypedValue = "";
   _actionOverrideKeyCount = 0;
   _lastValidURLStr = "";
   _valueOnLastSearch = "";
   _suppressStartQuery = false;
+  _permanentlySuppressStartQuery = false;
   _suppressPrimaryAdjustment = false;
   _lastSearchString = "";
   // Tracks IME composition.
   #compositionState = lazy.UrlbarUtils.COMPOSITION.NONE;
   #compositionClosedPopup = false;
+  #compositionHadText = false;
+
+  #isSidebarMode = false;
+
+  /** @type {?string} */
+  #removedImplicitTabUrl = null;
+
+  /**
+   * @type {ContextWebsite[]}
+   */
+  #contextWebsites = [];
+
+  /**
+   * @type {?WebsiteChipContainer}
+   */
+  #websiteContextChipsContainer = null;
 
   valueIsTyped = false;
 
@@ -239,7 +323,14 @@ export class SmartbarInput extends HTMLElement {
   constructor() {
     super();
 
-    this.window = this.ownerGlobal;
+    // If the current window context does not have gBrowser,
+    // get the main browser window.
+    this.window = this.documentGlobal;
+    if (!this.window.gBrowser) {
+      lazy.logger.debug(`gBrowser not available, get the browser window.`);
+      this.window = window.browsingContext.topChromeWindow;
+    }
+
     this.document = this.window.document;
     this.isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(this.window);
 
@@ -290,7 +381,9 @@ export class SmartbarInput extends HTMLElement {
    * Initialization that happens once on the first connect.
    */
   #initOnce() {
-    this.#sapName = this.getAttribute("sap-name");
+    this.#sapName = /** @type {"searchbar"|"smartbar"|"urlbar"} */ (
+      this.getAttribute("sap-name")
+    );
     this.#isAddressbar = this.#sapName == "urlbar";
     this.#isSmartbarMode = this.#sapName == "smartbar";
 
@@ -320,18 +413,36 @@ export class SmartbarInput extends HTMLElement {
     );
     if (this.#isSmartbarMode) {
       this.#ensureSmartbarEditor();
+      this._inputCta = this.querySelector("input-cta");
+      this._inputCta.setAttribute("action", this.smartbarAction);
+      this.#updateCtaSearchEngineInfo();
+      this._inputCta.addEventListener(
+        "aiwindow-input-cta:on-action-change",
+        this
+      );
+      this._inputCta.addEventListener("aiwindow-input-cta:on-action", this);
+      this._inputCta.addEventListener("aiwindow-input-cta:on-stop", this);
+      this._inputCta.addEventListener(
+        "aiwindow-input-cta:on-search-engine-select",
+        this
+      );
+      this._inputCta.addEventListener("shown", this);
+      this.addEventListener("ai-website-chip:remove", this);
+      this.#findWebsiteContextChipsContainer();
+      this.#updateContextChips();
     }
     this._inputContainer = this.querySelector(".urlbar-input-container");
 
     this.controller = new lazy.UrlbarController({ input: this });
-    this.view = new lazy.UrlbarView(this);
-    this.searchModeSwitcher = new lazy.SearchModeSwitcher(this);
+    this.controller.addListener(this);
+    this.view = new UrlbarView(this);
+    this.searchModeSwitcher = new SearchModeSwitcher(this);
 
     // The event bufferer can be used to defer events that may affect users
     // muscle memory; for example quickly pressing DOWN+ENTER should end up
     // on a predictable result, regardless of the search status. The event
     // bufferer will invoke the handling code at the right time.
-    this.eventBufferer = new lazy.UrlbarEventBufferer(this);
+    this.eventBufferer = new UrlbarEventBufferer(this);
 
     // Forward certain properties.
     // Note if you are extending these, you'll also need to extend the inline
@@ -358,6 +469,21 @@ export class SmartbarInput extends HTMLElement {
     // The engine name is not known yet, but update placeholder anyway to
     // reflect value of keyword.enabled or set the searchbar placeholder.
     this._setPlaceholder(null);
+
+    // Defer until after layout so listeners can safely interact with the element.
+    this.documentGlobal.requestAnimationFrame(() => {
+      this.dispatchEvent(
+        new CustomEvent("smartbar-initialized", { bubbles: true })
+      );
+    });
+  }
+
+  attributeChangedCallback(attribute, _oldValue, _newValue) {
+    if (attribute != "open") {
+      return;
+    }
+
+    this.updateLayoutExtend();
   }
 
   connectedCallback() {
@@ -387,6 +513,7 @@ export class SmartbarInput extends HTMLElement {
       this.window.document.documentElement.hasAttribute("taskbartab") ||
       this.readOnly
     ) {
+      this.#stopBreakout();
       return;
     }
 
@@ -414,6 +541,9 @@ export class SmartbarInput extends HTMLElement {
     // recording abandonment events when the command causes a blur event.
     this.view.panel.addEventListener("command", this, true);
 
+    // This listener handles the overflow scroll fade animation.
+    this.view.panel.addEventListener("scroll", this);
+
     this.window.addEventListener("customizationstarting", this);
     this.window.addEventListener("aftercustomization", this);
     this.window.addEventListener("toolbarvisibilitychange", this);
@@ -432,8 +562,10 @@ export class SmartbarInput extends HTMLElement {
     // If the search service is not initialized yet, the placeholder
     // and icon will be updated in delayedStartupInit.
     if (
-      Cu.isESModuleLoaded("resource://gre/modules/SearchService.sys.mjs") &&
-      Services.search.isInitialized
+      Cu.isESModuleLoaded(
+        "moz-src:///toolkit/components/search/SearchService.sys.mjs"
+      ) &&
+      lazy.SearchService.isInitialized
     ) {
       this.searchModeSwitcher.updateSearchIcon();
       this._updatePlaceholderFromDefaultEngine();
@@ -474,6 +606,8 @@ export class SmartbarInput extends HTMLElement {
       this.parentNode.removeAttribute("overflows");
     }
 
+    this.controller.removeListener(this);
+
     if (this._copyCutController) {
       this.inputField.controllers.removeController(this._copyCutController);
       delete this._copyCutController;
@@ -501,6 +635,13 @@ export class SmartbarInput extends HTMLElement {
     // recording abandonment events when the command causes a blur event.
     this.view.panel.removeEventListener("command", this, true);
 
+    // This listener handles the overflow scroll fade animation.
+    this.view.panel.removeEventListener("scroll", this);
+    if (this.#scrollAnimationId) {
+      this.window.cancelAnimationFrame(this.#scrollAnimationId);
+      this.#scrollAnimationId = null;
+    }
+
     this.window.removeEventListener("customizationstarting", this);
     this.window.removeEventListener("aftercustomization", this);
     this.window.removeEventListener("toolbarvisibilitychange", this);
@@ -512,13 +653,39 @@ export class SmartbarInput extends HTMLElement {
     if (this.#gBrowserListenersAdded) {
       this.window.gBrowser.tabContainer.removeEventListener("TabSelect", this);
       this.window.gBrowser.tabContainer.removeEventListener("TabClose", this);
+      this.window.gBrowser.tabContainer.removeEventListener(
+        "TabAttrModified",
+        this
+      );
       this.window.gBrowser.removeTabsProgressListener(this);
       this.#gBrowserListenersAdded = false;
+    }
+
+    if (this.#isSmartbarMode) {
+      this._inputCta.removeEventListener(
+        "aiwindow-input-cta:on-action-change",
+        this
+      );
+      this._inputCta.removeEventListener("aiwindow-input-cta:on-action", this);
+      this._inputCta.removeEventListener("aiwindow-input-cta:on-stop", this);
+      this._inputCta.removeEventListener(
+        "aiwindow-input-cta:on-search-engine-select",
+        this
+      );
+      this._inputCta.removeEventListener("shown", this);
+      this.removeEventListener("ai-website-chip:remove", this);
     }
 
     this._resizeObserver?.disconnect();
 
     this._removeObservers();
+
+    // Remove pref observer
+    lazy.UrlbarPrefs.removeObserver(this);
+
+    // Clear window and document references.
+    this.window = null;
+    this.document = null;
   }
 
   /**
@@ -529,25 +696,39 @@ export class SmartbarInput extends HTMLElement {
    * Note that it might be called before #init has finished.
    */
   #onContextMenuRebuilt() {
+    // Skip context menu initialization for smartbar mode.
+    if (this.#isSmartbarMode) {
+      return;
+    }
     this._initStripOnShare();
     this._initPasteAndGo();
   }
 
   addGBrowserListeners() {
-    // The following listeners are only used for the address bar.
-    if (!this.#isAddressbar) {
+    if (!this.window.gBrowser || this.#gBrowserListenersAdded) {
       return;
     }
-    if (this.window.gBrowser && !this.#gBrowserListenersAdded) {
+
+    this.window.gBrowser.addTabsProgressListener(this);
+    this.#gBrowserListenersAdded = true;
+
+    // TabSelect/TabClose listeners are needed for both address bar and smartbar modes
+    if (this.#isAddressbar || this.#isSmartbarMode) {
       this.window.gBrowser.tabContainer.addEventListener("TabSelect", this);
       this.window.gBrowser.tabContainer.addEventListener("TabClose", this);
-      this.window.gBrowser.addTabsProgressListener(this);
-      this.#gBrowserListenersAdded = true;
+    }
+
+    if (this.#isSmartbarMode) {
+      this.window.gBrowser.tabContainer.addEventListener(
+        "TabAttrModified",
+        this
+      );
     }
   }
 
   #initSmartbarEditor() {
     const adapter = createEditor(this.inputField);
+    adapter.input.maxLength = MAX_INPUT_LENGTH;
     this.#smartbarInputController = new lazy.SmartbarInputController(adapter);
     this.inputField = adapter.input;
     this.#smartbarEditor = adapter.editor;
@@ -580,27 +761,114 @@ export class SmartbarInput extends HTMLElement {
     return this.#lazy.addSearchEngineHelper;
   }
 
-  /**
-   * The search access point name of the SmartbarInput for use with telemetry or
-   * logging, e.g. `urlbar`, `searchbar`.
-   */
   get sapName() {
     return this.#sapName;
   }
 
-  get smartbarMode() {
-    const mode = this.getAttribute("smartbar-mode") || this.#smartbarMode;
-    return SmartbarInput.#validSmartbarModes.includes(mode)
-      ? mode
-      : SmartbarInput.#validSmartbarModes[0];
+  get smartbarAction() {
+    return /** @type {SmartbarAction} */ (
+      this.getAttribute("smartbar-action") || this.#smartbarAction
+    );
   }
 
-  set smartbarMode(mode) {
-    if (!SmartbarInput.#validSmartbarModes.includes(mode)) {
+  /**
+   * Gets the original detected intent model action.
+   */
+  get detectedIntent() {
+    return /** @type {SmartbarAction} */ (this.#detectedIntent);
+  }
+
+  /**
+   * Set to true when the chat assistant is in the middle of generating answers.
+   */
+  get assistantIsGenerating() {
+    return this.#smartbarAssistantIsGenerating;
+  }
+
+  set assistantIsGenerating(value) {
+    if (this.#smartbarAssistantIsGenerating == value) {
       return;
     }
-    this.#smartbarMode = mode;
-    this.setAttribute("smartbar-mode", mode);
+    this.#smartbarAssistantIsGenerating = value;
+    if (value) {
+      this.#smartbarActionSaved = this.#smartbarAction;
+      this._inputCta.setAttribute("action", "stop");
+    } else {
+      this._inputCta.setAttribute("action", this.#smartbarActionSaved || "");
+      this.#smartbarActionSaved = "";
+    }
+  }
+
+  /**
+   * Gets the Smartbar location.
+   *
+   * @returns {SapLocation} The location of the smartbar
+   */
+  get sapLocation() {
+    return this.#isSidebarMode ? "sidebar" : "fullpage";
+  }
+
+  /**
+   * Gets the window mode for telemetry.
+   *
+   * @returns {WindowMode} The window mode.
+   */
+  get windowMode() {
+    // For now smartbar is always in the Smart Window.
+    return "smartwindow";
+  }
+
+  /**
+   * Gets the AI Window if available.
+   */
+  get #aiWindow() {
+    const root = /** @type {ShadowRoot} */ (this.getRootNode());
+    return /** @type {AIWindow | null} */ (root.host?.closest("ai-window"));
+  }
+
+  /**
+   * Gets conversation telemetry info from the parent ai-window.
+   *
+   * @returns {{chat_id: string, message_seq: number}} The conversation info
+   */
+  get conversationTelemetryInfo() {
+    return {
+      chat_id: this.#aiWindow?.conversationId ?? "",
+      message_seq: this.#aiWindow?.conversationMessageCount ?? 0,
+    };
+  }
+
+  /**
+   * Gets the model name from the parent ai-window.
+   *
+   * @returns {string} The model name
+   */
+  get modelName() {
+    return this.#aiWindow?.modelName ?? "";
+  }
+
+  /**
+   * Gets the count of context tabs currently selected.
+   *
+   * @returns {number} The number of context websites
+   */
+  get contextWebsitesCount() {
+    return this.getResolvedContextWebsites().length;
+  }
+
+  /**
+   * Set smartbar action.
+   *
+   * @param {SmartbarAction} action
+   */
+  set smartbarAction(action) {
+    if (this.#smartbarAction != action) {
+      this.#smartbarAction = action;
+      this.setAttribute("smartbar-action", action);
+      if (!this.#smartbarAssistantIsGenerating) {
+        this._inputCta.setAttribute("action", action);
+      }
+    }
   }
 
   blur() {
@@ -1060,6 +1328,13 @@ export class SmartbarInput extends HTMLElement {
       return;
     }
 
+    if (this.#isSmartbarMode) {
+      if (browser == this.window.gBrowser.selectedBrowser) {
+        this.#updateContextChips();
+      }
+      return;
+    }
+
     if (
       browser != this.window.gBrowser.selectedBrowser &&
       !this.window.isBlankPageURL(locationURI.spec)
@@ -1082,6 +1357,37 @@ export class SmartbarInput extends HTMLElement {
    * @param {Event} event The event to handle.
    */
   handleEvent(event) {
+    if (event.type === "shown") {
+      const { chat_id, message_seq } = this.conversationTelemetryInfo;
+      Glean.smartWindow.intentChangePreview.record({
+        chat_id,
+        current_intent: this.smartbarAction,
+        location: this.sapLocation,
+        message_seq: String(message_seq),
+      });
+      return;
+    }
+
+    // Forward custom input CTA events.
+    if (event.type.startsWith("aiwindow-input-cta:")) {
+      this.#handleSmartbarCtaAction(/** @type {CustomEvent} */ (event));
+      return;
+    }
+
+    // Handle website chip remove events.
+    if (event.type === "ai-website-chip:remove") {
+      const { url } = /** @type {CustomEvent} */ (event).detail;
+      this.removeContextMention(url);
+      const { chat_id, message_seq } = this.conversationTelemetryInfo;
+      Glean.smartWindow.removeTab.record({
+        chat_id,
+        location: this.sapLocation,
+        message_seq: String(message_seq),
+        tabs_selected: String(this.#contextWebsites.length),
+      });
+      return;
+    }
+
     let methodName = "_on_" + event.type;
     if (methodName in this) {
       try {
@@ -1128,15 +1434,124 @@ export class SmartbarInput extends HTMLElement {
   }
 
   /**
+   * Dispatches a smartbar-commit custom event.
+   *
+   * @param {Event} event - The event that triggered the action.
+   * @param {string} value - The value to commit.
+   */
+  #dispatchSmartbarCommitEvent(event, value) {
+    this.dispatchEvent(
+      new CustomEvent("smartbar-commit", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          value,
+          action: this.smartbarAction,
+          contextMentions: this.getResolvedContextWebsites(),
+          contextPageUrl: this.getContextPageUrl(),
+          detectedIntent: this.detectedIntent,
+          event,
+          location: this.sapLocation,
+          searchProvider: lazy.UrlbarSearchUtils.getDefaultEngine()?.name,
+        },
+      })
+    );
+  }
+
+  /**
+   * Submit a chat event.
+   *
+   * @param {Event} event - The event that triggered the action.
+   * @param {string} value - The value to commit.
+   */
+  submitChat(event, value) {
+    this.smartbarAction = "chat";
+    this.#dispatchSmartbarCommitEvent(event, value);
+  }
+
+  /**
    * @typedef {object} HandleNavigationOneOffParams
    *
    * @property {string} openWhere
    *   Where we expect the result to be opened.
    * @property {object} openParams
    *   The parameters related to where the result will be opened.
-   * @property {nsISearchEngine} engine
+   * @property {SearchEngine} engine
    *   The selected one-off's engine.
    */
+
+  /**
+   * Handles user initiated action.
+   *
+   * @param {CustomEvent} event - The event that triggered the action.
+   */
+  #handleSmartbarCtaAction(event) {
+    if (event.type === "aiwindow-input-cta:on-stop") {
+      this.dispatchEvent(
+        new CustomEvent("smartbar-stop-generation", {
+          bubbles: true,
+          composed: true,
+        })
+      );
+      return;
+    }
+
+    const action = event.detail.action;
+    this.smartbarAction = action;
+    const isExplicitAction =
+      event.type === "aiwindow-input-cta:on-action-change";
+
+    // For non-explicit actions, forward to handleNavigation.
+    if (!isExplicitAction) {
+      this.handleNavigation({ event });
+      return;
+    }
+
+    // Handle explicit actions from smartbar CTA.
+    const committedValue = this.untrimmedValue;
+    this.controller.engagementEvent.record(event, {
+      location: this.sapLocation,
+      searchString: committedValue,
+      searchSource: this.getSearchSource(event),
+      selType: `${action}_button`,
+      result: null,
+      windowMode: this.windowMode,
+    });
+    this.#dispatchSmartbarCommitEvent(event, committedValue);
+
+    // Run search
+    if (action === "search") {
+      const engineName = event?.detail?.engineName;
+      const engine = engineName
+        ? lazy.UrlbarSearchUtils.getEngineByName(engineName)
+        : lazy.UrlbarSearchUtils.getDefaultEngine();
+      const [url, postData] = lazy.UrlbarUtils.getSearchQueryUrl(
+        engine,
+        committedValue
+      );
+      this._loadURL(url, event, this._whereToOpen(event), {
+        postData,
+        allowInheritPrincipal: false,
+      });
+      this._recordSearch(engine, event);
+    }
+
+    // Attempt to navigate to URL
+    if (action === "navigate") {
+      let flags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+      if (this.isPrivate) {
+        flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+      }
+
+      let fixupInfo = Services.uriFixup.getFixupURIInfo(committedValue, flags);
+      this._loadURL(
+        fixupInfo.preferredURI.spec,
+        event,
+        this._whereToOpen(event),
+        { allowInheritPrincipal: false }
+      );
+    }
+  }
 
   /**
    * Handles an event which would cause a URL or text to be opened.
@@ -1154,21 +1569,12 @@ export class SmartbarInput extends HTMLElement {
    *   The principal that the action was triggered from.
    */
   handleNavigation({ event, oneOffParams, triggeringPrincipal }) {
-    if (this.#isSmartbarMode) {
-      const committedValue = this.untrimmedValue;
-      const mode = this.smartbarMode;
-      lazy.logger.debug(`commit (${mode}): ${committedValue}`);
-      this.#clearSmartbarInput();
-      this.dispatchEvent(
-        new CustomEvent("smartbar-commit", {
-          detail: { value: committedValue, event, mode },
-        })
-      );
-      if (!this.window.gBrowser) {
-        return;
-      }
-      // Fall through to default navigation behaviour.
+    // When queries are suppressed, submit directly to chat.
+    if (this.#isSmartbarMode && this._permanentlySuppressStartQuery) {
+      this.submitChat(event, this.untrimmedValue);
+      return;
     }
+
     let element = this.view.selectedElement;
     let result = this.view.getResultFromElement(element);
     let openParams = oneOffParams?.openParams || { triggeringPrincipal };
@@ -1195,6 +1601,7 @@ export class SmartbarInput extends HTMLElement {
       (result.heuristic ||
         !this.valueIsTyped ||
         result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP ||
+        result.type == lazy.UrlbarUtils.RESULT_TYPE.AI_CHAT ||
         this.value == this.#getValueFromResult(result));
     if (
       !isComposing &&
@@ -1302,9 +1709,12 @@ export class SmartbarInput extends HTMLElement {
     let selectedResult = result || this.view.selectedResult;
     this.controller.engagementEvent.record(event, {
       element,
+      location: this.sapLocation,
       selType,
+      searchSource: this.getSearchSource(event),
       searchString: typedValue,
       result: selectedResult || this._resultForCurrentValue || null,
+      windowMode: this.windowMode,
     });
 
     if (URL.canParse(url)) {
@@ -1313,6 +1723,9 @@ export class SmartbarInput extends HTMLElement {
       openParams.schemelessInput = this.#getSchemelessInput(
         this.untrimmedValue
       );
+      if (this.#isSmartbarMode) {
+        this.#dispatchSmartbarCommitEvent(event, this.untrimmedValue);
+      }
       this._loadURL(url, event, where, openParams);
       return;
     }
@@ -1428,7 +1841,7 @@ export class SmartbarInput extends HTMLElement {
    *
    * @param {string} searchString
    *   The search string to use.
-   * @param {nsISearchEngine} [searchEngine]
+   * @param {SearchEngine} [searchEngine]
    *   Optional. If included and the right prefs are set, we will enter search
    *   mode when handing `searchString` from the fake input to the Urlbar.
    * @param {string} [newtabSessionId]
@@ -1527,8 +1940,11 @@ export class SmartbarInput extends HTMLElement {
       this.controller.engagementEvent.record(event, {
         result,
         element,
+        location: this.sapLocation,
+        searchSource: this.getSearchSource(event),
         searchString: this._lastSearchString,
         selType: "dismiss",
+        windowMode: this.windowMode,
       });
       this.view.onQueryResultRemoved(result.rowIndex);
       return;
@@ -1568,8 +1984,11 @@ export class SmartbarInput extends HTMLElement {
       this.controller.engagementEvent.record(event, {
         result,
         element,
+        location: this.sapLocation,
         selType: "canonized",
+        searchSource: this.getSearchSource(event),
         searchString: this._lastSearchString,
+        windowMode: this.windowMode,
       });
       this._loadURL(this._untrimmedValue, event, where, openParams, browser);
       return;
@@ -1579,6 +1998,7 @@ export class SmartbarInput extends HTMLElement {
       ? { url: resultUrl, postData: null }
       : lazy.UrlbarUtils.getUrlFromResult(result, { element });
     openParams.postData = postData;
+    let isSplitViewActive = this.window.gBrowser.selectedTab.splitview;
 
     switch (result.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.URL: {
@@ -1626,7 +2046,8 @@ export class SmartbarInput extends HTMLElement {
         // and button is provided to switch to tab.
         if (
           this.hasAttribute("action-override") ||
-          (lazy.UrlbarPrefs.get("secondaryActions.switchToTab") &&
+          ((lazy.UrlbarPrefs.get("secondaryActions.switchToTab") ||
+            isSplitViewActive) &&
             element?.dataset.action !== "tabswitch")
         ) {
           where = "current";
@@ -1648,22 +2069,24 @@ export class SmartbarInput extends HTMLElement {
         this.controller.engagementEvent.record(event, {
           result,
           element,
+          location: this.sapLocation,
+          searchSource: this.getSearchSource(event),
           searchString,
           searchMode,
           selType: this.controller.engagementEvent.typeFromElement(
             result,
             element
           ),
+          windowMode: this.windowMode,
         });
 
         let switched = this.window.switchToTabHavingURI(
           Services.io.newURI(url),
           true,
           loadOpts,
-          lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
-            lazy.UrlbarProviderOpenTabs.isNonPrivateUserContextId(
-              result.payload.userContextId
-            )
+          lazy.UrlbarProviderOpenTabs.isNonPrivateUserContextId(
+            result.payload.userContextId
+          )
             ? result.payload.userContextId
             : null
         );
@@ -1699,11 +2122,14 @@ export class SmartbarInput extends HTMLElement {
           this.controller.engagementEvent.record(event, {
             result,
             element,
+            location: this.sapLocation,
+            searchSource: this.getSearchSource(event),
             searchString: this._lastSearchString,
             selType: this.controller.engagementEvent.typeFromElement(
               result,
               element
             ),
+            windowMode: this.windowMode,
           });
           this.maybeConfirmSearchModeFromResult({
             result,
@@ -1750,7 +2176,9 @@ export class SmartbarInput extends HTMLElement {
             result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY,
           alias: result.payload.keyword,
         };
-        const engine = Services.search.getEngineByName(result.payload.engine);
+        const engine = lazy.SearchService.getEngineByName(
+          result.payload.engine
+        );
 
         if (where == "tab") {
           // The TabOpen event is fired synchronously so tabEvent.target
@@ -1787,8 +2215,11 @@ export class SmartbarInput extends HTMLElement {
         this.controller.engagementEvent.record(event, {
           result,
           element,
+          location: this.sapLocation,
           selType: "tip",
+          searchSource: this.getSearchSource(event),
           searchString: this._lastSearchString,
+          windowMode: this.windowMode,
         });
         return;
       }
@@ -1803,12 +2234,15 @@ export class SmartbarInput extends HTMLElement {
           this.controller.engagementEvent.record(event, {
             result,
             element,
+            location: this.sapLocation,
             searchMode,
+            searchSource: this.getSearchSource(event),
             searchString: this._lastSearchString,
             selType: this.controller.engagementEvent.typeFromElement(
               result,
               element
             ),
+            windowMode: this.windowMode,
           });
           return;
         }
@@ -1818,8 +2252,11 @@ export class SmartbarInput extends HTMLElement {
         this.controller.engagementEvent.record(event, {
           result,
           element,
+          location: this.sapLocation,
           selType: "extension",
+          searchSource: this.getSearchSource(event),
           searchString: this._lastSearchString,
+          windowMode: this.windowMode,
         });
 
         // The urlbar needs to revert to the loaded url when a command is
@@ -1843,17 +2280,35 @@ export class SmartbarInput extends HTMLElement {
         this.controller.engagementEvent.record(event, {
           result,
           element,
+          location: this.sapLocation,
+          searchSource: this.getSearchSource(event),
           searchString: this._lastSearchString,
           selType: this.controller.engagementEvent.typeFromElement(
             result,
             element
           ),
+          windowMode: this.windowMode,
         });
         this.maybeConfirmSearchModeFromResult({
           result,
           checkValue: false,
         });
 
+        return;
+      }
+      case lazy.UrlbarUtils.RESULT_TYPE.AI_CHAT: {
+        this.controller.engagementEvent.record(event, {
+          result,
+          element,
+          location: this.sapLocation,
+          searchSource: this.getSearchSource(event),
+          searchString: this._lastSearchString,
+          selType: this.controller.engagementEvent.typeFromElement(
+            result,
+            element
+          ),
+          windowMode: this.windowMode,
+        });
         return;
       }
     }
@@ -1867,7 +2322,10 @@ export class SmartbarInput extends HTMLElement {
       let input;
       if (!result.heuristic) {
         input = this._lastSearchString;
-      } else if (result.autofill?.type == "adaptive") {
+      } else if (
+        result.autofill?.type == "adaptive_url" ||
+        result.autofill?.type == "adaptive_origin"
+      ) {
         input = result.autofill.adaptiveHistoryInput;
       }
       // `input` may be an empty string, so do a strict comparison here.
@@ -1878,20 +2336,29 @@ export class SmartbarInput extends HTMLElement {
       }
     }
 
-    this.controller.engagementEvent.startTrackingBounceEvent(browser, event, {
-      result,
-      element,
-      searchString: this._lastSearchString,
-      selType: this.controller.engagementEvent.typeFromElement(result, element),
-      searchSource: this.getSearchSource(event),
-    });
+    this.controller.engagementEvent
+      .startTrackingBounceEvent(browser, event, {
+        result,
+        element,
+        location: this.sapLocation,
+        searchString: this._lastSearchString,
+        selType: this.controller.engagementEvent.typeFromElement(
+          result,
+          element
+        ),
+        searchSource: this.getSearchSource(event),
+        windowMode: this.windowMode,
+      })
+      .catch(lazy.logger.error);
 
     this.controller.engagementEvent.record(event, {
       result,
       element,
+      location: this.sapLocation,
       searchString: this._lastSearchString,
       selType: this.controller.engagementEvent.typeFromElement(result, element),
       searchSource: this.getSearchSource(event),
+      windowMode: this.windowMode,
     });
 
     if (result.payload.sendAttributionRequest) {
@@ -1909,6 +2376,9 @@ export class SmartbarInput extends HTMLElement {
       }
     }
 
+    if (this.#isSmartbarMode) {
+      this.#dispatchSmartbarCommitEvent(event, this.untrimmedValue);
+    }
     this._loadURL(
       url,
       event,
@@ -1923,13 +2393,18 @@ export class SmartbarInput extends HTMLElement {
     );
   }
 
-  #clearSmartbarInput() {
+  clearSmartbarInput() {
     this.value = "";
     this.userTypedValue = "";
     this._lastSearchString = "";
     this._autofillPlaceholder = null;
     this._resultForCurrentValue = null;
+    this.smartbarAction = "";
+    this.#detectedIntent = "";
+    this.#contextWebsites = [];
+    this.#updateContextChips();
     this.setSelectionRange(0, 0);
+    this.view.close();
   }
 
   /**
@@ -2091,6 +2566,11 @@ export class SmartbarInput extends HTMLElement {
       return;
     }
 
+    // Don’t autofill if mentions panel is open.
+    if (this.inputField.isHandlingMentions) {
+      return;
+    }
+
     let isPlaceholderSelected =
       this._autofillPlaceholder &&
       this.selectionEnd == this._autofillPlaceholder.value.length &&
@@ -2176,6 +2656,58 @@ export class SmartbarInput extends HTMLElement {
   }
 
   /**
+   * Invoked by the controller when a query starts.
+   *
+   * @param {UrlbarQueryContext} _queryContext
+   */
+  onQueryStarted(_queryContext) {
+    this.#smartbarActionPending = true;
+  }
+
+  /**
+   * Invoked by the controller when query results are received.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   */
+  onQueryResults(queryContext) {
+    if (
+      !this.#isSmartbarMode ||
+      queryContext.pendingHeuristicProviders.size ||
+      !this.#smartbarActionPending
+    ) {
+      return;
+    }
+    this.#smartbarActionPending = false;
+    this.#updateSmartbarCTAButton(queryContext.results[0]);
+  }
+
+  onQueryFinished() {
+    // Calling #updatePanelScrollFade to ensure `has-overflow` is not stale.
+    this.#updatePanelScrollFade();
+  }
+
+  /**
+   * Suppresses running search queries.
+   *
+   * @param {object} [options]
+   * @param {boolean} [options.permanent] Whether suppression persists until explicitly cleared.
+   */
+  suppressStartQuery({ permanent = false } = {}) {
+    this._suppressStartQuery = true;
+    if (permanent) {
+      this._permanentlySuppressStartQuery = true;
+    }
+  }
+
+  /**
+   * Clears search query suppression.
+   */
+  unsuppressStartQuery() {
+    this._suppressStartQuery = false;
+    this._permanentlySuppressStartQuery = false;
+  }
+
+  /**
    * Starts a query based on the current input value.
    *
    * @param {object} [options]
@@ -2206,10 +2738,21 @@ export class SmartbarInput extends HTMLElement {
     resetSearchState = true,
     event,
   } = {}) {
+    // When mentions panel is open, skip queries triggered by input events and
+    // close the suggestions view. The mentions plugin will handle querying
+    // providers directly.
+    const isHandlingMentions = this.inputField.isHandlingMentions;
+    if (isHandlingMentions && event) {
+      this.view.close();
+      return;
+    }
+
+    // When mentions panel is open, skip the validation since the value
+    // includes "@" but searchString doesn’t.
     if (!searchString) {
       searchString =
         this.getAttribute("pageproxystate") == "valid" ? "" : this.value;
-    } else if (!this.value.startsWith(searchString)) {
+    } else if (!isHandlingMentions && !this.value.startsWith(searchString)) {
       throw new Error("The current value doesn't start with the search string");
     }
 
@@ -2224,6 +2767,7 @@ export class SmartbarInput extends HTMLElement {
     }
 
     if (this._suppressStartQuery) {
+      this.#updateSmartbarCTAButton();
       return;
     }
 
@@ -2253,7 +2797,7 @@ export class SmartbarInput extends HTMLElement {
    *   use it as its query.
    * @param {object} [options]
    *   Object options
-   * @param {nsISearchEngine} [options.searchEngine]
+   * @param {SearchEngine} [options.searchEngine]
    *   Search engine to use when the search is using a known alias.
    * @param {UrlbarUtils.SEARCH_MODE_ENTRY} [options.searchModeEntry]
    *   If provided, we will record this parameter as the search mode entry point
@@ -2296,11 +2840,11 @@ export class SmartbarInput extends HTMLElement {
         value = value.slice(1);
       }
     } else if (
-      Object.values(lazy.UrlbarTokenizer.RESTRICT).includes(firstToken)
+      Object.values(UrlbarShared.RESTRICT_TOKENS).includes(firstToken)
     ) {
       this.searchMode = null;
       // If the entire value is a restricted token, append a space.
-      if (Object.values(lazy.UrlbarTokenizer.RESTRICT).includes(value)) {
+      if (Object.values(UrlbarShared.RESTRICT_TOKENS).includes(value)) {
         value += " ";
       }
     }
@@ -2330,14 +2874,14 @@ export class SmartbarInput extends HTMLElement {
    * Returns a search mode object if a token should enter search mode when
    * typed. This does not handle engine aliases.
    *
-   * @param {Values<typeof lazy.UrlbarTokenizer.RESTRICT>} token
+   * @param {Values<typeof UrlbarShared.RESTRICT_TOKENS>} token
    *   A restriction token to convert to search mode.
    * @returns {?object}
    *   A search mode object. Null if search mode should not be entered. See
    *   setSearchMode documentation for details.
    */
   searchModeForToken(token) {
-    if (token == lazy.UrlbarTokenizer.RESTRICT.SEARCH) {
+    if (token == UrlbarShared.RESTRICT_TOKENS.SEARCH) {
       return {
         engineName: lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate)
           ?.name,
@@ -2356,36 +2900,79 @@ export class SmartbarInput extends HTMLElement {
   }
 
   /**
-   * Opens a search page if the value is non-empty, otherwise opens the
-   * search engine homepage (searchform).
+   * Opens a SERP if value is non-empty, otherwise
+   * opens the search engine homepage (searchform).
    *
    * @param {string} value
    * @param {object} options
-   * @param {nsISearchEngine} options.searchEngine
+   * @param {SearchEngine} options.searchEngine
+   * @param {Event} options.event
+   * @param {string} options.where
+   * @param {boolean} [options.inBackground]
    */
-  openEngineHomePage(value, { searchEngine }) {
-    if (!searchEngine) {
-      console.warn("No searchEngine parameter");
+  openSearchEnginePage(
+    value,
+    { searchEngine, event, where, inBackground = false }
+  ) {
+    if (!searchEngine || !event || !where) {
+      console.warn("Missing parameters");
       return;
     }
 
     let trimmedValue = value.trim();
-    let url;
+    let url, postData;
     if (trimmedValue) {
-      url = searchEngine.getSubmission(trimmedValue, null).uri.spec;
-      // TODO: record SAP telemetry, see Bug 1961789.
+      [url, postData] = lazy.UrlbarUtils.getSearchQueryUrl(
+        searchEngine,
+        trimmedValue
+      );
+      if (where.startsWith("tab")) {
+        // The TabOpen event is fired synchronously so tabEvent.target
+        // is guaranteed to be our new search tab.
+        this.window.gBrowser.tabContainer.addEventListener(
+          "TabOpen",
+          tabEvent =>
+            this._recordSearch(
+              searchEngine,
+              event,
+              {},
+              tabEvent.target.linkedBrowser
+            ),
+          { once: true }
+        );
+      } else {
+        this._recordSearch(searchEngine, event);
+      }
+
+      if (where == "current") {
+        // Enter search mode so:
+        // - in the urlbar, persisted search terms work
+        // - in the searchbar, the engine stays selected
+        //
+        // Note that this will also record telemetry and
+        // search mode will be exited on the urlbar if the
+        // engine does not support persisted search terms
+        this.setSearchMode(
+          {
+            engineName: searchEngine.name,
+            entry: "searchbutton",
+            source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+            isPreview: false,
+          },
+          this.window.gBrowser.selectedBrowser
+        );
+      }
     } else {
       url = searchEngine.searchForm;
       lazy.BrowserSearchTelemetry.recordSearchForm(searchEngine, this.#sapName);
+      if (this.#isAddressbar && where == "current") {
+        this.inputField.value = url;
+        this.selectionStart = -1;
+      }
     }
+    this._lastSearchString = trimmedValue;
 
-    this._lastSearchString = "";
-    if (this.#isAddressbar) {
-      this.#setInputValue(url);
-    }
-    this.selectionStart = -1;
-
-    this.window.openTrustedLinkIn(url, "current");
+    this.window.openTrustedLinkIn(url, where, { inBackground, postData });
   }
 
   /**
@@ -2483,10 +3070,10 @@ export class SmartbarInput extends HTMLElement {
     // Exit search mode if the passed-in engine is invalid or hidden.
     let engine;
     if (searchMode?.engineName) {
-      if (!Services.search.isInitialized) {
-        await Services.search.init();
+      if (!lazy.SearchService.isInitialized) {
+        await lazy.SearchService.init();
       }
-      engine = Services.search.getEngineByName(searchMode.engineName);
+      engine = lazy.SearchService.getEngineByName(searchMode.engineName);
       if (!engine || engine.hidden) {
         searchMode = null;
       }
@@ -2673,6 +3260,147 @@ export class SmartbarInput extends HTMLElement {
     return this.querySelector(".urlbar-go-button");
   }
 
+  get smartbarButtonContainer() {
+    return this.querySelector(".smartbar-button-container");
+  }
+
+  /**
+   * Move focus to the first focusable button in the smartbar action button
+   * container, skipping any that are hidden or disabled. Only meaningful
+   * in smartbar mode, where at least one action button is always visible
+   * and enabled.
+   */
+  focusFirstActionButton() {
+    /** @type {HTMLElement} */ (
+      this.smartbarButtonContainer.querySelector(
+        ":scope > :not([hidden]):not([disabled])"
+      )
+    ).focus();
+  }
+
+  /**
+   * Move focus to the last focusable element in the smartbar action button
+   * container. Recurses through visible shadow trees so split-button
+   * hosts (e.g. input-cta's chevron) land on their deepest last
+   * tabbable, making the reverse Tab cycle symmetric with the forward
+   * one. Layout-agnostic: doesn't assume a particular last button or
+   * wrapping element. Only meaningful in smartbar mode.
+   */
+  focusLastActionButton() {
+    const buttons = this.smartbarButtonContainer.querySelectorAll(
+      ":scope > :not([hidden]):not([disabled])"
+    );
+    const lastHost = /** @type {HTMLElement} */ (buttons[buttons.length - 1]);
+    let last = lastHost;
+    const walk = node => {
+      if (node.checkVisibility && !node.checkVisibility()) {
+        return;
+      }
+      if (this.#isTabbable(node)) {
+        last = node;
+      }
+      if (node.shadowRoot) {
+        for (const child of node.shadowRoot.children) {
+          walk(child);
+        }
+      }
+      for (const child of node.children) {
+        walk(child);
+      }
+    };
+    walk(lastHost);
+    /** @type {HTMLElement} */ (last).focus();
+  }
+
+  /**
+   * Whether `el` participates in Tab navigation. Matches the browser's
+   * tab-order rule (`tabIndex >= 0`, excluding disabled and `<link>`)
+   * so callers can predict where default Tab would land.
+   *
+   * @param {Element | null | undefined} el
+   * @returns {boolean}
+   */
+  #isTabbable(el) {
+    return el && !el.disabled && el.tabIndex >= 0 && el.localName != "link";
+  }
+
+  /**
+   * Walks up from `target` through normal DOM and shadow root boundaries
+   * (via `parentNode || host`) to determine whether `container` is an
+   * ancestor. Works regardless of shadow root mode (open or closed).
+   *
+   * @param {Node | null | undefined} target
+   * @param {Node | null | undefined} container
+   * @returns {boolean}
+   */
+  #isInsideContainer(target, container) {
+    while (target && target != container) {
+      target = target.parentNode || target.host;
+    }
+    return !!target;
+  }
+
+  /**
+   * Tab handler for keydown events originating inside the smartbar action
+   * button container. Mirrors the urlbar's circular Tab pattern: Tab from
+   * the last action button wraps back to the first result; Shift+Tab from
+   * the first wraps to the last.
+   *
+   * @param {KeyboardEvent} event
+   */
+  #onActionButtonsKeyDown(event) {
+    // Escape from any action button closes the suggestions and returns
+    // focus to the input, mirroring the behaviour when Escape is pressed
+    // from the input itself.
+    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE && this.view.isOpen) {
+      this.view.close();
+      this.focus();
+      event.preventDefault();
+      return;
+    }
+    if (event.keyCode != KeyEvent.DOM_VK_TAB || !this.view.isOpen) {
+      return;
+    }
+    const container = this.smartbarButtonContainer;
+    const buttons = [
+      ...container.querySelectorAll(":scope > :not([hidden]):not([disabled])"),
+    ];
+    if (!buttons.length) {
+      return;
+    }
+    // Walk up from the composed target through normal DOM and shadow
+    // root boundaries (via `parentNode || host`) to find the action
+    // button host containing the focused element. composedPath() would
+    // skip closed shadow root boundaries, so we walk manually.
+    let focused = event.composedTarget;
+    while (focused && !buttons.includes(focused)) {
+      focused = focused.parentNode || focused.host;
+    }
+    if (!focused) {
+      return;
+    }
+    // The inner focused element (e.g. the main button or chevron of a
+    // split moz-button). If a tabbable sibling exists in the same shadow
+    // tree, let default Tab cycle into it before wrapping.
+    const innerTarget = /** @type {HTMLElement} */ (event.composedTarget);
+    const adjacent = event.shiftKey
+      ? innerTarget?.previousElementSibling
+      : innerTarget?.nextElementSibling;
+    if (this.#isTabbable(adjacent)) {
+      return;
+    }
+
+    if (event.shiftKey && focused == buttons[0]) {
+      this.focus();
+      this.view.selectBy(1, { reverse: true, userPressedTab: true });
+      event.preventDefault();
+    } else if (!event.shiftKey && focused == buttons[buttons.length - 1]) {
+      this.focus();
+      this.view.selectBy(1, { reverse: false, userPressedTab: true });
+      event.preventDefault();
+    }
+  }
+
   get value() {
     return this.#smartbarInputController?.value ?? this.inputField.value;
   }
@@ -2788,6 +3516,14 @@ export class SmartbarInput extends HTMLElement {
     this.#updateTextboxPosition();
   }
 
+  updateLayoutExtend() {
+    if (this.view.isOpen) {
+      this.startLayoutExtend();
+    } else {
+      this.endLayoutExtend();
+    }
+  }
+
   /**
    * Updates the user interface to indicate whether the URI in the address bar
    * is different than the loaded page, because it's being edited or because a
@@ -2899,10 +3635,16 @@ export class SmartbarInput extends HTMLElement {
     return true;
   }
 
+  /**
+   * @param {{wrappedJSObject: SearchEngine}} subject
+   * @param {"browser-search-engine-modified"} topic
+   * @param {string} data
+   */
   observe(subject, topic, data) {
     switch (topic) {
       case lazy.SearchUtils.TOPIC_ENGINE_MODIFIED: {
-        let engine = subject.QueryInterface(Ci.nsISearchEngine);
+        let engine = subject.wrappedJSObject;
+        this.#updateCtaSearchEngineInfo();
         switch (data) {
           case lazy.SearchUtils.MODIFIED_TYPE.CHANGED:
           case lazy.SearchUtils.MODIFIED_TYPE.REMOVED: {
@@ -2934,13 +3676,18 @@ export class SmartbarInput extends HTMLElement {
    *
    * @param {Event} event
    *   The event that triggered this query.
-   * @returns {string}
+   * @returns {keyof typeof lazy.BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES}
    *   The source name.
    */
   getSearchSource(event) {
     if (this.#isAddressbar) {
       if (this._isHandoffSession) {
-        return "urlbar-handoff";
+        return "urlbar_handoff";
+      }
+
+      if (this.searchModeSwitcher?.eventTargetIsPanelItem(event)) {
+        // The search mode switcher doesn't have its own search source yet.
+        return "urlbar_searchmode";
       }
 
       const isOneOff =
@@ -2951,7 +3698,7 @@ export class SmartbarInput extends HTMLElement {
         // oneoff_urlbar and oneoff_searchbar). The extra information is not
         // necessary; the intent is the same regardless of whether the user is
         // in search mode when they do a key-modified click/enter on a one-off.
-        return "urlbar-searchmode";
+        return "urlbar_searchmode";
       }
 
       let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
@@ -2960,7 +3707,7 @@ export class SmartbarInput extends HTMLElement {
         // persisted. However when the user modifies the search term, the boolean
         // will become false. Thus, we check the presence of the search terms to
         // know whether or not search terms ever persisted in the address bar.
-        return "urlbar-persisted";
+        return "urlbar_persisted";
       }
     }
     return this.#sapName;
@@ -3049,8 +3796,10 @@ export class SmartbarInput extends HTMLElement {
     // so this will be a no-op.
     if (this.focused) {
       this.controller.engagementEvent.record(event, {
+        location: this.sapLocation,
         searchString: this._lastSearchString,
         searchSource: this.getSearchSource(event),
+        windowMode: this.windowMode,
       });
     }
 
@@ -3261,6 +4010,8 @@ export class SmartbarInput extends HTMLElement {
         );
       case lazy.UrlbarUtils.RESULT_TYPE.RESTRICT:
         return result.payload.autofillKeyword + " ";
+      case lazy.UrlbarUtils.RESULT_TYPE.AI_CHAT:
+        return result.payload.query ?? "";
       case lazy.UrlbarUtils.RESULT_TYPE.TIP: {
         let value = element?.dataset.url || element?.dataset.input;
         if (value) {
@@ -3350,10 +4101,12 @@ export class SmartbarInput extends HTMLElement {
    */
   _maybeAutofillPlaceholder(value) {
     // We allow autofill in local but not remote search modes.
+    // Also disable autofill when mentions panel is open.
     let allowAutofill =
       this.selectionEnd == value.length &&
       !this.searchMode?.engineName &&
-      this.searchMode?.source != lazy.UrlbarUtils.RESULT_SOURCE.SEARCH;
+      this.searchMode?.source != lazy.UrlbarUtils.RESULT_SOURCE.SEARCH &&
+      !this.inputField.isHandlingMentions;
 
     if (!allowAutofill) {
       this.#clearAutofill();
@@ -3369,7 +4122,10 @@ export class SmartbarInput extends HTMLElement {
     // if the caret isn't at the end of the input.
     let canAutofillPlaceholder = false;
     if (this._autofillPlaceholder) {
-      if (this._autofillPlaceholder.type == "adaptive") {
+      if (
+        this._autofillPlaceholder.type == "adaptive_url" ||
+        this._autofillPlaceholder.type == "adaptive_origin"
+      ) {
         canAutofillPlaceholder =
           value.length >=
             this._autofillPlaceholder.adaptiveHistoryInput.length &&
@@ -3507,7 +4263,7 @@ export class SmartbarInput extends HTMLElement {
     if (this.getAttribute("pageproxystate") == "valid") {
       uri = this.#isOpenedPageInBlankTargetLoading
         ? this.window.gBrowser.selectedBrowser.browsingContext
-            .nonWebControlledBlankURI
+            .nonWebControlledLoadingURI
         : this.window.gBrowser.currentURI;
     } else {
       // The value could be:
@@ -3608,7 +4364,7 @@ export class SmartbarInput extends HTMLElement {
    * updates an incremental total number of searches in a pref,
    * and informs ASRouter that a search has occurred via a trigger send
    *
-   * @param {nsISearchEngine} engine
+   * @param {SearchEngine} engine
    *   The engine to generate the query for.
    * @param {Event} event
    *   The event that triggered this query.
@@ -3699,6 +4455,9 @@ export class SmartbarInput extends HTMLElement {
    *   Whether the event is a KeyboardEvent that triggers canonization.
    */
   #isCanonizeKeyboardEvent(event) {
+    if (this.sapName == "searchbar") {
+      return false;
+    }
     return (
       KeyboardEvent.isInstance(event) &&
       event.keyCode == KeyEvent.DOM_VK_RETURN &&
@@ -3710,7 +4469,7 @@ export class SmartbarInput extends HTMLElement {
 
   /**
    * If appropriate, this prefixes a search string with 'www.' and suffixes it
-   * with browser.fixup.alternate.suffix prior to navigating.
+   * with Services.locale.urlFixupSuffix prior to navigating.
    *
    * @param {Event} event
    *   The event that triggered this query.
@@ -3723,14 +4482,14 @@ export class SmartbarInput extends HTMLElement {
     // Only add the suffix when the URL bar value isn't already "URL-like",
     // and only if we get a keyboard event, to match user expectations.
     if (
-      this.sapName == "searchbar" ||
       !this.#isCanonizeKeyboardEvent(event) ||
       !/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(value)
     ) {
       return null;
     }
 
-    let suffix = Services.prefs.getCharPref("browser.fixup.alternate.suffix");
+    let suffix = Services.locale.urlFixupSuffix;
+    Glean.urlfixup.suffix.get("smartbar", suffix).add(1);
     if (!suffix.endsWith("/")) {
       suffix += "/";
     }
@@ -3776,11 +4535,11 @@ export class SmartbarInput extends HTMLElement {
    *   The new selectionStart.
    * @param {number} options.selectionEnd
    *   The new selectionEnd.
-   * @param {"origin" | "url" | "adaptive"} options.type
-   *   The autofill type, one of: "origin", "url", "adaptive"
+   * @param {"origin" | "url" | "adaptive_url" | "adaptive_origin"} options.type
+   *   The autofill type.
    * @param {string} options.adaptiveHistoryInput
-   *   If the autofill type is "adaptive", this is the matching `input` value
-   *   from adaptive history.
+   *   If the autofill type is "adaptive_url" or "adaptive_origin", this is the
+   *   matching `input` value from adaptive history.
    * @param {string} [options.untrimmedValue]
    *   Untrimmed value including a protocol.
    */
@@ -3837,8 +4596,11 @@ export class SmartbarInput extends HTMLElement {
     this.controller.engagementEvent.record(event, {
       result,
       element,
+      location: this.sapLocation,
+      searchSource: this.getSearchSource(event),
       searchString: this._lastSearchString,
       selType: element.dataset.command,
+      windowMode: this.windowMode,
     });
 
     if (element.dataset.command == "manage") {
@@ -4371,7 +5133,7 @@ export class SmartbarInput extends HTMLElement {
     pasteAndGo.setAttribute("label", label);
     pasteAndGo.setAttribute("anonid", "paste-and-go");
     pasteAndGo.addEventListener("command", () => {
-      this._suppressStartQuery = true;
+      this.suppressStartQuery();
 
       this.select();
       this.window.goDoCommand("cmd_paste");
@@ -4379,7 +5141,9 @@ export class SmartbarInput extends HTMLElement {
       this.handleCommand();
       this.controller.clearLastQueryContextCache();
 
-      this._suppressStartQuery = false;
+      if (!this._permanentlySuppressStartQuery) {
+        this.unsuppressStartQuery();
+      }
     });
 
     contextMenu.addEventListener("popupshowing", () => {
@@ -4450,7 +5214,7 @@ export class SmartbarInput extends HTMLElement {
       if (result.type == lazy.UrlbarUtils.RESULT_TYPE.RESTRICT) {
         searchMode.restrictType = "keyword";
       } else if (
-        lazy.UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(result.payload.keyword)
+        UrlbarShared.SEARCH_MODE_RESTRICT.has(result.payload.keyword)
       ) {
         searchMode.restrictType = "symbol";
       }
@@ -4479,6 +5243,33 @@ export class SmartbarInput extends HTMLElement {
   }
 
   /**
+   * Updates the input-cta based on the current search mode.
+   */
+  async #updateCtaSearchEngineInfo() {
+    if (!this.#isSmartbarMode) {
+      return;
+    }
+
+    // Get default engine from current search mode
+    const engine = lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate);
+
+    this._inputCta.searchEngineInfo = {
+      name: engine.name,
+      icon: await engine.getIconURL(),
+    };
+
+    const engines = await lazy.SearchService.getVisibleEngines();
+    this._inputCta.searchEngines = await Promise.all(
+      engines
+        .filter(e => !e.hideOneOffButton)
+        .map(async e => ({
+          name: e.name,
+          icon: await e.getIconURL(),
+        }))
+    );
+  }
+
+  /**
    * Updates the UI so that search mode is either entered or exited.
    *
    * @param {object} searchMode
@@ -4504,6 +5295,7 @@ export class SmartbarInput extends HTMLElement {
     if (!engineName && !source) {
       this.removeAttribute("searchmode");
       this.initPlaceHolder(true);
+      this.#updateCtaSearchEngineInfo();
       return;
     }
 
@@ -4735,6 +5527,12 @@ export class SmartbarInput extends HTMLElement {
       return;
     }
     this.toggleAttribute("unifiedsearchbutton-available", available);
+    const switcher = this.querySelector(".searchmode-switcher");
+    if (available) {
+      switcher.removeAttribute("aria-hidden");
+    } else {
+      switcher.setAttribute("aria-hidden", "true");
+    }
     this.getBrowserState(
       this.window.gBrowser.selectedBrowser
     ).isUnifiedSearchButtonAvailable = available;
@@ -4743,12 +5541,12 @@ export class SmartbarInput extends HTMLElement {
   /**
    * Returns a Promise that resolves with default search engine.
    *
-   * @returns {Promise<nsISearchEngine>}
+   * @returns {Promise<SearchEngine>}
    */
   _getDefaultSearchEngine() {
     return this.isPrivate
-      ? Services.search.getDefaultPrivate()
-      : Services.search.getDefault();
+      ? lazy.SearchService.getDefaultPrivate()
+      : lazy.SearchService.getDefault();
   }
 
   /**
@@ -4774,12 +5572,16 @@ export class SmartbarInput extends HTMLElement {
       throw new Error("Expected an engineName to be specified");
     }
 
+    if (this.#isSmartbarMode) {
+      this.#updateCtaSearchEngineInfo();
+    }
+
     if (this.searchMode || !this.#isAddressbar) {
       return;
     }
 
-    let engine = Services.search.getEngineByName(engineName);
-    if (engine.isConfigEngine) {
+    let engine = lazy.SearchService.getEngineByName(engineName);
+    if (engine instanceof lazy.ConfigSearchEngine) {
       this._setPlaceholder(engineName);
     } else {
       // Display the default placeholder string.
@@ -4863,8 +5665,10 @@ export class SmartbarInput extends HTMLElement {
     // For now we detect that case by discarding the event on command, but we
     // may want to figure out a more robust way to detect abandonment.
     this.controller.engagementEvent.record(event, {
+      location: this.sapLocation,
       searchString: this._lastSearchString,
       searchSource: this.getSearchSource(event),
+      windowMode: this.windowMode,
     });
 
     this.focusedViaMousedown = false;
@@ -4902,8 +5706,17 @@ export class SmartbarInput extends HTMLElement {
     }
 
     // Respect the autohide preference for easier inspecting/debugging via
-    // the browser toolbox.
-    if (!lazy.UrlbarPrefs.get("ui.popup.disable_autohide")) {
+    // the browser toolbox. Keep the view open when focus moves to any
+    // action button so the user can Tab back to the result list. The
+    // ancestor walk crosses shadow roots because the action buttons are
+    // custom elements with their own shadow trees.
+    if (
+      !lazy.UrlbarPrefs.get("ui.popup.disable_autohide") &&
+      !this.#isInsideContainer(
+        event.relatedTarget,
+        this.smartbarButtonContainer
+      )
+    ) {
       this.view.close();
     }
 
@@ -5007,7 +5820,7 @@ export class SmartbarInput extends HTMLElement {
       }
     }
 
-    if (this.focusedViaMousedown) {
+    if (this.focusedViaMousedown && !this._permanentlySuppressStartQuery) {
       this.view.autoOpen({ event });
     } else {
       if (this._untrimOnFocusAfterKeydown) {
@@ -5054,6 +5867,14 @@ export class SmartbarInput extends HTMLElement {
           event.composedTarget != this.inputField &&
           event.composedTarget != this._inputContainer
         ) {
+          if (
+            this.#isInsideContainer(
+              event.composedTarget,
+              this.smartbarButtonContainer
+            )
+          ) {
+            event.preventDefault();
+          }
           break;
         }
 
@@ -5110,8 +5931,10 @@ export class SmartbarInput extends HTMLElement {
               relatedTarget: this.inputField,
             });
             this.controller.engagementEvent.record(blurEvent, {
+              location: this.sapLocation,
               searchString: this._lastSearchString,
               searchSource: this.getSearchSource(blurEvent),
+              windowMode: this.windowMode,
             });
           }
 
@@ -5153,6 +5976,13 @@ export class SmartbarInput extends HTMLElement {
       this.#compositionClosedPopup = false;
     }
 
+    if (
+      compositionState == lazy.UrlbarUtils.COMPOSITION.COMPOSING &&
+      event.data
+    ) {
+      this.#compositionHadText = true;
+    }
+
     this.toggleAttribute("usertyping", value);
     this.removeAttribute("actiontype");
 
@@ -5174,9 +6004,20 @@ export class SmartbarInput extends HTMLElement {
       }
     }
 
+    // Suppress queries when there are inline mentions.
+    if (this.inputField.hasMention) {
+      this.suppressStartQuery();
+    } else if (!this._permanentlySuppressStartQuery) {
+      this.unsuppressStartQuery();
+    }
+
+    if (!value) {
+      this.#updateSmartbarCTAButton();
+    }
+
     if (this.view.isOpen) {
       if (lazy.UrlbarPrefs.get("closeOtherPanelsOnOpen")) {
-        // SmartbarView rolls up all popups when it opens, but we should
+        // UrlbarView rolls up all popups when it opens, but we should
         // do the same for SmartbarInput when it's already open in case
         // a tab preview was opened
         this.window.docShell.treeOwner
@@ -5184,7 +6025,15 @@ export class SmartbarInput extends HTMLElement {
           .getInterface(Ci.nsIAppWindow)
           .rollupAllPopups();
       }
-      if (!value && !lazy.UrlbarPrefs.get("suggest.topsites")) {
+      // Don’t show results when the input is empty unless top sites are enabled.
+      // TODO (bug 2014773): In Smartbar mode, we currently don’t show
+      // results for an empty input.
+      const canShowZeroPrefixResults =
+        !value &&
+        lazy.UrlbarPrefs.get("suggest.topsites") &&
+        !this.#isSmartbarMode;
+      const willShowResults = value || canShowZeroPrefixResults;
+      if (!willShowResults) {
         this.view.clear();
         if (!this.searchMode || !this.view.oneOffSearchButtons?.hasView) {
           this.view.close();
@@ -5201,7 +6050,7 @@ export class SmartbarInput extends HTMLElement {
     // 1. a compositionstart event
     // 2. some input events
     // 3. a compositionend event
-    // 4. an input event
+    // 4. an input event (some IMEs may skip this when step 3 has empty data)
 
     // We should do nothing during composition or if composition was canceled
     // and we didn't close the popup on composition start.
@@ -5214,12 +6063,13 @@ export class SmartbarInput extends HTMLElement {
       return;
     }
 
-    // Autofill only when text is inserted (i.e., event.data is not empty) and
-    // it's not due to pasting.
+    // Don't autofill when the user is explicitly deleting content, pasting, or
+    // undoing/redoing.
     const allowAutofill =
       (!lazy.UrlbarPrefs.get("keepPanelOpenDuringImeComposition") ||
         compositionState !== lazy.UrlbarUtils.COMPOSITION.COMPOSING) &&
-      !!event.data &&
+      !event.inputType?.startsWith("delete") &&
+      !event.inputType?.startsWith("history") &&
       !lazy.UrlbarUtils.isPasteEvent(event) &&
       this._maybeAutofillPlaceholder(value);
 
@@ -5282,30 +6132,14 @@ export class SmartbarInput extends HTMLElement {
     );
   }
 
-  _on_overflow(event) {
-    const targetIsPlaceholder =
-      event.originalTarget.implementedPseudoElement == "::placeholder";
-    // We only care about the non-placeholder text.
-    // This shouldn't be needed, see bug 1487036.
-    if (targetIsPlaceholder) {
-      return;
-    }
+  _on_overflow(_event) {
     this._overflowing = true;
     this.updateTextOverflow();
   }
 
-  _on_underflow(event) {
-    const targetIsPlaceholder =
-      event.originalTarget.implementedPseudoElement == "::placeholder";
-    // We only care about the non-placeholder text.
-    // This shouldn't be needed, see bug 1487036.
-    if (targetIsPlaceholder) {
-      return;
-    }
+  _on_underflow(_event) {
     this._overflowing = false;
-
     this.updateTextOverflow();
-
     this._updateUrlTooltip();
   }
 
@@ -5325,7 +6159,8 @@ export class SmartbarInput extends HTMLElement {
     }
     let oldEnd = oldValue.substring(this.selectionEnd);
 
-    const pasteData = this.sanitizeTextFromClipboard(originalPasteData);
+    const pasteData =
+      lazy.UrlbarUtils.sanitizeTextFromClipboard(originalPasteData);
 
     if (originalPasteData != pasteData) {
       // Unfortunately we're not allowed to set the bits being pasted
@@ -5357,49 +6192,6 @@ export class SmartbarInput extends HTMLElement {
         event,
       });
     }
-  }
-
-  /**
-   * Sanitize and process data retrieved from the clipboard
-   *
-   * @param {string} clipboardData
-   *   The original data retrieved from the clipboard.
-   * @returns {string}
-   *   The sanitized paste data, ready to use.
-   */
-  sanitizeTextFromClipboard(clipboardData) {
-    let fixedURI, keywordAsSent;
-    try {
-      ({ fixedURI, keywordAsSent } = Services.uriFixup.getFixupURIInfo(
-        clipboardData,
-        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
-          Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
-      ));
-    } catch (e) {}
-
-    let pasteData;
-    if (keywordAsSent) {
-      // For performance reasons, we don't want to beautify a long string.
-      if (clipboardData.length < 500) {
-        // For only keywords, replace any white spaces including line break
-        // with white space.
-        pasteData = clipboardData.replace(/\s/g, " ");
-      } else {
-        pasteData = clipboardData;
-      }
-    } else if (
-      fixedURI?.scheme == "data" &&
-      !fixedURI.spec.match(/^data:.+;base64,/)
-    ) {
-      // For data url without base64, replace line break with white space.
-      pasteData = clipboardData.replace(/[\r\n]/g, " ");
-    } else {
-      // For normal url or data url having basic64, or if fixup failed, just
-      // remove line breaks.
-      pasteData = clipboardData.replace(/[\r\n]/g, "");
-    }
-
-    return lazy.UrlbarUtils.stripUnsafeProtocolOnPaste(pasteData);
   }
 
   /**
@@ -5446,7 +6238,12 @@ export class SmartbarInput extends HTMLElement {
         this.window.gBrowser.selectedBrowser?.getAttribute("usercontextid") ?? 0
       );
       options.tabGroup = this.window.gBrowser.selectedTab.group?.id ?? null;
-      options.currentPage = this.window.gBrowser.currentURI?.spec ?? "";
+      const currentPageSpec = this.window.gBrowser.currentURI?.spec;
+      // currentURI can be transiently null during a docshell swap (tab drag);
+      // omit currentPage rather than passing "" which fails UrlbarQueryContext validation.
+      if (currentPageSpec) {
+        options.currentPage = currentPageSpec;
+      }
     }
 
     if (this.searchMode) {
@@ -5459,6 +6256,46 @@ export class SmartbarInput extends HTMLElement {
     return new lazy.UrlbarQueryContext(options);
   }
 
+  /**
+   * Handles scroll events from the urlbarView panel.
+   *
+   * Returns early if:
+   * - the event does not come from the urlbarView panel
+   * - CSS `animation-timeline: scroll()` is supported
+   *
+   * @param {Event} event
+   */
+  _on_scroll(event) {
+    if (
+      event.target !== this.view.panel ||
+      CSS.supports("animation-timeline", "scroll()")
+    ) {
+      return;
+    }
+    this.#updatePanelScrollFade();
+  }
+
+  #updatePanelScrollFade() {
+    // Only run animation if there is not already an animation request for
+    // the current frame.
+    if (this.#scrollAnimationId) {
+      return;
+    }
+    this.#scrollAnimationId = this.window.requestAnimationFrame(() => {
+      this.#scrollAnimationId = null;
+
+      const { scrollTop, scrollHeight, clientHeight } = this.view.panel;
+      const maxScroll = scrollHeight - clientHeight;
+      const hasScrollOverflow = maxScroll > 0;
+      const progress = hasScrollOverflow ? scrollTop / maxScroll : 0;
+      this.view.panel.toggleAttribute("has-overflow", hasScrollOverflow);
+      this.view.panel.style.setProperty(
+        "--smartbar-view-scroll-progress",
+        progress.toFixed(3)
+      );
+    });
+  }
+
   _on_scrollend() {
     this.updateTextOverflow();
   }
@@ -5469,6 +6306,22 @@ export class SmartbarInput extends HTMLElement {
     this._untrimOnFocusAfterKeydown = false;
     this._gotTabSelect = true;
     this._afterTabSelectAndFocusChange();
+
+    // Update context chips to reflect the newly selected tab
+    if (this.#isSidebarMode) {
+      this.#updateContextChips();
+    }
+  }
+
+  _on_TabAttrModified(event) {
+    if (
+      this.#isSidebarMode &&
+      event.target == this.window.gBrowser.selectedTab &&
+      (event.detail.changed.includes("image") ||
+        event.detail.changed.includes("label"))
+    ) {
+      this.#updateContextChips();
+    }
   }
 
   _on_TabClose(event) {
@@ -5489,10 +6342,34 @@ export class SmartbarInput extends HTMLElement {
       // Ignore char key input while processing enter key.
       event.preventDefault();
     }
+    // Don't insert a space character into the contenteditable when SPACE
+    // is meant to activate a selected result-menu (or other button-like
+    // selectable element). The controller's keydown handler will open the
+    // menu; we just need to suppress the character insertion before the
+    // multiline editor's input pipeline picks it up.
+    if (
+      this.#isSmartbarMode &&
+      event.data == " " &&
+      this.view?.shouldSpaceActivateSelectedElement?.()
+    ) {
+      event.preventDefault();
+    }
   }
 
   _on_keydown(event) {
     if (event.currentTarget == this.window) {
+      // Tab/Shift+Tab/Escape on the smartbar action buttons goes through
+      // a dedicated handler. We detect membership via a manual ancestor
+      // walk so we work across shadow root boundaries regardless of mode.
+      if (
+        this.#isInsideContainer(
+          event.composedTarget,
+          this.smartbarButtonContainer
+        )
+      ) {
+        this.#onActionButtonsKeyDown(event);
+        return;
+      }
       // It would be great if we could more easily detect the user focusing the
       // address bar through a keyboard shortcut, but F6 and TAB bypass are
       // not going through commands handling.
@@ -5505,7 +6382,7 @@ export class SmartbarInput extends HTMLElement {
     if (
       this.#isSmartbarMode &&
       event.keyCode === KeyEvent.DOM_VK_RETURN &&
-      event.shiftKey
+      (event.shiftKey || this.#smartbarAssistantIsGenerating)
     ) {
       event.preventDefault();
       return;
@@ -5626,6 +6503,7 @@ export class SmartbarInput extends HTMLElement {
       throw new Error("Trying to start a nested composition?");
     }
     this.#compositionState = lazy.UrlbarUtils.COMPOSITION.COMPOSING;
+    this.#compositionHadText = false;
 
     if (lazy.UrlbarPrefs.get("keepPanelOpenDuringImeComposition")) {
       return;
@@ -5670,6 +6548,21 @@ export class SmartbarInput extends HTMLElement {
     this.#compositionState = event.data
       ? lazy.UrlbarUtils.COMPOSITION.COMMIT
       : lazy.UrlbarUtils.COMPOSITION.CANCELED;
+
+    // Certain IMEs fire a spurious empty composition after each commit without
+    // a subsequent input event. If this composition was empty throughout and it
+    // closed the popup, reopen it directly since we can't rely on a following
+    // input event.
+    if (
+      !event.data &&
+      !this.#compositionHadText &&
+      this.#compositionClosedPopup &&
+      !lazy.UrlbarPrefs.get("keepPanelOpenDuringImeComposition")
+    ) {
+      this.#compositionState = lazy.UrlbarUtils.COMPOSITION.NONE;
+      this.#compositionClosedPopup = false;
+      this.startQuery({ resetSearchState: false, event });
+    }
   }
 
   _on_dragstart(event) {
@@ -5806,7 +6699,7 @@ export class SmartbarInput extends HTMLElement {
       this.window.gBrowser.selectedBrowser.browsingContext.sessionHistory
         ?.count === 0 &&
       this.window.gBrowser.selectedBrowser.browsingContext
-        .nonWebControlledBlankURI
+        .nonWebControlledLoadingURI
     );
   }
 
@@ -5869,6 +6762,223 @@ export class SmartbarInput extends HTMLElement {
         event.keyCode == KeyEvent.DOM_VK_META &&
         this._isKeyDownWithMetaAndLeft)
     );
+  }
+
+  /**
+   * Updates the smartbar CTA button based on the type of the first result in
+   * the given query context.
+   *
+   * @param {UrlbarResult} [firstResult] The first result received.
+   */
+  #updateSmartbarCTAButton(firstResult) {
+    /** @type {SmartbarAction} */
+    let detectedAction;
+    if (!firstResult || !firstResult.heuristic) {
+      detectedAction = this.value ? "chat" : "";
+    } else {
+      switch (firstResult.type) {
+        case lazy.UrlbarUtils.RESULT_TYPE.URL:
+        case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
+          detectedAction = "navigate";
+          break;
+        case lazy.UrlbarUtils.RESULT_TYPE.AI_CHAT:
+          detectedAction = "chat";
+          break;
+        case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
+          detectedAction = "search";
+          break;
+        default:
+          detectedAction = "";
+      }
+    }
+    this.smartbarAction = detectedAction;
+    this.#detectedIntent = detectedAction;
+  }
+
+  /**
+   * Provides the current page url and context sites for current
+   * smartbar state. Used for when a starter prompt is clicked
+   * which lives outside of Smartbar.
+   *
+   * @returns {{ pageUrl: ?URL, contextWebsites: Array<ContextWebsite>}}
+   */
+  getCurrentContextData() {
+    return {
+      pageUrl: this.getContextPageUrl(),
+      contextWebsites: this.getResolvedContextWebsites(),
+    };
+  }
+
+  /**
+   * Returns the page URL to associate with the next submitted message, or null
+   * if the implicit current-tab chip has been removed.
+   *
+   * @returns {?URL}
+   */
+  getContextPageUrl() {
+    if (!this.#isSidebarMode) {
+      return null;
+    }
+    const currentTabUrl = lazy.getCurrentTabUrl(this.window);
+    if (currentTabUrl?.spec == this.#removedImplicitTabUrl) {
+      return null;
+    }
+    return URL.parse(currentTabUrl?.spec) ?? null;
+  }
+
+  /**
+   * Returns the resolved, deduped list of context websites including the
+   * implicit current-tab entry when in sidebar mode.
+   *
+   * @returns {ContextWebsite[]}
+   */
+  getResolvedContextWebsites() {
+    /** @type {ContextWebsite[]} */
+    const candidates = [...this.#contextWebsites];
+
+    // Place the implicit current-tab website first (sidebar mode only) so the
+    // "default" context is consistently visible and doesn't get pushed out by
+    // explicit chips, unless the user has explicitly removed it.
+    if (this.#isSidebarMode) {
+      const tab = this.window.gBrowser?.selectedTab;
+      const url = tab?.linkedBrowser.currentURI?.spec;
+      if (url && url != this.#removedImplicitTabUrl) {
+        candidates.unshift({
+          type: "currentTab",
+          url,
+          label: tab.label || url,
+          iconSrc: this.#resolveTabIconSrc(tab.image, url),
+        });
+      }
+    }
+
+    const seen = new Set();
+    return candidates
+      .filter(site => site.url && !seen.has(site.url) && seen.add(site.url))
+      .slice(0, MAX_CONTEXT_WEBSITES);
+  }
+
+  /**
+   * Updates the website context chips shown in the Smartbar header.
+   */
+  #updateContextChips() {
+    const finalWebsites = this.getResolvedContextWebsites();
+    finalWebsites.forEach(site => this.#ensureWebsiteIcon(site));
+
+    const container = this.#findWebsiteContextChipsContainer();
+    if (container) {
+      container.websites = finalWebsites;
+      container.removable = true;
+      container.hidden = !finalWebsites.length;
+    }
+  }
+
+  /**
+   * Public method to trigger context chip update.
+   * Called when sidebar reopens to ensure chips reflect the current tab.
+   */
+  updateContextChips() {
+    this.#updateContextChips();
+  }
+
+  /**
+   * Resolves a tab favicon to a URL safe for use in both aiWindow.html and
+   * aiChatContent.html. Only chrome: URLs are passed through; all others
+   * (data:, moz-remote-image:, https:, etc.) fall back to page-icon: which
+   * works in both the chrome process and the privileged about content process.
+   *
+   * @param {string} tabImage
+   * @param {string} url
+   * @returns {string}
+   */
+  #resolveTabIconSrc(tabImage, url) {
+    return tabImage?.startsWith("chrome:")
+      ? tabImage
+      : lazy.UrlbarUtils.getIconForUrl(url);
+  }
+
+  /**
+   * Ensures a website context entry has an icon source, mutating it in place.
+   *
+   * @param {ContextWebsite} site
+   */
+  #ensureWebsiteIcon(site) {
+    if (!site.iconSrc) {
+      site.iconSrc = site.url ? lazy.UrlbarUtils.getIconForUrl(site.url) : "";
+    }
+  }
+
+  // Cache the container reference to avoid repeated querySelector calls
+  // since #updateContextChips runs on every navigation and context update.
+  // Re-query if the cached element is disconnected to avoid stale references
+  // during Smartbar lifecycle changes.
+  #findWebsiteContextChipsContainer() {
+    if (this.#websiteContextChipsContainer?.isConnected) {
+      return this.#websiteContextChipsContainer;
+    }
+
+    this.#websiteContextChipsContainer = this.querySelector(
+      ".smartbar-context-chips-header"
+    );
+
+    return this.#websiteContextChipsContainer;
+  }
+
+  /**
+   * @param {boolean} isSidebar
+   */
+  set isSidebarMode(isSidebar) {
+    this.#isSidebarMode = !!isSidebar;
+    this.#updateContextChips();
+  }
+
+  /**
+   * Add a website to the context chips.
+   *
+   * @param {object} mention - The mention to add
+   * @param {string} mention.type - The type of context
+   * @param {string} mention.url - The mention URL
+   * @param {string} mention.label - The mention label
+   * @param {string} [mention.iconSrc] - The mention icon source
+   */
+  addContextMention(mention) {
+    const hasMention = this.#contextWebsites.some(
+      site => site.url === mention.url
+    );
+    if (hasMention) {
+      return;
+    }
+
+    if (this.#removedImplicitTabUrl == mention.url) {
+      this.#removedImplicitTabUrl = null;
+      this.#contextWebsites = [mention, ...this.#contextWebsites];
+    } else {
+      this.#contextWebsites = [...this.#contextWebsites, mention];
+    }
+    this.#updateContextChips();
+  }
+
+  /**
+   * Remove a context mention.
+   *
+   * @param {string} url - The URL of the mention
+   */
+  removeContextMention(url) {
+    const originalLength = this.#contextWebsites.length;
+    this.#contextWebsites = this.#contextWebsites.filter(
+      site => site.url !== url
+    );
+
+    const isCurrentTab =
+      this.#isSidebarMode &&
+      this.window.gBrowser.selectedTab.linkedBrowser.currentURI?.spec == url;
+    if (isCurrentTab) {
+      this.#removedImplicitTabUrl = url;
+    }
+
+    if (this.#contextWebsites.length !== originalLength || isCurrentTab) {
+      this.#updateContextChips();
+    }
   }
 }
 

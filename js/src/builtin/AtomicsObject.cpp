@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -19,8 +17,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 
-#include "jsnum.h"
-
+#include "builtin/Number.h"
 #include "builtin/Promise.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
@@ -36,6 +33,7 @@
 
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 
@@ -998,9 +996,10 @@ FutexWaiterListHead::~FutexWaiterListHead() {
     // a thread is waiting, and that thread must have a reference to the shared
     // array buffer it's waiting on, so that buffer can't be freed.
 
+    FutexWaiterListNode* next = iter->next();
     AsyncFutexWaiter* removedWaiter =
         RemoveAsyncWaiter(iter->toWaiter()->asAsync(), lock);
-    iter = iter->next();
+    iter = next;
 
     if (removedWaiter->hasTimeout() &&
         !removedWaiter->timeoutTask()->cleared(lock)) {
@@ -1522,6 +1521,7 @@ bool js::atomics_notify_impl(JSContext* cx, SharedArrayRawBuffer* sarb,
   // avoid mutex ordering problems.
   RootedValue resultMsg(cx, StringValue(cx->names().ok));
   for (uint32_t i = 0; i < promisesToResolve.length(); i++) {
+    AutoRealm ar(cx, promisesToResolve[i]);
     if (!PromiseObject::resolve(cx, promisesToResolve[i], resultMsg)) {
       MOZ_ASSERT(cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed());
       return false;

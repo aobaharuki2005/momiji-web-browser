@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -45,7 +43,7 @@ class nsDeviceSensorData final : public nsIDeviceSensorData {
   nsDeviceSensorData(unsigned long type, double x, double y, double z);
 
  private:
-  ~nsDeviceSensorData();
+  ~nsDeviceSensorData() = default;
 
  protected:
   unsigned long mType;
@@ -62,8 +60,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDeviceSensorData)
 NS_IMPL_RELEASE(nsDeviceSensorData)
-
-nsDeviceSensorData::~nsDeviceSensorData() = default;
 
 NS_IMETHODIMP nsDeviceSensorData::GetType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);

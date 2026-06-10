@@ -31,10 +31,6 @@ use std::hash::{Hash, Hasher};
 /// events.
 pub type ItemTag = (u64, u16);
 
-/// An identifier used to refer to previously sent display items. Currently it
-/// refers to individual display items, but this may change later.
-pub type ItemKey = u16;
-
 #[repr(C)]
 #[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
 pub struct PrimitiveFlags(u8);
@@ -130,26 +126,6 @@ impl SpaceAndClipInfo {
     }
 }
 
-/// Defines a caller provided key that is unique for a given spatial node, and is stable across
-/// display lists. WR uses this to determine which spatial nodes are added / removed for a new
-/// display list. The content itself is arbitrary and opaque to WR, the only thing that matters
-/// is that it's unique and stable between display lists.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke, Default, Eq, Hash)]
-pub struct SpatialTreeItemKey {
-    key0: u64,
-    key1: u64,
-}
-
-impl SpatialTreeItemKey {
-    pub fn new(key0: u64, key1: u64) -> Self {
-        SpatialTreeItemKey {
-            key0,
-            key1,
-        }
-    }
-}
-
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub enum SpatialTreeItem {
@@ -200,9 +176,6 @@ pub enum DisplayItem {
     PopReferenceFrame,
     PopStackingContext,
     PopAllShadows,
-
-    ReuseItems(ItemKey),
-    RetainedItems(ItemKey),
 
     // For debugging purposes.
     DebugMarker(u32),
@@ -323,9 +296,6 @@ pub struct StickyFrameDescriptor {
     /// applied due to bottom-stickiness. The x-axis works analogously.
     pub previously_applied_offset: LayoutVector2D,
 
-    /// A unique (per-pipeline) key for this spatial that is stable across display lists.
-    pub key: SpatialTreeItemKey,
-
     /// A property binding that we use to store an animation ID for APZ
     pub transform: Option<PropertyBinding<LayoutTransform>>,
 }
@@ -350,8 +320,6 @@ pub struct ScrollFrameDescriptor {
     pub scroll_offset_generation: APZScrollGeneration,
     /// Whether this scrollframe document has any scroll-linked effect or not.
     pub has_scroll_linked_effect: HasScrollLinkedEffect,
-    /// A unique (per-pipeline) key for this spatial that is stable across display lists.
-    pub key: SpatialTreeItemKey,
 }
 
 /// A solid or an animating color to draw (may not actually be a rectangle due to complex clips)
@@ -425,7 +393,6 @@ pub struct TextDisplayItem {
     pub font_key: font::FontInstanceKey,
     pub color: ColorF,
     pub glyph_options: Option<font::GlyphOptions>,
-    pub ref_frame_offset: LayoutVector2D,
 } // IMPLICIT: glyphs: Vec<font::GlyphInstance>
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
@@ -622,6 +589,7 @@ pub struct BoxShadowDisplayItem {
     pub blur_radius: f32,
     pub spread_radius: f32,
     pub border_radius: BorderRadius,
+    pub shadow_radius: BorderRadius,
     pub clip_mode: BoxShadowClipMode,
 }
 
@@ -865,8 +833,6 @@ pub struct ReferenceFrame {
     /// matrix.
     pub transform: ReferenceTransformBinding,
     pub id: SpatialId,
-    /// A unique (per-pipeline) key for this spatial that is stable across display lists.
-    pub key: SpatialTreeItemKey,
 }
 
 /// If passed in a stacking context display item, inform WebRender that
@@ -900,11 +866,9 @@ pub struct SnapshotInfo {
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct PushStackingContextDisplayItem {
-    pub origin: LayoutPoint,
     pub spatial_id: SpatialId,
     pub snapshot: Option<SnapshotInfo>,
     pub prim_flags: PrimitiveFlags,
-    pub ref_frame_offset: LayoutVector2D,
     pub stacking_context: StackingContext,
 }
 
@@ -2282,8 +2246,6 @@ impl DisplayItem {
             DisplayItem::RadialGradient(..) => "radial_gradient",
             DisplayItem::Rectangle(..) => "rectangle",
             DisplayItem::SetGradientStops => "set_gradient_stops",
-            DisplayItem::ReuseItems(..) => "reuse_item",
-            DisplayItem::RetainedItems(..) => "retained_items",
             DisplayItem::Text(..) => "text",
             DisplayItem::YuvImage(..) => "yuv_image",
             DisplayItem::BackdropFilter(..) => "backdrop_filter",

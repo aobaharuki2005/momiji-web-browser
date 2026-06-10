@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPIDOMWindow_h__
-#define nsPIDOMWindow_h__
+#ifndef nsPIDOMWindow_h_
+#define nsPIDOMWindow_h_
 
 #include "Units.h"
 #include "js/TypeDecls.h"
@@ -350,6 +348,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
+  mozilla::dom::ClientSource* GetClientSource() const;
 
   void SetPolicyContainer(nsIPolicyContainer* aPolicyContainer);
   nsIPolicyContainer* GetPolicyContainer();
@@ -631,7 +630,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   void NotifyCloseWatcherRemoved();
 
   virtual mozilla::dom::DocumentPictureInPicture*
-  GetExtantDocumentPictureInPicture() = 0;
+  GetExtantDocumentPictureInPicture() const = 0;
 
  protected:
   void CreatePerformanceObjectIfNeeded();
@@ -883,13 +882,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   // Base URI, COEP and PolicyContainer of the current document will be
   // retained.
   virtual void SetInitialPrincipal(nsIPrincipal* aNewWindowPrincipal) = 0;
-
-  // Returns an object containing the window's state.  This also suspends
-  // all running timeouts in the window.
-  virtual already_AddRefed<nsISupports> SaveWindowState() = 0;
-
-  // Restore the window state from aState.
-  virtual nsresult RestoreWindowState(nsISupports* aState) = 0;
 
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
@@ -1167,4 +1159,4 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
 #include "nsPIDOMWindowInlines.h"
 
-#endif  // nsPIDOMWindow_h__
+#endif  // nsPIDOMWindow_h_

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -109,6 +107,10 @@ enum class StreamCaptureBehavior : uint8_t {
   CONTINUE_WHEN_ENDED,
   FINISH_WHEN_ENDED
 };
+
+// `NotNeeded` means audio is routed through WebAudio (audio output is
+// configured by WebAudio), or audio output configuration is not required.
+enum class AudioOutputConfig : bool { NotNeeded = false, Needed = true };
 
 /**
  * Possible values of the 'preload' attribute.
@@ -274,6 +276,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Called by the video decoder object, on the main thread,
   // when the resource has completed seeking.
   void SeekCompleted() final;
+
+  // Called by the video decoder object, on the main thread, before a seek
+  // operation to update the played time ranges.
+  void UpdatePlayedRangesBeforeSeek(double aRangeEndTime) final;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has aborted seeking.
@@ -658,14 +664,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     SetHTMLBoolAttr(nsGkAtoms::muted, aMuted, aRv);
   }
 
-  bool MozAllowCasting() const { return mAllowCasting; }
-
-  void SetMozAllowCasting(bool aShow) { mAllowCasting = aShow; }
-
-  bool MozIsCasting() const { return mIsCasting; }
-
-  void SetMozIsCasting(bool aShow) { mIsCasting = aShow; }
-
   // Returns whether a call to Play() would be rejected with NotAllowedError.
   // This assumes "worst case" for unknowns. So if prompting for permission is
   // enabled and no permission is stored, this behaves as if the user would
@@ -753,7 +751,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   already_AddRefed<DOMMediaStream> MozCaptureStreamUntilEnded(ErrorResult& aRv);
 
-  bool MozAudioCaptured() const { return mAudioCaptured; }
+  already_AddRefed<DOMMediaStream> CaptureStream(ErrorResult& aRv);
+
+  bool MozAudioCaptured() const;
 
   void MozGetMetadata(JSContext* aCx, JS::MutableHandle<JSObject*> aResult,
                       ErrorResult& aRv);
@@ -798,6 +798,18 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   void NotifyCueDisplayStatesChanged();
 
+  void SetCuesDirty() {
+    if (mTextTrackManager) {
+      mTextTrackManager->SetCuesDirty();
+    }
+  }
+
+  void UpdateCueDisplay() {
+    if (mTextTrackManager) {
+      mTextTrackManager->UpdateCueDisplay();
+    }
+  }
+
   bool IsBlessed() const { return mIsBlessed; }
 
   // A method to check whether we are currently playing.
@@ -810,8 +822,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   virtual void OnVisibilityChange(Visibility aNewVisibility);
 
-  // Begin testing only methods
+  // Return the effective volume, taking mute and other factors that affect the
+  // final output volume into account.
   float ComputedVolume() const;
+
+  // Begin testing only methods
   bool ComputedMuted() const;
 
   // Return true if the media has been suspended media due to an inactive
@@ -867,6 +882,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Return key system in use if we have one, otherwise return nothing.
   Maybe<nsAutoString> GetKeySystem() const override;
 
+  MediaEventSource<float>& EffectiveVolumeChangeEvent() {
+    return mEffectiveVolumeChangeEvent;
+  }
+
  protected:
   virtual ~HTMLMediaElement();
 
@@ -908,6 +927,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    */
   virtual void WakeLockRelease();
   virtual void UpdateWakeLock();
+
+  // This must be called immediately after monitor attributes change, and cannot
+  // wait for the Watchable notification, because some pseudo-classes are
+  // required to be applied immediately after the change.
+  void UpdatePlaybackPseudoClasses();
 
   void CreateAudioWakeLockIfNeeded();
   void ReleaseAudioWakeLockIfExists();
@@ -1038,12 +1062,16 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * to the DOMMediaStream. Volume and mute state will be applied to the audio
    * reaching the stream. No video tracks will be captured in this case.
    *
+   * aAudioOutputConfig determines if we should configure audio output in our
+   * media pipeline.
+   *
    * aGraph may be null if the stream's tracks do not need to use a
    * specific graph.
    */
   already_AddRefed<DOMMediaStream> CaptureStreamInternal(
       StreamCaptureBehavior aFinishBehavior,
-      StreamCaptureType aStreamCaptureType, MediaTrackGraph* aGraph);
+      StreamCaptureType aStreamCaptureType,
+      AudioOutputConfig aAudioOutputConfig, MediaTrackGraph* aGraph);
 
   /**
    * Initialize a decoder as a clone of an existing decoder in another
@@ -1337,10 +1365,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // tracks this HTMLMediaElement has.
   StreamCaptureType CaptureTypeForElement();
 
-  // True if this element can be captured, false otherwise.
-  bool CanBeCaptured(StreamCaptureType aCaptureType);
+  // Returns true if capture is allowed. Returns false and sets aRv if capture
+  // is not allowed: NotSupportedError if the element contains restricted
+  // content, or NS_ERROR_FAILURE if the document has no window.
+  bool CanBeCaptured(StreamCaptureType aCaptureType, ErrorResult& aRv);
 
-  using nsGenericHTMLElement::DispatchEvent;
   // For nsAsyncEventRunner.
   // The event is blocked while the document is in B/F cache.
   MOZ_CAN_RUN_SCRIPT nsresult FireEvent(const nsAString& aName);
@@ -1827,6 +1856,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // https://html.spec.whatwg.org/multipage/media.html#pending-text-track-change-notification-flag
   bool mPendingTextTrackChanged = false;
 
+  Visibility mVisibilityState = Visibility::Untracked;
+
  public:
   // This function will be called whenever a text track that is in a media
   // element's list of text tracks has its text track mode change value
@@ -1880,7 +1911,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // For use by mochitests. Enabling pref "media.test.video-suspend"
   bool mForcedHidden = false;
 
-  Visibility mVisibilityState = Visibility::Untracked;
+  // https://html.spec.whatwg.org/multipage/media.html#is-currently-stalled
+  bool mIsCurrentlyStalled = false;
 
   UniquePtr<ErrorSink> mErrorSink;
 
@@ -1967,12 +1999,27 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // with. See bug 1946547.
   void MaybeMarkSHEntryAsUserInteracted();
 
+  // True if we should have track sources for captured tracks.
+  bool ShouldHaveTrackSources() const;
+
 #ifdef MOZ_WMF_CDM
   // It's used to record telemetry probe for WMFCDM playback.
   bool mIsUsingWMFCDM = false;
 #endif
 
   Maybe<DelayedScheduler<AwakeTimeStamp>> mAudioWakelockReleaseScheduler;
+
+  // AudioOutputConfig::Needed means audio is rendered through our own
+  // media-pipeline audio backend. Otherwise, audio output configuration is not
+  // required because audio is routed to Web Audio’s backend (via
+  // MediaElementAudioSourceNode), or is not played through output devices at
+  // all (via MozCaptureStreamXXX). The latter will be unsupported and removed
+  // soon.
+  // Note: Once this becomes NotNeeded, it will never change back. The current
+  // API design does not provide a way to revert this change.
+  AudioOutputConfig mAudioOutputConfig = AudioOutputConfig::Needed;
+
+  MediaEventProducer<float> mEffectiveVolumeChangeEvent;
 };
 
 // Check if the context is chrome or has the debugger or tabs permission

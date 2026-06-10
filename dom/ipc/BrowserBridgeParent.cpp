@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -42,6 +40,10 @@ nsresult BrowserBridgeParent::InitWithProcess(
   RefPtr<CanonicalBrowsingContext> browsingContext =
       CanonicalBrowsingContext::Get(aWindowInit.context().mBrowsingContextId);
   if (!browsingContext || browsingContext->IsDiscarded()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (!browsingContext->Group()->IsKnownForChildID(
+          aParentBrowser->OtherChildID())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -225,7 +227,7 @@ IPCResult BrowserBridgeParent::RecvDispatchSynthesizedMouseEvent(
   }
 
   WidgetMouseEvent event = aEvent;
-  event.mWidget = widget;
+  event.mWidget = std::move(widget);
   // Convert mRefPoint from the dispatching child process coordinate space
   // to the parent coordinate space. The SendRealMouseEvent call will convert
   // it into the dispatchee child process coordinate space
@@ -280,10 +282,16 @@ IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
 #  if defined(ANDROID)
   MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
 #  endif
-  MOZ_ASSERT(aDoc || mEmbedderAccessibleDoc,
-             "Embedder doc shouldn't be cleared if it wasn't set");
-  MOZ_ASSERT(!mEmbedderAccessibleDoc || !aDoc || mEmbedderAccessibleDoc == aDoc,
-             "Embedder doc shouldn't change from one doc to another");
+  if (!aDoc && !mEmbedderAccessibleDoc) {
+    return IPC_FAIL(this, "Embedder doc shouldn't be cleared if it wasn't set");
+  }
+  if (mEmbedderAccessibleDoc && aDoc && mEmbedderAccessibleDoc != aDoc) {
+    return IPC_FAIL(this,
+                    "Embedder doc shouldn't change from one doc to another");
+  }
+  if (aDoc && aDoc->Manager() != Manager()) {
+    return IPC_FAIL(this, "Embedder doc not managed by our PBrowser");
+  }
   if (!aDoc && mEmbedderAccessibleDoc &&
       !mEmbedderAccessibleDoc->IsShutdown()) {
     // We're clearing the embedder doc, so remove the pending child doc addition
@@ -293,14 +301,22 @@ IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
   mEmbedderAccessibleDoc = static_cast<a11y::DocAccessibleParent*>(aDoc);
   mEmbedderAccessibleID = aID;
   if (!aDoc) {
-    MOZ_ASSERT(!aID);
+    if (aID) {
+      return IPC_FAIL(this, "Attempt to clear embedder but id given");
+    }
     return IPC_OK();
   }
-  MOZ_ASSERT(aID);
+  if (!aID) {
+    return IPC_FAIL(this, "Attempt to set embedder without id");
+  }
   if (GetDocAccessibleParent()) {
     // The embedded DocAccessibleParent has already been created. This can
-    // happen if, for example, an iframe is hidden and then shown or
-    // an iframe is reflowed by layout.
+    // happen if, for example, an iframe is hidden and then shown or an iframe
+    // Accessible is re-created. In the case of re-creation, the old iframe
+    // Accessible still exists at this point because this IPDL message is
+    // received *before* we receive the accessibility hide and show events. This
+    // is okay; DocAccessibleParent will store this as a pending OOP child
+    // document and add it when the new OuterDocAccessible arrives.
     mEmbedderAccessibleDoc->AddChildDoc(this);
   }
   return IPC_OK();

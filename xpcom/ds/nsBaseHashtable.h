@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsBaseHashtable_h__
-#define nsBaseHashtable_h__
+#ifndef nsBaseHashtable_h_
+#define nsBaseHashtable_h_
 
 #include <functional>
 #include <utility>
@@ -1100,4 +1098,4 @@ inline void ImplCycleCollectionTrace(
                            aClosure);
 }
 
-#endif  // nsBaseHashtable_h__
+#endif  // nsBaseHashtable_h_

@@ -1,11 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsBlockDebugFlags_h__
-#define nsBlockDebugFlags_h__
+#ifndef nsBlockDebugFlags_h_
+#define nsBlockDebugFlags_h_
 
 #undef NOISY_FIRST_LETTER  // enables debug output for first-letter specific
                            // layout
@@ -21,4 +19,4 @@
                                // invalidate
 #undef REALLY_NOISY_REFLOW     // some extra debug info
 
-#endif  // nsBlockDebugFlags_h__
+#endif  // nsBlockDebugFlags_h_

@@ -2,7 +2,6 @@ use alloc::{borrow::ToOwned as _, boxed::Box, ffi::CString, string::String, sync
 use core::{
     ffi::{c_void, CStr},
     marker::PhantomData,
-    mem::ManuallyDrop,
     slice,
     str::FromStr,
 };
@@ -264,11 +263,7 @@ impl super::Instance {
             extensions.push(ext::metal_surface::NAME);
             extensions.push(khr::portability_enumeration::NAME);
         }
-        if cfg!(all(
-            unix,
-            not(target_vendor = "apple"),
-            not(target_family = "wasm")
-        )) {
+        if cfg!(drm) {
             // VK_EXT_acquire_drm_display -> VK_EXT_direct_mode_display -> VK_KHR_display
             extensions.push(ext::acquire_drm_display::NAME);
             extensions.push(ext::direct_mode_display::NAME);
@@ -516,10 +511,10 @@ impl super::Instance {
         Ok(self.create_surface_from_vk_surface_khr(surface))
     }
 
-    #[cfg(metal)]
-    fn create_surface_from_view(
+    #[cfg(target_vendor = "apple")]
+    fn create_surface_from_layer(
         &self,
-        view: core::ptr::NonNull<c_void>,
+        layer: raw_window_metal::Layer,
     ) -> Result<super::Surface, crate::InstanceError> {
         if !self.shared.extensions.contains(&ext::metal_surface::NAME) {
             return Err(crate::InstanceError::new(String::from(
@@ -527,17 +522,14 @@ impl super::Instance {
             )));
         }
 
-        let layer = unsafe { crate::metal::Surface::get_metal_layer(view.cast()) };
         // NOTE: The layer is retained by Vulkan's `vkCreateMetalSurfaceEXT`,
         // so no need to retain it beyond the scope of this function.
-        let layer_ptr = (*layer).cast();
-
         let surface = {
             let metal_loader =
                 ext::metal_surface::Instance::new(&self.shared.entry, &self.shared.raw);
             let vk_info = vk::MetalSurfaceCreateInfoEXT::default()
                 .flags(vk::MetalSurfaceCreateFlagsEXT::empty())
-                .layer(layer_ptr);
+                .layer(layer.as_ptr().as_ptr());
 
             unsafe { metal_loader.create_metal_surface(&vk_info, None).unwrap() }
         };
@@ -553,8 +545,8 @@ impl super::Instance {
             crate::vulkan::swapchain::NativeSurface::from_vk_surface_khr(self, surface);
 
         super::Surface {
-            inner: ManuallyDrop::new(Box::new(native_surface)),
             swapchain: RwLock::new(None),
+            inner: Box::new(native_surface),
         }
     }
 
@@ -895,6 +887,10 @@ impl crate::Instance for super::Instance {
                 let connection = display.connection.expect("Pointer to X-Server is not set.");
                 self.create_surface_from_xcb(connection.as_ptr(), handle.window.get())
             }
+            #[cfg(drm)]
+            (Rwh::Drm(handle), Rdh::Drm(display)) => {
+                self.create_surface_from_drm_plane(display.fd, handle.plane)
+            }
             (Rwh::AndroidNdk(handle), _) => {
                 self.create_surface_android(handle.a_native_window.as_ptr())
             }
@@ -906,17 +902,19 @@ impl crate::Instance for super::Instance {
                 })?;
                 self.create_surface_from_hwnd(hinstance.get(), handle.hwnd.get())
             }
-            #[cfg(all(target_os = "macos", feature = "metal"))]
+            #[cfg(target_vendor = "apple")]
             (Rwh::AppKit(handle), _)
                 if self.shared.extensions.contains(&ext::metal_surface::NAME) =>
             {
-                self.create_surface_from_view(handle.ns_view)
+                let layer = unsafe { raw_window_metal::Layer::from_ns_view(handle.ns_view) };
+                self.create_surface_from_layer(layer)
             }
-            #[cfg(all(any(target_os = "ios", target_os = "visionos"), feature = "metal"))]
+            #[cfg(target_vendor = "apple")]
             (Rwh::UiKit(handle), _)
                 if self.shared.extensions.contains(&ext::metal_surface::NAME) =>
             {
-                self.create_surface_from_view(handle.ui_view)
+                let layer = unsafe { raw_window_metal::Layer::from_ui_view(handle.ui_view) };
+                self.create_surface_from_layer(layer)
             }
             (_, _) => Err(crate::InstanceError::new(format!(
                 "window handle {window_handle:?} is not a Vulkan-compatible handle"
@@ -985,12 +983,6 @@ impl crate::Instance for super::Instance {
     }
 }
 
-impl Drop for super::Surface {
-    fn drop(&mut self) {
-        unsafe { ManuallyDrop::take(&mut self.inner).delete_surface() };
-    }
-}
-
 impl crate::Surface for super::Surface {
     type A = super::Api;
 
@@ -1017,7 +1009,6 @@ impl crate::Surface for super::Surface {
         if let Some(mut sc) = self.swapchain.write().take() {
             // SAFETY: `unconfigure`'s contract guarantees there are no resources derived from the swapchain in use.
             unsafe { sc.release_resources(device) };
-            unsafe { sc.delete_swapchain() };
         }
     }
 
@@ -1025,7 +1016,7 @@ impl crate::Surface for super::Surface {
         &self,
         timeout: Option<core::time::Duration>,
         fence: &super::Fence,
-    ) -> Result<Option<crate::AcquiredSurfaceTexture<super::Api>>, crate::SurfaceError> {
+    ) -> Result<crate::AcquiredSurfaceTexture<super::Api>, crate::SurfaceError> {
         let mut swapchain = self.swapchain.write();
         let swapchain = swapchain.as_mut().unwrap();
 

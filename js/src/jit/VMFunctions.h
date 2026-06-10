@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -47,7 +45,8 @@ class MegamorphicCacheEntry;
 
 namespace gc {
 
-struct Cell;
+class AllocSite;
+class Cell;
 
 }  // namespace gc
 
@@ -409,8 +408,11 @@ bool OperatorIn(JSContext* cx, HandleValue key, HandleObject obj, bool* out);
                                      MutableHandleValue rval);
 
 [[nodiscard]] bool CreateThisFromIC(JSContext* cx, HandleObject callee,
-                                    HandleObject newTarget,
-                                    MutableHandleValue rval);
+                                    HandleObject newTarget, Value* argv,
+                                    uint32_t argc, MutableHandleValue rval);
+[[nodiscard]] bool CreateThisFromICWithAllocSite(
+    JSContext* cx, HandleObject callee, HandleObject newTarget,
+    gc::AllocSite* site, Value* argv, uint32_t argc, MutableHandleValue rval);
 [[nodiscard]] bool CreateThisFromIon(JSContext* cx, HandleObject callee,
                                      HandleObject newTarget,
                                      MutableHandleValue rval);
@@ -499,9 +501,9 @@ ArrayObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
 [[nodiscard]] bool PushVarEnv(JSContext* cx, BaselineFrame* frame,
                               Handle<Scope*> scope);
 
-[[nodiscard]] bool InitBaselineFrameForOsr(BaselineFrame* frame,
-                                           InterpreterFrame* interpFrame,
-                                           uint32_t numStackValues);
+void InitBaselineFrameForOsr(BaselineFrame* frame,
+                             InterpreterFrame* interpFrame,
+                             uint32_t numStackValues);
 
 JSString* StringReplace(JSContext* cx, HandleString string,
                         HandleString pattern, HandleString repl);
@@ -522,7 +524,6 @@ bool ObjectIsCallable(JSObject* obj);
 bool ObjectIsConstructor(JSObject* obj);
 JSObject* ObjectKeys(JSContext* cx, HandleObject obj);
 JSObject* ObjectKeysFromIterator(JSContext* cx, HandleObject iterObj);
-bool ObjectKeysLength(JSContext* cx, HandleObject obj, int32_t* length);
 
 [[nodiscard]] bool ThrowRuntimeLexicalError(JSContext* cx,
                                             unsigned errorNumber);
@@ -705,6 +706,13 @@ float Float16ToFloat32(int32_t value);
 int32_t Float32ToFloat16(float value);
 
 void DateFillLocalTimeSlots(DateObject* dateObj);
+double DateNow(JSContext* cx);
+double DateParse(JSContext* cx, const JSString* str);
+double DateLocalTimeToUTC(JSContext* cx, int64_t localTime);
+double DateYearFromTime(JSContext* cx, double utcTime);
+double DateMonthFromTime(JSContext* cx, double utcTime);
+double DateDateFromTime(JSContext* cx, double utcTime);
+JSObject* NewDateObject(JSContext* cx, double utcTime);
 
 JSAtom* AtomizeStringNoGC(JSContext* cx, JSString* str);
 
@@ -733,7 +741,7 @@ void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
 
 void AssertPropertyLookup(NativeObject* obj, PropertyKey id, uint32_t slot);
 
-void ReadBarrier(gc::Cell* cell);
+void WeakMapValueReadBarrier(gc::TenuredCell* cell, Zone* mapZone);
 
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);

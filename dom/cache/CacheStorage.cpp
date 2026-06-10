@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -579,10 +577,7 @@ bool CacheStorage::HasStorageAccess(UseCounter aLabel,
     }
   }
 
-  return access > StorageAccess::eDeny ||
-         (StaticPrefs::
-              privacy_partition_always_partition_third_party_non_cookie_storage() &&
-          ShouldPartitionStorage(access));
+  return access > StorageAccess::eDeny || ShouldPartitionStorage(access);
 }
 
 }  // namespace mozilla::dom::cache

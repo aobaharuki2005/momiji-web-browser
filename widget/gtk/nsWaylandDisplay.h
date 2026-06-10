@@ -1,13 +1,11 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __MOZ_WAYLAND_DISPLAY_H__
-#define __MOZ_WAYLAND_DISPLAY_H__
+#ifndef MOZ_WAYLAND_DISPLAY_H_
+#define MOZ_WAYLAND_DISPLAY_H_
 
+#include <time.h>
 #include "DMABufDevice.h"
 
 #include "mozilla/widget/mozwayland.h"
@@ -24,7 +22,9 @@
 #include "mozilla/widget/color-management-v1-client-protocol.h"
 #include "mozilla/widget/color-representation-v1-client-protocol.h"
 #include "mozilla/widget/xdg-shell-client-protocol.h"
+#include "mozilla/widget/xx-fractional-scale-v2-client-protocol.h"
 #include "mozilla/widget/xx-pip-v1-client-protocol.h"
+#include "mozilla/widget/xx-session-management-v1-client-protocol.h"
 
 #include <gbm.h>
 
@@ -46,7 +46,11 @@ class nsWaylandDisplay {
  public:
   // Create nsWaylandDisplay object on top of native Wayland wl_display
   // connection.
+  // Split nsWaylandDisplay setup to constructor & Init() call
+  // to allow calls WaylandDisplayGet() from Init() where we query
+  // wayland display setup.
   explicit nsWaylandDisplay(wl_display* aDisplay);
+  void Init();
 
   static uint32_t GetLastEventSerial();
   wl_display* GetDisplay() { return mDisplay; };
@@ -68,6 +72,9 @@ class nsWaylandDisplay {
   org_kde_kwin_appmenu_manager* GetAppMenuManager() { return mAppMenuManager; }
   wp_fractional_scale_manager_v1* GetFractionalScaleManager() {
     return mFractionalScaleManager;
+  }
+  xx_fractional_scale_manager_v2* GetFractionalScaleManagerV2() {
+    return mFractionalScaleManagerV2;
   }
   bool IsPrimarySelectionEnabled() { return mIsPrimarySelectionEnabled; }
 
@@ -104,6 +111,9 @@ class nsWaylandDisplay {
   void SetFractionalScaleManager(wp_fractional_scale_manager_v1* aManager) {
     mFractionalScaleManager = aManager;
   }
+  void SetFractionalScaleManagerV2(xx_fractional_scale_manager_v2* aManager) {
+    mFractionalScaleManagerV2 = aManager;
+  }
   void EnablePrimarySelection() { mIsPrimarySelectionEnabled = true; }
 
   void SetColorManager(wp_color_manager_v1* aColorManager);
@@ -130,30 +140,49 @@ class nsWaylandDisplay {
   bool HasDMABufFeedback() const { return mDmabufIsFeedback; }
   void EnsureDMABufFormats();
 
+  void SetFixes(wl_fixes* aFixes);
+  wl_fixes* GetFixes() const { return mFixes; }
+
+  static void SessionCreate(void* aData, xx_session_v1* aSession,
+                            const char* aSessionId);
+  static void SessionRestore(void* aData, xx_session_v1* aSession);
+  static void SessionReplace(void* aData, xx_session_v1* aSession);
+
+  xx_session_manager_v1* GetSessionManager() { return mSessionManager; }
+  void SetSessionManager(xx_session_manager_v1* aSessionManager);
+  void CreateSession(const char* aSessionId = nullptr);
+  xx_session_v1* GetSession() { return mWaylandSession; }
+
   static void AsyncRoundtripCallback(void* aData, wl_callback* aCallback,
                                      uint32_t aTime);
   void RequestAsyncRoundtrip();
   void WaitForAsyncRoundtrips();
 
+  void RefreshScreens();
+
   struct MonitorConfig {
+    MonitorConfig(int aId, struct wl_output* aWlOutput);
+    ~MonitorConfig();
+
     int id = 0;
     int x = 0;
     int y = 0;
     int pixelWidth = 0;
     int pixelHeight = 0;
-    explicit MonitorConfig(int aId) : id(aId) {}
+    wl_output* wlOutput = nullptr;
+    bool pendingChanges = true;
   };
 
-  MonitorConfig* AddMonitorConfig(int aId);
+  void AddMonitorConfig(int aId, wl_output* aWlOutput);
   MonitorConfig* GetMonitorConfig(int x, int y);
   bool RemoveMonitorConfig(int aId);
-  void AddWlOutput(wl_output* aWlOutput, int aId);
 
   ~nsWaylandDisplay();
 
  private:
   PRThread* mThreadId = nullptr;
   wl_registry* mRegistry = nullptr;
+  wl_fixes* mFixes = nullptr;
   wl_display* mDisplay = nullptr;
   wl_compositor* mCompositor = nullptr;
   wl_subcompositor* mSubcompositor = nullptr;
@@ -174,10 +203,14 @@ class nsWaylandDisplay {
   xdg_activation_v1* mXdgActivation = nullptr;
   org_kde_kwin_appmenu_manager* mAppMenuManager = nullptr;
   wp_fractional_scale_manager_v1* mFractionalScaleManager = nullptr;
+  xx_fractional_scale_manager_v2* mFractionalScaleManagerV2 = nullptr;
   wp_color_manager_v1* mColorManager = nullptr;
   wp_color_representation_manager_v1* mColorRepresentationManager = nullptr;
   xx_pip_shell_v1* mPipShell = nullptr;
   xdg_wm_base* mWmBase = nullptr;
+  xx_session_manager_v1* mSessionManager = nullptr;
+  xx_session_v1* mWaylandSession = nullptr;
+  nsCString mWaylandSessionId;
   RefPtr<DMABufFormats> mFormats;
   GList* mAsyncRoundtrips = nullptr;
 
@@ -209,7 +242,8 @@ class nsWaylandDisplay {
 wl_display* WaylandDisplayGetWLDisplay();
 nsWaylandDisplay* WaylandDisplayGet();
 void WaylandDisplayRelease();
-void WlCompositorCrashHandler();
+void WlCompositorUnavailableHandler();
+void WlCompositorSilentDisconnectHandler(clock_t aFailureTime);
 
 }  // namespace mozilla::widget
 
@@ -235,4 +269,4 @@ static inline T* WaylandRegistryBind(struct wl_registry* wl_registry,
   return reinterpret_cast<T*>(id);
 }
 
-#endif  // __MOZ_WAYLAND_DISPLAY_H__
+#endif  // MOZ_WAYLAND_DISPLAY_H_

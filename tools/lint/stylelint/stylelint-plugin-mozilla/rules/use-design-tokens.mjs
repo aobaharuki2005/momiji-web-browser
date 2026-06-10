@@ -8,7 +8,11 @@
 
 import stylelint from "stylelint";
 import valueParser from "postcss-value-parser";
-import { namespace, getLocalCustomProperties } from "../helpers.mjs";
+import {
+  namespace,
+  getLocalCustomProperties,
+  isSystemColor,
+} from "../helpers.mjs";
 import { propertyConfig } from "../config.mjs";
 import { PropertyValidator } from "../property-validator.mjs";
 
@@ -35,6 +39,13 @@ const messages = ruleMessages(ruleName, {
     let message = `${value} should use ${formatTokenCategory(tokenCategories)}design token.`;
     if (suggestedValue) {
       message += ` Suggested value: ${suggestedValue}. This may be fixable by running the same command again with --fix.`;
+    }
+    return message;
+  },
+  warning: (value, suggestedValue) => {
+    let message = `${value} is allowed, but discouraged.`;
+    if (suggestedValue) {
+      message += ` Consider using ${suggestedValue} instead.`;
     }
     return message;
   },
@@ -77,19 +88,57 @@ const ruleFunction = primaryOption => {
       );
 
       if (!isValid) {
-        const fixedValue = config.validator.getFixedValue(parsedValue);
+        const fixedValue = config.validator.getFixedValue(
+          value,
+          config.validator.customFixes
+        );
         const tokenCategories = config.validator.getTokenCategories();
+        const fix =
+          fixedValue !== null ? () => (decl.value = fixedValue) : undefined;
+
+        // Replace CSS variable usage with their locally defined values, if applicable.
+        // This allows us to check if suggestions work on the local variables, so we can set the severity to warning.
+        const resolvedValue = config.validator.getResolvedValue(value);
+        const suggestedValue = config.validator.getFixedValue(
+          resolvedValue,
+          config.validator.customSuggestions
+        );
+        const isSuggestedValueValid =
+          suggestedValue &&
+          config.validator.isValidPropertyValue(
+            valueParser(suggestedValue),
+            cssCustomProperties
+          );
+
+        let warningPropertyValue = value;
+        if (isSuggestedValueValid && resolvedValue !== value) {
+          warningPropertyValue = `${value}, which resolves to ${resolvedValue},`;
+        }
+
+        let message = isSuggestedValueValid
+          ? messages.warning(warningPropertyValue, suggestedValue)
+          : messages.rejected(value, tokenCategories, fixedValue);
+        let severity = isSuggestedValueValid ? "warning" : "error";
+
+        if (
+          severity !== "warning" &&
+          config.validator.warnSystemColors &&
+          isSystemColor(value)
+        ) {
+          message = messages.warning(
+            value,
+            `${formatTokenCategory(tokenCategories)}design token`
+          );
+          severity = "warning";
+        }
 
         report({
-          message: messages.rejected(value, tokenCategories, fixedValue),
+          message,
+          severity,
           node: decl,
           result,
           ruleName,
-          fix: () => {
-            if (fixedValue !== null) {
-              decl.value = fixedValue;
-            }
-          },
+          fix,
         });
       }
     });

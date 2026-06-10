@@ -152,6 +152,10 @@ class MessagePumpKqueue : public MessagePump {
   // Scratch buffer that is used to receive the message sent to |wakeup_|.
   mach_msg_empty_rcv_t wakeup_buffer_{};
 
+  // A Mach port set used to watch ports from WatchMachReceivePort(). This is
+  // only used on macOS <10.12, where kqueues cannot watch ports directly.
+  mozilla::UniqueMachPortSet port_set_;
+
   // Watch controllers for FDs. IDs are generated from next_fd_controller_id_
   // and are stored in the kevent64_s::udata field.
   nsTHashMap<uint64_t, FileDescriptorWatcher*> fd_controllers_;

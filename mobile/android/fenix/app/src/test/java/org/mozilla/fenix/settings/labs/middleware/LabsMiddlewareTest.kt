@@ -9,7 +9,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -17,7 +16,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verify
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.labs.FeatureKey
 import org.mozilla.fenix.settings.labs.LabsFeature
@@ -33,7 +31,8 @@ import org.robolectric.RobolectricTestRunner
 class LabsMiddlewareTest {
 
     private lateinit var settings: Settings
-    private val onRestart: () -> Unit = mock()
+    private var onRestartCount = 0
+    private val onRestart: () -> Unit = { onRestartCount++ }
 
     @Before
     fun setup() {
@@ -65,7 +64,7 @@ class LabsMiddlewareTest {
 
         store.dispatch(LabsAction.RestartApplication)
 
-        verify(onRestart).invoke()
+        assertEquals(1, onRestartCount)
     }
 
     @Test

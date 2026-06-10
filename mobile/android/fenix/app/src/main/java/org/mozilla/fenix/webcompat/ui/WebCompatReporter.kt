@@ -22,13 +22,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,25 +46,24 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Dropdown
+import mozilla.components.compose.base.LinkText
+import mozilla.components.compose.base.LinkTextState
 import mozilla.components.compose.base.button.FilledButton
+import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.button.OutlinedButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.compose.base.text.Text.Resource
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.LinkText
-import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemedValue
+import org.mozilla.fenix.theme.ThemedValueProvider
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_CHOOSE_REASON_BUTTON
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_SEND_BUTTON
 import org.mozilla.fenix.webcompat.store.WebCompatReporterAction
@@ -85,7 +84,7 @@ private const val PROBLEM_DESCRIPTION_MAX_LINES = 5
 fun WebCompatReporter(
     store: WebCompatReporterStore,
 ) {
-    val state by store.observeAsState(store.state) { it }
+    val state by store.stateFlow.collectAsState()
 
     var previewSheetVisible by remember { mutableStateOf(false) }
 
@@ -115,29 +114,6 @@ fun WebCompatReporter(
                 .width(FirefoxTheme.layout.size.containerMaxWidth),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            LinkText(
-                text = stringResource(
-                    R.string.webcompat_reporter_description_3,
-                    stringResource(R.string.app_name),
-                    stringResource(R.string.webcompat_reporter_learn_more),
-                ),
-                linkTextStates = listOf(
-                    LinkTextState(
-                        text = stringResource(R.string.webcompat_reporter_learn_more),
-                        url = "",
-                        onClick = {
-                            store.dispatch(WebCompatReporterAction.LearnMoreClicked)
-                        },
-                    ),
-                ),
-                style = FirefoxTheme.typography.body2.copy(color = MaterialTheme.colorScheme.onSurface),
-                linkTextColor = MaterialTheme.colorScheme.tertiary,
-                linkTextDecoration = TextDecoration.Underline,
-                textAlign = TextAlign.Start,
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
             TextField(
                 value = state.enteredUrl,
                 onValueChange = {
@@ -229,15 +205,9 @@ fun WebCompatReporter(
 
                 Column {
                     Text(
-                        text = stringResource(id = R.string.webcompat_reporter_etp_checkbox_text),
+                        text = stringResource(id = R.string.webcompat_reporter_etp_checkbox_text_2),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = FirefoxTheme.typography.body1,
-                    )
-
-                    Text(
-                        text = stringResource(id = R.string.webcompat_reporter_etp_checkbox_description),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = FirefoxTheme.typography.body2,
                     )
                 }
             }
@@ -298,6 +268,30 @@ fun WebCompatReporter(
                     textDecoration = TextDecoration.Underline,
                 )
             }
+
+            Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static150))
+
+            LinkText(
+                text = stringResource(
+                    R.string.webcompat_reporter_description_3,
+                    stringResource(R.string.app_name),
+                    stringResource(R.string.webcompat_reporter_learn_more),
+                ),
+                linkTextStates = listOf(
+                    LinkTextState(
+                        text = stringResource(R.string.webcompat_reporter_learn_more),
+                        url = "",
+                        onClick = {
+                            store.dispatch(WebCompatReporterAction.LearnMoreClicked)
+                        },
+                    ),
+                ),
+                style = FirefoxTheme.typography.body2.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                linkTextColor = MaterialTheme.colorScheme.primary,
+                linkTextDecoration = TextDecoration.None,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.padding(bottom = FirefoxTheme.layout.space.static150),
+            )
         }
     }
 
@@ -345,10 +339,13 @@ private fun TempAppBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick,
+                contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
+            ) {
                 Icon(
                     painter = painterResource(iconsR.drawable.mozac_ic_back_24),
-                    contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
+                    contentDescription = null,
                 )
             }
         },
@@ -366,54 +363,39 @@ private fun TempAppBar(
     )
 }
 
-private class WebCompatPreviewParameterProvider : PreviewParameterProvider<WebCompatReporterState> {
-    override val values: Sequence<WebCompatReporterState>
-        get() = sequenceOf(
-            // Initial feature opening
-            WebCompatReporterState(
-                enteredUrl = "www.example.com/url_parameters_that_break_the_page",
-            ),
-            // Error in URL field
-            WebCompatReporterState(
-                enteredUrl = "",
-            ),
-            // Multi-line description
-            WebCompatReporterState(
-                enteredUrl = "www.example.com/url_parameters_that_break_the_page",
-                reason = BrokenSiteReason.Slow,
-                problemDescription = "The site wouldn’t load and after I tried xyz it still wouldn’t " +
-                        "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
-                        "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
-                        "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
-                        "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
-                        "load and then again ",
-            ),
-        )
-}
-
-@PreviewLightDark
-@Composable
-private fun WebCompatReporterPreview(
-    @PreviewParameter(WebCompatPreviewParameterProvider::class) initialState: WebCompatReporterState,
-) {
-    FirefoxTheme {
-        WebCompatReporter(
-            store = WebCompatReporterStore(
-                initialState = initialState,
-            ),
-        )
-    }
-}
+private class WebCompatPreviewParameterProvider : ThemedValueProvider<WebCompatReporterState>(
+    sequenceOf(
+        // Initial feature opening
+        WebCompatReporterState(
+            enteredUrl = "www.example.com/url_parameters_that_break_the_page",
+        ),
+        // Error in URL field
+        WebCompatReporterState(
+            enteredUrl = "",
+        ),
+        // Multi-line description
+        WebCompatReporterState(
+            enteredUrl = "www.example.com/url_parameters_that_break_the_page",
+            reason = BrokenSiteReason.Slow,
+            problemDescription = "The site wouldn’t load and after I tried xyz it still wouldn’t " +
+                    "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
+                    "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
+                    "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
+                    "load and then again site wouldn’t load and after I tried xyz it still wouldn’t " +
+                    "load and then again ",
+        ),
+    ),
+)
 
 @Preview
 @Composable
-private fun WebCompatReporterPrivatePreview(
-    @PreviewParameter(WebCompatPreviewParameterProvider::class) initialState: WebCompatReporterState,
+private fun WebCompatReporterPreview(
+    @PreviewParameter(WebCompatPreviewParameterProvider::class) state: ThemedValue<WebCompatReporterState>,
 ) {
-    FirefoxTheme(theme = Theme.Private) {
+    FirefoxTheme(state.theme) {
         WebCompatReporter(
             store = WebCompatReporterStore(
-                initialState = initialState,
+                initialState = state.value,
             ),
         )
     }

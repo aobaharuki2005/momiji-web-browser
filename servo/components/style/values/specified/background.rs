@@ -6,6 +6,7 @@
 
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
+use crate::typed_om::{KeywordValue, ToTyped, TypedValue};
 use crate::values::generics::background::BackgroundSize as GenericBackgroundSize;
 use crate::values::specified::length::{
     NonNegativeLengthPercentage, NonNegativeLengthPercentageOrAuto,
@@ -13,7 +14,8 @@ use crate::values::specified::length::{
 use cssparser::{match_ignore_ascii_case, Parser};
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
-use style_traits::{CssWriter, ParseError, ToCss};
+use style_traits::{CssString, CssWriter, ParseError, ToCss};
+use thin_vec::ThinVec;
 
 /// A specified value for the `background-size` property.
 pub type BackgroundSize = GenericBackgroundSize<NonNegativeLengthPercentage>;
@@ -51,6 +53,7 @@ impl Parse for BackgroundSize {
     ToCss,
     ToResolvedValue,
     ToShmem,
+    ToTyped,
 )]
 #[allow(missing_docs)]
 #[value_info(other_values = "repeat-x,repeat-y")]
@@ -108,6 +111,29 @@ impl ToCss for BackgroundRepeat {
                 }
                 Ok(())
             },
+        }
+    }
+}
+
+impl ToTyped for BackgroundRepeat {
+    fn to_typed(&self, dest: &mut ThinVec<TypedValue>) -> Result<(), ()> {
+        match (self.0, self.1) {
+            (BackgroundRepeatKeyword::Repeat, BackgroundRepeatKeyword::NoRepeat) => {
+                dest.push(TypedValue::Keyword(KeywordValue(CssString::from(
+                    "repeat-x",
+                ))));
+                Ok(())
+            },
+            (BackgroundRepeatKeyword::NoRepeat, BackgroundRepeatKeyword::Repeat) => {
+                dest.push(TypedValue::Keyword(KeywordValue(CssString::from(
+                    "repeat-y",
+                ))));
+                Ok(())
+            },
+            (horizontal, vertical) if horizontal == vertical => {
+                ToTyped::to_typed(&horizontal, dest)
+            },
+            _ => Err(()),
         }
     }
 }

@@ -9,8 +9,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutWelcomeDefaults:
     "resource:///modules/aboutwelcome/AboutWelcomeDefaults.sys.mjs",
-  EnrollmentType: "resource://nimbus/ExperimentAPI.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -151,6 +149,10 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.RPMGetFormatURLPref.bind(this), window, {
       defineAs: "RPMGetFormatURLPref",
     });
+
+    Cu.exportFunction(this.AWWaitForNimbus.bind(this), window, {
+      defineAs: "AWWaitForNimbus",
+    });
   }
 
   /**
@@ -214,10 +216,11 @@ export class AboutWelcomeChild extends JSWindowActorChild {
   async getAWContent() {
     let attributionData = await this.sendQuery("AWPage:GET_ATTRIBUTION_DATA");
 
-    let experimentMetadata =
-      lazy.NimbusFeatures.aboutwelcome.getEnrollmentMetadata(
-        lazy.EnrollmentType.EXPERIMENT
-      ) ?? {};
+    // Get enrollment metadata from the parent process, since the
+    // content-process view of NimbusFeatures might not contain fresh enrollments.
+    const { experimentMetadata, featureConfig } = await this.sendQuery(
+      "AWPage:GET_ABOUTWELCOME_FEATURE_CONFIG"
+    );
 
     lazy.log.debug(
       `Loading about:welcome with ${
@@ -225,7 +228,6 @@ export class AboutWelcomeChild extends JSWindowActorChild {
       } experiment`
     );
 
-    let featureConfig = lazy.NimbusFeatures.aboutwelcome.getAllVariables();
     featureConfig.needDefault = await this.sendQuery("AWPage:NEED_DEFAULT");
     featureConfig.needPin = await this.sendQuery("AWPage:DOES_APP_NEED_PIN");
     if (featureConfig.languageMismatchEnabled) {
@@ -406,6 +408,10 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     return this.sendQueryAndCloneForContent(
       "AWPage:GET_UNHANDLED_CAMPAIGN_ACTION"
     );
+  }
+
+  AWWaitForNimbus() {
+    return this.wrapPromise(this.sendQuery("AWPage:WAIT_FOR_NIMBUS"));
   }
 
   RPMGetFormatURLPref(formatURL) {

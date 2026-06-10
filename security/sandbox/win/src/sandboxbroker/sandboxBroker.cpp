@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -36,6 +34,7 @@
 #include "mozilla/WinDllServices.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/ipc/LaunchError.h"
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -414,29 +413,31 @@ static void AddLLVMProfilePathDirectoryToPolicy(
 #undef WSTRING
 
 static void EnsureAppLockerAccess(sandbox::TargetConfig* aConfig) {
-  if (aConfig->GetLockdownTokenLevel() < sandbox::USER_LIMITED) {
-    // The following rules are to allow DLLs to be loaded when the token level
-    // blocks access to AppLocker. If the sandbox does not allow access to the
-    // DLL or the AppLocker rules specifically block it, then it will not load.
-    auto result = aConfig->AllowFileAccess(
-        sandbox::FileSemantics::kAllowReadonly, L"\\Device\\SrpDevice");
-    if (sandbox::SBOX_ALL_OK != result) {
-      NS_ERROR("Failed to add rule for SrpDevice.");
-      LOG_E("Failed (ResultCode %d) to add read access to SrpDevice", result);
-    }
-    result = aConfig->AllowRegistryRead(
-        L"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Srp\\GP\\");
-    if (sandbox::SBOX_ALL_OK != result) {
-      NS_ERROR("Failed to add rule for Srp\\GP.");
-      LOG_E("Failed (ResultCode %d) to add read access to Srp\\GP", result);
-    }
-    // On certain Windows versions there is a double slash before GP.
-    result = aConfig->AllowRegistryRead(
-        L"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Srp\\\\GP\\");
-    if (sandbox::SBOX_ALL_OK != result) {
-      NS_ERROR("Failed to add rule for Srp\\\\GP.");
-      LOG_E("Failed (ResultCode %d) to add read access to Srp\\\\GP", result);
-    }
+  // At USER_LIMITED and above AppLocker is not blocked.
+  if (aConfig->GetLockdownTokenLevel() >= sandbox::USER_LIMITED) {
+    return;
+  }
+
+  // The ntdll check SaferpIsV2PolicyPresent reads from this key.
+  auto result = aConfig->AllowRegistryRead(
+      LR"(HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Srp\GP\)");
+  if (sandbox::SBOX_ALL_OK != result) {
+    NS_ERROR(R"(Failed to add rule for Srp\GP.)");
+    LOG_E(R"(Failed (ResultCode %d) to add read access to Srp\GP)", result);
+  }
+
+  // When AppLocker is deployed via Mobile Device Management, without this
+  // rule SaferpIsV2PolicyPresent silently fails to detect AppLocker, causing
+  // the AppLocker check to be bypassed entirely.
+  AddCachedWindowsDirRule(aConfig, sandbox::FileSemantics::kAllowReadonly,
+                          FOLDERID_System, uR"(\AppLocker\MDM)"_ns);
+
+  // Read access to this device is required to make the AppLocker ioctl call.
+  result = aConfig->AllowFileAccess(sandbox::FileSemantics::kAllowReadonly,
+                                    LR"(\Device\SrpDevice)");
+  if (sandbox::SBOX_ALL_OK != result) {
+    NS_ERROR("Failed to add rule for SrpDevice.");
+    LOG_E("Failed (ResultCode %d) to add read access to SrpDevice", result);
   }
 }
 
@@ -1114,9 +1115,22 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   }
 
   if (StaticPrefs::security_sandbox_content_close_ksecdd_handle()) {
-    result = config->AddKernelObjectToClose(L"File", L"\\Device\\KsecDD");
-    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
-                       "AddKernelObjectToClose should never fail.");
+    // bug 2006941 and bug 2008739 and bug 2022584 - Trellix DLP uses these
+    // functions, so don't do this if their DLLs are loaded
+    bool isTrellixDllLoaded;
+#if defined(_M_X64)
+    isTrellixDllLoaded = !!::GetModuleHandleW(L"fcagff64.dll") ||
+                         !!::GetModuleHandleW(L"fcagff64hc.dll");
+#elif defined(_M_ARM64)
+    isTrellixDllLoaded = !!::GetModuleHandleW(L"fcagffarm64hc.dll");
+#else
+    isTrellixDllLoaded = !!::GetModuleHandleW(L"fcagff.dll");
+#endif
+    if (!isTrellixDllLoaded) {
+      result = config->AddKernelObjectToClose(L"File", L"\\Device\\KsecDD");
+      MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                         "AddKernelObjectToClose should never fail.");
+    }
   }
 
   sandbox::MitigationFlags mitigations =
@@ -1194,26 +1208,9 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
 #endif
   }
 
-  if (StaticPrefs::security_sandbox_chrome_pipe_rule_enabled()) {
-    // Add the policy for the client side of a pipe. It is just a file
-    // in the \pipe\ namespace. We restrict it to pipes that start with
-    // "chrome." so the sandboxed process cannot connect to system services.
-    result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
-                                     L"\\??\\pipe\\chrome.*");
-    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
-                       "With these static arguments AddRule should never fail, "
-                       "what happened?");
-  }
-
   // Add the policy for the client side of the crash server pipe.
   result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
                                    L"\\??\\pipe\\gecko-crash-server-pipe.*");
-  MOZ_RELEASE_ASSERT(
-      sandbox::SBOX_ALL_OK == result,
-      "With these static arguments AddRule should never fail, what happened?");
-
-  // Allow content processes to use complex line breaking brokering.
-  result = config->AllowLineBreaking();
   MOZ_RELEASE_ASSERT(
       sandbox::SBOX_ALL_OK == result,
       "With these static arguments AddRule should never fail, what happened?");
@@ -1311,6 +1308,19 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       NS_ERROR("Failed to get user's SID.");
       LOG_E("Failed to get user's SID. %lx", ::GetLastError());
     }
+
+    // Required for GetUserGeoID, which is used to get timezone information.
+    bool geoRuleSet =
+        config->AllowRegistryRead(L"HKEY_CURRENT_USER") ==
+            sandbox::SBOX_ALL_OK &&
+        config->AllowRegistryRead(
+            L"HKEY_CURRENT_USER\\Control Panel\\International\\Geo") ==
+            sandbox::SBOX_ALL_OK;
+    if (!geoRuleSet) {
+      NS_ERROR("Failed to add rule for International Geo.");
+      LOG_E("Failed (ResultCode %d) to add rule for International Geo.",
+            result);
+    }
   }
 }
 
@@ -1335,6 +1345,7 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   sandbox::MitigationFlags initialMitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
+      sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL | sandbox::MITIGATION_DEP;
@@ -1361,18 +1372,14 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   config->SetLockdownDefaultDacl();
   config->AddRestrictingRandomSid();
 
-  // Policy wrapper to keep track of available rule space. The full policy has
-  // 14 pages, so 12 allows two pages for generic process rules and to allow for
-  // padding that occurs in LowLevelPolicy::Done. See bug 2009140.
-  sandboxing::SizeTrackingConfig trackingConfig(config, 12);
-
-  if (StaticPrefs::security_sandbox_chrome_pipe_rule_enabled()) {
-    // Add the policy for the client side of a pipe. It is just a file
-    // in the \pipe\ namespace. We restrict it to pipes that start with
-    // "chrome." so the sandboxed process cannot connect to system services.
-    SANDBOX_SUCCEED_OR_CRASH(trackingConfig.AllowFileAccess(
-        sandbox::FileSemantics::kAllowAny, L"\\??\\pipe\\chrome.*"));
-  }
+  // Policy wrapper to keep track of available rule space. We allow two spare
+  // pages for generic process rules and to allow for padding that occurs in
+  // LowLevelPolicy::Done. See bug 2009140.
+  // Note that we plan to move to a single font access rule in bug 2002995. This
+  // will remove the need for individual rules and mean that we can reduce
+  // sandbox::kPolMemPageCount.
+  sandboxing::SizeTrackingConfig trackingConfig(config,
+                                                sandbox::kPolMemPageCount - 2);
 
   // Add the policy for the client side of the crash server pipe.
   SANDBOX_SUCCEED_OR_CRASH(
@@ -1398,7 +1405,12 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
       sandboxing::UserFontConfigHelper configHelper(
           LR"(Software\Microsoft\Windows NT\CurrentVersion\Fonts)",
           *sWindowsProfileDir, *sLocalAppDataDir, *sRoamingAppDataDir);
-      configHelper.AddRules(trackingConfig);
+      if (!configHelper.AddRules(trackingConfig)) {
+        // We've run out of space for font rules, so fall back to
+        // USER_INTERACTIVE to maintain access to all user fonts.
+        SANDBOX_SUCCEED_OR_CRASH(config->SetTokenLevel(
+            initialTokenLevel, sandbox::USER_INTERACTIVE));
+      }
     }
   }
 }
@@ -1470,17 +1482,6 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
 
   result = AddCigToConfig(config);
   SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
-
-  if (StaticPrefs::security_sandbox_chrome_pipe_rule_enabled()) {
-    // Add the policy for the client side of a pipe. It is just a file
-    // in the \pipe\ namespace. We restrict it to pipes that start with
-    // "chrome." so the sandboxed process cannot connect to system services.
-    result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
-                                     L"\\??\\pipe\\chrome.*");
-    SANDBOX_ENSURE_SUCCESS(result,
-                           "With these static arguments AddRule should never "
-                           "fail, what happened?");
-  }
 
   // Add the policy for the client side of the crash server pipe.
   result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
@@ -1554,17 +1555,6 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
 
   result = AddCigToConfig(config);
   SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
-
-  if (StaticPrefs::security_sandbox_chrome_pipe_rule_enabled()) {
-    // Add the policy for the client side of a pipe. It is just a file
-    // in the \pipe\ namespace. We restrict it to pipes that start with
-    // "chrome." so the sandboxed process cannot connect to system services.
-    result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
-                                     L"\\??\\pipe\\chrome.*");
-    SANDBOX_ENSURE_SUCCESS(result,
-                           "With these static arguments AddRule should never "
-                           "fail, what happened?");
-  }
 
   // Add the policy for the client side of the crash server pipe.
   result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
@@ -1834,17 +1824,6 @@ bool BuildUtilitySandbox(sandbox::TargetConfig* config,
   }
 #endif
 
-  if (StaticPrefs::security_sandbox_chrome_pipe_rule_enabled()) {
-    // Add the policy for the client side of a pipe. It is just a file
-    // in the \pipe\ namespace. We restrict it to pipes that start with
-    // "chrome." so the sandboxed process cannot connect to system services.
-    result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
-                                     L"\\??\\pipe\\chrome.*");
-    SANDBOX_ENSURE_SUCCESS(result,
-                           "With these static arguments AddRule should never "
-                           "fail, what happened?");
-  }
-
   // Add the policy for the client side of the crash server pipe.
   result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
                                    L"\\??\\pipe\\gecko-crash-server-pipe.*");
@@ -1857,6 +1836,8 @@ bool BuildUtilitySandbox(sandbox::TargetConfig* config,
 
 bool SandboxBroker::SetSecurityLevelForUtilityProcess(
     mozilla::ipc::SandboxingKind aSandbox) {
+  MOZ_ASSERT(IsUtilitySandboxEnabled(aSandbox));
+
   if (!mPolicy) {
     return false;
   }
@@ -1869,16 +1850,29 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
     case mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
       return BuildUtilitySandbox(config, UtilityAudioDecodingWmfSandboxProps());
 #ifdef MOZ_WMF_MEDIA_ENGINE
-    case mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM:
-      return BuildUtilitySandbox(config, UtilityMfMediaEngineCdmSandboxProps());
+    case mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM: {
+      if (!BuildUtilitySandbox(config, UtilityMfMediaEngineCdmSandboxProps())) {
+        return false;
+      }
+      // Allow MFTEnumEx to enumerate registered MFT decoders/encoders.
+      auto result = config->AllowRegistryRead(
+          L"HKEY_LOCAL_MACHINE\\Software\\Classes\\MediaFoundation\\*");
+      if (sandbox::SBOX_ALL_OK != result) {
+        NS_WARNING("Failed to add MediaFoundation registry rule for MFCDM.");
+      }
+      // MFTEnumEx reads CLSID subkeys to enumerate registered Media Foundation
+      // Transforms. The exact CLSIDs vary per system and are not known at build
+      // time, so a wildcard covering the full CLSID hive is required.
+      result = config->AllowRegistryRead(
+          L"HKEY_LOCAL_MACHINE\\Software\\Classes\\CLSID\\*");
+      if (sandbox::SBOX_ALL_OK != result) {
+        NS_WARNING("Failed to add CLSID registry rule for MFCDM.");
+      }
+      return true;
+    }
 #endif
     case mozilla::ipc::SandboxingKind::WINDOWS_UTILS:
       return BuildUtilitySandbox(config, WindowsUtilitySandboxProps());
-    case mozilla::ipc::SandboxingKind::WINDOWS_FILE_DIALOG:
-      // This process type is not sandboxed. (See commentary in
-      // `ipc::IsUtilitySandboxEnabled()`.)
-      MOZ_ASSERT_UNREACHABLE("No sandboxing for this process type");
-      return false;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown sandboxing value");
       return false;
@@ -1965,17 +1959,6 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(
   result = config->SetDelayedProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");
-
-  if (StaticPrefs::security_sandbox_chrome_pipe_rule_enabled()) {
-    // Add the policy for the client side of a pipe. It is just a file
-    // in the \pipe\ namespace. We restrict it to pipes that start with
-    // "chrome." so the sandboxed process cannot connect to system services.
-    result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,
-                                     L"\\??\\pipe\\chrome.*");
-    SANDBOX_ENSURE_SUCCESS(result,
-                           "With these static arguments AddRule should never "
-                           "fail, what happened?");
-  }
 
   // Add the policy for the client side of the crash server pipe.
   result = config->AllowFileAccess(sandbox::FileSemantics::kAllowAny,

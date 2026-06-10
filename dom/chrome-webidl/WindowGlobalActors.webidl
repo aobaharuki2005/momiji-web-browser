@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -87,6 +86,9 @@ interface WindowGlobalParent : WindowContext {
 
   readonly attribute long osPid;
 
+  // The remote type of `this.domProcess`.
+  readonly attribute UTF8String? remoteType;
+
   // A WindowGlobalParent is the root in its process if it has no parent, or its
   // embedder is in a different process.
   readonly attribute boolean isProcessRoot;
@@ -143,6 +145,13 @@ interface WindowGlobalParent : WindowContext {
 
   static WindowGlobalParent? getByInnerWindowId(unsigned long long innerWindowId);
 
+  // Flush each live top-level WindowGlobalParent's in-memory ContentBlockingLog
+  // to the tracking database. Used by TrackingDBService to force ingestion of
+  // pending events from long-lived tabs before a read query. Applies the same
+  // gates as the existing on-destruction flush (out-of-process, non-private,
+  // top-level content).
+  static undefined flushAllContentBlockingLogs();
+
   /**
    * Get or create the JSWindowActor with the given name.
    *
@@ -180,6 +189,8 @@ interface WindowGlobalParent : WindowContext {
   // has active peer connections.  If this is called for a non-top-level
   // context, it always returns false.
   boolean hasActivePeerConnections();
+
+  undefined updateFullscreenKeyboardLockStatus(FullscreenKeyboardLock status);
 };
 
 [Exposed=Window, ChromeOnly]

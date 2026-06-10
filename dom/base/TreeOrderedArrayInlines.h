@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,8 +13,9 @@
 
 namespace mozilla::dom {
 
-template <typename Node>
-size_t TreeOrderedArray<Node>::Insert(Node& aNode, nsINode* aCommonAncestor) {
+template <typename Node, TreeKind K>
+size_t TreeOrderedArray<Node, K>::Insert(Node& aNode,
+                                         nsINode* aCommonAncestor) {
   static_assert(std::is_base_of_v<nsINode, Node>, "Should be a node");
 
   auto span = Base::AsSpan();
@@ -35,8 +34,8 @@ size_t TreeOrderedArray<Node>::Insert(Node& aNode, nsINode* aCommonAncestor) {
       auto* curNode = static_cast<Node*>(aNode);
       MOZ_DIAGNOSTIC_ASSERT(curNode != &mNode,
                             "Tried to insert a node already in the list");
-      return nsContentUtils::CompareTreePosition<TreeKind::DOM>(
-          &mNode, curNode, mCommonAncestor, &mCache);
+      return nsContentUtils::CompareTreePosition<K>(&mNode, curNode,
+                                                    mCommonAncestor, &mCache);
     }
   };
 

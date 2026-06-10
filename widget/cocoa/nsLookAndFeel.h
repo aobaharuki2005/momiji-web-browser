@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,11 +34,15 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   // Having a separate, static method allows us to rely on the same
   // chunk of telemetry logging code at initialization and when we
-  // recieve an event that changes the value of our telemetry probe.
+  // receive an event that changes the value of our telemetry probe.
   static void RecordAccessibilityTelemetry();
-
+  static bool UseOverlayScrollbars();
  protected:
   bool mInitialized = false;
+
+  static bool SystemWantsOverlayScrollbars();
+  static bool AllowOverlayScrollbarsOverlap();
+
 };
 
 #endif  // nsLookAndFeel_h_

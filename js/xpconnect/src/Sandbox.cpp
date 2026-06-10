@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -42,6 +40,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
+#include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/CSSPositionTryDescriptorsBinding.h"
 #include "mozilla/dom/CSSRuleBinding.h"
@@ -378,6 +377,31 @@ static bool SandboxCreateStorage(JSContext* cx, JS::HandleObject obj) {
   return JS_DefineProperty(cx, obj, "storage", wrapped, JSPROP_ENUMERATE);
 }
 
+// Prior to bug 2013389, the following DOM objects would be structured-cloned
+// into the inner window's realm when `structuredClone` is called from an
+// extension content script. All other objects would remain within the content
+// script's realm. This method is used to retain this historic behaviour.
+//
+// See bug 2017797 for discussion about this behaviour.
+static bool LegacyShouldCloneIntoWindow(JS::Handle<JSObject*> obj) {
+  return IS_INSTANCE_OF(Blob, obj) || IS_INSTANCE_OF(Directory, obj) ||
+         IS_INSTANCE_OF(FileList, obj) || IS_INSTANCE_OF(FormData, obj) ||
+         IS_INSTANCE_OF(ImageBitmap, obj) || IS_INSTANCE_OF(VideoFrame, obj) ||
+         IS_INSTANCE_OF(EncodedVideoChunk, obj) ||
+         IS_INSTANCE_OF(AudioData, obj) ||
+         IS_INSTANCE_OF(EncodedAudioChunk, obj) ||
+#ifdef MOZ_WEBRTC
+         IS_INSTANCE_OF(RTCEncodedVideoFrame, obj) ||
+         IS_INSTANCE_OF(RTCEncodedAudioFrame, obj) ||
+         IS_INSTANCE_OF(RTCDataChannel, obj) ||
+#endif
+         IS_INSTANCE_OF(MessagePort, obj) ||
+         IS_INSTANCE_OF(OffscreenCanvas, obj) ||
+         IS_INSTANCE_OF(ReadableStream, obj) ||
+         IS_INSTANCE_OF(WritableStream, obj) ||
+         IS_INSTANCE_OF(TransformStream, obj);
+}
+
 static bool SandboxStructuredClone(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -386,22 +410,44 @@ static bool SandboxStructuredClone(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedDictionary<dom::StructuredSerializeOptions> options(cx);
-  BindingCallContext callCx(cx, "structuredClone");
   if (!options.Init(cx, args.hasDefined(1) ? args[1] : JS::NullHandleValue,
                     "Argument 2", false)) {
     return false;
   }
 
-  nsIGlobalObject* global = CurrentNativeGlobal(cx);
+  // NOTE: A spec-compliant structuredClone should determine & use the relevant
+  // global instead of the current global.
+  nsCOMPtr<nsIGlobalObject> global = CurrentNativeGlobal(cx);
   if (!global) {
     JS_ReportErrorASCII(cx, "structuredClone: Missing global");
     return false;
+  }
+
+  // If this is a content script, we may want to clone into that window instead.
+  // See the comment on LegacyShouldCloneIntoWindow for details.
+  if (IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()) &&
+      StaticPrefs::extensions_webextensions_legacyStructuredCloneBehavior() &&
+      args[0].isObject()) {
+    JS::Rooted<JSObject*> obj(cx, &args[0].toObject());
+    if (LegacyShouldCloneIntoWindow(obj)) {
+      RefPtr<nsGlobalWindowInner> window =
+          SandboxWindowOrNull(global->GetGlobalJSObject(), cx);
+      if (window) {
+        global = window;
+      }
+    }
   }
 
   JS::Rooted<JS::Value> result(cx);
   ErrorResult rv;
   nsContentUtils::StructuredClone(cx, global, args[0], options, &result, rv);
   if (rv.MaybeSetPendingException(cx)) {
+    return false;
+  }
+
+  // Because we specified a custom `global`, the returned value may not be in
+  // our realm.
+  if (!mozilla::dom::MaybeWrapValue(cx, &result)) {
     return false;
   }
 
@@ -536,16 +582,11 @@ static size_t sandbox_moved(JSObject* obj, JSObject* old) {
   (XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET)
 
 static const JSClassOps SandboxClassOps = {
-    nullptr,                         // addProperty
-    nullptr,                         // delProperty
-    nullptr,                         // enumerate
-    JS_NewEnumerateStandardClasses,  // newEnumerate
-    JS_ResolveStandardClass,         // resolve
-    JS_MayResolveStandardClass,      // mayResolve
-    sandbox_finalize,                // finalize
-    nullptr,                         // call
-    nullptr,                         // construct
-    JS_GlobalObjectTraceHook,        // trace
+    .newEnumerate = JS_NewEnumerateStandardClasses,
+    .resolve = JS_ResolveStandardClass,
+    .mayResolve = JS_MayResolveStandardClass,
+    .finalize = sandbox_finalize,
+    .trace = JS_GlobalObjectTraceHook,
 };
 
 static const js::ClassExtension SandboxClassExtension = {
@@ -1260,6 +1301,14 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
   }
   MOZ_ASSERT(principal);
 
+  nsGlobalWindowInner* windowOfProto = nullptr;
+  if (options.proto) {
+    RootedObject unwrappedProto(cx, js::UncheckedUnwrap(options.proto, false));
+    if (principal->Subsumes(nsContentUtils::ObjectPrincipal(unwrappedProto))) {
+      windowOfProto = WindowGlobalOrNull(unwrappedProto);
+    }
+  }
+
   JS::RealmOptions realmOptions;
 
   auto& creationOptions = realmOptions.creationOptions();
@@ -1276,6 +1325,10 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
   }
 
   xpc::SetPrefableRealmOptions(realmOptions);
+  if (!isSystemPrincipal &&
+      (!windowOfProto || !windowOfProto->CrossOriginIsolated())) {
+    creationOptions.setDefineSharedArrayBufferConstructor(false);
+  }
   if (options.sameZoneAs) {
     creationOptions.setNewCompartmentInExistingZone(
         js::UncheckedUnwrap(options.sameZoneAs));
@@ -1289,6 +1342,14 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
     creationOptions.setExistingCompartment(xpc::PrivilegedJunkScope());
   } else {
     creationOptions.setNewCompartmentInSystemZone();
+  }
+
+  bool freezeBuiltins = isSystemPrincipal;
+  if (options.freezeBuiltins.isSome()) {
+    freezeBuiltins = options.freezeBuiltins.value();
+  }
+  if (freezeBuiltins) {
+    creationOptions.setFreezeBuiltins(true);
   }
 
   if (options.alwaysUseFdlibm) {
@@ -1741,6 +1802,28 @@ bool OptionsBase::ParseBoolean(const char* name, bool* prop) {
 }
 
 /*
+ * Helper that tries to get an optional bool property from the options object.
+ */
+bool OptionsBase::ParseOptionalBoolean(const char* name, Maybe<bool>& prop) {
+  RootedValue value(mCx);
+  bool found;
+  bool ok = ParseValue(name, &value, &found);
+  NS_ENSURE_TRUE(ok, false);
+
+  if (!found) {
+    return true;
+  }
+
+  if (!value.isBoolean()) {
+    JS_ReportErrorASCII(mCx, "Expected a boolean value for property %s", name);
+    return false;
+  }
+
+  prop = Some(value.toBoolean());
+  return true;
+}
+
+/*
  * Helper that tries to get an object property from the options object.
  */
 bool OptionsBase::ParseObject(const char* name, MutableHandleObject prop) {
@@ -1949,6 +2032,7 @@ bool SandboxOptions::Parse() {
                                 sandboxContentSecurityPolicy) &&
             ParseString("sandboxName", sandboxName) &&
             ParseObject("sameZoneAs", &sameZoneAs) &&
+            ParseOptionalBoolean("freezeBuiltins", freezeBuiltins) &&
             ParseBoolean("freshCompartment", &freshCompartment) &&
             ParseBoolean("freshZone", &freshZone) &&
             ParseBoolean("invisibleToDebugger", &invisibleToDebugger) &&

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -21,6 +19,8 @@
 #ifdef MOZ_WIDGET_UIKIT
 #  include <CoreFoundation/CoreFoundation.h>
 #endif
+#include "gfxPlatform.h"  // just for HasVariationFontSupport()
+#include "nsCocoaFeatures.h"
 #include "mozilla/gfx/Logging.h"
 
 #ifdef MOZ_WIDGET_COCOA
@@ -102,10 +102,10 @@ CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize,
     return ctFont.forget();
   }
 #endif
-
   // Older implementation used up to macOS 12.
   CTFontRef ctFont;
-  if (aInstalledFont) {
+  if (nsCocoaFeatures::OnSierraExactly() ||
+        (aInstalledFont && nsCocoaFeatures::OnHighSierraOrLater())) {
     AutoRelease<CFDictionaryRef> vars(CGFontCopyVariations(aCGFont));
     if (vars) {
       AutoRelease<CFDictionaryRef> varAttr(CFDictionaryCreate(
@@ -375,6 +375,17 @@ bool UnscaledFontMac::GetFontDescriptor(FontDescriptorOutput aCb,
     return false;
   }
 
+  // Bug 1690235: using a font descriptor may fail for variation fonts
+  // on systems prior to 10.15, so we return false in this case.
+  if (gfxPlatform::GetPlatform()->HasVariationFontSupport() &&
+      !nsCocoaFeatures::OnCatalinaOrLater()) {
+    CFDataRef data = CGFontCopyTableForTag(mFont, 0x66766172);  // 'fvar'
+    if (data) {
+      CFRelease(data);
+      return false;
+    }
+  }
+
   AutoRelease<CFStringRef> psname(CGFontCopyPostScriptName(mFont));
   if (!psname) {
     return false;
@@ -435,6 +446,11 @@ static void CollectVariationsFromDictionary(const void* aKey,
 
 static bool GetVariationsForCTFont(CTFontRef aCTFont,
                                    std::vector<FontVariation>* aOutVariations) {
+  // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+  // versions (see bug 1331683)
+  if (!nsCocoaFeatures::OnSierraOrLater()) {
+    return true;
+  }
   if (!aCTFont) {
     return true;
   }
@@ -508,6 +524,12 @@ ScaledFontMac::InstanceData::InstanceData(
 static CFDictionaryRef CreateVariationDictionaryOrNull(
     CGFontRef aCGFont, CFArrayRef& aCGAxesCache, CFArrayRef& aCTAxesCache,
     uint32_t aVariationCount, const FontVariation* aVariations) {
+  // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+  // versions (see bug 1331683)
+  if (!nsCocoaFeatures::OnSierraOrLater()) {
+    return nullptr;
+  }
+
   if (!aCGAxesCache) {
     aCGAxesCache = CGFontCopyVariationAxes(aCGFont);
     if (!aCGAxesCache) {
@@ -617,6 +639,12 @@ static CFDictionaryRef CreateVariationDictionaryOrNull(
 static CFDictionaryRef CreateVariationTagDictionaryOrNull(
     CTFontRef aCTFont, uint32_t aVariationCount,
     const FontVariation* aVariations) {
+  // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+  // versions (see bug 1331683)
+  if (!nsCocoaFeatures::OnSierraOrLater()) {
+    return nullptr;
+  }
+
   AutoRelease<CFArrayRef> axes(CTFontCopyVariationAxes(aCTFont));
   CFIndex axisCount = CFArrayGetCount(axes);
 
@@ -784,7 +812,7 @@ cairo_font_face_t* ScaledFontMac::CreateCairoFontFace(
 
 already_AddRefed<UnscaledFont> UnscaledFontMac::CreateFromFontDescriptor(
     const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex) {
-  if (aDataLength == 0) {
+  if (aDataLength == 0 || aIndex > aDataLength) {
     gfxWarning() << "Mac font descriptor is truncated.";
     return nullptr;
   }

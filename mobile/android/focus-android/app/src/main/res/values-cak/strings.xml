@@ -562,6 +562,8 @@
   <string name="tabs_tray_action_erase">Tiyuj runatab\'al okem pa k\'amaya\'l</string>
   <!-- Label for the option in the Focus "tabs tray" to clos the other tabs except the current tab. -->
   <string name="tabs_tray_action_erase_other">Ketz\'apïx ri ch\'aqa\' chik taq ruwi\'</string>
+  <!-- Label for the option in the Focus "tabs tray" to add a new tab. -->
+  <string name="tabs_tray_action_add_new_tab">Titz\'aqatisäx k\'ak\'a\' ruwi\'</string>
   <!--
     If the user decides to open the current page in another browser and if Firefox is not installed then we show this
     item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play).
@@ -582,6 +584,21 @@
   <string name="security_popup_security_verified">Jikib\'an ruma: %1$s</string>
   <!-- Content Description of Security Icon in toolbar -->
   <string name="site_security_icon_content_description">Rujikomal Ruxaq K\'amaya\'l</string>
+  <!--
+    %1$s will be replaced with the organization for which the certificate
+    used by the site was issued. For example, the certificate in use by
+    the site https://eidas.ec.europa.eu/ was issued to "The European
+    Commission".
+  -->
+  <string name="qualified_identity">Iqitzijib\'äl talun richin %1$s</string>
+  <!--
+    The European Union eIDAS Regulation specifies a type of certificate
+    called a "qualified website authentication certificate" (QWAC) and
+    requires that browsers identify and indicate such certificates. This
+    text was paraphrased from ETSI TS 119 411-5 V2.1.1 section 6.3 and
+    indicates that the website uses a QWAC.
+  -->
+  <string name="qualified_text">Rojqan taq ajowaxïk ejikib\'an pa ri Rutaqonem (EU) 2024/1183.</string>
   <string name="preference_autocomplete_duplicate_url_error">K\'o chik ri URL</string>
   <!-- Label for the Find in page button -->
   <string name="find_in_page">Tikanöx pa Ruxaq</string>
@@ -666,7 +683,7 @@
 
     CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text.
   -->
-  <string name="cfr_cookie_banner">%1$s Tatojtob\'ej ye\'axutuj ri kik\'utuxik taq kuki richin ye\'ajech\'ej ri itzel taq kitzijol kuki.\n\nKenuk\'samajïx ri kajowaxik kitzijol taq kuki pa %2$s.</string>
+  <string name="cfr_cookie_banner">%1$s Tatojtob\'ej ye\'axutuj ri kik\'utuxik taq kuki richin ye\'ajech\'ej ri itzel taq kitzijol kuki. Kenuk\'samajïx ri kajowaxik kitzijol taq kuki pa %2$s.</string>
   <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
   <string name="cfr_cookie_banner_link">taq nuk\'ulem</string>
   <!-- Preference for autoplay -->
@@ -876,11 +893,11 @@
     The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s is the name of the app (for example "Firefox Focus" or "Firefox Klar"),
     %2$s is a URL to a support article. Contains a button that will redirect the user to Privacy & Security Screen.
   -->
-  <string name="errorpage_httpsonly_message2" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[%1$s Tatojtob\'ej nawokisaj jun HTTPS okem toq k\'atzinel richin jun nïm jikib\'anem. <a href=\"%2$s\">Tetamäx ch\'aqa\' chik</a> <br/><br/> Ütz nijal pa Runuk\'ulem > Ichinanem chuqa\' jikib\'anem > Jikib\'anem.]]></string>
+  <string name="errorpage_httpsonly_message2" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[%1$s Tatojtob\'ej nawokisaj jun HTTPS okem toq k\'atzinel richin jun nïm jikib\'anem. <a href=\"%2$s\">Tetamäx ch\'aqa\' chik</a> <br/><br/>\nÜtz nijal pa Runuk\'ulem > Ichinanem chuqa\' jikib\'anem > Jikib\'anem.]]></string>
   <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
   <string name="mozac_browser_errorpages_security_bad_cert_title">Man ütz ta okem</string>
   <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
-  <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[Rik\'in jub\'a\' jun ruk\'ayewal ri runuk\'ulem ruk\'u\'x samaj, o chuqa\' k\'o ri tajin nik\'exo ri ruk\'u\'x samaj. <br/><br/> We at jikïl chi atokinäq chik ütz pa re ruk\'u\'x samaj re\', to ri sachoj xa xe jun ti mej xtub\'än.]]></string>
+  <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[Rik\'in jub\'a\' jun ruk\'ayewal ri runuk\'ulem ruk\'u\'x samaj, o chuqa\' k\'o ri tajin nik\'exo ri ruk\'u\'x samaj. <br/><br/>\nWe at jikïl chi atokinäq chik ütz pa re ruk\'u\'x samaj re\', to ri sachoj xa xe jun ti mej xtub\'än.]]></string>
   <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
   <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Rik\'in jub\'a\' k\'o noxk\'ob\'en ri ruxaq ruma ri\' yak\'oje\' pa k\'ayewal pe k\'a nasamajij el.</label> <br><br>\n<label>%1$s man nukuqub\'a\' ta ruk\'u\'x chi rij <b>%2$s</b> ruma man etaman ta ruwäch ri xya\'o ri iqitzijob\'al, ri iqitzijob\'al ruyon juch\'un o ri ruk\'u\'x samaj man yerutäq ta ri nik\'aj ütz taq iqitizjob\'al.</label>]]></string>
   <!--

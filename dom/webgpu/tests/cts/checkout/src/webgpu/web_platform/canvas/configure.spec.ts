@@ -220,7 +220,7 @@ g.test('usage')
   .fn(t => {
     const { canvasType, usage } = t.params;
 
-    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
     if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
       t.skipIfTransientAttachmentNotSupported();
     }
@@ -355,7 +355,7 @@ g.test('invalid_usage')
   .fn(t => {
     const { canvasType, format, usage } = t.params;
 
-    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
     if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
       t.skipIfTransientAttachmentNotSupported();
     }
@@ -532,7 +532,7 @@ g.test('viewFormats')
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-    const compatible = textureFormatsAreViewCompatible(t.device, format, viewFormat);
+    const compatible = textureFormatsAreViewCompatible(t.device.features, format, viewFormat);
 
     // Test configure() produces an error if the formats aren't compatible.
     t.expectValidationError(() => {

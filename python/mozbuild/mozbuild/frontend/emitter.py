@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import functools
 import logging
 import os
 import sys
@@ -16,7 +17,7 @@ from mach.mixin.logging import LoggingMixin
 from mozpack.chrome.manifest import Manifest
 
 from mozbuild.base import ExecutionSummary
-from mozbuild.util import HierarchicalStringList, memoize
+from mozbuild.util import HierarchicalStringList
 
 from ..testing import REFTEST_FLAVORS, TEST_MANIFESTS, SupportFilesConverter
 from .context import Context, ObjDirPath, Path, SourcePath, SubContext
@@ -44,6 +45,7 @@ from .data import (
     InstallationTarget,
     IPDLCollection,
     JARManifest,
+    JsShellArchive,
     LegacyRunTests,
     Library,
     Linkable,
@@ -273,7 +275,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     contexts[os.path.normcase(lib.objdir)],
                 )
 
-        @memoize
+        @functools.cache
         def rust_libraries(obj):
             libs = []
             for o in obj.linked_libraries:
@@ -497,7 +499,7 @@ class TreeMetadataEmitter(LoggingMixin):
             self._static_linking_shared.add(obj)
         obj.link_library(candidates[0])
 
-    @memoize
+    @functools.cache
     def _get_external_library(self, dir, name, force_static):
         # Create ExternalStaticLibrary or ExternalSharedLibrary object with a
         # context more or less truthful about where the external library is.
@@ -708,7 +710,16 @@ class TreeMetadataEmitter(LoggingMixin):
                         )
 
                     check_unique_binary(program, kind)
-                    self._binaries[program] = cls(context, program, cargo_file)
+                    features = context.get(cls.FEATURES_VAR, [])
+                    unique_features = set(features)
+                    if len(features) != len(unique_features):
+                        raise SandboxValidationError(
+                            f"features for {program} should not contain duplicates: {features}",
+                            context,
+                        )
+                    self._binaries[program] = cls(
+                        context, program, cargo_file, features
+                    )
                     self._linkage.append((
                         context,
                         self._binaries[program],
@@ -999,6 +1010,30 @@ class TreeMetadataEmitter(LoggingMixin):
                         context,
                     )
                 seen[basename] = (src, symbol)
+
+        extra_link_deps = context.get("EXTRA_LINK_DEPS")
+        if extra_link_deps:
+            link_targets = [
+                l
+                for l in linkables
+                if isinstance(l, (Program, SimpleProgram, SharedLibrary))
+            ]
+            if not link_targets:
+                raise SandboxValidationError(
+                    "EXTRA_LINK_DEPS is set but no program or shared library "
+                    "is defined in this directory.",
+                    context,
+                )
+            for dep in extra_link_deps:
+                if isinstance(dep, SourcePath) and not os.path.exists(dep.full_path):
+                    raise SandboxValidationError(
+                        f"Path specified in EXTRA_LINK_DEPS does not exist: {dep} "
+                        f"(resolved to {dep.full_path})",
+                        context,
+                    )
+            deps = list(extra_link_deps)
+            for linkable in link_targets:
+                linkable.extra_link_deps = deps
 
         # Only emit sources if we have linkables defined in the same context.
         # Note the linkables are not emitted in this function, but much later,
@@ -1586,6 +1621,9 @@ class TreeMetadataEmitter(LoggingMixin):
         if run_tests := context.get("LEGACY_RUN_TESTS", []):
             yield LegacyRunTests(context, run_tests)
 
+        if jsshell_files := context.get("JS_SHELL_ARCHIVE_FILES", []):
+            yield JsShellArchive(context, jsshell_files)
+
         rust_tests = context.get("RUST_TESTS", [])
         if rust_tests:
             # TODO: more sophisticated checking of the declared name vs.
@@ -1745,6 +1783,16 @@ class TreeMetadataEmitter(LoggingMixin):
                         )
                     inputs.append(p)
 
+                extra_deps = []
+                for d in flags.extra_deps:
+                    p = Path(context, d)
+                    if isinstance(p, SourcePath) and not os.path.exists(p.full_path):
+                        raise SandboxValidationError(
+                            f"extra_dep for generating {f} does not exist: {p.full_path}",
+                            context,
+                        )
+                    extra_deps.append(p)
+
                 yield GeneratedFile(
                     context,
                     script,
@@ -1754,6 +1802,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     flags.flags,
                     localized=localized,
                     force=flags.force,
+                    extra_deps=extra_deps,
                 )
 
     def _process_test_manifests(self, context):

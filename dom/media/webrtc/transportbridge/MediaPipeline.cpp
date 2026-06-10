@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,7 +7,6 @@
 #include "MediaPipeline.h"
 
 #include <inttypes.h>
-#include <math.h>
 
 #include <sstream>
 #include <utility>
@@ -262,7 +260,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mRtpBytesSent(0),
       mRtpBytesReceived(0),
       mPc(aPc),
-      mRtpHeaderExtensionMap(new webrtc::RtpHeaderExtensionMap()),
+      mRtpHeaderExtensionMap(MakeUnique<webrtc::RtpHeaderExtensionMap>()),
       mPacketDumper(PacketDumper::GetPacketDumper(mPc)) {
   if (mDirection == DirectionType::TRANSMIT) {
     mRtpSendEventListener = mConduit->SenderRtpSendEvent().Connect(
@@ -385,7 +383,7 @@ void MediaPipeline::GetContributingSourceStats(
   // Get the expiry from now
   DOMHighResTimeStamp expiry =
       RtpCSRCStats::GetExpiryFromTime(GetTimestampMaker().GetNow().ToDom());
-  for (auto info : mCsrcStats) {
+  for (const auto& info : mCsrcStats) {
     if (!info.second.Expired(expiry)) {
       RTCRTPContributingSourceStats stats;
       info.second.GetWebidlInstance(stats, aInboundRtpStreamId);
@@ -766,7 +764,7 @@ MediaPipelineTransmit::MediaPipelineTransmit(
                     std::move(aConduit)),
       mWatchManager(this, AbstractThread::MainThread()),
       mIsVideo(aIsVideo),
-      mListener(new PipelineListener(mConduit)),
+      mListener(MakeRefPtr<PipelineListener>(mConduit)),
       mDomTrack(nullptr, "MediaPipelineTransmit::mDomTrack"),
       mSendTrackOverride(nullptr, "MediaPipelineTransmit::mSendTrackOverride") {
   if (!IsVideo()) {
@@ -1427,7 +1425,7 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     : MediaPipelineReceive(aPc, std::move(aTransportHandler),
                            std::move(aCallThread), std::move(aStsThread),
                            std::move(aConduit)),
-      mListener(aSource ? new PipelineListener(
+      mListener(aSource ? MakeRefPtr<PipelineListener>(
                               std::move(aSource), std::move(aTrackingId),
                               mConduit, std::move(aPrincipalHandle), aPrivacy)
                         : nullptr) {
@@ -1606,8 +1604,8 @@ MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     : MediaPipelineReceive(aPc, std::move(aTransportHandler),
                            std::move(aCallThread), std::move(aStsThread),
                            std::move(aConduit)),
-      mRenderer(new PipelineRenderer(this)),
-      mListener(aSource ? new PipelineListener(
+      mRenderer(MakeRefPtr<PipelineRenderer>(this)),
+      mListener(aSource ? MakeRefPtr<PipelineListener>(
                               std::move(aSource), std::move(aTrackingId),
                               std::move(aPrincipalHandle), aPrivacy)
                         : nullptr) {

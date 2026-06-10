@@ -16,7 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AIWindow:
     "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -45,23 +44,11 @@ export let NewTabPagePreloading = {
    * Create a browser in the right process type.
    */
   _createBrowser(win) {
-    const {
-      gBrowser,
-      gMultiProcessBrowser,
-      gFissionBrowser,
-      BROWSER_NEW_TAB_URL,
-    } = win;
+    const { gBrowser, BROWSER_NEW_TAB_URL } = win;
 
-    let oa = lazy.E10SUtils.predictOriginAttributes({ window: win });
-
-    let remoteType = lazy.E10SUtils.getRemoteTypeForURI(
-      BROWSER_NEW_TAB_URL,
-      gMultiProcessBrowser,
-      gFissionBrowser,
-      lazy.E10SUtils.DEFAULT_REMOTE_TYPE,
-      null,
-      oa
-    );
+    let remoteType = ChromeUtils.predictRemoteTypeForURI(BROWSER_NEW_TAB_URL, {
+      window: win,
+    });
     let browser = gBrowser.createBrowser({
       isPreloadBrowser: true,
       remoteType,
@@ -123,9 +110,12 @@ export let NewTabPagePreloading = {
 
     // Don't bother creating a preload browser if we're not in the top set of windows:
     let windowPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(window);
+    let windowAIWindow = lazy.AIWindow.isAIWindowActive(window);
     let countKey = windowPrivate ? "private" : "normal";
     let topWindows = lazy.BrowserWindowTracker.orderedWindows.filter(
-      w => lazy.PrivateBrowsingUtils.isWindowPrivate(w) == windowPrivate
+      w =>
+        lazy.PrivateBrowsingUtils.isWindowPrivate(w) == windowPrivate &&
+        lazy.AIWindow.isAIWindowActive(w) == windowAIWindow
     );
     if (topWindows.indexOf(window) >= this.MAX_COUNT) {
       return;
@@ -144,7 +134,8 @@ export let NewTabPagePreloading = {
     }
 
     let browser = this._createBrowser(window);
-    browser.loadURI(Services.io.newURI(window.BROWSER_NEW_TAB_URL), {
+    let tabURI = Services.io.newURI(window.BROWSER_NEW_TAB_URL);
+    browser.loadURI(tabURI, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     browser.docShellIsActive = false;
@@ -152,7 +143,6 @@ export let NewTabPagePreloading = {
     window.gURLBar.getBrowserState(browser).urlbarFocused = true;
 
     // Make sure the preloaded browser is loaded with desired zoom level
-    let tabURI = Services.io.newURI(window.BROWSER_NEW_TAB_URL);
     window.FullZoom.onLocationChange(tabURI, false, browser);
 
     this.browserCounts[countKey]++;

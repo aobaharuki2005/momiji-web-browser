@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,6 +24,10 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsPrintfCString.h"
+
+#if defined(MOZ_WIDGET_COCOA)
+#  include "nsCocoaFeatures.h"
+#endif
 
 ////////////////////
 // Minimum value constants defined in GLES 2.0.25 $6.2 "State Tables":
@@ -484,6 +487,16 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
     gl->fEnable(LOCAL_GL_PROGRAM_POINT_SIZE);
   }
 
+#ifdef XP_MACOSX
+  if (gl->WorkAroundDriverBugs() && gl->Vendor() == gl::GLVendor::ATI &&
+      !nsCocoaFeatures::IsAtLeastVersion(10, 9)) {
+    // The Mac ATI driver, in all known OSX version up to and including
+    // 10.8, renders points sprites upside-down. (Apple bug 11778921)
+    gl->fPointParameterf(LOCAL_GL_POINT_SPRITE_COORD_ORIGIN,
+                         LOCAL_GL_LOWER_LEFT);
+  }
+#endif
+
   if (gl->IsSupported(gl::GLFeature::seamless_cube_map_opt_in)) {
     gl->fEnable(LOCAL_GL_TEXTURE_CUBE_MAP_SEAMLESS);
   }
@@ -607,7 +620,7 @@ bool WebGLContext::ValidateFramebufferTarget(GLenum target) const {
       break;
   }
 
-  if (MOZ_LIKELY(isValid)) {
+  if (isValid) [[likely]] {
     return true;
   }
 

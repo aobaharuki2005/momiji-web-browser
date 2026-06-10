@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -347,11 +346,12 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 
   NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
   [NSGraphicsContext
-      setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:ctx
+      setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx
                                                                 flipped:NO]];
 
-  [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
-
+  if(@available(macOS 10.9, *)) {
+     [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
+  }
   [NSGraphicsContext setCurrentContext:oldContext];
 
   CGContextRelease(ctx);

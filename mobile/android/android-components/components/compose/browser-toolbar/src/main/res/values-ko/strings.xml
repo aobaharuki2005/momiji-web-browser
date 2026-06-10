@@ -22,5 +22,5 @@
   <!-- Text for the description displayed in the contextual feature recommendation popup promoting the new toolbar redesign. -->
   <string name="mozac_toolbar_cfr_description">우아하고 현대적인 느낌으로 디자인을 새롭게 단장했습니다.</string>
   <!-- Content description (not visible, for screen readers etc.) for the "minimal toolbar" containing just the URL instead of the big toolbar containing also other buttons. %1$s will be replaced with the domain name of the current website. -->
-  <string name="mozac_minimal_display_toolbar_content_description">%1$s에 텍스트 입력 중. 중지하려면 두 번 누르세요</string>
+  <string name="mozac_minimal_display_toolbar_content_description">%1$s에 텍스트 입력 중. 중지하려면 두 번 탭하세요</string>
 </resources>

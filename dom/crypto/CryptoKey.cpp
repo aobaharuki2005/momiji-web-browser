@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -183,38 +181,39 @@ void CryptoKey::GetType(nsString& aRetVal) const {
 
 bool CryptoKey::Extractable() const { return (mAttributes & EXTRACTABLE); }
 
-void CryptoKey::GetAlgorithm(JSContext* cx,
+void CryptoKey::GetAlgorithm(JSContext* aCx,
                              JS::MutableHandle<JSObject*> aRetVal,
                              ErrorResult& aRv) const {
   bool converted = false;
-  JS::Rooted<JS::Value> val(cx);
+  JS::Rooted<JS::Value> val(aCx);
   switch (mAlgorithm.mType) {
     case KeyAlgorithmProxy::AES:
-      converted = ToJSValue(cx, mAlgorithm.mAes, &val);
+      converted = ToJSValue(aCx, mAlgorithm.mAes, &val);
       break;
     case KeyAlgorithmProxy::KDF:
-      converted = ToJSValue(cx, mAlgorithm.mKDF, &val);
+      converted = ToJSValue(aCx, mAlgorithm.mKDF, &val);
       break;
     case KeyAlgorithmProxy::HMAC:
-      converted = ToJSValue(cx, mAlgorithm.mHmac, &val);
+      converted = ToJSValue(aCx, mAlgorithm.mHmac, &val);
       break;
     case KeyAlgorithmProxy::RSA: {
-      RootedDictionary<RsaHashedKeyAlgorithm> rsa(cx);
-      converted = mAlgorithm.mRsa.ToKeyAlgorithm(cx, rsa, aRv);
-      if (converted) {
-        converted = ToJSValue(cx, rsa, &val);
+      RootedDictionary<RsaHashedKeyAlgorithm> rsa(aCx);
+      mAlgorithm.mRsa.ToKeyAlgorithm(aCx, rsa, aRv);
+      if (aRv.Failed()) {
+        return;
       }
+      converted = ToJSValue(aCx, rsa, &val);
       break;
     }
     case KeyAlgorithmProxy::EC:
-      converted = ToJSValue(cx, mAlgorithm.mEc, &val);
+      converted = ToJSValue(aCx, mAlgorithm.mEc, &val);
       break;
     case KeyAlgorithmProxy::OKP:
-      converted = ToJSValue(cx, mAlgorithm.mEd, &val);
+      converted = ToJSValue(aCx, mAlgorithm.mEd, &val);
       break;
   }
   if (!converted) {
-    aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
+    aRv.NoteJSContextException(aCx);
     return;
   }
 

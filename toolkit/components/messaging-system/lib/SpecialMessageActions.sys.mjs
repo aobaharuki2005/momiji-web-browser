@@ -9,23 +9,30 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
-  // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
-  AIWindowAccountAuth:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowAccountAuth.sys.mjs",
+  AIWindow:
+    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
   // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   GenAI: "resource:///modules/GenAI.sys.mjs",
+  IPProtection:
+    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+    "moz-src:///browser/components/ipprotection/IPProtection.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+  ON_SERVICE_ENABLED_NOTIFICATION:
+    "resource://gre/modules/FxAccountsCommon.sys.mjs",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
   SelectableProfileService:
     "resource:///modules/profiles/SelectableProfileService.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
   Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
   // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
@@ -113,6 +120,58 @@ export const SpecialMessageActions = {
   },
 
   /**
+   * Pin a web app (Taskbar Tab) to the taskbar by manifest data, without
+   * requiring the site to be open or previously visited.
+   *
+   * Returns true if the tab was newly created and pinned, null if a Taskbar
+   * Tab for this URL already existed, or false if an error occurred.
+   *
+   * NOTE: findOrCreateTaskbarTab resolves once the taskbar tab is registered,
+   * not once it has actually been pinned. The internal pin step (and the
+   * Windows 11 OS pin dialog) runs after the promise settles, so we return
+   * before the user has accepted or rejected the OS prompt.
+   *
+   * @param {object} data
+   * @param {string} data.url - The URL of the web app (HTTP/HTTPS only).
+   * @param {string} data.name - Display name for the web app.
+   * @param {string} data.iconUrl - URL of the icon (256x256 PNG recommended).
+   * @returns {Promise<boolean|null>}
+   */
+  async pinTaskbarTab({ url, name, iconUrl }) {
+    let uri;
+    try {
+      uri = Services.io.newURI(url);
+    } catch (e) {
+      return false;
+    }
+    if (uri.scheme !== "https" && uri.scheme !== "http") {
+      return false;
+    }
+
+    const manifest = {
+      name,
+      start_url: url,
+      scope: uri.prePath + "/",
+      // NOTE: Manifest icon support (bug 1979462) is not yet implemented.
+      // Until that lands, the icon may fall back to the favicon service.
+      icons: [{ src: iconUrl, sizes: "256x256", type: "image/png" }],
+    };
+
+    try {
+      const result = await lazy.TaskbarTabs.findOrCreateTaskbarTab(uri, 0, {
+        manifest,
+      });
+      if (result.created) {
+        return true;
+      }
+      return null;
+    } catch (e) {
+      console.error("Failed to pin Taskbar Tab:", e);
+      return false;
+    }
+  },
+
+  /**
    *  Set browser as the operating system default browser.
    *
    *  @param {Window} window Reference to a window object
@@ -126,8 +185,8 @@ export const SpecialMessageActions = {
    *
    * @param {Window} window Reference to a window object
    */
-  setDefaultPDFHandler(window, onlyIfKnownBrowser = false) {
-    window.getShellService().setAsDefaultPDFHandler(onlyIfKnownBrowser);
+  async setDefaultPDFHandler(window, onlyIfKnownBrowser = false) {
+    await window.getShellService().setAsDefaultPDFHandler(onlyIfKnownBrowser);
   },
 
   /**
@@ -251,9 +310,17 @@ export const SpecialMessageActions = {
     // Array of prefs that are allowed to be edited by SET_PREF
     const allowedPrefs = [
       "browser.aboutwelcome.didSeeFinalScreen",
-      "browser.aiwindow.firstrun.modelChoice",
+      "browser.smartwindow.enabled",
+      "browser.smartwindow.firstrun.hasCompleted",
+      "browser.smartwindow.firstrun.modelChoice",
+      "browser.smartwindow.isDefaultWindow",
+      "browser.smartwindow.sidebar.openByDefault",
+      "browser.smartwindow.memories.generateFromConversation",
+      "browser.smartwindow.memories.generateFromHistory",
       "browser.crashReports.unsubmittedCheck.autoSubmit2",
       "browser.dataFeatureRecommendations.enabled",
+      "browser.ipProtection.bandwidth.enabled",
+      "browser.ipProtection.blockIPProtectionCallouts",
       "browser.ipProtection.enabled",
       "browser.ipProtection.optedOut",
       "browser.migrate.content-modal.about-welcome-behavior",
@@ -352,12 +419,15 @@ export const SpecialMessageActions = {
     if (!(await lazy.FxAccounts.canConnectAccount())) {
       return false;
     }
+    // In practice, all FxA signin flows will have a "ervice", because that param dictates the
+    // UI shown by FxA. But to be extra cautious, this code treats it as optional.
+    let neededService = data?.extraParams?.service;
     const url = await lazy.FxAccounts.config.promiseConnectAccountURI(
       data?.entrypoint || "activity-stream-firstrun",
       data?.extraParams || {}
     );
 
-    let window = browser.ownerGlobal;
+    let window = browser.documentGlobal;
 
     let fxaBrowser = await new Promise(resolve => {
       window.openLinkIn(url, data?.where || "tab", {
@@ -373,13 +443,15 @@ export const SpecialMessageActions = {
     let gBrowser = fxaBrowser.getTabBrowser();
     let fxaTab = gBrowser.getTabForBrowser(fxaBrowser);
 
+    let sawNeededService = false;
     let didSignIn = await new Promise(resolve => {
       // We're going to be setting up a listener and an observer for this
       // mechanism.
       //
       // 1. An event listener for the TabClose event, to detect if the user
       //    closes the tab before completing sign-in
-      // 2. An nsIObserver that listens for the UIState for FxA to reach
+      // 2. An nsIObserver that listens for an FxA "service" being enabled.
+      // 3. An nsIObserver that listens for the UIState for FxA to reach
       //    STATUS_SIGNED_IN.
       //
       // We want to clean up both the listener and observer when all of this
@@ -398,13 +470,27 @@ export const SpecialMessageActions = {
           Ci.nsISupportsWeakReference,
         ]),
 
-        observe() {
-          let state = lazy.UIState.get();
-          if (state.status === lazy.UIState.STATUS_SIGNED_IN) {
-            // We completed sign-in, so tear down our listener / observer and resolve
-            // didSignIn to true.
-            controller.abort();
-            resolve(true);
+        observe(aSubject, aTopic, aData) {
+          switch (aTopic) {
+            case lazy.UIState.ON_UPDATE: {
+              let state = lazy.UIState.get();
+              if (
+                (!neededService || sawNeededService) &&
+                state.status === lazy.UIState.STATUS_SIGNED_IN
+              ) {
+                // We completed sign-in, so tear down our listener / observer and resolve
+                // didSignIn to true.
+                controller.abort();
+                resolve(true);
+              }
+              break;
+            }
+            case lazy.ON_SERVICE_ENABLED_NOTIFICATION: {
+              if (aData === neededService) {
+                sawNeededService = true;
+              }
+              break;
+            }
           }
         },
       };
@@ -424,8 +510,7 @@ export const SpecialMessageActions = {
         { once: true, signal }
       );
 
-      let window = fxaTab.ownerGlobal;
-      window.addEventListener("unload", () => {
+      fxaTab.documentGlobal.addEventListener("unload", () => {
         // If the hosting window unload event was fired before the event handler
         // was removed, this means that the window was closed and sign-in was
         // not completed, which means we should resolve didSignIn to false.
@@ -433,14 +518,22 @@ export const SpecialMessageActions = {
         resolve(false);
       });
 
+      Services.obs.addObserver(
+        fxaObserver,
+        lazy.ON_SERVICE_ENABLED_NOTIFICATION
+      );
       Services.obs.addObserver(fxaObserver, lazy.UIState.ON_UPDATE);
 
       // Unfortunately, nsIObserverService.addObserver does not accept an
       // AbortController signal as a parameter, so instead we listen for the
-      // abort event on the signal to remove the observer.
+      // abort event on the signal to remove the observers.
       signal.addEventListener(
         "abort",
         () => {
+          Services.obs.removeObserver(
+            fxaObserver,
+            lazy.ON_SERVICE_ENABLED_NOTIFICATION
+          );
           Services.obs.removeObserver(fxaObserver, lazy.UIState.ON_UPDATE);
         },
         { once: true }
@@ -550,7 +643,11 @@ export const SpecialMessageActions = {
   },
 
   async createAndOpenProfile() {
-    await lazy.SelectableProfileService.createNewProfile();
+    await lazy.SelectableProfileService.createNewProfile(
+      true,
+      null,
+      "asrouter"
+    );
   },
 
   async submitOnboardingOptOutPing() {
@@ -620,7 +717,7 @@ export const SpecialMessageActions = {
    */
   /* eslint-disable-next-line complexity */
   async handleAction(action, browser) {
-    const window = browser.ownerGlobal;
+    const window = browser.documentGlobal;
     switch (action.type) {
       case "SHOW_MIGRATION_WIZARD":
         lazy.MigrationUtils.showMigrationWizard(window, {
@@ -643,6 +740,8 @@ export const SpecialMessageActions = {
             private: false,
             triggeringPrincipal:
               Services.scriptSecurityManager.createNullPrincipal({}),
+            width: action.data.width,
+            height: action.data.height,
           }
         );
         break;
@@ -660,6 +759,12 @@ export const SpecialMessageActions = {
       case "OPEN_FIREFOX_VIEW":
         window.FirefoxViewHandler.openTab();
         break;
+      case "OPEN_TAB_IN_SPLITVIEW": {
+        Services.prefs.setBoolPref("browser.tabs.splitView.enabled", true);
+        let newTab = window.gBrowser.addTrustedTab("about:opentabs");
+        window.gBrowser.addTabSplitView([window.gBrowser.selectedTab, newTab]);
+        break;
+      }
       case "OPEN_PREFERENCES_PAGE":
         window.openPreferences(
           action.data.category || action.data.args,
@@ -690,6 +795,8 @@ export const SpecialMessageActions = {
       case "PIN_FIREFOX_TO_TASKBAR":
         await this.pinFirefoxToTaskbar(window, action.data?.privatePin);
         break;
+      case "PIN_TASKBAR_TAB":
+        return this.pinTaskbarTab(action.data);
       case "PIN_FIREFOX_TO_START_MENU":
         await this.pinToStartMenu(window);
         break;
@@ -706,7 +813,7 @@ export const SpecialMessageActions = {
         await this.setDefaultBrowser(window);
         break;
       case "SET_DEFAULT_PDF_HANDLER":
-        this.setDefaultPDFHandler(
+        await this.setDefaultPDFHandler(
           window,
           action.data?.onlyIfKnownBrowser ?? false
         );
@@ -722,6 +829,37 @@ export const SpecialMessageActions = {
           "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs"
         );
         await WindowsLaunchOnLogin.createLaunchOnLogin();
+        break;
+      }
+      case "CREATE_GROUP_FROM_CURRENT_TAB": {
+        let tab =
+          window.gBrowser.getTabForBrowser(browser) ??
+          window.gBrowser.selectedTab;
+        if (tab.group) {
+          // Create a new tab after the current tab's group, add the new tab to
+          // a new tab group.
+          /** @type {Extract<nsIObserver, Function>} */
+          async function observer(aSubject) {
+            Services.obs.removeObserver(observer, "browser-open-newtab-start");
+            /** @type {nsIBrowser} */
+            let newBrowser = await aSubject.wrappedJSObject;
+            let newTab = window.gBrowser.getTabForBrowser(newBrowser);
+            window.gBrowser.addTabGroup([newTab], {
+              insertBefore: tab.group.nextElementSibling,
+              isUserTriggered: true,
+              telemetryUserCreateSource: "messaging",
+            });
+          }
+          Services.obs.addObserver(observer, "browser-open-newtab-start");
+          window.gBrowser.addAdjacentNewTab(tab);
+        } else {
+          // Add the current tab to a new tab group in place.
+          window.gBrowser.addTabGroup([tab], {
+            insertBefore: tab,
+            isUserTriggered: true,
+            telemetryUserCreateSource: "messaging",
+          });
+        }
         break;
       }
       case "PIN_CURRENT_TAB": {
@@ -754,7 +892,7 @@ export const SpecialMessageActions = {
         return this.fxaSignInFlow(action.data, browser);
       case "FXA_AIWINDOW_SIGNIN_FLOW":
         /** @returns {Promise<boolean>} */
-        return lazy.AIWindowAccountAuth.launchAIWindow(browser);
+        return lazy.AIWindow.launchWindow(browser);
       case "OPEN_PROTECTION_PANEL": {
         let { gProtectionsHandler } = window;
         gProtectionsHandler.showProtectionsPopup({});
@@ -810,13 +948,6 @@ export const SpecialMessageActions = {
         throw new Error(
           `Special message action with type ${action.type} is unsupported.`
         );
-      case "CLICK_ELEMENT": {
-        const clickElement = window.document.querySelector(
-          action.data.selector
-        );
-        clickElement?.click();
-        break;
-      }
       case "RELOAD_BROWSER":
         browser.reload();
         break;
@@ -873,6 +1004,18 @@ export const SpecialMessageActions = {
         await lazy.TaskbarTabs.moveTabIntoTaskbarTab(currentTab);
         break;
       }
+      case "RESTORE_SESSION": {
+        if (
+          lazy.SessionStore.canRestoreLastSession &&
+          !lazy.PrivateBrowsingUtils.isWindowPrivate(window)
+        ) {
+          await lazy.SessionStore.restoreLastSession();
+        }
+        break;
+      }
+      case "IPPROTECTION_ENROLL":
+        await lazy.IPProtection.getPanel(window)?.enroll();
+        break;
     }
     return undefined;
   },

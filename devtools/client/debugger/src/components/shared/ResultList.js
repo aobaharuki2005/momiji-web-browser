@@ -6,7 +6,7 @@ import React, { Component } from "devtools/client/shared/vendor/react";
 import { li, div, ul } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
-import DebuggerImage from "./DebuggerImage";
+import DebuggerImage from "devtools/client/shared/components/DebuggerImage";
 
 const classnames = require("resource://devtools/client/shared/classnames.js");
 
@@ -65,6 +65,7 @@ export default class ResultList extends Component {
             className: "icon",
           },
           React.createElement(DebuggerImage, {
+            className: item.iconClassName,
             name: item.icon,
           })
         ),

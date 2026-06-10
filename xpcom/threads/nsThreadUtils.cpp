@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -28,6 +26,13 @@
 #  include <windows.h>
 #elif defined(XP_MACOSX)
 #  include <sys/resource.h>
+#elif defined(XP_LINUX) && !defined(ANDROID)
+#  include <sys/syscall.h>
+// <linux/ioprio.h> has no glibc wrapper and is absent from some sysroots, so
+// define the constants directly from the stable kernel ABI.
+#  define IOPRIO_WHO_THREAD 1
+#  define IOPRIO_CLASS_BE 2
+#  define IOPRIO_PRIO_VALUE(class, data) (((class) << 13) | (data))
 #endif
 
 #if defined(ANDROID)
@@ -42,6 +47,12 @@ static mozilla::LazyLogModule sEventDispatchAndRunLog("events");
   MOZ_LOG(sEventDispatchAndRunLog, mozilla::LogLevel::Error, args)
 #define LOG1_ENABLED() \
   MOZ_LOG_TEST(sEventDispatchAndRunLog, mozilla::LogLevel::Error)
+
+namespace mozilla {
+namespace net {
+bool OnSocketThread();
+}
+}  // namespace mozilla
 
 using namespace mozilla;
 
@@ -130,7 +141,7 @@ PrioritizableRunnable::GetName(nsACString& aName) {
 
 NS_IMETHODIMP
 PrioritizableRunnable::Run() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(NS_IsMainThread() || net::OnSocketThread());
   return mRunnable->Run();
 }
 
@@ -512,6 +523,14 @@ nsAutoLowPriorityIO::nsAutoLowPriorityIO() {
   lowIOPrioritySet =
       oldPriority != -1 &&
       setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD, IOPOL_THROTTLE) != -1;
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  // IOPRIO_CLASS_BE with priority 7 is the lowest best-effort I/O class,
+  // matching the throttled (not starved) semantics of macOS and Windows.
+  oldPriority =
+      static_cast<int>(syscall(__NR_ioprio_get, IOPRIO_WHO_THREAD, 0));
+  lowIOPrioritySet =
+      oldPriority >= 0 && syscall(__NR_ioprio_set, IOPRIO_WHO_THREAD, 0,
+                                  IOPRIO_PRIO_VALUE(IOPRIO_CLASS_BE, 7)) == 0;
 #else
   lowIOPrioritySet = false;
 #endif
@@ -526,6 +545,10 @@ nsAutoLowPriorityIO::~nsAutoLowPriorityIO() {
 #elif defined(XP_MACOSX)
   if (MOZ_LIKELY(lowIOPrioritySet)) {
     setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD, oldPriority);
+  }
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  if (MOZ_LIKELY(lowIOPrioritySet)) {
+    syscall(__NR_ioprio_set, IOPRIO_WHO_THREAD, 0, oldPriority);
   }
 #endif
 }
@@ -611,7 +634,7 @@ LogTaskBase<nsIRunnable>::Run::Run(nsIRunnable* aEvent, bool aWillRunAgain)
 
   nsAutoCString name;
   named->GetName(name);
-  LOG1(("EXEC %p %p [%s]", aEvent, this, name.BeginReading()));
+  LOG1(("EXEC %p %p [%s]", aEvent, this, name.get()));
 }
 
 template <>
@@ -627,7 +650,7 @@ LogTaskBase<Task>::Run::Run(Task* aTask, bool aWillRunAgain)
     return;
   }
 
-  LOG1(("EXEC %p %p [%s]", aTask, this, name.BeginReading()));
+  LOG1(("EXEC %p %p [%s]", aTask, this, name.get()));
 }
 
 template <>
@@ -714,7 +737,7 @@ nsresult NS_DispatchBackgroundTask(
                                                            aDispatchFlags);
 }
 
-nsresult NS_CreateBackgroundTaskQueue(const char* aName,
+nsresult NS_CreateBackgroundTaskQueue(mozilla::StaticString aName,
                                       nsISerialEventTarget** aTarget) {
   nsCOMPtr<nsISerialEventTarget> target =
       nsThreadManager::get().CreateBackgroundTaskQueue(aName);
@@ -740,8 +763,8 @@ nsresult NS_DispatchAndSpinEventLoopUntilComplete(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<nsThreadSyncDispatch> wrapper =
-      new nsThreadSyncDispatch(current.forget(), std::move(aEvent));
+  RefPtr wrapper =
+      MakeRefPtr<nsThreadSyncDispatch>(current.forget(), std::move(aEvent));
 
   // NOTE: We use NS_DISPATCH_FALLIBLE here to avoid leaking the wrapper object.
   // As nsThreadSyncDispatch internally holds aEvent with a MaybeLeakRefPtr, we

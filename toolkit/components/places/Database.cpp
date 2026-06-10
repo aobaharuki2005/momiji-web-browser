@@ -23,6 +23,7 @@
 #include "SQLFunctions.h"
 #include "Helpers.h"
 #include "nsFaviconService.h"
+#include "ConcurrentConnection.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -598,6 +599,19 @@ nsresult Database::EnsureConnection() {
     rv = storage->OpenUnsharedDatabase(databaseFile,
                                        mozIStorageService::CONNECTION_DEFAULT,
                                        getter_AddRefs(mMainConn));
+    if (rv == NS_ERROR_STORAGE_IOERR) {
+      // A ConcurrentConnection may be racing with us: on some filesystems
+      // (e.g. network shares) concurrent WAL-mode opens can return
+      // SQLITE_IOERR instead of SQLITE_BUSY, which busy_timeout cannot handle.
+      // Interrupt any ongoing CC operation and retry once. If CC had an open
+      // connection and was holding a WAL reader lock, the interrupt releases
+      // it. After our retry succeeds, CC will reopen via the
+      // TOPIC_PLACES_INIT_COMPLETE observer once Places finishes initializing.
+      ConcurrentConnection::MaybeInterrupt();
+      rv = storage->OpenUnsharedDatabase(databaseFile,
+                                         mozIStorageService::CONNECTION_DEFAULT,
+                                         getter_AddRefs(mMainConn));
+    }
     if (NS_SUCCEEDED(rv) && !databaseExisted) {
       mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_CREATE;
     } else if (rv == NS_ERROR_FILE_CORRUPTED) {
@@ -1053,10 +1067,11 @@ nsresult Database::SetupDatabaseConnection(
     NS_ENSURE_SUCCESS(rv, rv);
     bool hasResult = false;
     rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FILE_CORRUPTED);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(hasResult, NS_ERROR_FILE_CORRUPTED);
     rv = statement->GetInt32(0, &mDBPageSize);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && mDBPageSize > 0,
-                   NS_ERROR_FILE_CORRUPTED);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(mDBPageSize > 0, NS_ERROR_FILE_CORRUPTED);
   }
 
 #if !defined(HAVE_64BIT_BUILD)
@@ -1077,7 +1092,7 @@ nsresult Database::SetupDatabaseConnection(
   // Enable FOREIGN KEY support. This is a strict requirement.
   rv = mMainConn->ExecuteSimpleSQL(nsLiteralCString(
       MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA foreign_keys = ON"));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FILE_CORRUPTED);
+  NS_ENSURE_SUCCESS(rv, rv);
 #ifdef DEBUG
   {
     // There are a few cases where setting foreign_keys doesn't work:
@@ -1099,27 +1114,33 @@ nsresult Database::SetupDatabaseConnection(
   // Attach the favicons database to the main connection.
   rv = EnsureFaviconsDatabaseAttached(aStorage);
   if (NS_FAILED(rv)) {
-    // The favicons database may be corrupt.
-    // Set last corruption time in prefs for troubleshooting.
-    CheckedInt<int32_t> daysSinceEpoch = GetNow() / USEC_PER_DAY;
-    if (daysSinceEpoch.isValid()) {
-      Preferences::SetInt(PREF_DATABASE_FAVICONS_LASTCORRUPTION,
-                          daysSinceEpoch.value());
-    }
+    if (rv != NS_ERROR_FILE_CORRUPTED) {
+      // The failure is not due to corruption; retry once before giving up.
+      rv = EnsureFaviconsDatabaseAttached(aStorage);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      // The favicons database is corrupt.
+      // Set last corruption time in prefs for troubleshooting.
+      CheckedInt<int32_t> daysSinceEpoch = GetNow() / USEC_PER_DAY;
+      if (daysSinceEpoch.isValid()) {
+        Preferences::SetInt(PREF_DATABASE_FAVICONS_LASTCORRUPTION,
+                            daysSinceEpoch.value());
+      }
 
-    // Try to replace and reattach it.
-    nsCOMPtr<nsIFile> iconsFile;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                getter_AddRefs(iconsFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = iconsFile->Append(DATABASE_FAVICONS_FILENAME);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = iconsFile->Remove(false);
-    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
-      return rv;
+      // Replace and reattach it.
+      nsCOMPtr<nsIFile> iconsFile;
+      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                  getter_AddRefs(iconsFile));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = iconsFile->Append(DATABASE_FAVICONS_FILENAME);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = iconsFile->Remove(false);
+      if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
+        return rv;
+      }
+      rv = EnsureFaviconsDatabaseAttached(aStorage);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = EnsureFaviconsDatabaseAttached(aStorage);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Create favicons temp entities.
@@ -1353,12 +1374,20 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (currentSchemaVersion < 84) {
-        rv = MigrateV84Up();
+      // The schema 84 migration was the same as 85, we had to re-run it to
+      // correct issues with origin frecency.
+
+      if (currentSchemaVersion < 85) {
+        rv = MigrateV85Up();
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
       // Firefox 147 uses schema version 84
+
+      if (currentSchemaVersion < 86) {
+        rv = MigrateV86Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -2285,13 +2314,39 @@ nsresult Database::MigrateV83Up() {
   return NS_OK;
 }
 
-nsresult Database::MigrateV84Up() {
-  // Recalculate frecency due to changing calculate_frecency.
+nsresult Database::MigrateV85Up() {
+  // Recalculate frecency due to changing frecency and giving too high a bonus
+  // for non-typed URLs.
   nsresult rv = mMainConn->ExecuteSimpleSQL(
       "UPDATE moz_origins "
       "SET recalc_frecency = 1 "
       "WHERE frecency > 1"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult Database::MigrateV86Up() {
+  nsCOMPtr<mozIStorageStatement> stmt;
+
+  // Check and add block_until_ms if missing.
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT block_until_ms FROM moz_origins"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_origins "
+        "ADD COLUMN block_until_ms INTEGER"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Check and add block_pages_until_ms if missing.
+  rv = mMainConn->CreateStatement(
+      "SELECT block_pages_until_ms FROM moz_origins"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_origins "
+        "ADD COLUMN block_pages_until_ms INTEGER"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
@@ -2442,11 +2497,12 @@ void Database::Shutdown() {
 
   mClosed = true;
 
-  // Execute PRAGMA optimized as last step, this will ensure proper database
-  // performance across restarts.
+  // Execute PRAGMA optimize as last step, this will ensure proper database
+  // performance across restarts. The 0x12 flags mean: run ANALYZE on tables
+  // that might benefit (0x02), with a row limit to keep runtime bounded (0x10).
   nsCOMPtr<mozIStoragePendingStatement> ps;
   MOZ_ALWAYS_SUCCEEDS(mMainConn->ExecuteSimpleSQLAsync(
-      "PRAGMA optimize(0x02)"_ns, nullptr, getter_AddRefs(ps)));
+      "PRAGMA optimize(0x12)"_ns, nullptr, getter_AddRefs(ps)));
 
   if (NS_FAILED(mMainConn->AsyncClose(connectionShutdown))) {
     (void)connectionShutdown->Complete(NS_ERROR_UNEXPECTED, nullptr);

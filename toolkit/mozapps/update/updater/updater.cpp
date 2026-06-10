@@ -100,7 +100,7 @@ bool PerformInstallationFromDMG(int argc, char** argv);
 struct UpdateServerThreadArgs {
   int argc;
   const NS_tchar** argv;
-  const char* marChannelID;
+  const char* marChannelID = "";
 };
 #endif
 
@@ -333,7 +333,7 @@ class Thread {
 static NS_tchar gPatchDirPath[MAXPATHLEN];
 static NS_tchar gInstallDirPath[MAXPATHLEN];
 static NS_tchar gWorkingDirPath[MAXPATHLEN];
-MOZ_RUNINIT static ArchiveReader gArchiveReader;
+constinit static ArchiveReader gArchiveReader;
 static bool gSucceeded = false;
 static bool sStagedUpdate = false;
 static bool sReplaceRequest = false;
@@ -365,7 +365,7 @@ static const int kCallbackIndex = 8;
 
 // This string contains the MAR channel IDs that are later extracted by one of
 // the `ReadMARChannelIDsFrom` variants.
-MOZ_RUNINIT static MARChannelStringTable gMARStrings;
+constinit static MARChannelStringTable gMARStrings;
 
 // Normally, we run updates as a result of user action (the user started Firefox
 // or clicked a "Restart to Update" button). But there are some cases when
@@ -706,7 +706,7 @@ static int ensure_remove_recursive(const NS_tchar* path,
     return rv;
   }
 
-  while ((entry = NS_treaddir(dir)) != 0) {
+  while ((entry = NS_treaddir(dir)) != nullptr) {
     if (NS_tstrcmp(entry->d_name, NS_T(".")) &&
         NS_tstrcmp(entry->d_name, NS_T(".."))) {
       NS_tchar childPath[MAXPATHLEN];
@@ -970,7 +970,7 @@ static int ensure_copy_recursive(const NS_tchar* path, const NS_tchar* dest,
     return READ_ERROR;
   }
 
-  while ((entry = NS_treaddir(dir)) != 0) {
+  while ((entry = NS_treaddir(dir)) != nullptr) {
     if (NS_tstrcmp(entry->d_name, NS_T(".")) &&
         NS_tstrcmp(entry->d_name, NS_T(".."))) {
       NS_tchar childPath[MAXPATHLEN];
@@ -1594,7 +1594,7 @@ class PatchFileDecoder {
     return ptr;
   }
 
-  virtual ~PatchFileDecoder() {}
+  virtual ~PatchFileDecoder() = default;
 
   virtual unsigned int ComputeCrc32(const uint8_t* aBuf, size_t aBufSize) = 0;
 
@@ -1616,7 +1616,7 @@ class PatchFileDecoder {
 #if defined(MOZ_BSPATCH)
 class BSPatchFileDecoder : public PatchFileDecoder {
  public:
-  ~BSPatchFileDecoder() override {}
+  ~BSPatchFileDecoder() override = default;
 
   unsigned int ComputeCrc32(const uint8_t* aBuf, size_t aBufSize) override;
 
@@ -2195,7 +2195,7 @@ int AddIfNotFile::Parse(NS_tchar* line) {
 int AddIfNotFile::Prepare() {
   // If the test file exists, then skip this action.
   if (!NS_taccess(mTestFile.get(), F_OK)) {
-    mTestFile = NULL;
+    mTestFile = nullptr;
     return OK;
   }
 
@@ -2275,6 +2275,8 @@ void PatchIfFile::Finish(int status) {
 //-----------------------------------------------------------------------------
 
 #ifdef XP_WIN
+#  include "EnterprisePolicies.h"
+#  include "EnterprisePoliciesFlagFile.h"
 #  include "nsWindowsRestart.cpp"
 #  include "nsWindowsHelpers.h"
 #  include "uachelper.h"
@@ -2390,7 +2392,13 @@ bool LaunchWinPostProcess(const WCHAR* installationDir,
   wcsncpy(dummyArg, L"argv0ignored ",
           sizeof(dummyArg) / sizeof(dummyArg[0]) - 1);
 
-  size_t len = wcslen(exearg) + wcslen(dummyArg);
+  const bool addDesktopLauncher{
+      !EnterprisePoliciesFlagFile::Exists(gPatchDirPath)};
+  if (addDesktopLauncher) {
+    LOG(("Add /DesktopLauncher argument to helper.exe"));
+  }
+  LPCWSTR desktopLauncherArg{addDesktopLauncher ? L" /DesktopLauncher" : L""};
+  size_t len{wcslen(exearg) + wcslen(dummyArg) + wcslen(desktopLauncherArg)};
   WCHAR* cmdline = (WCHAR*)malloc((len + 1) * sizeof(WCHAR));
   if (!cmdline) {
     LOG(
@@ -2402,6 +2410,7 @@ bool LaunchWinPostProcess(const WCHAR* installationDir,
 
   wcsncpy(cmdline, dummyArg, len);
   wcscat(cmdline, exearg);
+  wcscat(cmdline, desktopLauncherArg);
 
   // We want to launch the post update helper app to update the Windows
   // registry even if there is a failure with removing the uninstall.update
@@ -3004,16 +3013,17 @@ static int ReadMARChannelIDsFromBuffer(char* aChannels,
  *        `OK` on success, `UPDATE_SETTINGS_FILE_CHANNEL` on failure.
  */
 static int PopulategMARStrings() {
+  if (gMARStrings.MARChannelID && gMARStrings.MARChannelID[0] != '\0') {
+    return OK;
+  }
+
   int rv = UPDATE_SETTINGS_FILE_CHANNEL;
 #  ifdef XP_MACOSX
-  if (gInvocation == UpdaterInvocation::Second) {
-    // An elevated update process will have already populated gMARStrings when
-    // it connected to the unelevated update process to obtain the command line
-    // args. See `ObtainUpdaterArguments`.
-    rv = OK;
-  } else if (auto marChannels =
-                 UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
-    rv = ReadMARChannelIDsFromBuffer(marChannels->data(), &gMARStrings);
+  if (gInvocation != UpdaterInvocation::Second) {
+    if (std::optional<std::string> marChannels =
+            UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
+      rv = ReadMARChannelIDsFromBuffer(marChannels->data(), &gMARStrings);
+    }
   }
 #  else
   NS_tchar updateSettingsPath[MAXPATHLEN];
@@ -3235,6 +3245,10 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv
     }
 
     EXIT_IF_SECOND_UPDATER_INSTANCE(updateLockFileHandle, 0);
+
+    // Flag removed by the unelevated process during the single-process update
+    EnterprisePoliciesFlagFile::Remove(gPatchDirPath);
+
 #elif XP_MACOSX
     if (gInvocation == UpdaterInvocation::First) {
       if (gSucceeded) {
@@ -3394,7 +3408,6 @@ int NS_main(int argc, NS_tchar** argv) {
   if (argc == 4 && (strstr(argv[1], "-dmgInstall") != 0)) {
     isDMGInstall = true;
     if (isElevated) {
-      PerformInstallationFromDMG(argc, argv);
       freeArguments(argc, argv);
       CleanupElevatedMacUpdate(true);
       return 0;
@@ -3698,7 +3711,27 @@ int NS_main(int argc, NS_tchar** argv) {
       UpdateServerThreadArgs threadArgs;
       threadArgs.argc = suiArgc;
       threadArgs.argv = suiArgv.get();
-      threadArgs.marChannelID = gMARStrings.MARChannelID.get();
+      threadArgs.marChannelID = "";
+
+#  ifdef MOZ_VERIFY_MAR_SIGNATURE
+      // Try to populate gMARStrings so that we can pass the resulting MAR
+      // channel ID to the elevated updater via IPC. If this fails (observed on
+      // some macOS standard-profile elevated updates where the unelevated
+      // updater cannot resolve the weak UpdateSettingsGetAcceptedMARChannels
+      // symbol from UpdateSettings.framework), proceed with an empty channel
+      // ID rather than aborting the elevated update.
+      // ArchiveReader::VerifyProductInformation skips the channel-match check
+      // when the channel ID is empty; the MAR's cryptographic signature is
+      // still verified, preserving the security posture that existed prior to
+      // bug 2028575.
+      if (PopulategMARStrings() == OK) {
+        threadArgs.marChannelID = gMARStrings.MARChannelID.get();
+      } else {
+        fprintf(stderr,
+                "Unable to retrieve MAR channels in unelevated updater; "
+                "proceeding with elevation using an empty channel ID.\n");
+      }
+#  endif  // MOZ_VERIFY_MAR_SIGNATURE
 
       Thread t1;
       if (t1.Run(ServeElevatedUpdateThreadFunc, &threadArgs) == 0) {
@@ -3920,6 +3953,14 @@ int NS_main(int argc, NS_tchar** argv) {
         LOG(("Failed to open update lock file: %lu", GetLastError()));
       } else {
         LOG(("Successfully opened lock file"));
+      }
+
+      if (EnterprisePolicies::InDistribution(gInstallDirPath) ||
+          EnterprisePolicies::InRegistry(L"" MOZ_APP_BASENAME)) {
+        LOG(("Enterprise policies detected"));
+        EnterprisePoliciesFlagFile::Add(gPatchDirPath);
+      } else {
+        LOG(("No enterprise policies detected"));
       }
 
       if (updateLockFileHandle == INVALID_HANDLE_VALUE ||
@@ -4253,6 +4294,9 @@ int NS_main(int argc, NS_tchar** argv) {
                  "'succeeded'."));
           }
         }
+
+        // Flag removed by the unelevated process during the two-process update
+        EnterprisePoliciesFlagFile::Remove(gPatchDirPath);
 
         if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
           CloseHandle(updateLockFileHandle);
@@ -5135,7 +5179,7 @@ int AddPreCompleteActions(ActionList* list) {
 
   int rv;
   NS_tchar* line;
-  while ((line = mstrtok(kNL, &rb)) != 0) {
+  while ((line = mstrtok(kNL, &rb)) != nullptr) {
     // skip comments
     if (*line == NS_T('#')) {
       continue;
@@ -5210,7 +5254,7 @@ int DoUpdate() {
   ActionList list;
   NS_tchar* line;
   bool isFirstAction = true;
-  while ((line = mstrtok(kNL, &rb)) != 0) {
+  while ((line = mstrtok(kNL, &rb)) != nullptr) {
     // skip comments
     if (*line == NS_T('#')) {
       continue;

@@ -9,6 +9,7 @@
 import("../../webrtc.gni")
 
 rtc_library("sent_packet") {
+  visibility = [ "*" ]
   sources = [
     "sent_packet.cc",
     "sent_packet.h",
@@ -25,7 +26,6 @@ rtc_library("received_packet") {
   deps = [
     "..:checks",
     "..:socket_address",
-    "../../api:array_view",
     "../../api/transport:ecn_marking",
     "../../api/units:timestamp",
     "../system:rtc_export",

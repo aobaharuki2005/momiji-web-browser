@@ -59,18 +59,20 @@ impl Queue {
             ptr::null_mut::<dispatch_queue_attr_s>();
         let label = CString::new(label).unwrap();
         let c_string = label.as_ptr();
-        let queue = {
-            let target_guard = target.queue.lock().unwrap();
-            Self {
-                queue: Mutex::new(unsafe {
-                    dispatch_queue_create_with_target(
-                        c_string,
-                        DISPATCH_QUEUE_SERIAL,
-                        *target_guard,
-                    )
-                }),
-                owned: AtomicBool::new(true),
-            }
+        let target_guard = target.queue.lock().unwrap();
+        let queue = unsafe {
+            dispatch_queue_create(
+                c_string,
+                DISPATCH_QUEUE_SERIAL,
+            )
+        };
+        unsafe { dispatch_set_target_queue(
+            mem::transmute::<dispatch_queue_t, dispatch_object_t>(queue),
+            *target_guard)
+        };
+        let queue = Self {
+            queue: Mutex::new(queue),
+            owned: AtomicBool::new(true),
         };
         queue.set_should_cancel(Box::new(AtomicBool::new(false)));
         queue

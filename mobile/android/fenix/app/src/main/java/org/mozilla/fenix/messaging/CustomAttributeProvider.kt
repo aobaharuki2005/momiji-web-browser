@@ -9,7 +9,7 @@ import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import mozilla.components.service.nimbus.messaging.JexlAttributeProvider
 import mozilla.components.support.base.ext.areNotificationsEnabledSafe
-import mozilla.components.support.utils.BrowsersCache
+import mozilla.components.support.utils.Browsers
 import org.json.JSONObject
 import org.mozilla.fenix.components.metrics.UTMParams.Companion.UTM_CAMPAIGN
 import org.mozilla.fenix.components.metrics.UTMParams.Companion.UTM_CONTENT
@@ -81,7 +81,7 @@ object CustomAttributeProvider : JexlAttributeProvider {
         val settings = context.settings()
         return JSONObject(
             mapOf(
-                "is_default_browser" to BrowsersCache.all(context).isDefaultBrowser,
+                "is_default_browser" to Browsers.isDefaultBrowser(context),
                 "date_string" to formatter.format(now.time),
                 "number_of_app_launches" to settings.numberOfAppLaunches,
                 "adjust_campaign" to settings.adjustCampaignId,

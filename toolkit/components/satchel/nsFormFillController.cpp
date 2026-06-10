@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -51,7 +49,7 @@ using mozilla::LogLevel;
 static mozilla::LazyLogModule sLogger("satchel");
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mFocusedPopup,
-                         mLastListener, mFocusListeners)
+                         mLastListener, mFocusListeners, mFocusPendingPromise)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
@@ -71,7 +69,7 @@ nsFormFillController::nsFormFillController()
     : mControlledElement(nullptr),
       mRestartAfterAttributeChangeTask(nullptr),
       mListNode(nullptr),
-      // The amount of time a context menu event supresses showing a
+      // The amount of time a context menu event suppresses showing a
       // popup from a focus event in ms. This matches the threshold in
       // toolkit/components/passwordmgr/LoginManagerChild.sys.mjs.
       mFocusAfterRightClickThreshold(400),
@@ -257,8 +255,6 @@ nsFormFillController::MarkAsAutoCompletableField(Element* aElement) {
   mAutoCompleteInputs.InsertOrUpdate(aElement, true);
   aElement->AddMutationObserverUnlessExists(this);
 
-  EnablePreview(aElement);
-
   if (nsFocusManager::GetFocusedElementStatic() == aElement) {
     if (!mControlledElement) {
       MaybeStartControllingInput(aElement);
@@ -345,8 +341,8 @@ nsFormFillController::SetPopupOpen(bool aPopupOpen) {
       NS_ENSURE_STATE(presShell);
       presShell->ScrollContentIntoView(
           content,
-          ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
-          ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
+          AxisScrollParams(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
+          AxisScrollParams(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
           ScrollFlags::ScrollOverflowHidden);
       // mFocusedPopup can be destroyed after ScrollContentIntoView, see bug
       // 420089
@@ -695,7 +691,7 @@ nsFormFillController::OnSearchCompletion(nsIAutoCompleteResult* aResult) {
   nsAutoString searchString;
   aResult->GetSearchString(searchString);
 
-  mLastSearchString = searchString;
+  mLastSearchString = std::move(searchString);
 
   if (mLastListener) {
     nsCOMPtr<nsIAutoCompleteObserver> lastListener = mLastListener;
@@ -733,7 +729,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
 
   mInvalidatePreviousResult = false;
 
-  nsIGlobalObject* global = target->GetOwnerGlobal();
+  nsIGlobalObject* global = target->GetRelevantGlobal();
   NS_ENSURE_STATE(global);
   nsPIDOMWindowInner* inner = global->GetAsInnerWindow();
   NS_ENSURE_STATE(inner);
@@ -968,7 +964,7 @@ nsresult nsFormFillController::KeyDown(Event* aEvent) {
 
   mPasswordPopupAutomaticallyOpened = false;
 
-  if (!IsFocusedInputControlled()) {
+  if (!mController || !mControlledElement || ReadOnly(mControlledElement)) {
     return NS_OK;
   }
 
@@ -985,6 +981,9 @@ nsresult nsFormFillController::KeyDown(Event* aEvent) {
     case KeyboardEvent_Binding::DOM_VK_RETURN: {
       nsCOMPtr<nsIAutoCompleteController> controller = mController;
       controller->HandleEnter(false, aEvent, &cancel);
+      if (nsFocusManager::GetFocusedElementStatic() != mControlledElement) {
+        StopControllingInput();
+      }
       break;
     }
     case KeyboardEvent_Binding::DOM_VK_DELETE:
@@ -1056,6 +1055,9 @@ nsresult nsFormFillController::KeyDown(Event* aEvent) {
     case KeyboardEvent_Binding::DOM_VK_ESCAPE: {
       nsCOMPtr<nsIAutoCompleteController> controller = mController;
       controller->HandleEscape(&cancel);
+      if (nsFocusManager::GetFocusedElementStatic() != mControlledElement) {
+        StopControllingInput();
+      }
       break;
     }
     case KeyboardEvent_Binding::DOM_VK_TAB: {
@@ -1181,7 +1183,7 @@ void nsFormFillController::StartControllingInput(Element* aElement) {
     return;
   }
 
-  mFocusedPopup = popup;
+  mFocusedPopup = std::move(popup);
 
   aElement->AddMutationObserverUnlessExists(this);
   mControlledElement = aElement;
@@ -1265,7 +1267,7 @@ void nsFormFillController::GetValue(mozilla::dom::Element* aElement,
 
 Element* nsFormFillController::GetList(mozilla::dom::Element* aElement) {
   if (auto* input = HTMLInputElement::FromNodeOrNull(aElement)) {
-    return input->GetList();
+    return input->GetListInternal();
   }
   return nullptr;
 }
@@ -1336,13 +1338,4 @@ void nsFormFillController::SetUserInput(mozilla::dom::Element* aElement,
   } else if (auto* textarea = HTMLTextAreaElement::FromNodeOrNull(aElement)) {
     textarea->SetUserInput(aValue, aSubjectPrincipal);
   }
-}
-
-void nsFormFillController::EnablePreview(mozilla::dom::Element* aElement) {
-  if (auto* input = HTMLInputElement::FromNodeOrNull(aElement)) {
-    input->EnablePreview();
-  } else if (auto* textarea = HTMLTextAreaElement::FromNodeOrNull(aElement)) {
-    textarea->EnablePreview();
-  }
-  return;
 }

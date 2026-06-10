@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -106,7 +104,6 @@ NS_IMPL_CYCLE_COLLECTION(TextTrackManager, mMediaElement, mTextTracks,
                          mPendingTextTracks, mNewCues)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextTrackManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TextTrackManager)
@@ -203,6 +200,7 @@ void TextTrackManager::AddCues(TextTrack* aTextTrack) {
     for (uint32_t i = 0; i < cueList->Length(); ++i) {
       mNewCues->AddCue(*cueList->IndexedGetter(i, dummy));
     }
+    RefPtr<TextTrackManager> kungFuDeathGrip(this);
     MaybeRunTimeMarchesOn();
   }
 }
@@ -227,6 +225,7 @@ void TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack,
     for (uint32_t i = 0; i < removeCueList->Length(); ++i) {
       mNewCues->RemoveCue(*((*removeCueList)[i]));
     }
+    RefPtr<TextTrackManager> kungFuDeathGrip(this);
     MaybeRunTimeMarchesOn();
   }
 }
@@ -289,6 +288,7 @@ void TextTrackManager::NotifyCueAdded(TextTrackCue& aCue) {
   if (mNewCues) {
     mNewCues->AddCue(aCue);
   }
+  RefPtr<TextTrackManager> kungFuDeathGrip(this);
   MaybeRunTimeMarchesOn();
 }
 
@@ -297,6 +297,7 @@ void TextTrackManager::NotifyCueRemoved(TextTrackCue& aCue) {
   if (mNewCues) {
     mNewCues->RemoveCue(aCue);
   }
+  RefPtr<TextTrackManager> kungFuDeathGrip(this);
   MaybeRunTimeMarchesOn();
   DispatchUpdateCueDisplay();
 }
@@ -317,16 +318,6 @@ void TextTrackManager::PopulatePendingList() {
   }
 }
 
-void TextTrackManager::AddListeners() {
-  if (mMediaElement) {
-    mMediaElement->AddEventListener(u"resizecaption"_ns, this, false, false);
-    mMediaElement->AddEventListener(u"resizevideocontrols"_ns, this, false,
-                                    false);
-    mMediaElement->AddEventListener(u"seeked"_ns, this, false, false);
-    mMediaElement->AddEventListener(u"controlbarchange"_ns, this, false, true);
-  }
-}
-
 void TextTrackManager::HonorUserPreferencesForTrackSelection() {
   if (performedTrackSelection || !mTextTracks) {
     return;
@@ -343,7 +334,7 @@ void TextTrackManager::HonorUserPreferencesForTrackSelection() {
   // Step 4: Set all TextTracks with a kind of metadata that are disabled
   // to hidden.
   for (uint32_t i = 0; i < mTextTracks->Length(); i++) {
-    TextTrack* track = (*mTextTracks)[i];
+    RefPtr<TextTrack> track = (*mTextTracks)[i];
     if (track->Kind() == TextTrackKind::Metadata && TrackIsDefault(track) &&
         track->Mode() == TextTrackMode::Disabled) {
       track->SetMode(TextTrackMode::Hidden);
@@ -384,11 +375,11 @@ void TextTrackManager::PerformTrackSelection(TextTrackKind aTextTrackKinds[],
   // first TextTrack in candidates with a default attribute to showing.
   // TODO: Bug 981691 - Honor user preferences for text track selection.
   for (uint32_t i = 0; i < candidates.Length(); i++) {
-    if (TrackIsDefault(candidates[i]) &&
-        candidates[i]->Mode() == TextTrackMode::Disabled) {
-      candidates[i]->SetMode(TextTrackMode::Showing);
+    RefPtr<TextTrack> track = candidates[i];
+    if (TrackIsDefault(track) && track->Mode() == TextTrackMode::Disabled) {
+      track->SetMode(TextTrackMode::Showing);
       WEBVTT_LOGV("PerformTrackSelection set Showing kind %d",
-                  static_cast<int>(candidates[i]->Kind()));
+                  static_cast<int>(track->Kind()));
       return;
     }
   }
@@ -415,32 +406,16 @@ void TextTrackManager::GetTextTracksOfKind(TextTrackKind aTextTrackKind,
   }
 }
 
-NS_IMETHODIMP
-TextTrackManager::HandleEvent(Event* aEvent) {
+void TextTrackManager::SetCuesDirty() {
   if (!mTextTracks) {
-    return NS_OK;
+    return;
   }
 
-  nsAutoString type;
-  aEvent->GetType(type);
-  WEBVTT_LOG("Handle event %s", NS_ConvertUTF16toUTF8(type).get());
+  WEBVTT_LOG("SetCuesDirty()");
 
-  const bool setDirty = type.EqualsLiteral("seeked") ||
-                        type.EqualsLiteral("resizecaption") ||
-                        type.EqualsLiteral("resizevideocontrols");
-  const bool updateDisplay = type.EqualsLiteral("controlbarchange") ||
-                             type.EqualsLiteral("resizecaption");
-
-  if (setDirty) {
-    for (uint32_t i = 0; i < mTextTracks->Length(); i++) {
-      ((*mTextTracks)[i])->SetCuesDirty();
-    }
+  for (uint32_t i = 0; i < mTextTracks->Length(); i++) {
+    ((*mTextTracks)[i])->SetCuesDirty();
   }
-  if (updateDisplay) {
-    UpdateCueDisplay();
-  }
-
-  return NS_OK;
 }
 
 class SimpleTextTrackEvent : public Runnable {
@@ -462,7 +437,7 @@ class SimpleTextTrackEvent : public Runnable {
   }
 
   void Dispatch() {
-    if (nsCOMPtr<nsIGlobalObject> global = mCue->GetOwnerGlobal()) {
+    if (nsCOMPtr<nsIGlobalObject> global = mCue->GetRelevantGlobal()) {
       global->Dispatch(do_AddRef(this));
     } else {
       NS_DispatchToMainThread(do_AddRef(this));
@@ -789,6 +764,7 @@ void TextTrackManager::TimeMarchesOn() {
 void TextTrackManager::NotifyCueUpdated(TextTrackCue* aCue) {
   // TODO: Add/Reorder the cue to mNewCues if we have some optimization?
   WEBVTT_LOG("NotifyCueUpdated, cue=%p", aCue);
+  RefPtr<TextTrackManager> kungFuDeathGrip(this);
   MaybeRunTimeMarchesOn();
   // For the case "Texttrack.mode = hidden/showing", if the mode
   // changing between showing and hidden, TimeMarchesOn

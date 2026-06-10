@@ -1,10 +1,9 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _NS_FONTCACHE_H_
-#define _NS_FONTCACHE_H_
+#ifndef NS_FONTCACHE_H_
+#define NS_FONTCACHE_H_
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -100,4 +99,4 @@ class nsFontCache final : public nsIObserver {
   bool mReportedProbableFingerprinting = false;
 };
 
-#endif /* _NS_FONTCACHE_H_ */
+#endif /* NS_FONTCACHE_H_ */

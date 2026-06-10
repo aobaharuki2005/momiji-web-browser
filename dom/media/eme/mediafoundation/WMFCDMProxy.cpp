@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -103,10 +101,12 @@ void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
   mCDM->Init(params)->Then(
       mMainThread, __func__,
       [self = RefPtr{this}, this, aPromiseId](const bool) {
+        RETURN_IF_SHUTDOWN();
         MOZ_ASSERT(mCDM->Id() > 0);
         mKeys->OnCDMCreated(aPromiseId, mCDM->Id());
       },
       [self = RefPtr{this}, this, aPromiseId](const nsresult rv) {
+        RETURN_IF_SHUTDOWN();
         RejectPromiseWithStateError(
             aPromiseId,
             nsLiteralCString("WMFCDMProxy::Init: WMFCDM init error"));
@@ -315,6 +315,7 @@ void WMFCDMProxy::Shutdown() {
     mProxyCallback = nullptr;
   }
   mIsShutdown = true;
+  mKeys.Clear();
 }
 
 void WMFCDMProxy::Terminated() {

@@ -1,12 +1,10 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
-/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::null_t from "mozilla/ipc/IPCCore.h";
-using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
+[RefCounted] using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
 using mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 include ClientIPCTypes;
@@ -85,9 +83,7 @@ union JSIPCValue {
 
     // Structured clone objects are used as a fallback when serialization
     // fails, or for places like WebExtensions which send these directly.
-    // The ClonedMessageData version is used for sending over IPC.
-    UniquePtr<StructuredCloneData>;
-    UniquePtr<ClonedMessageData>;
+    StructuredCloneData;
 
     // Commonly used DOM objects.
     nsIPrincipal;

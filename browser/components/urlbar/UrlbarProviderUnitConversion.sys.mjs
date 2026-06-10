@@ -8,9 +8,9 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { UnitConverterSimple } from "resource:///modules/UnitConverterSimple.sys.mjs";
-import { UnitConverterTemperature } from "resource:///modules/UnitConverterTemperature.sys.mjs";
-import { UnitConverterTimezone } from "resource:///modules/UnitConverterTimezone.sys.mjs";
+import { UnitConverterSimple } from "moz-src:///browser/components/urlbar/unitconverters/UnitConverterSimple.sys.mjs";
+import { UnitConverterTemperature } from "moz-src:///browser/components/urlbar/unitconverters/UnitConverterTemperature.sys.mjs";
+import { UnitConverterTimezone } from "moz-src:///browser/components/urlbar/unitconverters/UnitConverterTimezone.sys.mjs";
 import {
   UrlbarProvider,
   UrlbarUtils,
@@ -20,8 +20,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
-  UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
-  UrlbarView: "moz-src:///browser/components/urlbar/UrlbarView.sys.mjs",
+  UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -78,8 +77,6 @@ const VIEW_TEMPLATE = {
 export class UrlbarProviderUnitConversion extends UrlbarProvider {
   constructor() {
     super();
-    lazy.UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
-    lazy.UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
   }
 
   /**
@@ -112,6 +109,10 @@ export class UrlbarProviderUnitConversion extends UrlbarProvider {
 
     this._activeResult = null;
     return false;
+  }
+
+  getViewTemplate(_result) {
+    return VIEW_TEMPLATE;
   }
 
   /**

@@ -1,11 +1,11 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AntiTrackingLog.h"
 #include "ContentBlockingLog.h"
+
+#include <bit>
 
 #include "nsIEffectiveTLDService.h"
 #include "nsITrackingDBService.h"
@@ -15,6 +15,7 @@
 #include "nsRFPService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
+#include "nsTHashSet.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
@@ -194,13 +195,26 @@ void ContentBlockingLog::ReportLog() {
     return;
   }
 
+  // Emit only the delta since the last flush. This lets ReportLog() be called
+  // multiple times during a document's lifetime (e.g. from a flush-on-query
+  // barrier in TrackingDBService) without double-counting entries against the
+  // daily aggregated counters in protections.sqlite.
+  nsAutoCString payload = Stringify(/* aOnlyUnreported */ true);
+
+  // Stringify() emits "{}" when every origin's cursor is already at the end
+  // and all origin-level flags have been reported. Skip the IPC round-trip.
+  if (payload.EqualsLiteral("{}")) {
+    return;
+  }
+
   nsCOMPtr<nsITrackingDBService> trackingDBService =
       do_GetService("@mozilla.org/tracking-db-service;1");
   if (NS_WARN_IF(!trackingDBService)) {
     return;
   }
 
-  trackingDBService->RecordContentBlockingLog(Stringify());
+  trackingDBService->RecordContentBlockingLog(payload);
+  MarkAsReported();
 }
 
 void ContentBlockingLog::ReportCanvasFingerprintingLog(
@@ -215,6 +229,12 @@ void ContentBlockingLog::ReportCanvasFingerprintingLog(
   }
 
   bool hasCanvasFingerprinter = false;
+
+  // Track unique (key, source) combinations to avoid counting duplicates per
+  // page
+  nsTHashSet<nsCString> seenTextSourceCombos;
+  nsTHashSet<nsCString> seenAliasSourceCombos;
+
   for (const auto& originEntry : mLog) {
     if (!originEntry.mData) {
       continue;
@@ -243,80 +263,60 @@ void ContentBlockingLog::ReportCanvasFingerprintingLog(
           logEntry.mCanvasFingerprintingEvent.value();
 
       // ----------------------------------
-      // This function iterates through all source bits, incrementing for each
-      // individually And then incrementing for the combination of all source
-      // bits set.  It is used for both of the specific metrics we record.
-      auto IncrementBySources =
-          [](const CanvasFingerprintingEvent canvasFingerprintingEvent,
-             glean::impl::DualLabeledCounterMetric metric,
-             const nsCString& key) {
-            for (uint64_t b = canvasFingerprintingEvent.sourcesBitmask; b;
-                 b &= (b - 1)) {
-              // Unlike knownText, we use the full number (e.g. 256) rather than
-              // the exponent (e.g. 8)
-              uint32_t singleSetBit_Source = b & (~b + 1);
-
-              nsAutoCString category;
-              category.AppendInt(singleSetBit_Source);
-
-              // Increment once for each known text bit and source bit
-              // combination
-
-              metric.Get(key, category).Add();
-            }
-            // And increment once for each known text bit and source bit
-            // combination.  Make this an Info-level log because combinations
-            // MUST be added to the metric definition to be useful.
-            MOZ_LOG(gFingerprinterDetection, LogLevel::Info,
-                    ("ContentBlockingLog::ReportCanvasFingerprintingLog: "
-                     "Incrementing for combined sources bitmask %" PRIu64,
-                     canvasFingerprintingEvent.sourcesBitmask));
-            nsAutoCString category;
-            category.AppendInt(canvasFingerprintingEvent.sourcesBitmask);
-            metric.Get(key, category).Add();
-          };
-
-      // ----------------------------------
       // First cover canvas_fingerprinting_type_text_by_source_per_tab2
-      // We do this for each log entry
+      // Only count each unique (text, source) combination once per page
       if (!canvasFingerprintingEvent.knownTextBitmask) {
-        nsAutoCString key;
+        nsAutoCString key, category;
         key.AppendLiteral("none");
+        category.AppendInt(canvasFingerprintingEvent.sourcesBitmask);
 
-        IncrementBySources(
-            canvasFingerprintingEvent,
-            glean::contentblocking::
-                canvas_fingerprinting_type_text_by_source_per_tab2,
-            key);
+        nsAutoCString comboKey(key + ":"_ns + category);
+        if (!seenTextSourceCombos.Contains(comboKey)) {
+          seenTextSourceCombos.Insert(comboKey);
+          glean::contentblocking::
+              canvas_fingerprinting_type_text_by_source_per_tab2
+                  .Get(key, category)
+                  .Add();
+        }
       } else {
         // Iterate over each set bit in the bitmask
         for (uint32_t b = canvasFingerprintingEvent.knownTextBitmask; b;
              b &= (b - 1)) {
           uint32_t singleSetBit_Text = b & (~b + 1);
-          uint32_t exponent = mozilla::CountTrailingZeroes32(singleSetBit_Text);
+          uint32_t exponent = std::countr_zero(singleSetBit_Text);
 
-          nsAutoCString key;
+          nsAutoCString key, category;
           key.AppendInt(exponent);
+          category.AppendInt(canvasFingerprintingEvent.sourcesBitmask);
 
-          IncrementBySources(
-              canvasFingerprintingEvent,
-              glean::contentblocking::
-                  canvas_fingerprinting_type_text_by_source_per_tab2,
-              key);
+          nsAutoCString comboKey(key + ":"_ns + category);
+          if (!seenTextSourceCombos.Contains(comboKey)) {
+            seenTextSourceCombos.Insert(comboKey);
+            glean::contentblocking::
+                canvas_fingerprinting_type_text_by_source_per_tab2
+                    .Get(key, category)
+                    .Add();
+          }
         }
       }
 
       // ----------------------------------
       // Second, cover canvas_fingerprinting_type_alias_by_source_per_tab2
-      // We also do this for each log entry
-      nsAutoCString key;
-      key.AppendInt(static_cast<uint32_t>(canvasFingerprintingEvent.alias));
+      // Only count each unique (alias, source) combination once per page
+      {
+        nsAutoCString key, category;
+        key.AppendInt(static_cast<uint32_t>(canvasFingerprintingEvent.alias));
+        category.AppendInt(canvasFingerprintingEvent.sourcesBitmask);
 
-      IncrementBySources(
-          canvasFingerprintingEvent,
+        nsAutoCString comboKey(key + ":"_ns + category);
+        if (!seenAliasSourceCombos.Contains(comboKey)) {
+          seenAliasSourceCombos.Insert(comboKey);
           glean::contentblocking::
-              canvas_fingerprinting_type_alias_by_source_per_tab2,
-          key);
+              canvas_fingerprinting_type_alias_by_source_per_tab2
+                  .Get(key, category)
+                  .Add();
+        }
+      }
     }
   }
 

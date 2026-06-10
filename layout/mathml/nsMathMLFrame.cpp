@@ -1,18 +1,16 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLFrame.h"
 
+#include "PseudoStyleType.h"
 #include "gfxContext.h"
 #include "gfxMathTable.h"
 #include "gfxUtils.h"
 #include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/dom/MathMLElement.h"
 #include "mozilla/gfx/2D.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSValue.h"
 #include "nsLayoutUtils.h"
 #include "nsMathMLChar.h"
@@ -49,36 +47,20 @@ NS_IMETHODIMP
 nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent) {
   mEmbellishData.flags.clear();
   mEmbellishData.coreFrame = nullptr;
-  mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  mEmbellishData.direction = StretchDirection::Unsupported;
   mEmbellishData.leadingSpace = 0;
   mEmbellishData.trailingSpace = 0;
 
   mPresentationData.flags.clear();
   mPresentationData.baseFrame = nullptr;
-
-  // by default, just inherit the display of our parent
-  nsPresentationData parentData;
-  GetPresentationDataFrom(aParent, parentData);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMathMLFrame::UpdatePresentationData(MathMLPresentationFlags aFlagsValues,
                                       MathMLPresentationFlags aWhichFlags) {
-  NS_ASSERTION(aWhichFlags.contains(MathMLPresentationFlag::Compressed) ||
-                   aWhichFlags.contains(MathMLPresentationFlag::Dtls),
-               "aWhichFlags should only be compression or dtls flag");
-
-  if (!StaticPrefs::mathml_math_shift_enabled() &&
-      aWhichFlags.contains(MathMLPresentationFlag::Compressed)) {
-    // updating the compression flag is allowed
-    if (aFlagsValues.contains(MathMLPresentationFlag::Compressed)) {
-      // 'compressed' means 'prime' style in App. G, TeXbook
-      mPresentationData.flags += MathMLPresentationFlag::Compressed;
-    }
-    // no else. the flag is sticky. it retains its value once it is set
-  }
+  NS_ASSERTION(aWhichFlags.contains(MathMLPresentationFlag::Dtls),
+               "aWhichFlags should only dtls flag");
   // These flags determine whether the dtls font feature settings should
   // be applied.
   if (aWhichFlags.contains(MathMLPresentationFlag::Dtls)) {
@@ -97,7 +79,7 @@ void nsMathMLFrame::GetEmbellishDataFrom(nsIFrame* aFrame,
   // initialize OUT params
   aEmbellishData.flags.clear();
   aEmbellishData.coreFrame = nullptr;
-  aEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  aEmbellishData.direction = StretchDirection::Unsupported;
   aEmbellishData.leadingSpace = 0;
   aEmbellishData.trailingSpace = 0;
 
@@ -107,46 +89,6 @@ void nsMathMLFrame::GetEmbellishDataFrom(nsIFrame* aFrame,
       mathMLFrame->GetEmbellishData(aEmbellishData);
     }
   }
-}
-
-// helper to get the presentation data of a frame, by possibly walking up
-// the frame hierarchy if we happen to be surrounded by non-MathML frames.
-/* static */
-void nsMathMLFrame::GetPresentationDataFrom(
-    nsIFrame* aFrame, nsPresentationData& aPresentationData, bool aClimbTree) {
-  // initialize OUT params
-  aPresentationData.flags.clear();
-  aPresentationData.baseFrame = nullptr;
-
-  nsIFrame* frame = aFrame;
-  while (frame) {
-    if (frame->IsMathMLFrame()) {
-      nsIMathMLFrame* mathMLFrame = do_QueryFrame(frame);
-      if (mathMLFrame) {
-        mathMLFrame->GetPresentationData(aPresentationData);
-        break;
-      }
-    }
-    // stop if the caller doesn't want to lookup beyond the frame
-    if (!aClimbTree) {
-      break;
-    }
-    // stop if we reach the root <math> tag
-    nsIContent* content = frame->GetContent();
-    NS_ASSERTION(content || !frame->GetParent(),  // no assert for the root
-                 "dangling frame without a content node");
-    if (!content) {
-      break;
-    }
-
-    if (content->IsMathMLElement(nsGkAtoms::math)) {
-      break;
-    }
-    frame = frame->GetParent();
-  }
-  NS_WARNING_ASSERTION(
-      frame && frame->GetContent(),
-      "bad MathML markup - could not find the top <math> element");
 }
 
 /* static */
@@ -195,13 +137,10 @@ nscoord nsMathMLFrame::CalcLength(const nsCSSValue& aCSSValue,
   nsCSSUnit unit = aCSSValue.GetUnit();
   mozilla::dom::NonSVGFrameUserSpaceMetrics userSpaceMetrics(aFrame);
 
-  // The axis is only relevant for percentages, so it doesn't matter what we use
-  // here.
-  auto axis = SVGContentUtils::X;
-
   return nsPresContext::CSSPixelsToAppUnits(
       aCSSValue.GetFloatValue() *
-      SVGLength::GetPixelsPerCSSUnit(userSpaceMetrics, unit, axis,
+      SVGLength::GetPixelsPerCSSUnit(userSpaceMetrics, unit,
+                                     SVGLength::Axis::XY,
                                      /* aApplyZoom = */ true));
 }
 
@@ -222,15 +161,13 @@ void nsMathMLFrame::GetSupDropFromChild(nsIFrame* aChild, nscoord& aSupDrop,
 }
 
 /* static */
-void nsMathMLFrame::ParseAndCalcNumericValue(const nsString& aString,
-                                             nscoord* aLengthValue,
-                                             uint32_t aFlags,
-                                             float aFontSizeInflation,
-                                             nsIFrame* aFrame) {
+void nsMathMLFrame::ParseAndCalcNumericValue(
+    const nsString& aString, nscoord* aLengthValue, float aFontSizeInflation,
+    nsIFrame* aFrame, dom::MathMLElement::ParseFlags aFlags) {
   nsCSSValue cssValue;
 
   if (!dom::MathMLElement::ParseNumericValue(
-          aString, cssValue, aFlags, aFrame->PresContext()->Document())) {
+          aString, cssValue, aFrame->PresContext()->Document(), aFlags)) {
     // Invalid attribute value. aLengthValue remains unchanged, so the default
     // length value is used.
     return;
@@ -285,7 +222,7 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
 void nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                const nsRect& aRect,
                                const nsDisplayListSet& aLists,
-                               uint32_t aIndex) {
+                               uint16_t aIndex) {
   if (!aFrame->StyleVisibility()->IsVisible() || aRect.IsEmpty()) {
     return;
   }

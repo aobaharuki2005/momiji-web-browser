@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -489,29 +487,6 @@ AudioCallbackDriver::~AudioCallbackDriver() {
   }
 }
 
-bool IsMacbookOrMacbookAir() {
-#ifdef XP_MACOSX
-  size_t len = 0;
-  sysctlbyname("hw.model", NULL, &len, NULL, 0);
-  if (len) {
-    UniquePtr<char[]> model(new char[len]);
-    // This string can be
-    // MacBook%d,%d for a normal MacBook
-    // MacBookAir%d,%d for a Macbook Air
-    sysctlbyname("hw.model", model.get(), &len, NULL, 0);
-    char* substring = strstr(model.get(), "MacBook");
-    if (substring) {
-      const size_t offset = strlen("MacBook");
-      if (!strncmp(model.get() + offset, "Air", 3) ||
-          isdigit(model[offset + 1])) {
-        return true;
-      }
-    }
-  }
-#endif
-  return false;
-}
-
 void AudioCallbackDriver::Init(const nsCString& aStreamName) {
   LOG(LogLevel::Debug,
       ("%p: AudioCallbackDriver::Init driver=%p", Graph(), this));
@@ -583,14 +558,6 @@ void AudioCallbackDriver::Init(const nsCString& aStreamName) {
   uint32_t latencyFrames = CubebUtils::GetCubebMTGLatencyInFrames(&output);
 
   LOG(LogLevel::Debug, ("Minimum latency in frames: %d", latencyFrames));
-
-  // Macbook and MacBook air don't have enough CPU to run very low latency
-  // MediaTrackGraphs, cap the minimal latency to 512 frames int this case.
-  if (IsMacbookOrMacbookAir()) {
-    latencyFrames = std::max((uint32_t)512, latencyFrames);
-    LOG(LogLevel::Debug,
-        ("Macbook or macbook air, new latency: %d", latencyFrames));
-  }
 
   // Buffer sizes lower than 10ms are nowadays common. It's not very useful
   // when doing voice, because all the WebRTC code that does audio input

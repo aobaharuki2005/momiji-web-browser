@@ -16,8 +16,8 @@ require("resource://devtools/shared/specs/style/style-types.js");
 types.addDictType("domstylerule.queryContainerForNodeReturn", {
   node: "nullable:domnode",
   containerType: "nullable:string",
-  blockSize: "nullable:string",
-  inlineSize: "nullable:string",
+  containerName: "nullable:string",
+  queryFeatures: "nullable:array:json",
 });
 
 const styleRuleSpec = generateActorSpec({
@@ -64,6 +64,7 @@ const styleRuleSpec = generateActorSpec({
       request: {
         ancestorRuleIndex: Arg(0, "number"),
         node: Arg(1, "domnode"),
+        conditionIndex: Arg(2, "number"),
       },
       response: RetVal("domstylerule.queryContainerForNodeReturn"),
     },

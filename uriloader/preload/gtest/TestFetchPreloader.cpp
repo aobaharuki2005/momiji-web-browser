@@ -27,20 +27,25 @@ class FakeChannel : public nsIChannel {
   NS_DECL_NSICHANNEL
   NS_DECL_NSIREQUEST
 
-  nsresult Start() { return mListener->OnStartRequest(this); }
+  nsresult Start() {
+    nsCOMPtr<nsIStreamListener> listener = mListener;
+    return listener->OnStartRequest(this);
+  }
   nsresult Data(const nsACString& aData) {
     if (NS_FAILED(mStatus)) {
       return mStatus;
     }
     nsCOMPtr<nsIInputStream> is;
     NS_NewCStringInputStream(getter_AddRefs(is), aData);
-    return mListener->OnDataAvailable(this, is, 0, aData.Length());
+    nsCOMPtr<nsIStreamListener> listener = mListener;
+    return listener->OnDataAvailable(this, is, 0, aData.Length());
   }
   nsresult Stop(nsresult status) {
     if (NS_SUCCEEDED(mStatus)) {
       mStatus = status;
     }
-    mListener->OnStopRequest(this, mStatus);
+    nsCOMPtr<nsIStreamListener> listener = mListener;
+    listener->OnStopRequest(this, mStatus);
     mListener = nullptr;
     return mStatus;
   }
@@ -284,8 +289,8 @@ TEST(TestFetchPreloader, CacheNoneBeforeConsume)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -293,7 +298,7 @@ TEST(TestFetchPreloader, CacheNoneBeforeConsume)
       key, uri, mozilla::CORS_NONE, mozilla::dom::ReferrerPolicy::_empty, doc,
       0, nsISupportsPriority::PRIORITY_NORMAL)));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
@@ -322,8 +327,8 @@ TEST(TestFetchPreloader, CacheStartBeforeConsume)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -333,7 +338,7 @@ TEST(TestFetchPreloader, CacheStartBeforeConsume)
 
   EXPECT_NS_SUCCEEDED(channel->Start());
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
@@ -362,8 +367,8 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -375,7 +380,7 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
   EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
@@ -402,8 +407,8 @@ TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -417,7 +422,7 @@ TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
 
   // Request consumation of the preload...
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
@@ -442,8 +447,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsume)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -457,7 +462,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsume)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
   EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
@@ -481,8 +486,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -496,7 +501,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
   EXPECT_NS_FAILED(channel->Stop(ERROR_ONSTOP));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
@@ -520,8 +525,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -535,7 +540,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
   channel->Cancel(ERROR_CANCEL);
   EXPECT_NS_FAILED(channel->Stop(ERROR_CANCEL));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
@@ -563,8 +568,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -578,7 +583,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
   EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mOnStartResult = ERROR_THROW;
 
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
@@ -603,8 +608,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -618,7 +623,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
   EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mOnDataResult = ERROR_THROW;
 
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
@@ -643,8 +648,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -658,7 +663,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
   EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mOnStopResult = ERROR_THROW;
 
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
@@ -685,8 +690,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -700,7 +705,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
   EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mCancelIn = FakeListener::OnStart;
   // check that throwing from OnStartRequest doesn't affect the cancellation
   // status.
@@ -728,8 +733,8 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -743,7 +748,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
   EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
   EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mCancelIn = FakeListener::OnData;
   // check that throwing from OnStartRequest doesn't affect the cancellation
   // status.
@@ -772,8 +777,8 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -785,7 +790,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
   EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
   EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mCancelIn = FakeListener::OnData;
 
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
@@ -813,8 +818,8 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -834,7 +839,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
     EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
   }));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mCancelIn = FakeListener::OnStart;
 
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
@@ -862,8 +867,8 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -883,7 +888,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
     EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
   }));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mCancelIn = FakeListener::OnData;
 
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
@@ -911,8 +916,8 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeThrowFromOnStartRequestAndRace)
   NS_NewURI(getter_AddRefs(uri), "https://example.com"_ns);
   auto key = mozilla::PreloadHashKey::CreateAsFetch(uri, mozilla::CORS_NONE);
 
-  RefPtr<FakeChannel> channel = new FakeChannel();
-  RefPtr<FakePreloader> preloader = new FakePreloader(channel);
+  RefPtr channel = mozilla::MakeRefPtr<FakeChannel>();
+  RefPtr preloader = mozilla::MakeRefPtr<FakePreloader>(channel);
   RefPtr<mozilla::dom::Document> doc;
   NS_NewXMLDocument(getter_AddRefs(doc), nullptr, nullptr);
 
@@ -932,7 +937,7 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeThrowFromOnStartRequestAndRace)
     EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
   }));
 
-  RefPtr<FakeListener> listener = new FakeListener();
+  RefPtr listener = mozilla::MakeRefPtr<FakeListener>();
   listener->mOnStartResult = ERROR_THROW;
 
   EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));

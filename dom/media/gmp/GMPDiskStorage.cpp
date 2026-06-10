@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -77,7 +76,7 @@ class GMPDiskStorage : public GMPStorage {
  public:
   explicit GMPDiskStorage(const nsACString& aNodeId, const nsAString& aGMPName)
       : mNodeId(aNodeId), mGMPName(aGMPName) {
-    LOG("Created GMPDiskStorage, nodeId=%s, gmpName=%s", mNodeId.BeginReading(),
+    LOG("Created GMPDiskStorage, nodeId=%s, gmpName=%s", mNodeId.get(),
         NS_ConvertUTF16toUTF8(mGMPName).get());
   }
 
@@ -325,7 +324,7 @@ class GMPDiskStorage : public GMPStorage {
       f->Exists(&exists);
       if (!exists) {
         // Filename not in use, we can write into this file.
-        aOutFilename = hashStr;
+        aOutFilename = std::move(hashStr);
         return NS_OK;
       } else {
         // Hash collision; just increment the hash name and try that again.

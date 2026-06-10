@@ -115,7 +115,6 @@ add_task(async function ui_single() {
     1
   );
   Assert.ok(result.isBestMatch);
-  Assert.ok(result.hideRowLabel);
 
   Assert.ok(
     element.row.querySelector(".urlbarView-button-result-menu"),
@@ -272,11 +271,7 @@ add_task(async function activate() {
       gBrowser,
       expectedURL
     );
-    await EventUtils.synthesizeMouseAtCenter(
-      items[i],
-      {},
-      items[i].ownerGlobal
-    );
+    EventUtils.synthesizeMouseAtCenter(items[i], {}, items[i].documentGlobal);
     await onLocationChange;
     Assert.ok(true, `Expected URL is loaded [${expectedURL}]`);
 

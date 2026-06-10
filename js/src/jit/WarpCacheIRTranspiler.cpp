@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -9,8 +7,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
 
-#include "jsmath.h"
-
+#include "builtin/Math.h"
 #include "jit/AtomicOp.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
@@ -478,7 +475,7 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
 
 bool WarpCacheIRTranspiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
   switch (fuseIndex) {
-    case RealmFuses::FuseIndex::OptimizeGetIteratorFuse:
+    case RealmFuses::FuseIndex::OptimizeGetIteratorBytecodeFuse:
     case RealmFuses::FuseIndex::OptimizeArraySpeciesFuse:
     case RealmFuses::FuseIndex::OptimizeTypedArraySpeciesFuse:
     case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse:
@@ -952,16 +949,6 @@ bool WarpCacheIRTranspiler::emitGuardIsNotArrayBufferMaybeShared(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardIsTypedArray(ObjOperandId objId) {
-  MDefinition* obj = getOperand(objId);
-
-  auto* ins = MGuardIsTypedArray::New(alloc(), obj);
-  add(ins);
-
-  setOperand(objId, ins);
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitGuardIsNonResizableTypedArray(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
@@ -1382,6 +1369,15 @@ bool WarpCacheIRTranspiler::emitGuardNonDoubleType(ValOperandId inputId,
   MOZ_CRASH("unexpected type");
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsNotObject(ValOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MGuardIsNotObject::New(alloc(), input);
+  add(ins);
+  setOperand(inputId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardTo(ValOperandId inputId, MIRType type) {
   MDefinition* def = getOperand(inputId);
   if (def->type() == type) {
@@ -1651,9 +1647,8 @@ bool WarpCacheIRTranspiler::emitInt32ToStringWithBaseResult(
   add(guardedBase);
 
   // Use lower-case characters by default.
-  constexpr bool lower = true;
-
-  auto* ins = MInt32ToStringWithBase::New(alloc(), input, guardedBase, lower);
+  auto* ins = MInt32ToStringWithBase::New(alloc(), input, guardedBase,
+                                          StringCase::Lower);
   add(ins);
 
   pushResult(ins);
@@ -2652,6 +2647,16 @@ bool WarpCacheIRTranspiler::emitTypedArraySubarrayResult(
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitLinearizeString(StringOperandId strId,
+                                                StringOperandId resultId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* ins = MLinearizeString::New(alloc(), str);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLinearizeForCharAccess(
     StringOperandId strId, Int32OperandId indexId, StringOperandId resultId) {
   MDefinition* str = getOperand(strId);
@@ -2896,7 +2901,10 @@ bool WarpCacheIRTranspiler::emitStringIncludesResult(
   MDefinition* str = getOperand(strId);
   MDefinition* searchStr = getOperand(searchStrId);
 
-  auto* includes = MStringIncludes::New(alloc(), str, searchStr);
+  auto* linear = MLinearizeString::New(alloc(), str);
+  add(linear);
+
+  auto* includes = MStringIncludes::New(alloc(), linear, searchStr);
   add(includes);
 
   pushResult(includes);
@@ -2908,7 +2916,10 @@ bool WarpCacheIRTranspiler::emitStringIndexOfResult(
   MDefinition* str = getOperand(strId);
   MDefinition* searchStr = getOperand(searchStrId);
 
-  auto* indexOf = MStringIndexOf::New(alloc(), str, searchStr);
+  auto* linear = MLinearizeString::New(alloc(), str);
+  add(linear);
+
+  auto* indexOf = MStringIndexOf::New(alloc(), linear, searchStr);
   add(indexOf);
 
   pushResult(indexOf);
@@ -2954,8 +2965,7 @@ bool WarpCacheIRTranspiler::emitStringEndsWithResult(
 bool WarpCacheIRTranspiler::emitStringToLowerCaseResult(StringOperandId strId) {
   MDefinition* str = getOperand(strId);
 
-  auto* convert =
-      MStringConvertCase::New(alloc(), str, MStringConvertCase::LowerCase);
+  auto* convert = MStringConvertCase::New(alloc(), str, StringCase::Lower);
   add(convert);
 
   pushResult(convert);
@@ -2965,8 +2975,7 @@ bool WarpCacheIRTranspiler::emitStringToLowerCaseResult(StringOperandId strId) {
 bool WarpCacheIRTranspiler::emitStringToUpperCaseResult(StringOperandId strId) {
   MDefinition* str = getOperand(strId);
 
-  auto* convert =
-      MStringConvertCase::New(alloc(), str, MStringConvertCase::UpperCase);
+  auto* convert = MStringConvertCase::New(alloc(), str, StringCase::Upper);
   add(convert);
 
   pushResult(convert);
@@ -3153,18 +3162,6 @@ bool WarpCacheIRTranspiler::emitAllocateAndStoreDynamicSlot(
   addEffectful(allocateAndStore);
 
   return resumeAfter(allocateAndStore);
-}
-
-bool WarpCacheIRTranspiler::emitAddSlotAndCallAddPropHook(
-    ObjOperandId objId, ValOperandId rhsId, uint32_t newShapeOffset) {
-  Shape* shape = shapeStubField(newShapeOffset);
-  MDefinition* obj = getOperand(objId);
-  MDefinition* rhs = getOperand(rhsId);
-
-  auto* addProp = MAddSlotAndCallAddPropHook::New(alloc(), obj, rhs, shape);
-  addEffectful(addProp);
-
-  return resumeAfter(addProp);
 }
 
 bool WarpCacheIRTranspiler::emitStoreDenseElement(ObjOperandId objId,
@@ -5945,6 +5942,45 @@ bool WarpCacheIRTranspiler::emitDateSecondsFromSecondsIntoYearResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitDateNow(NumberOperandId resultId) {
+  auto* ins = MDateNow::New(alloc());
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitDateParse(StringOperandId strId,
+                                          NumberOperandId resultId) {
+  MDefinition* str = getOperand(strId);
+
+  auto* ins = MDateParse::New(alloc(), str);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitTimeClip(NumberOperandId timeId,
+                                         NumberOperandId resultId) {
+  MDefinition* time = getOperand(timeId);
+
+  auto* ins = MTimeClip::New(alloc(), time);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitNewDateObjectResult(
+    uint32_t templateObjectOffset, NumberOperandId utcTimeId) {
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+  MDefinition* utcTime = getOperand(utcTimeId);
+
+  auto* obj = MNewDateObject::New(alloc(), utcTime, templateObj);
+  add(obj);
+
+  pushResult(obj);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTruthyResult(OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
@@ -6278,7 +6314,7 @@ bool WarpCacheIRTranspiler::maybeCreateThis(MDefinition* callee,
   MOZ_ASSERT(kind == CallKind::Scripted);
 
   if (thisArg->isNewPlainObject()) {
-    // We have already updated |this| based on MetaScriptedThisShape. We do
+    // We have already updated |this| based on MetaCreateThis. We do
     // not need to generate a check.
     return false;
   }
@@ -7052,34 +7088,31 @@ bool WarpCacheIRTranspiler::emitCallNativeSetter(ObjOperandId receiverId,
                         nargsAndFlagsOffset);
 }
 
-bool WarpCacheIRTranspiler::emitMetaScriptedThisShape(
-    uint32_t thisShapeOffset) {
+bool WarpCacheIRTranspiler::emitMetaCreateThis(uint32_t numFixedSlots,
+                                               uint32_t numDynamicSlots,
+                                               gc::AllocKind allocKind,
+                                               uint32_t thisShapeOffset,
+                                               uint32_t siteOffset) {
   SharedShape* shape = &shapeStubField(thisShapeOffset)->asShared();
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
 
   MConstant* shapeConst = MConstant::NewShape(alloc(), shape);
   add(shapeConst);
 
-  // TODO: support pre-tenuring.
-  gc::Heap heap = gc::Heap::Default;
+  gc::Heap heap = allocSiteInitialHeapField(siteOffset);
 
-  uint32_t numFixedSlots = shape->numFixedSlots();
-  uint32_t numDynamicSlots = NativeObject::calculateDynamicSlots(shape);
-  gc::AllocKind kind = gc::GetGCObjectKind(numFixedSlots);
   MOZ_ASSERT(gc::GetObjectFinalizeKind(&PlainObject::class_) ==
              gc::FinalizeKind::None);
-  MOZ_ASSERT(!IsFinalizedKind(kind));
+  MOZ_ASSERT(!IsFinalizedKind(allocKind));
 
   auto* createThis = MNewPlainObject::New(alloc(), shapeConst, numFixedSlots,
-                                          numDynamicSlots, kind, heap);
+                                          numDynamicSlots, allocKind, heap);
   add(createThis);
 
   callInfo_->thisArg()->setImplicitlyUsedUnchecked();
   callInfo_->setThis(createThis);
   return true;
 }
-
-bool WarpCacheIRTranspiler::emitReturnFromIC() { return true; }
 
 bool WarpCacheIRTranspiler::emitBailout() {
   auto* bail = MBail::New(alloc());

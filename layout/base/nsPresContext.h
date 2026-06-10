@@ -1,13 +1,11 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* a presentation of a document, part 1 */
 
-#ifndef nsPresContext_h___
-#define nsPresContext_h___
+#ifndef nsPresContext_h_
+#define nsPresContext_h_
 
 #include "FontVisibilityProvider.h"
 #include "Units.h"
@@ -160,7 +158,7 @@ class nsPresContext : public nsISupports,
   /**
    * Initialize the presentation context from a particular device.
    */
-  nsresult Init(nsDeviceContext* aDeviceContext);
+  void Init(nsDeviceContext*);
 
   /**
    * Initialize the font cache if it hasn't been initialized yet.
@@ -443,6 +441,14 @@ class nsPresContext : public nsISupports,
   nscoord GetBimodalDynamicToolbarHeightInAppUnits() const;
 
   /**
+   * Returns the maximum height of the dynamic toolbar if the toolbar state is
+   * `DynamicToolbarState::Collapsed`, otherwise returns zero.
+   * The maximum height is based on the fixed viewport scale for elements with
+   * position:fixed.
+   */
+  nscoord GetBimodalDynamicToolbarHeightForFixedPosInAppUnits() const;
+
+  /**
    * Returns the state of the dynamic toolbar.
    */
   mozilla::DynamicToolbarState GetDynamicToolbarState() const;
@@ -557,7 +563,7 @@ class nsPresContext : public nsISupports,
   void SetFullZoom(float aZoom);
   void SetOverrideDPPX(float);
   void SetInRDMPane(bool aInRDMPane);
-  void UpdateTopInnerSizeForRFP();
+  void UpdateInnerSizeSpoofedForRFP();
   void UpdateForcedColors(bool aNotify = true);
 
  public:
@@ -587,6 +593,13 @@ class nsPresContext : public nsISupports,
    * Sets the effective color scheme override, and invalidate stuff as needed.
    */
   void SetColorSchemeOverride(mozilla::dom::PrefersColorSchemeOverride);
+
+  /**
+   * Sets the effective link parameters overrides, and invalidate stuff as
+   * needed.
+   */
+  void SetLinkParametersOverride(
+      const mozilla::StyleLinkParameters& aLinkParameters);
 
   /**
    * Return the device's screen size in inches, for font size
@@ -1087,16 +1100,6 @@ class nsPresContext : public nsISupports,
     }
   }
 
-  // Return the cached value of the about:config pref
-  // 'layout.abspos.fragmentainer-aware-positioning.enabled'.
-  //
-  // Note: Layout code should use this helper rather than the actual "live" pref
-  // value. This ensures a given frame tree handles abspos fragmentation
-  // consistently even if the actual pref value changes.
-  bool FragmentainerAwarePositioningEnabled() const {
-    return mFragmentainerAwarePositioningEnabled;
-  }
-
  protected:
   void DoUpdateHiddenByContentVisibilityForAnimations();
   friend class nsRunnableMethod<nsPresContext>;
@@ -1118,6 +1121,8 @@ class nsPresContext : public nsISupports,
   void UpdateCharSet(NotNull<const Encoding*> aCharSet);
 
   void DoForceReflowForFontInfoUpdateFromStyle();
+
+  void UpdateAnimationsPlayBackRateMultiplier(double aMultiplier);
 
  public:
   // Used by the PresShell to force a reflow when some aspect of font info
@@ -1153,6 +1158,10 @@ class nsPresContext : public nsISupports,
   float RubyPositioningFactor() const {
     MOZ_ASSERT(mRubyPositioningFactor > 0.0f);
     return mRubyPositioningFactor;
+  }
+
+  double AnimationsPlayBackRateMultiplier() const {
+    return mAnimationsPlayBackRateMultiplier;
   }
 
  protected:
@@ -1298,13 +1307,13 @@ class nsPresContext : public nsISupports,
   mozilla::TimeStamp mFirstMouseMoveTime;
   mozilla::TimeStamp mFirstScrollTime;
 
+  // last time we did a full style flush
+  mozilla::TimeStamp mLastStyleUpdateForAllAnimations;
+
   // incremented each time the root scroller scrolls, helpful to determine if
   // it has scrolled between the start and end of some deferred work (such as a
   // navigation intercept).
   uint32_t mLastScrollGeneration;
-
-  // last time we did a full style flush
-  mozilla::TimeStamp mLastStyleUpdateForAllAnimations;
 
   uint32_t mInterruptChecksToSkip;
 
@@ -1329,6 +1338,12 @@ class nsPresContext : public nsISupports,
   // been updated so far. This is necessary to avoid reentering on container
   // query style changes which cause us to do frame reconstruction.
   nsTHashSet<nsIContent*> mUpdatedContainerQueryContents;
+
+  // The cache of BrowsingContext.animationsPlayBackRateMultiplier.
+  // We need to cache it since the multiplier needs to be queried off the
+  // main-thread, unfortunately Document::GetBrowsingContext can not be used off
+  // the main-thread.
+  double mAnimationsPlayBackRateMultiplier = 1.0;
 
   ScrollStyles mViewportScrollStyles;
 
@@ -1408,11 +1423,6 @@ class nsPresContext : public nsISupports,
 
   unsigned mUserInputEventsAllowed : 1;
 
-  // Cached value of the about:config pref
-  // 'layout.abspos.fragmentainer-aware-positioning.enabled'
-  // from when this nsPresContext was initialized.
-  bool mFragmentainerAwarePositioningEnabled : 1 = false;
-
 #ifdef DEBUG
   unsigned mInitialized : 1;
 #endif
@@ -1422,6 +1432,7 @@ class nsPresContext : public nsISupports,
   FontVisibility mFontVisibility = FontVisibility::Unknown;
   mozilla::dom::PrefersColorSchemeOverride mOverriddenOrEmbedderColorScheme;
   mozilla::StyleForcedColors mForcedColors;
+  mozilla::StyleLinkParameters mLinkParameters;
 
  protected:
   virtual ~nsPresContext();
@@ -1495,4 +1506,4 @@ class nsRootPresContext final : public nsPresContext {
 #  define DO_GLOBAL_REFLOW_COUNT(_name)
 #endif  // MOZ_REFLOW_PERF
 
-#endif /* nsPresContext_h___ */
+#endif /* nsPresContext_h_ */
